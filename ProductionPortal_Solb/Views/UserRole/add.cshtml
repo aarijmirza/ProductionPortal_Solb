@@ -1,0 +1,52 @@
+﻿@model DAL.Models.UserRoleBLL
+@using System.Web.Configuration;
+@{
+    ViewBag.Title = "add";
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">User Role</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index" ,"Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">Setting</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">User Role</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- End XP Breadcrumbbar -->
+<!-- Start XP Contentbar -->
+<div class="xp-contentbar">
+    <!-- Start XP Row -->
+    <div class="row">
+        <!-- Start XP Col -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <form method="post" action="/UserRole/Save">
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="RoleName">Role Name</label>
+                                <input type="text" class="form-control" id="RoleName" name="RoleName" placeholder="Role Name">
+                            </div>
+                            <div class="form-group col-md-6" style="align-self: end;">
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Start XP Col -->
+    </div>
+    <!-- End XP Row -->
+</div>
+<!-- Start XP Contentbar -->

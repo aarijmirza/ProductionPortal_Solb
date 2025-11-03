@@ -1,0 +1,539 @@
+﻿@model DAL.Models.ViewModel.EAFMeltShopVM
+
+@{
+    ViewBag.Title = "add";
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">EAF MeltShop</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index" ,"Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">EAF MeltShop</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<!-- Start XP Contentbar -->
+<div class="xp-contentbar">
+    <!-- Start XP Row -->
+    <form action="/EAFMeltShop/add" id="addprofileform" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Start XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white" style=" ALIGN-SELF: end;">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="date">Date</label>
+                                <input type="date" class="form-control" id="date" name="date" placeholder="Date">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="shift">Shift</label>
+                                <select id="shift" class="form-control" name="Shift">
+                                    <option selected>Choose...</option>
+                                    <option>Morning</option>
+                                    <option>Evening</option>
+                                    <option>Night</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="ddlgrade">Grade</label>
+                                @Html.DropDownListFor(model => model.GRADE_ID,
+                                    ViewBag.Grade as SelectList,
+                                    "-- Select Grade --",
+                                    new { @class = "form-control", id = "ddlgrade" })
+                                @*@Html.DropDownListFor(model => model.Grade.GradeID, ViewBag.Grade as SelectList, "-- Select Grade --", new { @class = "form-control", @Name = "GradeID", @Id = "ddlgrade" })*@
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="heatno">Heat #</label>
+                                <input type="text" class="form-control" id="heatno" name="heatno" placeholder="Heat #">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="NoofHeat">No. of Heat</label>
+                                <input type="number" class="form-control" id="NoofHeat" name="NoofHeat">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="sequenceheat">Sequence Heat</label>
+                                <input type="number" class="form-control" id="sequenceheat" name="SequenceHeat">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="prevtap">Prev.Tapping Time (HH:MM)</label>
+                                <input type="time" class="form-control" id="prevtap" name="PrevTappTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="eafshellno">
+                                    EAF Shell No.
+                                </label>
+                                <input type="number" class="form-control" id="eafshellno" name="EAFShellNo">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="NoofheatstarttimeHeat">Heat Start Time (HH:MM)</label>
+                                <input type="time" class="form-control" id="heatstarttime" name="HeatStartTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="heatendtime">Heat End Time (HH:MM)</label>
+                                <input type="time" class="form-control" id="heatendtime" name="HeatEndTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="taptotaptime">Tap to Tap Time (MIN)</label>
+                                <input type="number" class="form-control" id="taptotaptime" name="TaptoTapTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="netarcingtime">Net Arcing Time (MIN)</label>
+                                <input type="number" class="form-control" id="netarcingtime" name="NetArcingTime">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="turnaroundtime">Turn Around Time (MIN)</label>
+                                <input type="number" class="form-control" id="turnaroundtime" name="TurnAroundTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="lininglife">Lining Life</label>
+                                <input type="number" class="form-control" id="lininglife" name="LiningLife">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="bottomlife">Bottom Life</label>
+                                <input type="number" class="form-control" id="bottomlife" name="BottomLife">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="ebtlife">EBT Life</label>
+                                <input type="number" class="form-control" id="ebtlife" name="EBTLife">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="deltalife">Delta Life</label>
+                                <input type="number" class="form-control" id="deltalife" name="DeltaLife">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="BucketChargeWt">Bucket Charge WT (KG)</label>
+                                <input type="number" class="form-control" id="BucketChargeWt" name="BucketChargingWeight">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="dri">ISAC Charge WT (KG)</label>
+                                <input type="number" class="form-control" id="dri" name="ISACChargeWeight">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="ebtlife">EBT Life</label>
+                                <input type="number" class="form-control" id="ebtlife" name="EBTLife">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="lime">Lime ISAC (KG)</label>
+                                <input type="number" class="form-control" id="lime" name="LimeISAC">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="dolo">Dolo ISAC (KG)</label>
+                                <input type="number" class="form-control" id="dolo" name="DoloISAC">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="coke">Coke ISAC (KG)</label>
+                                <input type="number" class="form-control" id="coke" name="CokeISAC">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="ISACChargeWt">ISAC Flux. WT (KG)</label>
+                                <input type="number" class="form-control" id="ISACChargeWt" name="ISACFluxWeight" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="TotalChargeWt">Total Charge WT (KG)</label>
+                                <input type="number" class="form-control" id="TotalChargeWt" name="TotalChargeWeight" readonly>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="lmtapwgt">LM TAP WT App. (KG)</label>
+                                <input type="number" class="form-control" id="lmtapwgt" name="LMTAPWTApp">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="tappingtemp">Tapping Temperature ℃</label>
+                                <input type="number" class="form-control" id="tappingtemp" name="TappingTemp">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="openingcarbon">Opening Carbon %</label>
+                                <input type="number" class="form-control" id="openingcarbon" name="OpeningCarbon">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="tappingduration">Tapping Duration</label>
+                                <input type="number" class="form-control" id="tappingduration" name="TappingDuration">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="pwrconsmp">Power Consumption (KWH)</label>
+                                <input type="number" class="form-control" id="pwrconsmp" name="PowerConsumption">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+            <!-- End XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title text-black">Consumables</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="FeSi">FeSi (KG)</label>
+                                <input type="number" class="form-control" id="FeSi" placeholder="" name="FeSi">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="heatno">SiMn (KG)</label>
+                                <input type="number" class="form-control" id="heatno" placeholder="" name="SiMn">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="FeMn">FeMn (KG)</label>
+                                <input type="number" class="form-control" id="FeMn" placeholder="" name="FeMn">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="AlBAR">Al-BAR (KG)</label>
+                                <input type="number" class="form-control" id="AlBAR" placeholder="" name="AlBAR">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="LIME">LIME (KG)</label>
+                                <input type="number" class="form-control" id="LIME" placeholder="" name="LIME">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="DOLOLIME">DOLOLIME (KG)</label>
+                                <input type="number" class="form-control" id="DOLOLIME" placeholder="" name="DOLOLIME">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="DOLOMITE">DOLOMITE (KG)</label>
+                                <input type="number" class="form-control" id="DOLOMITE" placeholder="" name="DOLOMITE">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="INJECTIONCARBON">INJECTION CARBON (KG)</label>
+                                <input type="number" class="form-control" id="INJECTIONCARBON" placeholder="" name="INJECTIONCARBON">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="HARDCOKE">HARD COKE (KG)</label>
+                                <input type="number" class="form-control" id="HARDCOKE" placeholder="" name="HARD_COKE">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="GUNNING">GUNNING (KG)</label>
+                                <input type="number" class="form-control" id="GUNNING" placeholder="" name="GUNNING">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="FETTLING">FETTLING</label>
+                                <input type="number" class="form-control" id="LIME" placeholder="" name="FETTLING">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="TEMPTIPS">TEMP.TIPS 900/1200</label>
+                                <input type="number" class="form-control" id="TEMPTIPS" placeholder="" name="TEMP_TIPS">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="LOLLYPOPSAMPLER">LOLLYPOP SAMPLER</label>
+                                <input type="number" class="form-control" id="LOLLYPOPSAMPLER" placeholder="" name="LOLLYPOP_SAMPLER">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="TOTALOXY">TOTAL OXY. ㎥</label>
+                                <input type="number" class="form-control" id="TOTALOXY" placeholder="" name="TOTAL_OXY">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="CELOXO2PROBE">CELOX/O2 PROBE</label>
+                                <input type="number" class="form-control" id="CELOXO2PROBE" placeholder="" name="CELOXO2_PROBE">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="EBTFILLER">EBT FILLER (KG)</label>
+                                <input type="number" class="form-control" id="EBTFILLER" placeholder="" name="EBT_FILLER">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="O2LANCINGPIPE">O2LANCING PIPE</label>
+                                <input type="number" class="form-control" id="O2LANCINGPIPE" placeholder="" name="O2LANCING_PIPE">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="CERAMICCOATEDPIPE">CERAMIC COATED PIPE</label>
+                                <input type="number" class="form-control" id="CERAMICCOATEDPIPE" placeholder="" name="CERAMIC_COATED_PIPE">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+            <!-- End XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title text-black">Electrodes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="electrodeTable" style="width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th>ADDITION</th>
+                                                <th>ADJUSTED</th>
+                                                <th>BREAK</th>
+                                                <th>STUB END LOSS</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <input type="text" class="form-control" name="Electrodes[0].ElectrodeAddition" />
+                                                </td>
+                                                <td>
+                                                    <input type="radio" name="Electrodes[0].Adjusted" value="Yes" /> Yes
+                                                    <input type="radio" name="Electrodes[0].Adjusted" value="No" /> No
+                                                </td>
+                                                <td>
+                                                    <input type="radio" name="Electrodes[0].Break" value="Yes" /> Yes
+                                                    <input type="radio" name="Electrodes[0].Break" value="No" /> No
+                                                </td>
+                                                <td>
+                                                    <input type="radio" name="Electrodes[0].StubEndLoss" value="Yes" /> Yes
+                                                    <input type="radio" name="Electrodes[0].StubEndLoss" value="No" /> No
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-success btn-sm addRow">
+                                                        <i class="mdi mdi-note-plus-outline"></i> Add Row
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div> <!-- table-responsive -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+            <!-- End XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title text-black">EAF MeltShop Delays</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="delaysTable" style="width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th>Section</th>
+                                                <th>Start Time</th>
+                                                <th>End Time</th>
+                                                <th>Total Duration (MIN)</th>
+                                                <th>Reason</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    @Html.DropDownList("Delays[0].GROUP_ORD", ViewBag.Delay as SelectList, "-- Select Delay --",
+                                                        new { @class = "form-control", @name = "Delays[0].GROUP_ORD" })
+                                                </td>
+                                                <td>
+                                                    <input type="time" class="form-control start-time" name="Delays[0].StartTime" />
+                                                </td>
+                                                <td>
+                                                    <input type="time" class="form-control end-time" name="Delays[0].EndTime" />
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control total-duration" name="Delays[0].TotalDuration" readonly />
+                                                </td>
+                                                <td>
+                                                    <textarea class="form-control" name="Delays[0].Reason"></textarea>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-success btn-sm addDRow">
+                                                        <i class="mdi mdi-note-plus"></i> Add Row
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div> <!-- table-responsive -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+
+        </div>
+    </form>
+    <!-- End XP Row -->
+</div>
+<!-- End XP Contentbar -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("date").value = today;
+</script>
+<script>
+    $(function () {
+        $("#lime,#dolo,#coke").keyup(function (e) {
+            var s = $("#lime").val();
+            var t = $("#dolo").val();
+            var u = $("#coke").val();
+
+            var result = "";
+            if (s !== "" && t !== "" && u !== "" && $.isNumeric(s) && $.isNumeric(t) && $.isNumeric(u)) {
+                result = parseFloat(s) + parseFloat(t) + parseFloat(u)
+            }
+            $("#ISACChargeWt").val(result);
+        });
+    });
+</script>
+<script>
+    $(function () {
+        $("#BucketChargeWt,#dri").keyup(function (e) {
+            var p = $("#BucketChargeWt").val();
+            var q = $("#dri").val();
+            var result = "";
+            if (p !== "" && q !== "" && $.isNumeric(p) && $.isNumeric(q)) {
+                result = parseFloat(p) + parseFloat(q)
+            }
+            $("#TotalChargeWt").val(result);
+        });
+    });
+</script>
+
+<script>
+    $(function () {
+        $("#NetArcingTime,#taptotaptime").keyup(function (e) {
+            var p = $("#taptotaptime").val();
+            var q = $("#NetArcingTime").val();
+            var result = "";
+            if (p !== "" && q !== "" && $.isNumeric(p) && $.isNumeric(q)) {
+                result = parseFloat(p) - parseFloat(q)
+            }
+            $("#turnaroundtime").val(result);
+        });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        let rowIndex = 1;
+
+        $('#electrodeTable').on('click', '.addRow', function () {
+            const newRow = `
+        <tr>
+            <td>
+                <input type="text" class="form-control" name="Electrodes[${rowIndex}].ElectrodeAddition" />
+            </td>
+            <td>
+                <input type="radio" name="Electrodes[${rowIndex}].Adjusted" value="Yes" /> Yes
+                <input type="radio" name="Electrodes[${rowIndex}].Adjusted" value="No" /> No
+            </td>
+            <td>
+                <input type="radio" name="Electrodes[${rowIndex}].Break" value="Yes" /> Yes
+                <input type="radio" name="Electrodes[${rowIndex}].Break" value="No" /> No
+            </td>
+            <td>
+                <input type="radio" name="Electrodes[${rowIndex}].StubEndLoss" value="Yes" /> Yes
+                <input type="radio" name="Electrodes[${rowIndex}].StubEndLoss" value="No" /> No
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm removeRow">
+                    <i class="fa fa-trash"></i> Remove
+                </button>
+            </td>
+        </tr>`;
+            $('#electrodeTable').on('click', '.removeRow', function () {
+                $(this).closest('tr').remove();
+            });
+            $('#electrodeTable tbody').append(newRow);
+            rowIndex++;
+        });
+    });
+
+    $(document).ready(function () {
+        let delayIndex = 1; // first row is already 0
+
+        $('#delaysTable').on('click', '.addDRow', function () {
+            const newRow = `
+        <tr>
+            <td>
+                <select class="form-control" name="Delays[${delayIndex}].GROUP_ORD">
+                    <option value="">-- Select Delay --</option>
+                    ${$('#Delays_0__GROUP_ORD option').map(function () {
+                return `<option value="${$(this).val()}">${$(this).text()}</option>`;
+            }).get().join('')}
+                </select>
+            </td>
+            <td>
+                <input type="time" class="form-control start-time" name="Delays[${delayIndex}].StartTime" />
+            </td>
+            <td>
+                <input type="time" class="form-control end-time" name="Delays[${delayIndex}].EndTime" />
+            </td>
+            <td>
+                <input type="text" class="form-control total-duration"
+                       name="Delays[${delayIndex}].TotalDuration" readonly />
+            </td>
+            <td>
+                <textarea class="form-control" name="Delays[${delayIndex}].Reason"></textarea>
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm removeRow">
+                    <i class="mdi mdi-delete"></i> Remove
+                </button>
+            </td>
+        </tr>`;
+            $('#delaysTable tbody').append(newRow);
+            delayIndex++;
+        });
+
+        $('#delaysTable').on('click', '.removeDRow', function () {
+            $(this).closest('tr').remove();
+        });
+
+        // calculate duration
+        $('#delaysTable').on('change', '.start-time, .end-time', function () {
+            const $row = $(this).closest('tr');
+            const startTime = $row.find('.start-time').val();
+            const endTime = $row.find('.end-time').val();
+            const $duration = $row.find('.total-duration');
+
+            if (startTime && endTime) {
+                const start = parseTime(startTime);
+                const end = parseTime(endTime);
+                let diff = (end - start) / (1000 * 60); // difference in minutes
+                if (diff < 0) diff += 24 * 60; // handle overnight case
+                $duration.val(diff);
+            } else {
+                $duration.val('');
+            }
+        });
+
+        // helper to parse HH:mm into Date object
+        function parseTime(timeStr) {
+            const parts = timeStr.split(':');
+            const date = new Date();
+            date.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+            return date;
+        }
+    });
+</script>

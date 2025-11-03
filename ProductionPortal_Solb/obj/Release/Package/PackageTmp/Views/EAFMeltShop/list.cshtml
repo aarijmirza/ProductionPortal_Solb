@@ -1,0 +1,79 @@
+﻿@using System.Globalization
+@{
+    ViewBag.Title = "list";
+    var requests = Model as List<DAL.Models.EAFMeltShopBLL>;
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">EAF MeltShop Record</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">EAF MeltShop</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">EAF MeltShop Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<!-- Start XP Contentbar -->
+<div class="xp-contentbar">
+    <!-- Start XP Row -->
+    <div class="row">
+        <!-- End XP Col -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="xp-default-datatable" class="display table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Heat #</th>
+                                    <th>Shift</th>
+                                    <th>Grade</th>
+                                    <th>Total Charge WT (KG)</th>
+                                    <th>Heat Start Time</th>
+                                    <th>Heat End Time</th>
+                                    <th>Power Consumption (KWH)</th>
+                                    @*<th>Action</th>*@
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in requests)
+                                {
+                                    var gregorian = new CultureInfo("en-US");
+                                    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+                                    <tr>
+                                        @*<td>@(item.CreatedDate.ToString("yyyy-MM-dd"))</td>*@
+                                        <td>@(item.CreatedDate.ToString("yyyy-MM-dd", gregorian))</td>
+                                        <td>@item.HeatNo</td>
+                                        <td>@item.Shift</td>
+                                        <td>@item.GRADE_ID</td>
+                                        <td>@item.TotalChargeWeight</td>
+                                        <td>@item.HeatStartTime</td>
+                                        <td>@item.HeatEndTime</td>
+                                        <td>@item.PowerConsumption</td>
+                                        @*<td>
+                                            <a href="~/EAFMeltShop/add?id=@item.ID"><i class="mdi mdi-grease-pencil"></i> Edit</a>
+                                        </td>*@
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End XP Col -->
+        <!-- Start XP Col -->
+    </div>
+    <!-- End XP Row -->
+</div>
+<!-- End XP Contentbar -->

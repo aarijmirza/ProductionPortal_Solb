@@ -1,0 +1,426 @@
+﻿@model DAL.Models.ViewModel.LFMeltShopVM
+
+@{
+    ViewBag.Title = "add";
+}
+
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">LF MeltShop</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index" ,"Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">LF MeltShop</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<!-- Start XP Contentbar -->
+<div class="xp-contentbar">
+    <!-- Start XP Row -->
+    <div class="row">
+        <!-- Start XP Col -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-white" style=" ALIGN-SELF: end;">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="date">Date</label>
+                            <input type="date" class="form-control" id="date" name="Date" placeholder="Date">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="shift">Shift</label>
+                            <select id="shift" class="form-control" name="Shift">
+                                <option selected>Choose...</option>
+                                <option>Morning</option>
+                                <option>Evening</option>
+                                <option>Night</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="ddlgrade">Grade</label>
+                            @Html.DropDownListFor(model => model.GRADE_ID,
+                                ViewBag.Grade as SelectList,
+                                "-- Select Grade --",
+                                new { @class = "form-control", id = "ddlgrade" })
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="heatno">Heat #</label>
+                            <input type="text" class="form-control" id="heatno" name="heatno" placeholder="Heat #">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="NoofHeat">No. of Heat</label>
+                            <input type="number" class="form-control" id="NoofHeat" name="NoofHeat">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="sequenceheat">Sequence Heat</label>
+                            <input type="number" class="form-control" id="sequenceheat" name="SequenceHeat">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="tempfirst">Temperature ℃(First)</label>
+                            <input type="number" class="form-control" id="tempfirst" name="TemperatureFirst">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="LMWghtApp">LM Weight App. (KG)</label>
+                            <input type="number" class="form-control" id="LMWghtApp" name="LMWghtApp">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="CarryOverSlag">Carry Over Slag (KG)</label>
+                            <input type="number" class="form-control" id="CarryOverSlag" name="CarryOverSlag">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="FreeBoard">Free Board (mm)</label>
+                            <input type="number" class="form-control" id="FreeBoard" name="FreeBoard">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="NoofheatstarttimeHeat">Heat Start Time (HH:MM)</label>
+                            <input type="time" class="form-control" id="heatstarttime" name="HeatStartTime">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="heatendtime">Heat End Time (HH:MM)</label>
+                            <input type="time" class="form-control" id="heatendtime" name="HeatEndTime">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="ArcingTime">Arcing Time (MIN)</label>
+                            <input type="number" class="form-control" id="ArcingTime" name="ArcingTime">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="PowerConsumption">
+                                Power Consumption (KWH)
+                            </label>
+                            <input type="number" class="form-control" id="PowerConsumption" name="PowerConsumption">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="DispatchTemp">Dispatch Temperature ℃</label>
+                            <input type="number" class="form-control" id="DispatchTemp" name="DispatchTemp">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="deltalife">Delta Life</label>
+                            <input type="number" class="form-control" id="deltalife" name="DeltaLife">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End XP Col -->
+        <!-- End XP Col -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-white">
+                    <h5 class="card-title text-black">Ladle Condition</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="LadleNo">Ladle No.</label>
+                            <input type="number" class="form-control" id="LadleNo" placeholder="" name="LadleNo">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="FeSi">Ladle Life</label>
+                            <input type="number" class="form-control" id="FeSi" placeholder="" name="FeSi">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="FeSi">Returned (MT)</label>
+                            <input type="number" class="form-control" id="FeSi" placeholder="" name="FeSi">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="FeSi">Pre-Heated</label>
+                            <input type="number" class="form-control" id="FeSi" placeholder="" name="FeSi">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="FeSi">Slag Zone</label>
+                            <input type="number" class="form-control" id="FeSi" placeholder="" name="FeSi">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="FeSi">Purging</label>
+                            <input type="number" class="form-control" id="FeSi" placeholder="" name="FeSi">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="FeSi">Temperature ℃</label>
+                            <input type="number" class="form-control" id="FeSi" placeholder="" name="FeSi">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End XP Col -->
+        <!-- End XP Col -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-white">
+                    <h5 class="card-title text-black">Consumables (KG)</h5>
+                    <h6 class="card-title text-black">EAF</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label for="CPC">CPC</label>
+                            <input type="number" class="form-control" id="CPC" placeholder="" name="CPC">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="FeSi">FeSi (KG)</label>
+                            <input type="number" class="form-control" id="FeSi" placeholder="" name="FeSi">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="heatno">SiMn (KG)</label>
+                            <input type="number" class="form-control" id="heatno" placeholder="" name="SiMn">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="FeMn">FeMn (KG)</label>
+                            <input type="number" class="form-control" id="FeMn" placeholder="" name="FeMn">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="AlBAR">Al-BAR (KG)</label>
+                            <input type="number" class="form-control" id="AlBAR" placeholder="" name="AlBAR">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="LIME">LIME (KG)</label>
+                            <input type="number" class="form-control" id="LIME" placeholder="" name="LIME">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-header bg-white">
+                    <h6 class="card-title text-black">LF</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label for="CPC">CPC</label>
+                            <input type="number" class="form-control" id="CPC" placeholder="" name="CPC">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="FeSi">FeSi (KG)</label>
+                            <input type="number" class="form-control" id="FeSi" placeholder="" name="FeSi">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="heatno">SiMn (KG)</label>
+                            <input type="number" class="form-control" id="heatno" placeholder="" name="SiMn">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="FeMn">FeMn (KG)</label>
+                            <input type="number" class="form-control" id="FeMn" placeholder="" name="FeMn">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="AlBAR">Al-BAR (KG)</label>
+                            <input type="number" class="form-control" id="AlBAR" placeholder="" name="AlBAR">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="LIME">LIME (KG)</label>
+                            <input type="number" class="form-control" id="LIME" placeholder="" name="LIME">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-header bg-white">
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label for="CaSi">CaSi Wire</label>
+                            <input type="number" class="form-control" id="CaSi" placeholder="" name="CaSi">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="Gcrush">G-Crush</label>
+                            <input type="number" class="form-control" id="Gcrush" placeholder="" name="Gcrush">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="INJCOKE">Injected COKE</label>
+                            <input type="number" class="form-control" id="INJCOKE" placeholder="" name="INJCOKE">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="DOLOLIME">DOLOLIME</label>
+                            <input type="number" class="form-control" id="DOLOLIME" placeholder="" name="DOLOLIME">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="DOLOMITE">DOLOMITE</label>
+                            <input type="number" class="form-control" id="DOLOMITE" placeholder="" name="DOLOMITE">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="CaF2">CaF2</label>
+                            <input type="number" class="form-control" id="CaF2" placeholder="" name="CaF2">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label for="RICEHUSK">
+                                RICE HUSK
+                            </label>
+                            <input type="number" class="form-control" id="RICEHUSK" placeholder="" name="RICEHUSK">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="ARGON">
+                                ARGON
+                            </label>
+                            <input type="number" class="form-control" id="ARGON" placeholder="" name="ARGON">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End XP Col -->
+        <!-- End XP Col -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-white">
+                    <h5 class="card-title text-black">Thermocouple Tips</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label for="TT900mmImport">T-T 900MM(IMPORT)</label>
+                            <input type="number" class="form-control" id="TT900mmImport" placeholder="" name="TT900mmImport">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="TT900mmLocal">T-T 900MM(LOCAL)</label>
+                            <input type="number" class="form-control" id="TT900mmLocal" placeholder="" name="TT900mmLocal">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="TT1200mm">T-T 1200MM</label>
+                            <input type="number" class="form-control" id="TT1200mm" placeholder="" name="TT1200mm">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="CELOXO2PROBE">CELOX/O2 PROBE</label>
+                            <input type="number" class="form-control" id="CELOXO2PROBE" placeholder="" name="CELOXO2PROBE">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End XP Col -->
+        <!-- End XP Col -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-white">
+                    <h5 class="card-title text-black">LF MeltShop Delays</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="delaysTable" style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Section</th>
+                                            <th>Start Time</th>
+                                            <th>End Time</th>
+                                            <th>Total Duration (MIN)</th>
+                                            <th>Reason</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                @Html.DropDownList("Delays[0].GROUP_ORD", ViewBag.Delay as SelectList, "-- Select Delay --",
+                                                    new { @class = "form-control", @name = "Delays[0].GROUP_ORD" })
+                                            </td>
+                                            <td>
+                                                <input type="time" class="form-control start-time" name="Delays[0].StartTime" />
+                                            </td>
+                                            <td>
+                                                <input type="time" class="form-control end-time" name="Delays[0].EndTime" />
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control total-duration" name="Delays[0].TotalDuration" readonly />
+                                            </td>
+                                            <td>
+                                                <textarea class="form-control" name="Delays[0].Reason"></textarea>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-success btn-sm addDRow">
+                                                    <i class="mdi mdi-note-plus"></i> Add Row
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div> <!-- table-responsive -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End XP Col -->
+    </div>
+    <!-- End XP Row -->
+</div>
+<!-- End XP Contentbar -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function () {
+        let delayIndex = 1;
+
+        $('#delaysTable').on('click', '.addDRow', function () {
+            const $table = $('#delaysTable tbody');
+            const $lastRow = $table.find('tr:last');
+            const $newRow = $lastRow.clone();
+
+            // Update name attributes
+            $newRow.find('select, input, textarea').each(function () {
+                const name = $(this).attr('name');
+                if (name) {
+                    const newName = name.replace(/\[\d+\]/, `[${delayIndex}]`);
+                    $(this).attr('name', newName);
+                    $(this).val('');
+                }
+            });
+
+            // Change button on previous row
+            $lastRow.find('.addDRow')
+                .removeClass('btn-success addDRow')
+                .addClass('btn-danger removeDRow')
+                .html('<i class="fa fa-trash"></i> Remove');
+
+            $table.append($newRow);
+            delayIndex++;
+        });
+
+        $('#delaysTable').on('click', '.removeDRow', function () {
+            $(this).closest('tr').remove();
+        });
+
+        // calculate duration
+        $('#delaysTable').on('change', '.start-time, .end-time', function () {
+            const $row = $(this).closest('tr');
+            const startTime = $row.find('.start-time').val();
+            const endTime = $row.find('.end-time').val();
+            const $duration = $row.find('.total-duration');
+
+            if (startTime && endTime) {
+                const start = parseTime(startTime);
+                const end = parseTime(endTime);
+                let diff = (end - start) / (1000 * 60); // difference in minutes
+                if (diff < 0) diff += 24 * 60; // handle overnight case
+                $duration.val(diff);
+            } else {
+                $duration.val('');
+            }
+        });
+
+        // helper to parse HH:mm into Date object
+        function parseTime(timeStr) {
+            const parts = timeStr.split(':');
+            const date = new Date();
+            date.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+            return date;
+        }
+    });
+</script>
