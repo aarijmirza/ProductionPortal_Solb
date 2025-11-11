@@ -2,6 +2,7 @@
 @{
     ViewBag.Title = "list";
     var delays = Model as List<DAL.Models.DelaysBLL>;
+    var plants = delays.Select(x => x.PlantName).Distinct().ToList();
 }
 
 <!-- Start XP Breadcrumbbar -->
@@ -22,6 +23,61 @@
     </div>
 </div>
 <!-- End XP Breadcrumbbar -->
+<!-- Filters Section -->
+<div class="xp-breadcrumbbar" style="padding: 50px 30px 0 30px;">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form id="filterForm" class="d-flex justify-content-between">
+
+                        <div class="d-flex">
+                            <div class="form-group mr-3">
+                                <label for="plantFilter" class="mr-2">Plant Name</label>
+                                <select id="plantFilter" class="form-control">
+                                    <option value="">All</option>
+                                    @foreach (var plant in plants)
+                                    {
+                                        <option value="@plant">@plant</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+
+                            <div class="form-group mr-3">
+                                <label for="fromDate" class="mr-2">From</label>
+                                <input type="date" id="fromDate" class="form-control" />
+                            </div>
+
+                            <div class="form-group mr-3">
+                                <label for="toDate" class="mr-2">To</label>
+                                <input type="date" id="toDate" class="form-control" />
+                            </div>
+
+                            <div class="form-group d-flex align-items-end mr-3">
+                                <button type="button" id="filterBtn" class="btn btn-primary mr-2">Filter</button>
+                                <button type="button" id="clearBtn" class="btn btn-secondary">Clear</button>
+                            </div>
+
+                            <div class="form-group d-flex align-items-end">
+                                <button type="button" id="exportExcel" class="btn btn-success mr-2">
+                                    <i class="fa fa-file-excel-o"></i> Export Excel
+                                </button>
+                                <button type="button" id="exportPdf" class="btn btn-danger mr-2">
+                                    <i class="fa fa-file-pdf-o"></i> Export PDF
+                                </button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Filter Section -->
 <!-- Start XP Contentbar -->
 <div class="xp-contentbar">
     <!-- Start XP Row -->
@@ -36,6 +92,7 @@
                                 <tr>
                                     <th>Date</th>
                                     <th>Heat #</th>
+                                    <th>Delay</th>
                                     <th>Plant Name</th>
                                     <th>Start Time</th>
                                     <th>End Time</th>
@@ -52,6 +109,7 @@
                                     <tr>
                                         <td>@(item.CreatedDate.ToString("yyyy-MM-dd", gregorian))</td>
                                         <td>@item.HeatNo</td>
+                                        <td>@item.GROUP_ORD</td>
                                         <td>@item.PlantName</td>
                                         <td>@item.StartTime</td>
                                         <td>@item.EndTime</td>
@@ -71,3 +129,111 @@
     <!-- End XP Row -->
 </div>
 <!-- End XP Contentbar -->
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var table = $('#xp-default-datatable').DataTable();
+
+        // Custom filter function
+        function filterTable() {
+            var plant = $('#plantFilter').val().toLowerCase();
+            var from = $('#fromDate').val();
+            var to = $('#toDate').val();
+
+            // Convert date inputs to comparable format
+            var fromDate = from ? new Date(from) : null;
+            var toDate = to ? new Date(to) : null;
+
+            table.rows().every(function () {
+                var data = this.data();
+                var dateStr = data[0]; // "yyyy-MM-dd"
+                var rowPlant = data[2].toLowerCase();
+
+                var rowDate = new Date(dateStr);
+                var visible = true;
+
+                // Filter by Plant
+                if (plant && rowPlant !== plant) {
+                    visible = false;
+                }
+
+                // Filter by Date Range
+                if (fromDate && rowDate < fromDate) visible = false;
+                if (toDate && rowDate > toDate) visible = false;
+
+                if (visible) $(this.node()).show();
+                else $(this.node()).hide();
+            });
+        }
+
+        // Apply Filter Button
+        $('#filterBtn').on('click', function () {
+            filterTable();
+        });
+
+        // Clear Filters Button
+        $('#clearBtn').on('click', function () {
+            $('#plantFilter').val('');
+            $('#fromDate').val('');
+            $('#toDate').val('');
+            $('#filterBtn').click(); // Refresh table
+        });
+    });
+
+$(document).ready(function () {
+    // 1️⃣ Set default dates: from = 1st of current month, to = today
+    var today = new Date();
+    var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    function formatDate(d) {
+        var month = (d.getMonth() + 1).toString().padStart(2, '0');
+        var day = d.getDate().toString().padStart(2, '0');
+        return d.getFullYear() + '-' + month + '-' + day;
+    }
+
+    $('#fromDate').val(formatDate(firstDay));
+    $('#toDate').val(formatDate(today));
+
+    // 2️⃣ Get URL for export dynamically
+    var exportExcelUrl = '@Url.Action("ExportExcel", "Other")';
+    var exportPDFUrl = '@Url.Action("ExportPDF", "Other")';
+
+    // 3️⃣ Handle export button click
+    $('#exportExcel').click(function () {
+    var plant = $('#plantFilter').val() || ''; // default to empty if not selected
+    var from = $('#fromDate').val() || '';      // default to empty
+    var to = $('#toDate').val() || '';          // default to empty
+
+    // Build URL with query parameters
+    var url = exportExcelUrl +
+    '?plant=' + encodeURIComponent(plant) +
+    '&from=' + encodeURIComponent(from) +
+    '&to=' + encodeURIComponent(to);
+
+    console.log('Export Excel URL:', url); // debug: check URL in console
+
+    // Redirect to trigger Excel download
+    window.location.href = url;
+    });
+
+    // 3️⃣ Handle export button click
+    $('#exportPdf').click(function () {
+        var plant = $('#plantFilter').val() || ''; // default to empty if not selected
+        var from = $('#fromDate').val() || '';      // default to empty
+        var to = $('#toDate').val() || '';          // default to empty
+
+        // Build URL with query parameters
+        var url = exportPDFUrl +
+            '?plant=' + encodeURIComponent(plant) +
+            '&from=' + encodeURIComponent(from) +
+            '&to=' + encodeURIComponent(to);
+
+        console.log('Export PDF URL:', url); // debug: check URL in console
+
+        // Redirect to trigger Excel download
+        window.location.href = url;
+    });
+});
+</script>

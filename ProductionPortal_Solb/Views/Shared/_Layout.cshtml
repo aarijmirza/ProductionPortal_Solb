@@ -111,7 +111,7 @@
                     <ul class="xp-vertical-menu">
                         <li class="xp-vertical-header">Main</li>
                         <li>
-                            <a href="">
+                            <a href="@Url.Action("Index", "Home")">
                                 <i class="icon-speedometer"></i><span>Dashboard</span>
                             </a>
                         </li>
@@ -133,6 +133,15 @@
                                 <li><a href="@Url.Action("list", "LFMeltShop")">View Record</a></li>
                             </ul>
                         </li>
+                        <li>
+                            <a href="javaScript:void();">
+                                <i class="icon-social-vkontakte"></i><span>CCM MELTSHOP</span><i class="icon-arrow-right pull-right"></i>
+                            </a>
+                            <ul class="xp-vertical-submenu">
+                                <li><a href="@Url.Action("add", "CCM")">Add Record</a></li>
+                                <li><a href="@Url.Action("list", "CCM")">View Record</a></li>
+                            </ul>
+                        </li>
                         <li class="xp-vertical-header">Extras</li>
                         <li>
                             <a href="javaScript:void();">
@@ -144,7 +153,7 @@
                         </li>
                         <li>
                             <a href="javaScript:void();">
-                                <i class="icon-lock"></i><span>Setting</span><i class="icon-arrow-right pull-right"></i>
+                                <i class="icon-settings"></i><span>Setting</span><i class="icon-arrow-right pull-right"></i>
                             </a>
                             <ul class="xp-vertical-submenu">
                                 <li><a href="@Url.Action("list", "UserRole")">User Role</a></li>

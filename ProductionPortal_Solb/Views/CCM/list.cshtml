@@ -1,21 +1,21 @@
 ﻿@using System.Globalization
 @{
     ViewBag.Title = "list";
-    var requests = Model as List<DAL.Models.LFMeltShopBLL>;
+    var requests = Model as List<DAL.Models.EAFMeltShopBLL>;
 }
 
 <!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
     <div class="row">
         <div class="col-md-6 col-lg-6">
-            <h4 class="xp-page-title">LF MeltShop Record</h4>
+            <h4 class="xp-page-title">CCM MeltShop Record</h4>
         </div>
         <div class="col-md-6 col-lg-6">
             <div class="xp-breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
-                    <li class="breadcrumb-item"><a href="#">LF MeltShop</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">LF MeltShop Record</li>
+                    <li class="breadcrumb-item"><a href="#">CCM MeltShop</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">CCM MeltShop Record</li>
                 </ol>
             </div>
         </div>
@@ -70,52 +70,12 @@
     <!-- Start XP Row -->
     <div class="row">
         <!-- End XP Col -->
-        <div class="col-lg-12">
-            <div class="card m-b-30">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="xp-default-datatable" class="display table table-striped table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Heat #</th>
-                                    <th>Shift</th>
-                                    <th>Grade</th>
-                                    <th>Temperature</th>
-                                    <th>Heat Start Time</th>
-                                    <th>Heat End Time</th>
-                                    <th>Power Consumption (KWH)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in requests)
-                                {
-                                    var gregorian = new CultureInfo("en-US");
-                                    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
-                                    <tr>
-                                        <td>@item.CreatedDate</td>
-                                        <td>@item.HeatNo</td>
-                                        <td>@item.Shift</td>
-                                        <td>@item.Grade</td>
-                                        <td>@item.TemperatureC</td>
-                                        <td>@item.HeatStartTime</td>
-                                        <td>@item.HeatEndTime</td>
-                                        <td>@item.PowerConsumption</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
         <!-- End XP Col -->
         <!-- Start XP Col -->
     </div>
     <!-- End XP Row -->
 </div>
 <!-- End XP Contentbar -->
-
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script>
@@ -124,7 +84,6 @@
 
         // Custom filter function
         function filterTable() {
-            var plant = $('#plantFilter').val().toLowerCase();
             var from = $('#fromDate').val();
             var to = $('#toDate').val();
 
@@ -139,11 +98,6 @@
 
                 var rowDate = new Date(dateStr);
                 var visible = true;
-
-                // Filter by Plant
-                if (plant && rowPlant !== plant) {
-                    visible = false;
-                }
 
                 // Filter by Date Range
                 if (fromDate && rowDate < fromDate) visible = false;
@@ -161,7 +115,6 @@
 
         // Clear Filters Button
         $('#clearBtn').on('click', function () {
-            $('#plantFilter').val('');
             $('#fromDate').val('');
             $('#toDate').val('');
             $('#filterBtn').click(); // Refresh table
@@ -183,8 +136,8 @@
     $('#toDate').val(formatDate(today));
 
     // 2️⃣ Get URL for export dynamically
-    var exportExcelUrl = '@Url.Action("ExportExcel", "LFMeltShop")';
-    var exportPDFUrl = '@Url.Action("ExportPDF", "LFMeltShop")';
+    var exportExcelUrl = '@Url.Action("ExportExcel", "CCM")';
+    var exportPDFUrl = '@Url.Action("ExportPDF", "CCM")';
 
     // 3️⃣ Handle export button click
     $('#exportExcel').click(function () {

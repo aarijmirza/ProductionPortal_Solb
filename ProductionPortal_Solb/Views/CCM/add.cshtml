@@ -1,0 +1,233 @@
+﻿@model DAL.Models.ViewModel.EAFMeltShopVM
+
+@{
+    ViewBag.Title = "add";
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">CCM MeltShop</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index" ,"Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">CCM MeltShop</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<!-- Start XP Contentbar -->
+<div class="xp-contentbar">
+    <!-- Start XP Row -->
+    <form action="/CCM/add" id="addprofileform" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Start XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white" style=" ALIGN-SELF: end;">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="date">Date</label>
+                                <input type="date" class="form-control" id="date" name="date" placeholder="Date" readonly>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="shift">Shift</label>
+                                <select id="shift" class="form-control" name="Shift">
+                                    <option selected>Choose...</option>
+                                    <option>Morning</option>
+                                    <option>Evening</option>
+                                    <option>Night</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="ddlgrade">Grade</label>
+                                @Html.DropDownListFor(model => model.GRADE_ID,
+                                    ViewBag.Grade as SelectList,
+                                    "-- Select Grade --",
+                                    new { @class = "form-control", id = "ddlgrade" })
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="heatno">Heat #</label>
+                                <input type="text" class="form-control" id="heatno" name="heatno" placeholder="Heat #">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="sequenceheat">Sequence Heat</label>
+                                <input type="number" class="form-control" id="sequenceheat" name="SequenceHeat">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="LadleNo">Ladle No.</label>
+                                <input type="number" class="form-control" id="LadleNo" placeholder="" name="LadleNo">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Temperature ℃</label>
+                                <input type="number" class="form-control" id="FeSi" placeholder="" name="LadleTemperature">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Molten Steel Wt (ton)</label>
+                                <input type="number" class="form-control" id="FeSi" placeholder="" name="MoltenSteelWt">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="sequenceheat">Time on Turret</label>
+                                <input type="number" class="form-control" id="sequenceheat" name="TurretTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="LadleNo">Plates Life</label>
+                                <input type="number" class="form-control" id="LadleNo" placeholder="" name="PlateLife">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Open Time</label>
+                                <input type="time" class="form-control" id="FeSi" placeholder="" name="OpenTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Close Time</label>
+                                <input type="time" class="form-control" id="FeSi" placeholder="" name="CloseTime">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="sequenceheat">Tundish No.</label>
+                                <input type="number" class="form-control" id="sequenceheat" name="TundishNo">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="LadleNo">Tundish Life (heats)</label>
+                                <input type="number" class="form-control" id="LadleNo" placeholder="" name="TundishLife">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Shroud Life (heats)</label>
+                                <input type="number" class="form-control" id="FeSi" placeholder="" name="ShroudLife">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Steel Temperature</label>
+                                <input type="number" class="form-control" id="FeSi" placeholder="" name="SteelTemperature">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="sequenceheat">Billet Size (mm2)</label>
+                                <input type="number" class="form-control" id="sequenceheat" name="BilletSize">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="LadleNo">Billet Lenght (m)</label>
+                                <input type="number" class="form-control" id="LadleNo" placeholder="" name="BilletLenght">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Casting Time (Min)</label>
+                                <input type="number" class="form-control" id="FeSi" placeholder="" name="CastingTime">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Billet Number</label>
+                                <input type="number" class="form-control" id="FeSi" placeholder="" name="BilletNumber">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Productivity (ton billet/hr)</label>
+                                <input type="number" class="form-control" id="FeSi" placeholder="" name="Productivity">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+            <!-- End XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title text-black">LF Leave Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="LadleNo">C %</label>
+                                <input type="number" class="form-control" id="C" placeholder="" name="C">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Si %</label>
+                                <input type="number" class="form-control" id="Si" placeholder="" name="Si">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Mn %</label>
+                                <input type="number" class="form-control" id="Mn" placeholder="" name="Mn">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">S %</label>
+                                <input type="number" class="form-control" id="S" placeholder="" name="S">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">T.E.%</label>
+                                <input type="number" class="form-control" id="TE" placeholder="" name="TE">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Mn / Si</label>
+                                <input type="number" class="form-control" id="MnSi" placeholder="" name="MnSi">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Mn / S</label>
+                                <input type="number" class="form-control" id="MnS" placeholder="" name="MnS">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+            <!-- End XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title text-black">CCM Chemical Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="LadleNo">C %</label>
+                                <input type="number" class="form-control" id="C" placeholder="" name="C">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Si %</label>
+                                <input type="number" class="form-control" id="Si" placeholder="" name="Si">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">Mn %</label>
+                                <input type="number" class="form-control" id="Mn" placeholder="" name="Mn">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">P %</label>
+                                <input type="number" class="form-control" id="P" placeholder="" name="P">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">S %</label>
+                                <input type="number" class="form-control" id="S" placeholder="" name="S">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="FeSi">T.E.%</label>
+                                <input type="number" class="form-control" id="TE" placeholder="" name="TE">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+        </div>
+    </form>
+    <!-- End XP Row -->
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("date").value = today;
+</script>
