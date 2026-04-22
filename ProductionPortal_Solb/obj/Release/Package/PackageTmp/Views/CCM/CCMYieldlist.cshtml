@@ -1,0 +1,258 @@
+﻿@using System.Globalization
+@{
+    ViewBag.Title = "CCMYieldlist";
+    var data = Model as List<DAL.Models.CCMYeildBLL>;
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">CCM Yield Break Down Record</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">CCM  Yield Break Down</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<!-- Filters Section -->
+<div class="xp-breadcrumbbar" style="padding: 50px 30px 0 30px;">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form id="filterForm" class="d-flex justify-content-between">
+
+                        <div class="d-flex">
+                            <div class="form-group mr-3">
+                                <label for="fromDate" class="mr-2">From</label>
+                                <input type="date" id="fromDate" class="form-control" />
+                            </div>
+
+                            <div class="form-group mr-3">
+                                <label for="toDate" class="mr-2">To</label>
+                                <input type="date" id="toDate" class="form-control" />
+                            </div>
+
+                            <div class="form-group d-flex align-items-end mr-3">
+                                <button type="button" id="filterBtn" class="btn btn-primary mr-2">Filter</button>
+                                <button type="button" id="clearBtn" class="btn btn-secondary">Clear</button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <div class="form-group d-flex align-items-end mr-3">
+                                <a id="addSampleBtn" class="btn btn-info text-white" href="@Url.Action("AddYieldRecord", "CCM")">
+                                    <i class="fa fa-plus-circle"></i> Add Record
+                                </a>
+                            </div>
+                            <div class="form-group d-flex align-items-end">
+                                @*<button type="button" id="exportExcel" class="btn btn-success mr-2">
+                                        <i class="fa fa-file-excel-o"></i> Export Excel
+                                    </button>*@
+                                <button type="button" id="exportPdf" class="btn btn-danger mr-2">
+                                    <i class="fa fa-file-pdf-o"></i> Export PDF
+                                </button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Filter Section -->
+<!-- Start XP Contentbar -->
+<div class="xp-contentbar">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Heat #</th>
+                                    <th>Tundish Skull</th>
+                                    <th>Process Rejected Billet</th>
+                                    <th>Short Billet < 6m</th>
+                                    <th>Head / Tail</th>
+                                    <th>Comment</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in data)
+                                {
+                                    var gregorian = new CultureInfo("en-US");
+                                    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+                                    <tr>
+                                        <td>@(item.Date.ToString("dd-MM-yyyy", gregorian))</td>
+                                        <td>@item.HeatNo</td>
+                                        <td>@item.TundishSkull</td>
+                                        <td>@item.ProcessRejectedBillet</td>
+                                        <td>@item.ShortBillet6m</td>
+                                        <td>@item.HeadTail</td>
+                                        <td>@item.Comment</td>
+                                        <td>
+                                            @*<a href="@Url.Action("details", "CCM", new { ID = item.ID })" class="btn btn-sm btn-info" onclick="event.stopPropagation();">
+                                                    <i class="mdi mdi-book-open-page-variant"></i>
+                                                </a>*@
+                                            <a href="javascript:void(0);"
+                                               onclick="confirmDelete('@item.HeatNo')"
+                                               class="btn btn-sm btn-danger">
+                                                <i class="mdi mdi-trash-can"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Contentbar -->
+<!-- End XP Contentbar -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var table = $('#xp-default-datatable').DataTable();
+
+        // Custom filter function
+        function filterTable() {
+            var from = $('#fromDate').val();
+            var to = $('#toDate').val();
+
+            // Convert date inputs to comparable format
+            var fromDate = from ? new Date(from) : null;
+            var toDate = to ? new Date(to) : null;
+
+            table.rows().every(function () {
+                var data = this.data();
+                var dateStr = data[0]; // "yyyy-MM-dd"
+                var rowPlant = data[2].toLowerCase();
+
+                var rowDate = new Date(dateStr);
+                var visible = true;
+
+                // Filter by Date Range
+                if (fromDate && rowDate < fromDate) visible = false;
+                if (toDate && rowDate > toDate) visible = false;
+
+                if (visible) $(this.node()).show();
+                else $(this.node()).hide();
+            });
+        }
+
+        // Apply Filter Button
+        $('#filterBtn').on('click', function () {
+            filterTable();
+        });
+
+        // Clear Filters Button
+        $('#clearBtn').on('click', function () {
+            $('#fromDate').val('');
+            $('#toDate').val('');
+            $('#filterBtn').click(); // Refresh table
+        });
+    });
+
+    $(document).ready(function () {
+    // 1️⃣ Set default dates: from = 1st of current month, to = today
+    var today = new Date();
+    var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    function formatDate(d) {
+        var month = (d.getMonth() + 1).toString().padStart(2, '0');
+        var day = d.getDate().toString().padStart(2, '0');
+        return d.getFullYear() + '-' + month + '-' + day;
+    }
+
+    $('#fromDate').val(formatDate(firstDay));
+    $('#toDate').val(formatDate(today));
+
+    // 2️⃣ Get URL for export dynamically
+    var exportExcelUrl = '@Url.Action("ExportExcel", "CCM")';
+    var exportPDFUrl = '@Url.Action("CCMYeildPDF", "CCM")';
+
+    // 3️⃣ Handle export button click
+    $('#exportExcel').click(function () {
+    var from = $('#fromDate').val() || '';      // default to empty
+    var to = $('#toDate').val() || '';          // default to empty
+
+    // Build URL with query parameters
+    var url = exportExcelUrl +
+    '&from=' + encodeURIComponent(from) +
+    '&to=' + encodeURIComponent(to);
+
+    console.log('Export Excel URL:', url); // debug: check URL in console
+
+    // Redirect to trigger Excel download
+    window.location.href = url;
+    });
+
+    // 3️⃣ Handle export button click
+        $('#exportPdf').click(function () {
+            debugger
+        var from = $('#fromDate').val() || '';      // default to empty
+        var to = $('#toDate').val() || '';          // default to empty
+
+        // Build URL with query parameters
+        // Correct: starts with ? for the first parameter
+        var url = exportPDFUrl + '?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
+
+        console.log('Export PDF URL:', url); // debug: check URL in console
+
+        // Redirect to trigger Excel download
+        window.location.href = url;
+    });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+        var msg = '@TempData["SuccessMessage"]';
+        if (msg) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: msg,
+                confirmButtonColor: '#3085d6'
+            });
+        }
+    });
+
+    function confirmDelete(heatNo) {
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This record will be permanently deleted.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+                // Redirect to delete action
+                window.location.href = '/CCM/delete?heatNo=' + heatNo;
+            }
+        });
+    }
+</script>

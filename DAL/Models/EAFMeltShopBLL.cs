@@ -65,7 +65,7 @@ namespace DAL.Models
         public decimal CERAMIC_COATED_PIPE { get; set; }
         public int StatusID { get; set; }
         public string CreatedBy { get; set; }
-        public DateTime CreatedDate { get; set; }
+        public DateTime? CreatedDate { get; set; }
         public string UpdatedBy { get; set; } = null;
         public DateTime? UpdatedDate { get; set; }
 

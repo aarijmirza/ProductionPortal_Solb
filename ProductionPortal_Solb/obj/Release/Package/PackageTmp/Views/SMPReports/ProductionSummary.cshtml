@@ -1,0 +1,525 @@
+﻿@using System.Globalization
+
+@{
+                                                            Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Daily Production Summary</title>
+
+    <!-- Fevicon -->
+    <link rel="shortcut icon" href="~/assets/images/favicon.png">
+    <!-- Start CSS --> <!-- Chartist Chart CSS -->
+    <link rel="stylesheet" href="~/assets/plugins/chartist-js/chartist.min.css">
+    <!-- Switchery CSS -->
+    <link href="~/assets/plugins/switchery/switchery.min.css" rel="stylesheet">
+    <!-- Datepicker CSS -->
+    <link href="~/assets/plugins/datepicker/datepicker.min.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/icons.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/style.css" rel="stylesheet" type="text/css">
+    <!-- End CSS --> <!-- DataTables CSS -->
+    <link href="~/assets/plugins/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/plugins/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+    <!-- Responsive Datatable CSS -->
+    <link href="~/assets/plugins/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+
+
+    <style>
+
+        @@media print {
+            canvas {
+                max-width: 100% !important;
+                height: 100% !important;
+            }
+
+            .card {
+                page-break-inside: avoid;
+            }
+
+            .piechart2 {
+                height: 225px !important;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            color: #000 !important;
+            padding: 0;
+        }
+
+        .card {
+            border: 1px solid lightgray;
+        }
+
+        p {
+            line-height: 1.3;
+            font-size: 15px;
+            font-weight: bolder;
+            margin-bottom: 10px;
+        }
+
+        .sheet {
+            margin: 10px auto;
+            border: 1px solid #000;
+            padding: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 12px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f2f2f2;
+            font-size: 15px;
+        }
+
+        .red {
+            color: #c00000;
+            font-weight: bold;
+        }
+
+        .text-top {
+            vertical-align: top;
+        }
+
+        .logo-cell img {
+            max-height: 70px;
+            margin-top: 10px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .legend-cell {
+            font-size: 9px;
+        }
+
+        @@media print {
+            body {
+                margin: 0;
+            }
+
+            .sheet {
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sheet">
+        <!-- LOGO + TITLES -->
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width: 90px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+
+                <td class="center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">STEEL MAKING PLANT</div>
+                    <div class="sub-header">PRODUCTION SUMMARY</div>
+                </td>
+            </tr>
+        </table>
+
+        <table style="margin-top:20px;">
+            <tr>
+                <hr style="border:1px solid #0094ff" />
+            </tr>
+            <tr>
+                <td style="border:none">
+                    <div class="card m-b-30">
+                        <div class="card-body">
+                            <div class="xp-widget-box text-center">
+                                <p class="text-black">
+                                    DAILY PRODUCTION
+                                </p>
+                                <h4 class="xp-counter text-success m-t-20">2580 t</h4>
+                                <p class="mb-0 f-w-5 text-muted">
+                                    Plan 2295 t (+19.4%)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+                <td style="border:none">
+                    <div class="card m-b-30">
+                        <div class="card-body">
+                            <div class="xp-widget-box text-center">
+                                <p class="text-black">MONTH TO DATE</p>
+                                <h4 class="xp-counter text-info m-t-20">10992 t</h4>
+                                <p class="mb-0 f-w-5 text-muted">
+                                    Target On Track
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+                <td style="border:none">
+                    <div class="card m-b-30">
+                        <div class="card-body">
+                            <div class="xp-widget-box text-center">
+                                <p class="text-black">YEILD (DAY)</p>
+                                <h4 class="xp-counter text-info m-t-20">87%</h4>
+                                <p class="mb-0 f-w-5 text-muted">
+                                    Month Avg 86%
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+                <td style="border:none">
+                    <div class="card m-b-30">
+                        <div class="card-body">
+                            <div class="xp-widget-box text-center">
+                                <p class="text-black">AVG TON/HEAT</p>
+                                <h4 class="xp-counter text-info m-t-20">137.0</h4>
+                                <p class="mb-0 f-w-5 text-muted">
+                                    Steady Performance
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+                <td style="border:none">
+                    <div class="card m-b-30">
+                        <div class="card-body">
+                            <div class="xp-widget-box text-center">
+                                <p class="text-black">RECORD HIGH</p>
+                                <h4 class="xp-counter text-info m-t-20">3104 t</h4>
+                                <p class="mb-0 f-w-5 text-muted">
+                                    Acheived: 02-01-2026
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+            </tr>
+
+        </table>
+
+        <div class="row">
+
+            <!-- LEFT: Production Plan vs Actual -->
+            <div class="col-lg-6 col-md-6 col-sm-6">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title text-info">Production Plan vs Actual</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="xp-chartjs-bar-chart" class="xp-chartjs-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Both charts in ONE column -->
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title text-info">Material Consumption & Composition</h5>
+                    </div>
+
+                    <div class="card-body piechart2" style="height: 390px;">
+                        <div class="row align-items-center">
+
+                            <!-- LEFT: Consumption Bars -->
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+
+                                <!-- Fe-Si -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Fe-Si (kg/t)</span>
+                                        <strong>1.7 / 2.0</strong>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" style="width:85%"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Lime -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Lime (kg/t)</span>
+                                        <strong>32.4 / 20.0</strong>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-danger" style="width:100%"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Power -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Power (kwh/t)</span>
+                                        <strong>674 / 602</strong>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-danger" style="width:100%"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- RIGHT: Scrap Mix Donut -->
+                            <div class="col-lg-6 col-md-6 col-sm-6 text-center">
+
+                                <h6 class="mb-3">Scrap Mix</h6>
+
+                                <div class="donut-container">
+                                    <canvas id="xp-chartjs-doughnut-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8 col-md-8 col-sm-8 col-xs-8">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <!-- Titles, Text, and Links Card -->
+                        <div class="card m-b-30" style="border-left: 5px solid dodgerblue; color: dodgerblue; font-size: 15px;">
+                            <div class="card-body">
+                                <span>Delay Analysis</span>
+                                <strong>(Total: 249 min)</strong>
+                            </div>
+                        </div>
+                        <!-- Titles, Text, and Links Card -->
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                        <!-- Titles, Text, and Links Card -->
+                        <div class="card m-b-30" style="border-left: 5px solid dodgerblue; text-align: center; font-size: 13px;">
+                            <div class="card-body">
+                                <span>Operation</span>
+                                <strong>228 min</strong>
+                            </div>
+                        </div>
+                        <!-- Titles, Text, and Links Card -->
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                        <!-- Titles, Text, and Links Card -->
+                        <div class="card m-b-30" style="border-left: 5px solid coral; text-align: center; font-size: 13px;">
+                            <div class="card-body">
+                                <span>Mechanical</span>
+                                <strong>19 min</strong>
+                            </div>
+                        </div>
+                        <!-- Titles, Text, and Links Card -->
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                        <!-- Titles, Text, and Links Card -->
+                        <div class="card m-b-30" style="border-left: 5px solid darkred; text-align: center; font-size: 13px;">
+                            <div class="card-body">
+                                <span>Refractory</span>
+                                <strong>2 min</strong>
+                            </div>
+                        </div>
+                        <!-- Titles, Text, and Links Card -->
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                        <!-- Titles, Text, and Links Card -->
+                        <div class="card m-b-30" style="border-left: 5px solid mediumseagreen; text-align: center; font-size: 13px;">
+                            <div class="card-body">
+                                <span>Electrical</span>
+                                <strong>0 min</strong>
+                            </div>
+                        </div>
+                        <!-- Titles, Text, and Links Card -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <!-- Titles, Text, and Links Card -->
+                        <div class="card m-b-30">
+                            <div class="card-body">
+                                <h5 class="card-title" style=" border-left: 3px solid dodgerblue; padding-left: 10px; color:dodgerblue">Billet Quality</h5>
+                                <h5 style="color: mediumseagreen;  text-align:center; font-size:30px;">100%</h5>
+                                <p style="text-align:center; font-size: 11px;">Prime Grade</p>
+                                <div style="display: flex; justify-content: space-between; font-size:8px;">
+                                    <p class="text-muted" style="font-size:10px;">Rejected</p>
+                                    <p class="text-muted" style="font-size:10px;">Short</p>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size:8px;">
+                                    <p style="font-size:10px;">0.00%</p>
+                                    <p style="font-size:10px;">0.00%</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Titles, Text, and Links Card -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Start JS -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/popper.min.js"></script>
+    <script src="~/assets/js/bootstrap.min.js"></script>
+    <script src="~/assets/js/modernizr.min.js"></script>
+    <script src="~/assets/js/detect.js"></script>
+    <script src="~/assets/js/jquery.slimscroll.js"></script>
+    <script src="~/assets/js/sidebar-menu.js"></script>
+
+    <!-- Chart JS -->
+    <script src="~/assets/plugins/chart.js/chart.min.js"></script>
+    <script src="~/assets/plugins/chart.js/chart-bundle.min.js"></script>
+    <script src="~/assets/js/init/chartjs-init.js"></script>
+
+    <!-- Main JS -->
+    <script src="~/assets/js/main.js"></script>
+    <!-- End JS -->
+
+
+    <script>
+        /* -----  Chartjs - Bar Chart  ----- */
+        var xpBarChartID = document.getElementById("xp-chartjs-bar-chart").getContext('2d');
+        var xpBarChart = new Chart(xpBarChartID, {
+            type: 'bar',
+            data: {
+                labels: ['Day', 'Month'],
+                datasets: [
+                    {
+                        label: 'Plan',
+                        backgroundColor: '#e1e4e9',
+                        borderColor: '#e1e4e9',
+                        barThickness: 2,
+                        data: [35, 60]
+                    },
+                    {
+                        label: 'Actual',
+                        backgroundColor: '#2bcd72',
+                        borderColor: '#2bcd72',
+                        barThickness: 2,
+                        data: [50, 70]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                legend: {
+                    position: 'top'
+                },
+
+                scales: {
+                    xAxes: [{
+                        categoryPercentage: 0.25,   // 🔑 controls group width
+                        barPercentage: 0.75,        // 🔑 spacing between bars
+                        gridLines: {
+                            color: '#e1e4e9',
+                            borderDash: [3]
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        },
+                        gridLines: {
+                            color: '#e1e4e9',
+                            borderDash: [3]
+                        }
+                    }]
+                }
+            }
+        });
+
+        /* -----  Chartjs - Doughnut Chart  ----- */
+        var xpDoughnutChartID = document.getElementById("xp-chartjs-doughnut-chart").getContext('2d');
+        var xpDoughnutChart = new Chart(xpDoughnutChartID, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [50, 50],
+                    backgroundColor: ["brown", "yellow"],
+                    label: 'Dataset 1'
+                }],
+                labels: ['Local', 'DRI']
+            },
+            options: {
+                responsive: true,
+                cutoutPercentage: 75,
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: false,
+                    text: 'Chart.js Doughnut Chart'
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

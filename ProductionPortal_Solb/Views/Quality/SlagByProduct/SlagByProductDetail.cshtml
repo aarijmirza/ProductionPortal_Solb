@@ -1,0 +1,161 @@
+﻿@model DAL.Models.SlagByProductAnalysisBLL
+
+@{
+    ViewBag.Title = "Slag By Product - Details";
+    var m = Model ?? new DAL.Models.SlagByProductAnalysisBLL();
+    var samples = m.Samples ?? new List<DAL.Models.SlagSampleAnalysisBLL>();
+}
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6">
+            <h4 class="xp-page-title">Slag By Product</h4>
+        </div>
+        <div class="col-md-6 text-right">
+            <a href="@Url.Action("SlagByProductList","Quality")" class="btn btn-secondary btn-sm">Back</a>
+            <a href="@Url.Action("AddSlagByProduct","Quality", new { id = m.ID })" class="btn btn-primary btn-sm">Edit</a>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="row">
+        <div class="col-lg-12">
+
+            <!-- MASTER CARD -->
+            <div class="card m-b-30">
+                <div class="card-header bg-white">
+                    <h5 class="card-title d-inline">Record Details</h5>
+                    <span class="float-right badge badge-info" style="font-size:14px;">
+                        ID: @m.ID
+                    </span>
+                </div>
+
+                <div class="card-body">
+                    <div class="form-row">
+
+                        <div class="form-group col-md-3">
+                            <label>Production Date</label>
+                            <input type="text" class="form-control" readonly
+                                   value="@(m.DateOfProduction?.ToString("MM/dd/yyyy") ?? "")" />
+                        </div>
+
+                        <div class="form-group col-md-3">
+                            <label>Heat #</label>
+                            <input type="text" class="form-control" readonly value="@m.HeatNo" />
+                        </div>
+
+                        <div class="form-group col-md-3">
+                            <label>Certificate #</label>
+                            <input type="text" class="form-control" readonly value="@m.CertificateNo" />
+                        </div>
+
+                        <div class="form-group col-md-3">
+                            <label>Analysis Date</label>
+                            <input type="text" class="form-control" readonly
+                                   value="@(m.DateOfAnalysis?.ToString("MM/dd/yyyy") ?? "")" />
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- RADIO DISPLAY (READONLY LOOK) -->
+                    <div class="form-row mt-2">
+                        <div class="col-md-2">@((m.ByProductType == "EAF") ? "✔ EAF" : "")</div>
+                        <div class="col-md-2">@((m.ByProductType == "LF") ? "✔ LF" : "")</div>
+                        <div class="col-md-2">@((m.ByProductType == "TS") ? "✔ TS" : "")</div>
+                        <div class="col-md-2">@((m.ByProductType == "Dust") ? "✔ Dust" : "")</div>
+                        <div class="col-md-2">@((m.ByProductType == "Scale") ? "✔ Scale" : "")</div>
+                        <div class="col-md-2">@((m.ByProductType == "Sludge") ? "✔ Sludge" : "")</div>
+                    </div>
+
+                </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- DETAIL / SAMPLES CARD -->
+            <div class="card m-b-30">
+                <div class="card-header bg-white">
+                    <h5 class="card-title d-inline">Analysis Result</h5>
+                    <span class="float-right badge badge-secondary" style="font-size:14px;">
+                        Total Samples:
+                    </span>
+                </div>
+
+                <div class="card-body">
+
+                    @if (samples == null)
+                    {
+                        <div class="alert alert-info mb-0">
+                            No sample entries found for this record.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Sample Code</th>
+                                        <th>Sample Time</th>
+                                        <th>CaO</th>
+                                        <th>MgO</th>
+                                        <th>SiO2</th>
+                                        <th>Al2O3</th>
+                                        <th>Fe2O3</th>
+                                        <th>S</th>
+                                        <th>MnO</th>
+                                        <th>Cr2O3</th>
+                                        <th>P2O5</th>
+                                        <th>V2O5</th>
+                                        <th>TiO2</th>
+                                        <th>ZnO</th>
+                                        <th>Total-Fe</th>
+                                        <th>Basicity4</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var s in samples)
+                                    {
+                                        <tr>
+                                            <td>@s.SampleCode</td>
+                                            <td>@(s.SampleTime.HasValue ? s.SampleTime.Value.ToString(@"hh\:mm") : "")</td>
+
+                                            <td>@s.CaO</td>
+                                            <td>@s.MgO</td>
+                                            <td>@s.SiO2</td>
+                                            <td>@s.Al2O3</td>
+                                            <td>@s.Fe2O3</td>
+                                            <td>@s.S</td>
+                                            <td>@s.MnO</td>
+                                            <td>@s.Cr2O3</td>
+                                            <td>@s.P2O5</td>
+                                            <td>@s.V2O5</td>
+                                            <td>@s.TiO2</td>
+                                            <td>@s.ZnO</td>
+                                            <td>@s.TotalFe</td>
+                                            <td>@s.Basicity4</td>
+                                        </tr>
+
+                                        if (!string.IsNullOrWhiteSpace(s.Comment))
+                                        {
+                                            <tr>
+                                                <td class="font-weight-bold" style="width:140px;">Comments</td>
+                                                <td colspan="15">@s.Comment</td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

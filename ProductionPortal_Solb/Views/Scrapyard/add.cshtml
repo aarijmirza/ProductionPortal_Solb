@@ -1,0 +1,212 @@
+﻿@{
+    ViewBag.Title = "add";
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Scrapyard</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index" ,"Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">Scrapyard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<!-- Start XP Contentbar -->
+<div class="xp-contentbar">
+    <!-- Start XP Row -->
+    <form action="/Scrapyard/add" id="addscrapform" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Start XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white" style=" ALIGN-SELF: end;">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="date">Date</label>
+                                <input type="date" class="form-control" id="date" name="Date" placeholder="Date" readonly>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="time">Time</label>
+                                <input type="time" class="form-control" id="time" name="time" placeholder="time">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="time">Heat #</label>
+                                <input type="text" class="form-control" id="heatno" name="heatno" placeholder="Heat #">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+            <!-- Start XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title">Material Inputs</h5>
+                        <button type="button" class="btn btn-success btn-sm float-right" id="addRowBtn">
+                            <i class="icon-plus"></i> Add Bucket Row
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="materialTable">
+                                <thead>
+                                    <tr>
+                                        <th>Bucket</th>
+                                        <th>Light Scrap</th>
+                                        <th>HMS</th>
+                                        <th>Return Metal</th>
+                                        <th>Return Bar</th>
+                                        <th>Metal Skull</th>
+                                        <th>DRI</th>
+                                        <th>Coal</th>
+                                        <th>Lime</th>
+                                        <th>Dololime</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+        </div>
+    </form>
+    <!-- End XP Row -->
+</div>
+<!-- End XP Contentbar -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+
+    $("input[type='number']").attr("step", "any");
+    // Set current date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("date").value = today;
+
+    const columnNames = [
+        'Bucket', 'LightScrap', 'HMS', 'ReturnMetal', 'ReturnBar',
+        'MetalSkull', 'DRI', 'Coal', 'Lime', 'Dololime'
+    ];
+
+    function createNewRow(rowIndex) {
+        let rowHtml = `
+            <tr data-row-index="${rowIndex}">
+                <td>
+                    <input type="text" class="form-control" name="data[${rowIndex}].Bucket" required>
+                </td>
+        `;
+
+        // Loop through the decimal fields (excluding Bucket)
+        for (let i = 1; i < columnNames.length; i++) {
+            const name = columnNames[i];
+            const isRequired = name === 'LightScrap' || name === 'HMS' ? 'required' : ''; // Example: make scrap required
+            rowHtml += `
+                <td>
+                    <input type="number" step="0.01" min="0" class="form-control material-input"
+                           name="data[${rowIndex}].${name}" placeholder="0.00" ${isRequired}>
+                </td>
+            `;
+        }
+
+        // Action Column (Remove Button)
+        rowHtml += `
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm remove-row">Remove</button>
+                </td>
+            </tr>
+        `;
+        return rowHtml;
+    }
+
+    // --- jQuery/JavaScript for Dynamic Functionality ---
+    $(document).ready(function () {
+        let currentRowIndex = 0; // Counter for the array index in the generated form data
+
+        // Initialize with one row
+        $('#materialTable tbody').append(createNewRow(currentRowIndex++));
+
+        // Event listener for adding a row
+        $('#addRowBtn').on('click', function () {
+            $('#materialTable tbody').append(createNewRow(currentRowIndex++));
+        });
+
+        // Event listener for removing a row (using delegation since rows are dynamic)
+        $('#materialTable').on('click', '.remove-row', function () {
+            $(this).closest('tr').remove();
+
+            // OPTIONAL: Re-index remaining rows to ensure sequential array submission
+            reindexRows();
+        });
+
+        function reindexRows() {
+            $('#materialTable tbody tr').each(function (index) {
+                $(this).attr('data-row-index', index);
+                $(this).find('input').each(function () {
+                    const oldName = $(this).attr('name');
+                    if (oldName) {
+                        // Regex to replace the array index (e.g., [0] or [1])
+                        const newName = oldName.replace(/\[\d+\]/, `[${index}]`);
+                        $(this).attr('name', newName);
+                    }
+                });
+            });
+            currentRowIndex = $('#materialTable tbody tr').length;
+        } 
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+
+        let isSubmitting = false;   // 🔐 double-submit lock
+
+        $("#addscrapform").on("submit", function (e) {
+            e.preventDefault(); // ❗ pehle submit roko
+
+            if (isSubmitting) return; // already submitting
+
+            Swal.fire({
+                title: 'Confirm Submission',
+                text: 'Are you sure you want to submit this Heat Record?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Submit',
+                cancelButtonText: 'Cancel',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    isSubmitting = true; // 🔒 lock
+
+                    // Disable submit button
+                    $("#addscrapform")
+                        .find("button[type='submit']")
+                        .prop("disabled", true)
+                        .text("Submitting...");
+
+                    // Finally submit form
+                    $("#addscrapform")[0].submit();
+                }
+            });
+        });
+
+    });
+</script>

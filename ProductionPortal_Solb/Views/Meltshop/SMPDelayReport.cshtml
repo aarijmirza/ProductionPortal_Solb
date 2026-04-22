@@ -1,0 +1,218 @@
+﻿@model IEnumerable<DAL.Models.PlantDelayBLL>
+@using System.Globalization
+@{
+    Layout = null;
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Rolling Mill Delay Report</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sheet {
+            margin: 10px auto;
+            border: 1px solid #000;
+            padding: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+            font-size: 28px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 12px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        .red {
+            color: #c00000;
+            font-weight: bold;
+        }
+
+        .text-top {
+            vertical-align: top;
+        }
+
+        .logo-cell img {
+            max-height: 70px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .legend-cell {
+            font-size: 9px;
+        }
+
+        @@media print {
+            body {
+                margin: 0;
+            }
+
+            .sheet {
+                margin: 0;
+                border: none;
+            }
+        }
+
+        .panel {
+            background: #fff;
+            position: relative;
+        }
+
+        .title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+
+        .footnote {
+            position: absolute;
+            bottom: 6px;
+            left: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .panel {
+            height: auto; /* 👈 FIXED HEIGHT HATAO */
+        }
+    </style>
+
+</head>
+<body>
+    <div class="sheet">
+
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width: 180px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+                <td class="center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">STEEL MAKING DEPARTMENT</div>
+                    <div class="sub-header">DELAY SUMMARY REPORT</div>
+                </td>
+                <td class="right" style="width:220px; font-size:16px; font-weight:bold">
+                    <b>Date:</b>
+                    @if (ViewBag.FromDate != null && ViewBag.ToDate != null)
+                    {
+                        var from = ((DateTime)ViewBag.FromDate).ToString("dd-MM-yyyy");
+                        var to = ((DateTime)ViewBag.ToDate).ToString("dd-MM-yyyy");
+
+                        if (from == to)
+                        {
+                            @from
+                        }
+                        else
+                        {
+                            @from <text> - </text> @to
+                        }
+                    }
+                </td>
+
+            </tr>
+        </table>
+
+        <table style="margin-top:6px;">
+            <tr>
+                <td colspan="17" class="section-title">DELAY SUMMARY</td>
+            </tr>
+
+            <tr class="small bold center">
+                <td>Sr.No</td>
+                <td>Area</td>
+                <td>Plant</td>
+                <td>Agency Code</td>
+                <td>Delay Type</td>
+                <td>Start Time</td>
+                <td>End Time</td>
+                <td>Total Duration</td>
+                <td>Equipment</td>
+                <td>Reason</td>
+                <td>Delay Description</td>
+                <td>Reason For Occurence</td>
+                <td>Action Taken</td>
+            </tr>
+            @foreach (var r in Model)
+            {
+                <tr class="center small">
+                    <td>@r.ID</td>
+                    <td>@r.Plant</td>
+                    <td>@r.Area</td>
+                    <td>@r.AgencyCode</td>
+                    <td>@r.DelayType</td>
+                    <td>@r.StartTime</td>
+                    <td>@r.EndTime</td>
+                    <td>@r.TotalDuration</td>
+                    <td>@r.Equipments</td>
+                    <td>@r.Reason</td>
+                    <td>@r.DelayDescription</td>
+                    <td>@r.ReasonForOccurence</td>
+                    <td>@r.ActionTaken</td>
+                </tr>
+            }
+        </table>
+
+    </div>
+</body>
+</html>

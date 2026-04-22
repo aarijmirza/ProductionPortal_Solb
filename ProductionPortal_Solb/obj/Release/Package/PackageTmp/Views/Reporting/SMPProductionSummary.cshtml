@@ -1,0 +1,230 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>SMP PRODUCTION SUMMARY</title>
+
+    <!-- ✅ Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- ✅ Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+    <!-- ✅ Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+
+        /* =========================
+           A4 PAGE SETTINGS
+        ==========================*/
+        @@page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+
+        @@media print {
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .sheet {
+                width: 190mm;
+                margin: 0 auto;
+                border: none;
+            }
+
+            .card {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* =========================
+           PAGE CONTAINER
+        ==========================*/
+        .sheet {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 10px auto;
+            padding: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .no-border td {
+            border: none !important;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        /* =========================
+           DASHBOARD CARDS
+        ==========================*/
+        .stat-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+            height: 100%;
+        }
+
+        .stat-icon {
+            font-size: 26px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+        }
+
+        hr.red-line {
+            border: 2px solid #c00000;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sheet">
+
+        <!-- ================= HEADER ================= -->
+        <table class="no-border">
+            <tr>
+                <td style="width:90px;">
+                    <img src="~/assets/images/logo.png" style="max-height:60px;" />
+                </td>
+                <td class="text-center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">STEEL MAKING PLANT</div>
+                    <div class="sub-header">PRODUCTION SUMMARY REPORT</div>
+                </td>
+            </tr>
+        </table>
+
+        <hr class="red-line" />
+
+        <!-- ================= DASHBOARD ROW ================= -->
+        <div class="container-fluid">
+            <div class="row g-2">
+                <div class="col-1">
+                </div>
+                <div class="col-2">
+                    <div class="stat-card">
+                        <div class="stat-label">Daily Production</div>
+                        <div class="stat-value text-primary">2580</div>
+                        <div class="stat-label">Total Heats</div>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="stat-card">
+                        <div class="stat-value text-success">1340</div>
+                        <div class="stat-label">EAF Production</div>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="stat-card">
+                        <div class="stat-value text-warning">52.3</div>
+                        <div class="stat-label">Avg Power (MW)</div>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="stat-card">
+                        <div class="stat-value text-info">75,200</div>
+                        <div class="stat-label">Total Billets (MT)</div>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="stat-card">
+                        <div class="stat-value text-danger">94.6%</div>
+                        <div class="stat-label">Yield</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <hr class="red-line" />
+
+        <!-- ================= CHART SECTION ================= -->
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <canvas id="productionChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= CHART SCRIPT ================= -->
+    <script>
+        const ctx = document.getElementById('productionChart');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Shift A', 'Shift B', 'Shift C'],
+                datasets: [{
+                    label: 'Production (MT)',
+                    data: [2500, 2300, 2700],
+                    backgroundColor: '#c00000'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

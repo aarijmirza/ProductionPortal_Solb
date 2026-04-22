@@ -1,0 +1,412 @@
+﻿@using System.Globalization
+@{
+    Layout = null;
+    // Example values (replace with Model.*)
+    var reportDate = "12-Nov-2025";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>SMP Daily Performance Report</title>
+    <style>
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+
+        .sheet {
+            width: 860px;
+            margin: 10px auto;
+            padding: 10px 10px 14px 10px;
+            border: 1px solid #bbb;
+            /* excel-like grid */
+            background-image: linear-gradient(#f1f1f1 1px, transparent 1px), linear-gradient(90deg, #f1f1f1 1px, transparent 1px);
+            background-size: 28px 22px;
+            background-position: 0 0;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .header-title {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .logo-cell img {
+            max-height: 90px;
+            margin-top: 10px;
+        }
+
+        .topbar {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+
+            .topbar td {
+                border: none;
+                vertical-align: middle;
+            }
+
+        .logo {
+            width: 150px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 25px;
+            font-weight: 700;
+            font-style: italic;
+            padding-right: 30px;
+        }
+
+        .date {
+            margin: 6px 0 10px 0;
+            font-size: 13px;
+        }
+
+        table.grid {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 16px 10px; /* spacing like screenshot */
+        }
+
+        .rowhead {
+            width: 70px;
+            color: #9a9a9a;
+            font-size: 12px;
+            text-align: left;
+            padding-left: 2px;
+            border: none !important;
+        }
+
+        .kpi {
+            width: 115px;
+            text-align: center;
+            border: 2px dotted #777;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.65);
+            padding: 6px 4px 5px 4px;
+        }
+
+            .kpi .h1 {
+                font-size: 13px;
+                color: #8f8f8f;
+                line-height: 14px;
+            }
+
+            .kpi .h2 {
+                font-size: 12px;
+                color: #9a9a9a;
+                margin-top: 2px;
+            }
+
+            .kpi .val {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                margin-top: 5px;
+            }
+
+            .kpi.thin {
+                padding: 7px 4px;
+            }
+
+            .kpi.smallval .val {
+                font-size: 12px;
+            }
+
+            .kpi.green {
+                border: 2px solid #1f7a3a;
+            }
+
+            .kpi .sep {
+                height: 1px;
+                background: #9a9a9a; /* light grey line */
+                margin: 4px 0 3px 0; /* spacing */
+            }
+
+        .remarks {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+            .remarks td {
+                border: 1px solid #777;
+                height: 70px;
+                background: rgba(255,255,255,0.7);
+            }
+
+            .remarks .label {
+                width: 100px;
+                height: auto;
+                border: none;
+                font-weight: 600;
+                padding: 4px 0 3px 2px;
+                background: transparent;
+            }
+
+        /* helpers */
+        .spacer {
+            height: 6px;
+        }
+
+        .muted {
+            color: #9a9a9a;
+        }
+    </style>
+</head>
+<body>
+    <div class="sheet">
+
+        <!-- LOGO + TITLES -->
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width: 330px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+
+                <td class="center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">SMP DAILY PERFORMANCE REPORT</div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- DATE / SHIFT / TEAM -->
+        <table>
+            <tr>
+                <td class="bold" style="width:1px;">Date</td>
+                <td style="width:140px;">@DateTime.Now.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)</td>
+            </tr>
+        </table>
+
+
+        <!-- Row 1: Totals -->
+        <table class="grid">
+            <tr>
+                <td class="rowhead"></td>
+
+                <td class="kpi">
+                    <div class="h1">Number of Heats</div>
+                    <div class="sep"></div>
+                    <div class="h2">Total</div>
+                    <div class="sep"></div>
+                    <div class="val">25</div>
+                </td>
+
+                <td class="kpi">
+                    <div class="h1">DRI</div>
+                    <div class="sep"></div>
+                    <div class="h2">Ton</div>
+                    <div class="sep"></div>
+                    <div class="val">2500</div>
+                </td>
+
+                <td class="kpi">
+                    <div class="h1">Scrap</div>
+                    <div class="sep"></div>
+                    <div class="h2">Ton</div>
+                    <div class="sep"></div>
+                    <div class="val">300</div>
+                </td>
+
+                <td class="kpi">
+                    <div class="h1">Liquid Steel</div>
+                    <div class="sep"></div>
+                    <div class="h2">Ton</div>
+                    <div class="sep"></div>
+                    <div class="val">2620</div>
+                </td>
+
+                <td class="kpi">
+                    <div class="h1">Casted Weight</div>
+                    <div class="sep"></div>
+                    <div class="h2">Ton</div>
+                    <div class="sep"></div>
+                    <div class="val">2570</div>
+                </td>
+
+                <td class="kpi">
+                    <div class="h1">Tap to Tap</div>
+                    <div class="sep"></div>
+                    <div class="h2">Min</div>
+                    <div class="sep"></div>
+                    <div class="val">60.3</div>
+                </td>
+            </tr>
+
+            <!-- Row 2: Availability/Performance/Yield/Productivity -->
+            <tr>
+                <td class="rowhead muted">Target</td>
+
+                <td class="kpi smallval">
+                    <div class="h1">Availability</div>
+                    <div class="sep"></div>
+                    <div class="h2">%</div>
+                    <div class="sep"></div>
+                    <div class="val">87%</div>
+                </td>
+                <td class="kpi smallval">
+                    <div class="h1">Performance</div>
+                    <div class="sep"></div>
+                    <div class="h2">%</div>
+                    <div class="sep"></div>
+                    <div class="val">85%</div>
+                </td>
+                <td class="kpi smallval">
+                    <div class="h1">Yield</div>
+                    <div class="sep"></div>
+                    <div class="h2">%</div>
+                    <div class="sep"></div>
+                    <div class="val">87%</div>
+                </td>
+                <td class="kpi smallval">
+                    <div class="h1">Quality Yield</div>
+                    <div class="sep"></div>
+                    <div class="h2">%</div>
+                    <div class="sep"></div>
+                    <div class="val">99%</div>
+                </td>
+                <td class="kpi smallval">
+                    <div class="h1">EAF Productivity</div>
+                    <div class="sep"></div>
+                    <div class="h2">TPH</div>
+                    <div class="sep"></div>
+                    <div class="val">140</div>
+                </td>
+                <td class="kpi smallval">
+                    <div class="h1">CCM Productivity</div>
+                    <div class="sep"></div>
+                    <div class="h2">TPH</div>
+                    <div class="sep"></div>
+                    <div class="val">140</div>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="rowhead muted">Actual</td>
+
+                <td class="kpi"><div class="val">80</div></td>
+                <td class="kpi"><div class="val">69</div></td>
+                <td class="kpi"><div class="val">85</div></td>
+                <td class="kpi"><div class="val">100</div></td>
+                <td class="kpi"><div class="val">135</div></td>
+                <td class="kpi"><div class="val">130</div></td>
+            </tr>
+
+            <!-- Row 3: DRI/Scrap/Fe* / Rice Husk -->
+            <tr>
+                <td class="rowhead muted">Target</td>
+
+                <td class="kpi">
+                    <div class="h1">DRI</div><div class="sep"></div><div class="h2">Kg/Ton</div>
+                    <div class="sep"></div>
+                    <div class="val">909</div>
+                </td>
+                <td class="kpi">
+                    <div class="h1">Scrap</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">225</div>
+                </td>
+                <td class="kpi">
+                    <div class="h1">Fe-Si</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">2</div>
+                </td>
+                <td class="kpi">
+                    <div class="h1">Fe-SiMn</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">15</div>
+                </td>
+                <td class="kpi">
+                    <div class="h1">Fe-Mn</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">2</div>
+                </td>
+                <td class="kpi">
+                    <div class="h1">Rice Husk</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">0.25</div>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="rowhead muted">Actual</td>
+                <td class="kpi"><div class="val">1060</div></td>
+                <td class="kpi"><div class="val">125</div></td>
+                <td class="kpi"><div class="val">2.1</div></td>
+                <td class="kpi"><div class="val">12.3</div></td>
+                <td class="kpi"><div class="val">1.3</div></td>
+                <td class="kpi"><div class="val">0.3</div></td>
+            </tr>
+
+            <!-- Row 4: Lime/Dolo/ChargeCoal/Fluorspar/CalcinedCarbon/(blank) -->
+            <tr>
+                <td class="rowhead muted">Target</td>
+
+                <td class="kpi"><div class="h1">Lime</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">30</div></td>
+                <td class="kpi"><div class="h1">Dolo Lime</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">30</div></td>
+                <td class="kpi"><div class="h1">Charge Coal</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">5</div></td>
+                <td class="kpi"><div class="h1">Fluorspar</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">1</div></td>
+                <td class="kpi"><div class="h1">Calcined Carbon</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">17</div></td>
+                <td class="kpi"><div class="h1">Aluminium</div><div class="sep"></div><div class="h2">Kg/Ton</div><div class="sep"></div><div class="val">&nbsp;</div></td>
+            </tr>
+
+            <tr>
+                <td class="rowhead muted">Actual</td>
+                <td class="kpi"><div class="val">25</div></td>
+                <td class="kpi"><div class="val">25</div></td>
+                <td class="kpi"><div class="val">2.1</div></td>
+                <td class="kpi"><div class="val">0.56</div></td>
+                <td class="kpi"><div class="val">15.3</div></td>
+                <td class="kpi"><div class="val">&nbsp;</div></td>
+            </tr>
+
+            <!-- Row 5: Power/LPG/Oxygen/Argon/Nitrogen/Water -->
+            <tr>
+                <td class="rowhead muted">Target</td>
+
+                <td class="kpi"><div class="h1">Power</div><div class="sep"></div><div class="h2">KWH/Ton</div><div class="sep"></div><div class="val">590</div></td>
+                <td class="kpi"><div class="h1">LPG</div><div class="sep"></div><div class="h2">NM3/Ton</div><div class="sep"></div><div class="val">10</div></td>
+                <td class="kpi"><div class="h1">Oxygen</div><div class="sep"></div><div class="h2">NM3/Ton</div><div class="sep"></div><div class="val">33</div></td>
+                <td class="kpi"><div class="h1">Argon</div><div class="sep"></div><div class="h2">NM3/Ton</div><div class="sep"></div><div class="val">0.16</div></td>
+                <td class="kpi"><div class="h1">Nitrogen</div><div class="sep"></div><div class="h2">NM3/Ton</div><div class="sep"></div><div class="val">1</div></td>
+                <td class="kpi"><div class="h1">Water</div><div class="sep"></div><div class="h2">M3</div><div class="sep"></div><div class="val">1.8</div></td>
+            </tr>
+
+            <tr>
+                <td class="rowhead muted">Actual</td>
+                <td class="kpi"><div class="val">&nbsp;</div></td>
+                <td class="kpi"><div class="val">&nbsp;</div></td>
+                <td class="kpi"><div class="val">&nbsp;</div></td>
+                <td class="kpi"><div class="val">&nbsp;</div></td>
+                <td class="kpi"><div class="val">&nbsp;</div></td>
+                <td class="kpi"><div class="val">&nbsp;</div></td>
+            </tr>
+
+            <!-- Row 6: Mechanical/Electrical/Operation/Refractory/Utility/Crain -->
+            <tr>
+                <td class="rowhead"></td>
+
+                <td class="kpi thin"><div class="h1">Mechanical</div><div class="sep"></div><div class="h2">Min</div><div class="sep"></div><div class="val">30</div></td>
+                <td class="kpi thin"><div class="h1">Electrical</div><div class="sep"></div><div class="h2">Min</div><div class="sep"></div><div class="val">29</div></td>
+                <td class="kpi thin"><div class="h1">Operation</div><div class="sep"></div><div class="h2">Min</div><div class="sep"></div><div class="val">35</div></td>
+                <td class="kpi thin"><div class="h1">Refractory</div><div class="sep"></div><div class="h2">Min</div><div class="sep"></div><div class="val">31</div></td>
+                <td class="kpi thin"><div class="h1">Utility</div><div class="sep"></div><div class="h2">Min</div><div class="sep"></div><div class="val">0</div></td>
+                <td class="kpi thin"><div class="h1">Crain</div><div class="sep"></div><div class="h2">Min</div><div class="sep"></div><div class="val">2</div></td>
+            </tr>
+        </table>
+
+        <!-- Remarks -->
+        <div style="margin-top:8px;">
+            <div class="remarks-label" style="font-weight:600; margin-bottom:4px;">Remarks:</div>
+            <table class="remarks">
+                <tr><td></td></tr>
+            </table>
+        </div>
+
+    </div>
+</body>
+</html>

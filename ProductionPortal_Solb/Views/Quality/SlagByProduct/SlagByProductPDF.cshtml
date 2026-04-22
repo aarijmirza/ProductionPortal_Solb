@@ -1,0 +1,137 @@
+﻿@using System.Globalization
+@model DAL.Models.ViewModel.SlagByProductPDFVM
+@{
+    Layout = null;
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Slag By Product Report</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sheet {
+            margin: 10px auto;
+            border: 1px solid #000;
+            padding: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 19px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 10px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f2f2f2;
+            font-size: 15px;
+        }
+
+        .red {
+            color: #c00000;
+            font-weight: bold;
+        }
+
+        .text-top {
+            vertical-align: top;
+        }
+
+        .logo-cell img {
+            max-height: 60px;
+            margin-top: 10px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .legend-cell {
+            font-size: 9px;
+        }
+
+        @@media print {
+            body {
+                margin: 0;
+            }
+
+            .sheet {
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <div class="sheet">
+        <!-- LOGO + TITLES -->
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width: 180px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+
+                <td class="center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">QUALITY CONTROL DEPARTMENT</div>
+                    <div class="sub-header">SLAG BY PRODUCT SUMMARY REPORT</div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+</body>
+</html>

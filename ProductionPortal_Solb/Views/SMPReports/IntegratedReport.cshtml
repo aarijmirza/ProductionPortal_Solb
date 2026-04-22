@@ -1,0 +1,179 @@
+﻿@using System.Globalization
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Daily Integrated Report</title>
+
+    <!-- Fevicon -->
+    <link rel="shortcut icon" href="~/assets/images/favicon.png">
+    <!-- Start CSS --> <!-- Chartist Chart CSS -->
+    <link rel="stylesheet" href="~/assets/plugins/chartist-js/chartist.min.css">
+    <!-- Switchery CSS -->
+    <link href="~/assets/plugins/switchery/switchery.min.css" rel="stylesheet">
+    <!-- Datepicker CSS -->
+    <link href="~/assets/plugins/datepicker/datepicker.min.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/icons.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/style.css" rel="stylesheet" type="text/css">
+    <!-- End CSS --> <!-- DataTables CSS -->
+    <link href="~/assets/plugins/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/plugins/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+    <!-- Responsive Datatable CSS -->
+    <link href="~/assets/plugins/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            color: #000 !important;
+            padding: 0;
+        }
+
+        .sheet {
+            margin: 10px auto;
+            border: 1px solid #000;
+            padding: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 12px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f2f2f2;
+            font-size: 15px;
+        }
+
+        .red {
+            color: #c00000;
+            font-weight: bold;
+        }
+
+        .text-top {
+            vertical-align: top;
+        }
+
+        .logo-cell img {
+            max-height: 70px;
+            margin-top: 10px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .legend-cell {
+            font-size: 9px;
+        }
+
+        @@media print {
+            body {
+                margin: 0;
+            }
+
+            .sheet {
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sheet">
+        <!-- LOGO + TITLES -->
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width: 90px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+
+                <td class="center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">STEEL MAKING PLANT</div>
+                    <div class="sub-header">DAILY INTEGRATED REPORT</div>
+                </td>
+            </tr>
+        </table>
+
+        <table style="margin-top:40px;">
+            <tr>
+                <td colspan="28" class="section-title">PRODUCTION DESCRIPTION</td>
+            </tr>
+            <tr class="center small bold">
+                <td rowspan="2">Heat #</td>
+                <td rowspan="2">Steel Grade</td>
+                <td rowspan="2">Total Charge</td>
+                <td rowspan="2">Power On</td>
+                <td rowspan="2">Tap to Tap</td>
+                <td rowspan="2">Turn Around</td>
+                <td rowspan="2">Tapping Weight</td>
+                <td rowspan="2">EAF Yeild</td>
+                <td rowspan="2">Total Delay</td>
+                <td rowspan="2">EAF Productivity</td>
+                <td rowspan="2">Casting Time</td>
+                <td rowspan="2">Running Strand</td>
+                <td rowspan="2">Restranding</td>
+                <td rowspan="2">CCM Prodcutivity</td>
+                <td rowspan="2">Prime Billet</td>
+                <td rowspan="2">Short Billet</td>
+                <td rowspan="2">Total Casted</td>
+                <td rowspan="2">CCM Yeild</td>
+                <td rowspan="2">SMP Yeild</td>
+            </tr>
+        </table>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,195 @@
+﻿@model List<DAL.Models.HeatChemistryBLL>
+@using System.Globalization
+@{
+    ViewBag.Title = "Heat Chemistry Detail";
+    var header = Model.FirstOrDefault();
+    string heatNo = header?.HeatNo ?? "N/A";
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+
+    // Optional columns: hide if all values null
+    //bool showGrade = Model.Any(m => !string.IsNullOrEmpty(m.Grade));
+    bool showSize = Model.Any(m => !string.IsNullOrEmpty(m.Size));
+    bool showWeight = Model.Any(m => m.Weight != null);
+    bool showTime = Model.Any(m => m.Time != null);
+    bool showArea = Model.Any(m => !string.IsNullOrEmpty(m.Area));
+    bool showShift = Model.Any(m => !string.IsNullOrEmpty(m.Shift));
+}
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Heat Chemistry Detail</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("List", "HeatChemistry")">Heat Chemistry</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="row">
+
+        <!-- Heat Information -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Heat Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label>Date</label>
+                            <p class="form-control-static"><strong>@(header.Date?.ToString("dd-MM-yyyy", gregorian))</strong></p>
+                        </div>
+                        @if (showTime)
+                        {
+                            <div class="form-group col-md-3">
+                                <label>Time</label>
+                                <p class="form-control-static"><strong>@header.Time</strong></p>
+                            </div>
+                        }
+                        <div class="form-group col-md-3">
+                            <label>Heat #</label>
+                            <p class="form-control-static"><strong>@heatNo</strong></p>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Total Samples</label>
+                            <p class="form-control-static"><strong>@Model.Count()</strong></p>
+                        </div>
+
+                        @if (showGrade)
+                        {
+                            <div class="form-group col-md-3">
+                                <label>Grade</label>
+                                <p class="form-control-static"><strong>@header.Grade</strong></p>
+                            </div>
+                        }
+                        @if (showSize)
+                        {
+                            <div class="form-group col-md-3">
+                                <label>Size</label>
+                                <p class="form-control-static"><strong>@header.Size</strong></p>
+                            </div>
+                        }
+                        @if (showWeight)
+                        {
+                            <div class="form-group col-md-3">
+                                <label>Weight</label>
+                                <p class="form-control-static"><strong>@header.Weight</strong></p>
+                            </div>
+                        }
+                        @if (showArea)
+                        {
+                            <div class="form-group col-md-3">
+                                <label>Area</label>
+                                <p class="form-control-static"><strong>@header.Area</strong></p>
+                            </div>
+                        }
+                        @if (showShift)
+                        {
+                            <div class="form-group col-md-3">
+                                <label>Shift</label>
+                                <p class="form-control-static"><strong>@header.Shift</strong></p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Details -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Sample Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sample #</th>
+                                    <th>C</th>
+                                    <th>Si</th>
+                                    <th>Mn</th>
+                                    <th>P</th>
+                                    <th>S</th>
+                                    <th>Ni</th>
+                                    <th>Cr</th>
+                                    <th>Mo</th>
+                                    <th>V</th>
+                                    <th>Cu</th>
+                                    <th>Ti</th>
+                                    <th>Sn</th>
+                                    <th>Al</th>
+                                    <th>Pb</th>
+                                    <th>B</th>
+                                    <th>Zn</th>
+                                    <th>N</th>
+                                    <th>MnS</th>
+                                    <th>Ceq</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td><strong>@item.SampleNo</strong></td>
+                                        <td>@item.C</td>
+                                        <td>@item.Si</td>
+                                        <td>@item.Mn</td>
+                                        <td>@item.P</td>
+                                        <td>@item.S</td>
+                                        <td>@item.Ni</td>
+                                        <td>@item.Cr</td>
+                                        <td>@item.Mo</td>
+                                        <td>@item.V</td>
+                                        <td>@item.Cu</td>
+                                        <td>@item.Ti</td>
+                                        <td>@item.Sn</td>
+                                        <td>@item.Al</td>
+                                        <td>@item.Pb</td>
+                                        <td>@item.B</td>
+                                        <td>@item.Zn</td>
+                                        <td>@item.N</td>
+                                        <td>@item.MnS</td>
+                                        <td>@item.Ceq</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">System Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Created By</label>
+                            <p class="form-control-static">@header.CreatedBy</p>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Created Date</label>
+                            <p class="form-control-static">@(header.CreatedDate.ToString("dd-MM-yyyy", gregorian))</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

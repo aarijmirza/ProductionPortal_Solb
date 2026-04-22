@@ -1,39 +1,37 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>
 
+<head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="Neon is a bootstrap, laravel & php admin dashboard template">
     <meta name="keywords" content="admin, admin dashboard, admin panel, admin template, admin theme, bootstrap 4, laravel, php, crm, analytics, responsive, sass support, ui kits, web app, clean design">
     <meta name="author" content="Themesbox17">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
-
     <title>Production Portal - Solb Steel</title>
-
     <!-- Fevicon -->
     <link rel="shortcut icon" href="~/assets/images/favicon.png">
-
-    <!-- Start CSS -->
-    <!-- Chartist Chart CSS -->
+    <!-- Start CSS --> <!-- Chartist Chart CSS -->
     <link rel="stylesheet" href="~/assets/plugins/chartist-js/chartist.min.css">
-
     <!-- Switchery CSS -->
     <link href="~/assets/plugins/switchery/switchery.min.css" rel="stylesheet">
     <!-- Datepicker CSS -->
     <link href="~/assets/plugins/datepicker/datepicker.min.css" rel="stylesheet" type="text/css">
-
     <link href="~/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="~/assets/css/icons.css" rel="stylesheet" type="text/css">
     <link href="~/assets/css/style.css" rel="stylesheet" type="text/css">
-    <!-- End CSS -->
-    <!-- DataTables CSS -->
+    <!-- End CSS --> <!-- DataTables CSS -->
     <link href="~/assets/plugins/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
     <link href="~/assets/plugins/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-
     <!-- Responsive Datatable CSS -->
     <link href="~/assets/plugins/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Select2 -->
+    @*<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />*@
+
+
 </head>
+
 <body class="xp-vertical">
     <!-- Search Modal -->
     <div class="modal search-modal fade" id="xpSearchModal" tabindex="-1" role="dialog" aria-labelledby="xpSearchModalLabel" aria-hidden="true">
@@ -103,54 +101,173 @@
 
                 <!-- Start XP Logobar -->
                 <div class="xp-logobar text-center">
-                    <a href="@Url.Action("Index", "Home")" class="xp-logo"><img src="~/assets/images/logo.png" class="img-fluid" alt="logo" style="width:75%;"></a>
+                    <a href="@Url.Action("Index", "Home")" class="xp-logo"><img src="~/assets/images/logo.png" class="img-fluid" alt="logo" style="width:50%;"></a>
                 </div>
                 <!-- End XP Logobar -->
                 <!-- Start XP Navigationbar -->
                 <div class="xp-navigationbar">
                     <ul class="xp-vertical-menu">
-                        <li class="xp-vertical-header">Main</li>
                         <li>
-                            <a href="">
+                            <a href="@Url.Action("Index", "Home")">
                                 <i class="icon-speedometer"></i><span>Dashboard</span>
                             </a>
                         </li>
-                        <li>
-                            <a href="javaScript:void();">
-                                <i class="icon-layers"></i><span>EAF MELTSHOP</span><i class="icon-arrow-right pull-right"></i>
-                            </a>
-                            <ul class="xp-vertical-submenu">
-                                <li><a href="@Url.Action("add", "EAFMeltShop")">Add Record</a></li>
-                                <li><a href="@Url.Action("list", "EAFMeltShop")">View Record</a></li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a href="javaScript:void();">
-                                <i class="icon-social-dropbox"></i><span>LF MELTSHOP</span><i class="icon-arrow-right pull-right"></i>
-                            </a>
-                            <ul class="xp-vertical-submenu">
-                                <li><a href="@Url.Action("add", "LFMeltShop")">Add Record</a></li>
-                                <li><a href="@Url.Action("list", "LFMeltShop")">View Record</a></li>
-                            </ul>
-                        </li>
-                        <li class="xp-vertical-header">Extras</li>
-                        <li>
-                            <a href="javaScript:void();">
-                                <i class="icon-lock"></i><span>Other Reports</span><i class="icon-arrow-right pull-right"></i>
-                            </a>
-                            <ul class="xp-vertical-submenu">
-                                <li><a href="@Url.Action("Delays", "Other")">Delays List</a></li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a href="javaScript:void();">
-                                <i class="icon-lock"></i><span>Setting</span><i class="icon-arrow-right pull-right"></i>
-                            </a>
-                            <ul class="xp-vertical-submenu">
-                                <li><a href="@Url.Action("list", "UserRole")">User Role</a></li>
-                                <li><a href="@Url.Action("list", "User")">User</a></li>
-                            </ul>
-                        </li>
+                        @*<li class="xp-vertical-header">MELTSHOP SECTION</li>*@
+                        @if (User.IsInRole("Administrator") || User.IsInRole("User") || User.IsInRole("Steel Making User") || User.IsInRole("QC User"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>STEEL MAKING PLANT</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("list", "Scrapyard")">SCRAPYARD</a></li>
+                                </ul><ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("EAFlist", "Meltshop")">ELECTRIC ARC FURNACE</a></li>
+                                </ul><ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("LFlist", "Meltshop")">LADDLE FURNACE</a></li>
+                                </ul><ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("list", "CCM")">CCM</a></li>
+                                </ul>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("CCMYieldlist", "CCM")">CCM YIELD BREAK DOWN</a></li>
+                                </ul>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("SMPlist", "Delay")">DELAY RECORD</a></li>
+                                </ul>
+                            </li>
+                        }
+                        @if (User.IsInRole("Administrator") || User.IsInRole("QC User") || User.IsInRole("Rolling Mill User") || User.IsInRole("User"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>QUALITY CONTROL</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                @if (User.IsInRole("Administrator") || User.IsInRole("User") || User.IsInRole("QC User") || User.IsInRole("Steel Making User"))
+                                {
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("HeatChemistry", "Quality")">HEAT CHEMISTRY</a></li>
+                                    </ul>
+                                }
+                                @if (User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User") || User.IsInRole("QC User"))
+                                {
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("BilletBoard", "Quality")">BILLET BOARD</a></li>
+                                    </ul>
+                                }
+                                @if (User.IsInRole("Administrator") || User.IsInRole("QC User"))
+                                {
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("SlagByProductList", "Quality")">SLAG & BY PRODUCTS</a></li>
+                                    </ul>
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("HBIDRIlist", "Quality")">DRI / HBI ANALYSIS</a></li>
+                                    </ul>
+                                }
+
+                            </li>
+                        }
+                        @if (User.IsInRole("Rolling Mill User") || User.IsInRole("Administrator"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>ROLLING MILL</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                @*@if (ViewBag.HasRollingMillTodayData != true)
+                                    {
+                                        <ul class="xp-vertical-submenu">
+                                            <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
+                                            <li style="color:red; padding:10px;">
+                                                ⚠ Please add Rolling Mill Details for today first
+                                            </li>
+                                        </ul>
+                                    }*@
+                                @if (ViewBag.HasRollingMillTodayData == true)
+                                {
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
+                                    </ul>
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("AddCharge", "RollingMill")">BILLET CHARGING</a></li>
+                                    </ul>
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("AddDischarge", "RollingMill")">FURNACE DISCHARGE</a></li>
+                                    </ul>
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("AddBundleSection", "RollingMill")">BUNDLE SECTION</a></li>
+                                    </ul>
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("list", "Delay")">DELAY RECORD</a></li>
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
+                                        <li style="color:red; padding:10px;">
+                                            ⚠ Please add Rolling Mill Details for today first
+                                        </li>
+                                    </ul>
+                                }
+                            </li>
+                        }
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>SECURITY</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("KPIAdd", "Security")">SHER DETAIL</a></li>
+                                    <li><a href="@Url.Action("FSadd", "Security")">FIRE SYSTEM KPI</a></li>
+                                </ul>
+                            </li>
+                        }
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>REPORTS</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("list", "SMPReports")">SMP REPORTS</a></li>
+                                    <li><a href="@Url.Action("list", "RMReports")">ROLLING MILL REPORTS</a></li>
+                                    <li><a href="@Url.Action("ProductionSummary", "SMPReports")">DIRECTOR SUMMARY REPORTS</a></li>
+
+                                    @*<li><a href="@Url.Action("DownloadSMPIntegratedPDF", "Reporting")">SMP INTEGRATED REPORT</a></li>
+                                        <li><a href="@Url.Action("DownloadSMPDailyReport", "Reporting")">SMP DAILY SUMMARY REPORT</a></li>
+                                        <li><a href="@Url.Action("DownloadDailyPlantStatistics", "Reporting")">SMP MONTHLY STATISTIC REPORT</a></li>*@
+
+                                </ul>
+                                @*<ul class="xp-vertical-submenu">
+                                        @if (User.IsInRole("Administrator") || User.IsInRole("User"))
+                                        {
+                                            <li><a href="@Url.Action("DownloadSMPIntegratedPDF", "Reporting")">SMP INTEGRATED REPORT</a></li>
+                                            <li><a href="@Url.Action("DownloadSMPDailyReport", "Reporting")">SMP DAILY SUMMARY REPORT</a></li>
+                                            <li><a href="@Url.Action("DownloadDailyPlantStatistics", "Reporting")">SMP MONTHLY STATISTIC REPORT</a></li>
+                                        }
+                                        @if (User.IsInRole("Rolling Mill User") || User.IsInRole("Administrator") || User.IsInRole("User"))
+                                        {
+                                            <li><a href="@Url.Action("DailyProductionRM", "Reporting")" target="_blank">RM DAILY PRODUCTION REPORT</a></li>
+                                            <li><a href="@Url.Action("RMMonthlyPerformanceReport", "Reporting")" target="_blank">RM MONTHLY SUMMARY REPORT</a></li>
+                                        }
+                                    </ul>*@
+                            </li>
+                        }
+
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>SETTING</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("list", "UserRole")">USER ROLE</a></li>
+                                </ul>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("list", "User")">USER DETAILS</a></li>
+                                </ul>
+                            </li>
+                        }
                     </ul>
                 </div>
                 <!-- End XP Navigationbar -->
@@ -179,6 +296,30 @@
     </div>
     <!-- End XP Container -->
     <!-- Start JS -->
+    <script>
+        function applyFilter() {
+
+            var department = $("#department").val();
+            var date = $("#date").val();
+            var shift = $("#shift").val();
+
+            $.ajax({
+                url: '/RollingMill/SaveFilter',
+                type: 'POST',
+                data: {
+                    Department: department,
+                    Shift: shift,
+                    FilterDate: date
+                },
+                success: function () {
+
+                    window.location.href = "/home/dashboard";
+
+                }
+            });
+        }
+    </script>
+
     <script src="~/assets/js/jquery.min.js"></script>
     <script src="~/assets/js/popper.min.js"></script>
     <script src="~/assets/js/bootstrap.min.js"></script>
@@ -205,6 +346,9 @@
     <!-- Dashboard JS -->
     <script src="~/assets/js/init/dashborad.js"></script>
 
+    <!-- Select2 JS (AFTER jQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+
     <!-- Main JS -->
     <script src="~/assets/js/main.js"></script>
     <!-- End JS -->
@@ -218,12 +362,13 @@
     <script src="~/assets/plugins/datatables/buttons.print.min.js"></script>
     <script src="~/assets/plugins/datatables/buttons.colVis.min.js"></script>
 
+
     <!-- Responsive Examples -->
     <script src="~/assets/plugins/datatables/dataTables.responsive.min.js"></script>
     <script src="~/assets/plugins/datatables/responsive.bootstrap4.min.js"></script>
 
     <!-- Datatable init JS -->
-    <script src="~/assets/js/init/table-datatable-init.js"></script>
+    @*<script src="~/assets/js/init/table-datatable-init.js"></script>*@
 
     <!-- Switchery js -->
     <script src="~/assets/plugins/switchery/switchery.min.js"></script>

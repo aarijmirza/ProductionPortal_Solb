@@ -1,0 +1,166 @@
+﻿@model DAL.Models.QCHBIDRIAnalysisBLL
+
+@{
+    ViewBag.Title = "HBI / DRI Analysis - Details";
+    var m = Model ?? new DAL.Models.QCHBIDRIAnalysisBLL();
+    var samples = m.Samples ?? new List<DAL.Models.SampleHBIDRIBLL>();
+}
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6">
+            <h4 class="xp-page-title">HBI / DRI Analysis - Details</h4>
+        </div>
+        <div class="col-md-6 text-right">
+            <a href="@Url.Action("HBIDRIlist","Quality")" class="btn btn-secondary btn-sm">Back</a>
+            <a href="@Url.Action("AddHBIDRIAnalysis","Quality", new { id = m.ID })" class="btn btn-primary btn-sm">Edit</a>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="row">
+        <div class="col-lg-12">
+
+            <!-- MASTER CARD -->
+            <div class="card m-b-30">
+                <div class="card-header bg-white">
+                    <h5 class="card-title d-inline">Record Details</h5>
+                    <span class="float-right badge badge-info" style="font-size:14px;">
+                        ID: @m.ID
+                    </span>
+                </div>
+
+                <div class="card-body">
+                    <div class="form-row">
+
+                        <div class="form-group col-md-2">
+                            <label>Receiving Date</label>
+                            <input type="text" class="form-control" readonly
+                                   value="@(m.ReceivingDate?.ToString("MM/dd/yyyy") ?? "")" />
+                        </div>
+
+                        <div class="form-group col-md-2">
+                            <label>Material</label>
+                            <input type="text" class="form-control" readonly value="@m.Material" />
+                        </div>
+
+                        <div class="form-group col-md-2">
+                            <label>Shipment Code No</label>
+                            <input type="text" class="form-control" readonly value="@m.ShipmentCodeNo" />
+                        </div>
+
+                        <div class="form-group col-md-2">
+                            <label>Supplier</label>
+                            <input type="text" class="form-control" readonly
+                                   value="@(m.Supplier)" />
+                        </div>
+
+                        <div class="form-group col-md-2">
+                            <label>Quantity</label>
+                            <input type="text" class="form-control" readonly
+                                   value="@(m.Quantity)" />
+                        </div>
+
+                        <div class="form-group col-md-2">
+                            <label>Analysis Date</label>
+                            <input type="text" class="form-control" readonly
+                                   value="@(m.AnalysisDate?.ToString("MM/dd/yyyy") ?? "")" />
+                        </div>
+
+                        <div class="form-group col-md-2">
+                            <label>Received Quantity</label>
+                            <input type="text" class="form-control" readonly
+                                   value="@(m.ReceivedQuantity)" />
+                        </div>
+
+                        <div class="form-group col-md-2">
+                            <label>Reference No</label>
+                            <input type="text" class="form-control" readonly
+                                   value="@(m.ReferenceNo)" />
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <label>Physical Analysis</label>
+                            <textarea class="form-control" rows="3" readonly>@m.PhysicalAnalysis</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- DETAIL / SAMPLES CARD -->
+        <div class="card m-b-30">
+            <div class="card-header bg-white">
+                <h5 class="card-title d-inline">Analysis Result</h5>
+                <span class="float-right badge badge-secondary" style="font-size:14px;">
+                    Total Samples:
+                </span>
+            </div>
+
+            <div class="card-body">
+
+                @if (samples == null)
+                {
+                    <div class="alert alert-info mb-0">
+                        No sample entries found for this record.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Sample Code</th>
+                                    <th>Fe Total</th>
+                                    <th>Fe Metallic</th>
+                                    <th>Metallization</th>
+                                    <th>C %</th>
+                                    <th>S %</th>
+                                    <th>P %</th>
+                                    <th>SiO2</th>
+                                    <th>Al2O3</th>
+                                    <th>MgO</th>
+                                    <th>CaO</th>
+                                    <th>Total Gangue</th>
+                                    <th>Grain Size</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var s in samples)
+                                {
+                                    <tr>
+                                        <td>@s.SampleCode</td>
+                                        <td>@s.FeTotal</td>
+                                        <td>@s.FeMetallic</td>
+                                        <td>@s.Metallization</td>
+                                        <td>@s.C</td>
+                                        <td>@s.S</td>
+                                        <td>@s.P</td>
+                                        <td>@s.SiO2</td>
+                                        <td>@s.Al2O3</td>
+                                        <td>@s.MgO</td>
+                                        <td>@s.CaO</td>
+                                        <td>@s.TotalGangue</td>
+                                        <td>@s.GrainSize</td>
+                                    </tr>
+
+                                    if (!string.IsNullOrWhiteSpace(s.Comment))
+                                    {
+                                        <tr>
+                                            <td class="font-weight-bold" style="width:140px;">Comments</td>
+                                            <td colspan="15">@s.Comment</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

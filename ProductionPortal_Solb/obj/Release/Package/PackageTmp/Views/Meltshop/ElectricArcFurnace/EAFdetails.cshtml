@@ -1,0 +1,203 @@
+﻿@* Declare the model as a single object *@
+@model DAL.Models.ElectricArcFurnaceBLL
+@using System.Globalization
+@{
+    ViewBag.Title = "Heat Details - " + Model.HeatNo;
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Assuming standard layout
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+}
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h6 class="xp-page-title">Electric Arc Furnace Heat Detail</h6>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("EAFlist", "Meltshop")">Electric Arc Furnace</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Heat Information</h4>
+                </div>
+                <div class="card-body">
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6>⚙️ Charge Material (Ton)</h6>
+                            <hr />
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Scrap (Ton):</strong> @Model.Scrap</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>DRI (Ton):</strong> @Model.DRI</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>HBI (Ton):</strong> @Model.HBI</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>OLD HBI / DRI:</strong> @Model.OldHBIDRI</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>No. of Baskets:</strong> @Model.NoofBaskets</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>P/B (Ton):</strong> @Model.PB</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Dumped:</strong> @Model.Dumped</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Supplier:</strong> @Model.Supplier</p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h6>🧪 Alloys & Fluxes (kg)</h6>
+                            <hr />
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>FeMn (kg):</strong> @Model.FeMn</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>FeSi (kg):</strong> @Model.FeSi</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>SiMn (kg):</strong> @Model.SiMn</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Total Alloys (kg):</strong> @Model.TotalAlloys</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Carbon (kg):</strong> @Model.Carbon</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Charge Coal:</strong> @Model.ChargeCoal</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Inj Carbon (kg):</strong> @Model.InjCarbon</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Aluminum Lamps:</strong> @Model.AluminumLamps</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Lime (3~12mm) (kg):</strong> @Model.Lime312mm</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Lime (5~50mm) (kg):</strong> @Model.Lime550mm</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Lime (kg):</strong> @Model.Lime</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Dolo Lime (kg):</strong> @Model.Dololime</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Coke (kg):</strong> @Model.Coke</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Flour Spar:</strong> @Model.FlourSpar</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Magnisia:</strong> @Model.Magnisia</p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h6>⚡ Energy & Consumables</h6>
+                            <hr />
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>KWH (Consumption):</strong> @Model.KWH</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Electrode (Pcs):</strong> @Model.Electrode</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Oxygen (NM³):</strong> @Model.Oxygen</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>LPG (NM³):</strong> @Model.LPG</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Total Dry Charge:</strong> @Model.TotalDryCharge</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Total TLS:</strong> @Model.TotalTls</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Net TLS:</strong> @Model.NetTls</p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h6>⏱️ Time & Delay Metrics</h6>
+                            <hr />
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>PO Start:</strong> @Model.POStart</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Tapping Start:</strong> @Model.TappingStart</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Power On:</strong> @Model.PowerOn</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Tap to Tap:</strong> @Model.TaptoTap</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>TAT:</strong> @Model.TAT</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Unscheduled Delay:</strong> @Model.UnscheduleDelay</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Effective Delay:</strong> @Model.EffectiveDelay</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Total Delay:</strong> @Model.TotalDelay</p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h6>🌡️ Tapping Results</h6>
+                            <hr />
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Tapping C%:</strong> @Model.TappingC</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Tap Temp:</strong> @Model.TapTemp</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="@Url.Action("LFlist", "Meltshop")" class="btn btn-secondary">
+                            <i class="fa fa-arrow-left"></i> Back to List
+                        </a>
+                        @* Assuming an Edit Action exists: *@
+                        @* <a href="@Url.Action("EAFedit", "Meltshop", new { id = Model.EAFRecordID })" class="btn btn-warning ml-2">Edit Record</a> *@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

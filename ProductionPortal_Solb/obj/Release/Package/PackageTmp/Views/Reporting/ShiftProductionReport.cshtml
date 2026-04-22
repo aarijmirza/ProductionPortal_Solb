@@ -1,0 +1,555 @@
+﻿@model DAL.Models.ViewModel.ShiftProductionReportVM
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Rolling Mill Shift Production Report</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sheet {
+            margin: 10px auto;
+            border: 1px solid #000;
+            padding: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 15px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        .red {
+            color: #c00000;
+            font-weight: bold;
+        }
+
+        .text-top {
+            vertical-align: top;
+        }
+
+        .logo-cell img {
+            max-height: 45px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .legend-cell {
+            font-size: 13px;
+        }
+
+        @@media print {
+            body {
+                margin: 0;
+            }
+
+            .sheet {
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sheet">
+
+        <!-- LOGO + TITLES -->
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width: 180px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+
+                <td class="center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">ROLLING MILL 2 DEPARTMENT</div>
+                    <div class="sub-header">ROLLING MILL 2 - SHIFT PRODUCTION REPORT</div>
+                    <div class="small">QFM-RM2-1007</div>
+                </td>
+
+                <td style="width:180px;">
+                    <table>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- DATE / SHIFT / TEAM -->
+        <table>
+            <tr>
+                <td class="bold" style="width:60px;">Date</td>
+                <td style="width:140px;"></td>
+
+                <td class="bold center" style="width:60px;">Shift :</td>
+                <td style="width:140px;"></td>
+
+                <td class="bold center" style="width:60px;">Team :</td>
+                <td style="width:140px;">Team B2</td>
+
+                <td class="bold center" style="width:90px;">Shift Incharge:</td>
+                <td style="width:140px;"></td>
+
+                <td class="bold center" style="width:70px;">Signature:</td>
+                <td style="width:100px;"></td>
+            </tr>
+
+            <tr>
+                <td class="bold">Fuel Consumption:</td>
+                <td colspan="3">0 (Liters)</td>
+                <td colspan="6"></td>
+            </tr>
+        </table>
+
+        <!-- DOWNTIME DESCRIPTION -->
+        <table style="margin-top:4px; width:100%; border-collapse:collapse;">
+
+            <!-- Header -->
+            <tr>
+                <td colspan="12" class="section-title">DOWNTIME DESCRIPTION</td>
+            </tr>
+
+            <!-- Column Header Row -->
+            <tr class="center small bold">
+
+                <!-- SMALL COLUMNS (same width) -->
+                <td style="width:45px;">Sr. No.</td>
+                <td style="width:65px;">Delay Start</td>
+                <td style="width:65px;">Delay Finish</td>
+                <td style="width:45px;">Total</td>
+                <td style="width:55px;">Cobble</td>
+                <td style="width:55px;">Hot Out</td>
+                <td style="width:65px;">Agency</td>
+                <td style="width:100px;">Equipment Code</td>
+
+                <!-- WIDE COLUMNS (same width for all 3) -->
+                <td style="width:100px;">Component</td>
+                <td style="width:180px;" class="red">Reason</td>
+                <td style="width:180px;" class="red">Description</td>
+                <td style="width:180px;" class="red">Reason for Occurrence</td>
+
+            </tr>
+            @if (Model?.Delays != null)
+            {
+                foreach (var item in Model.Delays)
+                {
+                    <tr style="height:22px;">
+                        <td class="center small">@item.ID</td>
+                        <td>@item.StartTime</td>
+                        <td>@item.EndTime</td>
+                        <td>@item.TotalDuration</td>
+                        <td>@item.Cobble</td>
+                        <td>@item.HotOut</td>
+                        <td>@item.AgencyName</td>
+                        <td>@item.Equipments</td>
+                        <td>@item.Component</td>
+
+                        <!-- Large width columns -->
+                        <td>@item.Reason</td>
+                        <td>@item.DelayDescription</td>
+                        <td>@item.ReasonForOccurence</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr class="center small bold">
+
+                    <!-- SMALL COLUMNS (same width) -->
+                    <td style="width:45px;">Sr. No.</td>
+                    <td style="width:65px;">Delay Start</td>
+                    <td style="width:65px;">Delay Finish</td>
+                    <td style="width:45px;">Total</td>
+                    <td style="width:55px;">Cobble</td>
+                    <td style="width:55px;">Hot Out</td>
+                    <td style="width:65px;">Agency</td>
+                    <td style="width:100px;">Equipment Code</td>
+
+                    <!-- WIDE COLUMNS (same width for all 3) -->
+                    <td style="width:100px;">Component</td>
+                    <td style="width:180px;" class="red">Reason</td>
+                    <td style="width:180px;" class="red">Description</td>
+                    <td style="width:180px;" class="red">Reason for Occurrence</td>
+
+                </tr>
+            }
+
+
+            <!-- Total Row -->
+            <tr class="total-row small">
+                <td class="right bold">Total</td>
+                <td></td>
+                <td></td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td colspan="7"></td>
+            </tr>
+
+        </table>
+
+
+        <!-- AGENCY LEGEND -->
+        <table class="no-border" style="margin-top:2px;">
+            <tr>
+                <td class="legend-cell">
+                    <b>Agency Legends:</b>
+                    PR-Production | GP-Guide / Pass Change | MM-Mechanical | EM-Electrical | RS-RollShop | CR-Crane |
+                    BD-Billet Bay / Dispatch | QU-Quality | UT-Utility | OT-Others |
+                    SC-Size Change | MD-Maintenance Down Day | PF-Power Failure(SEC) | NB-No Billet | AS-Annual Shutdown
+                </td>
+            </tr>
+        </table>
+
+        <!-- PRODUCTION DESCRIPTION -->
+        <table style="margin-top:4px;">
+            <tr>
+                <td colspan="24" class="section-title">PRODUCTION DESCRIPTION</td>
+            </tr>
+
+            <tr class="center small bold">
+                <td rowspan="2">Sr. No.</td>
+                <td rowspan="2">Heat No.</td>
+                <td rowspan="2">Grade</td>
+                <td rowspan="2">Size</td>
+                <td rowspan="2">Profile</td>
+                <td rowspan="2">Billet Discharge (Nos.)</td>
+                <td rowspan="2">Billet Rolled (Nos.)</td>
+                <td rowspan="2">Cobble (Nos.)</td>
+                <td rowspan="2">Hot Out (Nos.)</td>
+                <td rowspan="2">No. of Bundles (Prime)</td>
+                <td rowspan="2">Bundle On-Hold</td>
+                <td rowspan="2">Reject Bundle</td>
+                <td rowspan="2">Short Bundle Wt.</td>
+            </tr>
+
+            <tr class="center small bold">
+            </tr>
+            @if (Model?.DischargedHeats != null)
+            {
+                <!-- 8 Production Blank Rows -->
+                foreach (var item in Model.DischargedHeats)
+                {
+                    <tr>
+                        <td class="center">@item.DischargingSequence</td>
+                        <td>@item.HeatNo</td>
+                        <td>@item.SteelGrade</td>
+                        <td>@item.Size</td>
+                        <td>@item.Profile</td>
+                        <td>@item.TotalBillet</td>
+                        <td>@item.TotalBillet</td>
+                        <td>@item.Cobble</td>
+                        <td>@item.HotOut</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr class="center small bold">
+                    <td rowspan="2">Sr. No.</td>
+                    <td rowspan="2">Heat No.</td>
+                    <td rowspan="2">Grade</td>
+                    <td rowspan="2">Size</td>
+                    <td rowspan="2">Profile</td>
+                    <td rowspan="2">Billet Discharge (Nos.)</td>
+                    <td rowspan="2">Billet Rolled (Nos.)</td>
+                    <td rowspan="2">Cobble (Nos.)</td>
+                    <td rowspan="2">Hot Out (Nos.)</td>
+                    <td rowspan="2">No. of Bundles (Prime)</td>
+                    <td rowspan="2">Bundle On-Hold</td>
+                    <td rowspan="2">Reject Bundle</td>
+                    <td rowspan="2">Short Bundle Wt.</td>
+                </tr>
+            }
+            <!-- TOTALS -->
+            <tr class="total-row small">
+                <td colspan="5" class="right bold">Total</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+            </tr>
+        </table>
+
+        <!-- ============================
+        SHIFT PERFORMANCE SUMMARY (Excel style)
+        ============================ -->
+        <!-- BOTH SUMMARIES SIDE-BY-SIDE -->
+        <table style="width:100%; margin-top:10px;">
+            <tr>
+                <!-- LEFT: Shift Performance Summary -->
+                <td style="width:50%; vertical-align:top; padding-right:6px;">
+
+                    <!-- SHIFT PERFORMANCE SUMMARY -->
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr>
+                            <td colspan="5" class="section-title center" style="border:1px solid #000;">Shift Performance Summary</td>
+                        </tr>
+                        <!-- Size header row -->
+                        <tr class="small center bold">
+                            <td style="border:1px solid #000;">Size (mm)</td>
+                            <td style="border:1px solid #000;">12mm</td>
+                            <td style="border:1px solid #000;">14mm</td>
+                            <td style="border:1px solid #000;">16mm</td>
+                            <td style="border:1px solid #000;">Total</td>
+                        </tr>
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Tonnage</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000; text-align:center;">0</td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Total Billets Discharged (nos)</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Total Billets Rolled (nos)</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Cobble (nos)</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Hot out (nos)</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Total Billet Rolled (MT)</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">No. of Bundles Produced</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Fuel Consumption (L/MT)</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Electricity Consumption</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Finished Product (MT)</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Actual Yield (%)</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Theoretical Yield (%)</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">RRR%</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">Productivity Ton / Hrs.</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">1. Safety issues in the Shift:</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                        <tr class="small">
+                            <td style="border:1px solid #000;">2. Information/Message for incoming shift:</td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+                    </table>
+
+                </td>
+
+                <!-- RIGHT: Hourly Production Summary -->
+                <td style="width:50%; vertical-align:top; padding-left:6px;">
+
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr>
+                            <td colspan="4" class="section-title center" style="border:1px solid #000;">
+                                Hourly Production Summary
+                            </td>
+                        </tr>
+
+                        <!-- HEADER -->
+                        <tr class="small center bold">
+                            <td style="border:1px solid #000;">Sr. No.</td>
+                            <td style="border:1px solid #000;">Hourly Production</td>
+                            <td style="border:1px solid #000;">Target (Billet/hr)</td>
+                            <td style="border:1px solid #000;">Actual (Billet/hr)</td>
+                        </tr>
+
+                        @{
+                            // ✅ Default: no rows
+                            int hourlyRows = 0;
+
+                            if (Model?.DischargedHeats != null && Model.DischargedHeats.Any())
+                            {
+                                string shift = Model.DischargedHeats.First().Shift?.Trim().ToLower() ?? "";
+
+                                // Morning / Evening / Night → 8 rows, otherwise 12
+                                hourlyRows = (shift == "morning" || shift == "evening" || shift == "night")
+                                                ? 8
+                                                : 12;
+                            }
+                        }
+
+                        @* ✅ Render rows ONLY if data exists *@
+                        @if (hourlyRows > 0)
+                        {
+                            for (int i = 1; i <= hourlyRows; i++)
+                            {
+                                <tr class="small center" style="height:22px;">
+                                    <td style="border:1px solid #000;">@i</td>
+                                    <td style="border:1px solid #000;"></td>
+                                    <td style="border:1px solid #000;"></td>
+                                    <td style="border:1px solid #000;"></td>
+                                </tr>
+                            }
+                        }
+
+                        <!-- TOTAL -->
+                        <tr class="bold center">
+                            <td style="border:1px solid #000;">Total</td>
+                            <td style="border:1px solid #000;">0.00</td>
+                            <td style="border:1px solid #000;">0.00</td>
+                            <td style="border:1px solid #000;">0.00</td>
+                        </tr>
+
+                    </table>
+                </td>
+
+
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

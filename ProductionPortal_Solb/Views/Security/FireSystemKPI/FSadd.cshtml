@@ -1,0 +1,139 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Fire System KPI</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">Fire System KPI</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<div class="xp-contentbar">
+    <form action="/CCM/AddYieldRecord" id="addprofileform" method="post">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white text-right">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-1">
+                                <label>Month <br /><br /></label>
+                                <select class="form-control" name="Month">
+                                    <option selected disabled>-- select --</option>
+                                    <option value="January">January</option>
+                                    <option value="Febraury">Febraury</option>
+                                    <option value="March">March</option>
+                                    <option value="April">April</option>
+                                    <option value="May">May</option>
+                                    <option value="June">June</option>
+                                    <option value="July">July</option>
+                                    <option value="August">August</option>
+                                    <option value="September">September</option>
+                                    <option value="October">October</option>
+                                    <option value="November">November</option>
+                                    <option value="December">December</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Total FE <br /><br /></label>
+
+                                <input type="number" id="totalFE" class="form-control" name="TotalFE" />
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Inspected <br /><br /></label>
+
+                                <input type="number" id="inspected" class="form-control" name="Inspected" />
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Compliant <br /><br /></label>
+
+                                <input type="number" id="compliant" class="form-control" name="Compliant" />
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Non<br />Compliant</label>
+                                <input type="number" id="noncompliant" class="form-control" name="NonCompliant" />
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Hydrostatic Due</label>
+                                <input type="text" id="hydrostaticdue" class="form-control" name="HydrostaticDue" />
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Remarks</label>
+                                <textarea class="form-control" rows="2" name="Remarks" id="remarks"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h4 class="card-title">MONTHLY HOSE REELS</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-1">
+                                <label>Month <br /><br /></label>
+                                <select class="form-control" name="Month">
+                                    <option selected disabled>-- select --</option>
+                                    <option value="January">January</option>
+                                    <option value="Febraury">Febraury</option>
+                                    <option value="March">March</option>
+                                    <option value="April">April</option>
+                                    <option value="May">May</option>
+                                    <option value="June">June</option>
+                                    <option value="July">July</option>
+                                    <option value="August">August</option>
+                                    <option value="September">September</option>
+                                    <option value="October">October</option>
+                                    <option value="November">November</option>
+                                    <option value="December">December</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Total <br /> Hose Reels</label>
+
+                                <input type="number" id="totalFE" class="form-control" name="TotalFE" />
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Inspected <br /><br /></label>
+
+                                <input type="number" id="inspected" class="form-control" name="Inspected" />
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Compliant <br /><br /></label>
+
+                                <input type="number" id="compliant" class="form-control" name="Compliant" />
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Non<br />Compliant</label>
+                                <input type="number" id="noncompliant" class="form-control" name="NonCompliant" />
+                            </div>
+                            @*<div class="form-group col-md-1">
+                                <label>Hydrostatic Due</label>
+                                <input type="text" id="hydrostaticdue" class="form-control" name="HydrostaticDue" />
+                            </div>*@
+                            <div class="form-group col-md-6">
+                                <label>Remarks</label>
+                                <textarea class="form-control" rows="2" name="Remarks" id="remarks"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,211 @@
+﻿@model DAL.Models.DelaysVM
+@using System.Linq
+@{
+    ViewBag.Title = "add";
+}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#ddlEquipments').select2({
+            placeholder: "-- Select Equipments --",
+            allowClear: true,
+            search: true,
+            width: '100%'
+        });
+    });
+</script>
+
+ @*Start XP Breadcrumbbar*@ 
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Delays Record Form</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">Delay</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+ @*End XP Breadcrumbbar*@ 
+
+<div class="xp-contentbar">
+    <form action="/delay/SMPadd" id="addprofileform" method="post">
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white text-right">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row mb-4">
+                            <div class="form-group col-md-3">
+                                <div class="custom-control custom-radio">
+                                    <input class="custom-control-input plant-radio" type="radio" id="radio2" name="Area" value="Steel Making" hidden checked>
+                                    <label class="custom-control-label" for="radio2">Steel Making Plant</label>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="form-row mb-4">
+                            <div class="form-group col-md-3">
+                                <div class="custom-control custom-radio">
+                                    <input class="custom-control-input plant-radio" type="radio" id="radio3" name="Plant" value="EAF">
+                                    <label class="custom-control-label" for="radio3">EAF</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="custom-control custom-radio">
+                                    <input class="custom-control-input plant-radio" type="radio" id="radio4" name="Plant" value="LF">
+                                    <label class="custom-control-label" for="radio4">LF</label>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="custom-control custom-radio">
+                                    <input class="custom-control-input plant-radio" type="radio" id="radio5" name="Plant" value="CCM">
+                                    <label class="custom-control-label" for="radio5">CCM</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label>Agency</label>
+                                <select id="AgencyDropdown" name="AgencyName" class="form-control">
+                                    <option value="">-- Select Agency --</option>
+                                    @foreach (var a in (IEnumerable<DAL.Models.PlantDelayBLL>)ViewBag.Agencies)
+                                    {
+                                        <option value="@a.AgencyCode"
+                                                data-department="@a.Area"
+                                                data-delaytype="@a.DelayType">
+                                            @a.AgencyName
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Code</label>
+                                <input type="text" id="AgencyCodeInput" class="form-control" name="AgencyCode" readonly />
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>Date</label>
+                                <input type="date" class="form-control" id="date" name="Date" readonly>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>Start Time</label>
+                                <input type="time" class="form-control" name="StartTime" />
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>End Time</label>
+                                <input type="time" class="form-control" name="EndTime" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Equipment</label>
+                                @Html.DropDownListFor(model => model.Equipments,
+                                    ViewBag.Equipment as SelectList,
+                                    "-- Select Equipments --",
+                                    new { @class = "form-control select2", id = "ddlEquipments", name = "Equipments" })
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Component</label>
+                                @Html.DropDownListFor(model => model.Components,
+                                    ViewBag.Component as SelectList,
+                                    "-- Select Components --",
+                                    new { @class = "form-control select2", id = "ddlComponents", @disabled = "disabled" })
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Reason</label>
+                                <textarea class="form-control" rows="1" name="Reason"></textarea>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Delay Description</label>
+                                <textarea class="form-control" rows="1" name="DelayDescription"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Reason For Occurence</label>
+                                <textarea class="form-control" rows="3" name="ReasonForOccurence"></textarea>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Action Taken</label>
+                                <textarea class="form-control" rows="3" name="ActionTaken"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+ @*SCRIPTS*@ 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+
+<script>
+        $(document).ready(function () {
+
+            $("#date").val(new Date().toISOString().split('T')[0]);
+
+            // When Department or AgencyType radios change → filter dropdown
+            $("input[name='Area'], input[name='DelayType']").on("change", function () {
+                filterAgencies();
+            });
+
+            // When Agency selected → show code in textbox
+            $("#AgencyDropdown").on("change", function () {
+                var selectedValue = $(this).val();
+                var selectedName = $(this).val();
+                $("#AgencyCodeInput").val(selectedValue); // fill code
+                $("#AgencyCodeInput").val(selectedName); // fill code
+            });
+
+            function filterAgencies() {
+                var selectedDept = $("input[name='Area']:checked").val();
+                var selectedDelay = $("input[name='DelayType']:checked").val();
+
+                $("#AgencyDropdown option").show(); // reset
+
+                // Filter options
+                $("#AgencyDropdown option").not(":first").each(function () {
+                    var dept = $(this).data("department");
+                    var delay = $(this).data("delaytype");
+
+                    if (dept !== selectedDept || delay !== selectedDelay) {
+                        $(this).hide();
+                    }
+                });
+
+                // Reset dropdown & code input
+                $("#AgencyDropdown").val("");
+                $("#AgencyCodeInput").val("");
+            }
+
+            // Show/hide Cobbles & Hot Out row based on Department radio
+            $("input[name='Area']").on("change", function () {
+                var selectedDept = $("input[name='Area']:checked").val();
+
+                if (selectedDept === "Rolling Mill") {
+                    $("#rollingMillRow").show();
+                } else {
+                    $("#rollingMillRow").hide();
+                }
+            });
+
+        });
+    </script>
+
+

@@ -10,7 +10,8 @@ namespace WebAPICode.Helpers
 {
     public class DBHelper
     {
-        private static readonly string connectionString = "data source=10.1.14.66;initial catalog=Production_Solb;persist security info=True;user id=Postgres;password=Solb@2030;";
+        //private static readonly string connectionString = "data source=10.1.14.66;initial catalog=Production_Solb;persist security info=True;user id=Postgres;password=Solb@2030;";
+        private static readonly string connectionString = "data source=10.1.10.115\\PROD01;initial catalog=Production_Solb;persist security info=True;user id=WebReportViewer;password=WebReportViewer;";
 
         public DataTable GetTableFromSP(string sp, Dictionary<string, object> parametersCollection)
         {
@@ -47,6 +48,40 @@ namespace WebAPICode.Helpers
 
             }
         }
+
+        public DataTable GetTableFromQuery(string query, params SqlParameter[] parameters)
+        {
+            DataTable dt = new DataTable();
+
+            try
+            {
+                using (SqlConnection con = new SqlConnection(connectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand(query, con))
+                    {
+                        cmd.CommandType = CommandType.Text;
+
+                        if (parameters != null && parameters.Length > 0)
+                        {
+                            cmd.Parameters.AddRange(parameters);
+                        }
+
+                        using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                        {
+                            da.Fill(dt);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 🔴 Log error here if you have logging
+                throw;
+            }
+
+            return dt;
+        }
+
 
         public DataTable GetTableFromSP(string sp, SqlParameter[] prms)
         {
@@ -255,6 +290,18 @@ namespace WebAPICode.Helpers
             finally
             {
                 connection.Close();
+            }
+        }
+
+        public object ExecuteScalar(string spName, SqlParameter[] parameters)
+        {
+            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlCommand cmd = new SqlCommand(spName, con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(parameters);
+                con.Open();
+                return cmd.ExecuteScalar();
             }
         }
 

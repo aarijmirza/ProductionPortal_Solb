@@ -1,0 +1,233 @@
+﻿@model DAL.Models.ElectricArcFurnaceBLL 
+
+@{
+    ViewBag.Title = "LFadd";
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Laddle Furnace</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index" ,"Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">Laddle Furnace</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Heat Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<div class="xp-contentbar">
+    <form action="/Meltshop/LFadd" id="addprofileform" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white" style=" ALIGN-SELF: end;">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="Date">Date</label>
+                                <input type="date" class="form-control" id="date" name="Date" >
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="HeatNo">Heat No</label>
+                                @Html.DropDownListFor(model => model.HeatNo,
+                                    ViewBag.HeatNo as SelectList,
+                                     "-- Select Heat # --",
+                                     new { @class = "form-control", id = "ddlgrade" })
+
+                                @Html.ValidationMessageFor(model => model.HeatNo, "", new { @class = "text-danger" })
+                                @*<input type="text" class="form-control" id="HeatNo" name="HeatNo" placeholder="Enter Heat No" required>*@
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="HeatNo">Grade</label>
+                                <input type="text" class="form-control" id="HeatNo" name="Grade" placeholder="Enter Grade" required>
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="RecarburizerSilo">Recarburizer Silo (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="RecarburizerSilo" name="RecarburizerSilo" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="RecarburizerBags">Recarburizer Bags (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="RecarburizerBags" name="RecarburizerBags" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="FeSi">FeSi (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="FeSi" name="FeSi" placeholder="Enter Amount" value="0">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="FeMn">FeMn (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="FeMn" name="FeMn" placeholder="Enter Amount" value="0">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="SiMn">SiMn (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="SiMn" name="SiMn" placeholder="Enter Amount" value="0">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="TotalAlloys">Total Alloys (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="TotalAlloys" name="TotalAlloys" value="0.00" readonly>
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="Lime312mm">Lime 3-12mm (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="Lime312mm" name="Lime312mm" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="Dololime">Dololime (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="Dololime" name="Dololime" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="MgO">MgO (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="MgO" name="MgO" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="FlourSpar">Flour Spar (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="FlourSpar" name="FlourSpar" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="RiceHusk">Rice Husk (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="RiceHusk" name="RiceHusk" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="CaSi">CaSi (meter)</label>
+                                <input type="number" step="0.01" class="form-control" id="CaSi" name="CaSi" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="CafeWire">CaFe Wire (m)</label>
+                                <input type="number" step="0.01" class="form-control" id="CafeWire" name="CafeWire" placeholder="Enter Length">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="Cac2">CaC2 (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="Cac2" name="Cac2" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="SynSlag">Syn Slag (kg)</label>
+                                <input type="number" step="0.01" class="form-control" id="SynSlag" name="SynSlag" placeholder="Enter Amount">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="Electrode">Electrode (kg/T)</label>
+                                <input type="number" step="0.01" class="form-control" id="Electrode" name="Electrode" placeholder="Enter Consumption">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="KWH">KWH (per Ton)</label>
+                                <input type="number" step="0.01" class="form-control" id="KWH" name="KWH" placeholder="Enter Consumption">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="Nitrogen">Nitrogen (Nm³)</label>
+                                <input type="number" step="0.01" class="form-control" id="Nitrogen" name="Nitrogen" placeholder="Enter Volume">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="Argon">Argon (Nm³)</label>
+                                <input type="number" step="0.01" class="form-control" id="Argon" name="Argon" placeholder="Enter Volume">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="LMForCasting">LM For Casting (Ton)</label>
+                                <input type="number" step="0.01" class="form-control" id="LMForCasting" name="LMForCasting" placeholder="Enter Weight">
+                            </div>
+
+                            <div class="form-group col-md-2"></div>
+                            <div class="form-group col-md-2"></div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $("input[type='number']").attr("step", "any");
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("date").value = today;
+
+    function calculateTotalAlloys() {
+        // Get values from the input fields
+        const feSi = parseFloat(document.getElementById('FeSi').value) || 0;
+        const feMn = parseFloat(document.getElementById('FeMn').value) || 0;
+        const siMn = parseFloat(document.getElementById('SiMn').value) || 0;
+
+        // Calculate the total
+        const totalAlloys = feSi + feMn + siMn;
+
+        // Update the TotalAlloys field, formatted to 2 decimal places
+        document.getElementById('TotalAlloys').value = totalAlloys.toFixed(2);
+    }
+    document.getElementById('FeSi').addEventListener('input', calculateTotalAlloys);
+    document.getElementById('FeMn').addEventListener('input', calculateTotalAlloys);
+    document.getElementById('SiMn').addEventListener('input', calculateTotalAlloys);
+
+    // Run the calculation once on page load to ensure the initial value is correct
+    window.addEventListener('load', calculateTotalAlloys);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+
+        let isSubmitting = false;   // 🔐 double-submit lock
+
+        $("#addprofileform").on("submit", function (e) {
+            e.preventDefault(); // ❗ pehle submit roko
+
+            if (isSubmitting) return; // already submitting
+
+            Swal.fire({
+                title: 'Confirm Submission',
+                text: 'Are you sure you want to submit this Heat Record?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Submit',
+                cancelButtonText: 'Cancel',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    isSubmitting = true; // 🔒 lock
+
+                    // Disable submit button
+                    $("#addprofileform")
+                        .find("button[type='submit']")
+                        .prop("disabled", true)
+                        .text("Submitting...");
+
+                    // Finally submit form
+                    $("#addprofileform")[0].submit();
+                }
+            });
+        });
+
+    });
+</script>

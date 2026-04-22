@@ -1,0 +1,91 @@
+﻿@{
+    ViewBag.Title = "add";
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">QC Inspection Data - RM</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index" ,"Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">QC Inspection Data - RM</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<!-- Start XP Contentbar -->
+<div class="xp-contentbar">
+    <!-- Start XP Row -->
+    <form action="/Quality/QCInspectionRMadd" id="addprofileform" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Start XP Col -->
+            <div class="col-lg-12">
+                <div class="card m-b-30">
+                    <div class="card-header bg-white" style=" ALIGN-SELF: end;">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="date">Production Date</label>
+                                <input type="date" class="form-control" id="date" name="date" placeholder="Date" disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="date">Shift</label>
+                                <select class="form-control">
+                                    <option disabled selected>-- please select --</option>
+                                    <option value="07x15">07x15</option>
+                                    <option value="08x15">08x15</option>
+                                    <option value="15x23">15x23</option>
+                                    <option value="23x07">23x07</option>
+                                    <option value="07x19">07x19</option>
+                                    <option value="19x07">19x07</option>
+                                    <option value="08x17">08x17</option>
+                                    <option value="05x12">05x12</option>
+                                    <option value="12x20">12x20</option>
+                                    <option value="20x05">20x05</option>
+                                    <option value="24x00">24x00</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="date">Heat #</label>
+                                <select class="form-control">
+                                    <option disabled selected>-- please select --</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="date">Steel Grade</label>
+                                <input type="text" class="form-control" name="steelgrade" placeholder="steel grade" disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="date">Bar Size</label>
+                                <input type="text" class="form-control" name="barsize" placeholder="bar size" disabled>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="date">Total Bundles Produced</label>
+                                <input type="number" class="form-control" name="barsize" placeholder="total bundles producedss" disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End XP Col -->
+        </div>
+    </form>
+    <!-- End XP Row -->
+</div>
+<!-- End XP Contentbar -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $("input[type='number']").attr("step", "any");
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("date").value = today;
+</script>

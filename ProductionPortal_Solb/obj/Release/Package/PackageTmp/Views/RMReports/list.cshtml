@@ -1,0 +1,140 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Rolling Mill</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">Rolling Mill Plant</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Reports</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<!-- Filters Section -->
+<div class="xp-breadcrumbbar" style="padding: 50px 30px 0 30px;">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form id="filterForm" class="d-flex justify-content-between">
+
+                        <div class="d-flex">
+                            <div class="form-group mr-3">
+                                <label for="fromDate" class="mr-2">From</label>
+                                <input type="date" id="fromDate" class="form-control" />
+                            </div>
+
+                            <div class="form-group mr-3">
+                                <label for="toDate" class="mr-2">To</label>
+                                <input type="date" id="toDate" class="form-control" />
+                            </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Filter Section -->
+<div class="xp-contentbar">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="col-md-3 col-lg-3 col-xl-3">
+                            <!-- Sizing Card -->
+                            <div class="card border-danger m-b-30">
+                                <div class="card-body">
+                                    <h5 class="card-title">Shift Production Report</h5>
+                                    <a href="@Url.Action("ShiftProductionReport", "Reporting")" class="btn btn-primary" target="_blank">View Report</a>
+                                </div>
+                            </div>
+                            <!-- Sizing Card -->
+                        </div>
+                        <div class="col-md-3 col-lg-3 col-xl-3">
+                            <!-- Sizing Card -->
+                            <div class="card border-danger m-b-30">
+                                <div class="card-body">
+                                    <h5 class="card-title">Monthly Perfomance Report</h5>
+                                    <a href="@Url.Action("RMMonthlyPerformanceReport", "Reporting")" class="btn btn-primary" target="_blank">View Report</a>
+                                </div>
+                            </div>
+                            <!-- Sizing Card -->
+                        </div>
+                        <div class="col-md-3 col-lg-3 col-xl-3">
+                            <!-- Sizing Card -->
+                            <div class="card border-danger m-b-30">
+                                <div class="card-body">
+                                    <h5 class="card-title">Daily Production Report</h5>
+                                    <a href="@Url.Action("DailyProductionRM", "Reporting")" class="btn btn-primary" target="_blank">View Report</a>
+                                </div>
+                            </div>
+                            <!-- Sizing Card -->
+                        </div>
+                        <!--<div class="col-md-3 col-lg-3 col-xl-3">-->
+                            <!-- Sizing Card -->
+                            <!--<div class="card border-danger m-b-30">
+                                <div class="card-body">
+                                    <h5 class="card-title">Daily Production Statistic Report</h5>
+                                    <a href="@Url.Action("StatisticReport", "SMPReports")" class="btn btn-primary" target="_blank">View Report</a>
+                                </div>
+                            </div>-->
+                            <!-- Sizing Card -->
+                        <!--</div>
+                        <div class="col-md-3 col-lg-3 col-xl-3">-->
+                            <!-- Sizing Card -->
+                            <!--<div class="card border-danger m-b-30">
+                                <div class="card-body">
+                                    <h5 class="card-title">CCM Yeild Breakdown Report</h5>
+                                    <a href="@Url.Action("DailySummary", "SMPReports")" class="btn btn-primary" target="_blank">View Report</a>
+                                </div>
+                            </div>-->
+                            <!-- Sizing Card -->
+                        <!--</div>-->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+
+<script>
+    $(document).ready(function () {
+        // ✅ Default dates
+        var today = new Date();
+        var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        function formatDate(d) {
+            return d.toISOString().split('T')[0];
+        }
+
+        $('#fromDate').val(formatDate(today));
+        $('#toDate').val(formatDate(today));
+
+        // Export PDF (date-wise)
+        $('#exportPdf').click(function () {
+            var from = $('#fromDate').val() || '';
+            var to   = $('#toDate').val() || '';
+
+            var url = '@Url.Action("DailyHeatSummary", "MeltShop")'
+                + '?from=' + encodeURIComponent(from)
+                + '&to=' + encodeURIComponent(to);
+
+            window.open(url, '_blank');
+        });
+    });
+</script>

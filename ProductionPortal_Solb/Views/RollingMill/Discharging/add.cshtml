@@ -1,0 +1,517 @@
+﻿
+@using System.Globalization
+@model DAL.Models.ViewModel.RMDischargingVM
+@{
+    ViewBag.Title = "add";
+}
+<style>
+    .dropdown-container {
+        position: relative;
+    }
+
+    .dropdown-menu-custom {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        width: 100%;
+        max-width: 500px;
+        /* 💥 INCREASE THIS VALUE 💥 */
+        max-height: 250px; /* Increased height */
+        overflow-y: auto; /* Keep scrollbar */
+        border: 1px solid #ccc;
+        background-color: white;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+        font-size: 12px;
+    }
+
+        .dropdown-menu-custom table {
+            table-layout: fixed; /* Ensures fixed column widths */
+        }
+
+        .dropdown-menu-custom tbody tr {
+            cursor: pointer;
+        }
+
+            .dropdown-menu-custom tbody tr:hover {
+                background-color: #f5f5f5;
+            }
+            /* Style for selected row, if needed */
+            .dropdown-menu-custom tbody tr.selected {
+                background-color: #007bff;
+                color: white;
+            }
+
+        /* Ensures headers are bold */
+        .dropdown-menu-custom th {
+            font-weight: bold;
+            /* Add a border to the right of the header cells for alignment */
+            border-right: 1px solid #ccc;
+        }
+
+            /* Remove the border from the last header cell */
+            .dropdown-menu-custom th:last-child {
+                border-right: none;
+            }
+
+        /* 💥 VERTICAL AND HORIZONTAL SEPARATORS 💥 */
+        .dropdown-menu-custom td {
+            /* Horizontal Separator (bottom) */
+            border-bottom: 1px solid #ddd;
+            /* Vertical Separator (right) */
+            border-right: 1px solid #ccc; /* Light vertical line between columns */
+        }
+
+            /* Ensure the last column (last td in each row) does not have a right border */
+            .dropdown-menu-custom td:last-child {
+                border-right: none;
+            }
+
+        /* Ensure the last row doesn't have a bottom border, keeping it clean */
+        .dropdown-menu-custom tr:last-child td {
+            border-bottom: none;
+        }
+    /* ... (Keep existing hover styles) ... */
+</style>
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Furnace Discharge</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">Furnace Discharge</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<div class="xp-contentbar">
+    @using (Html.BeginForm("AddDischarge", "RollingMill", FormMethod.Post, new { id = "addprofileform" }))
+    {
+        @*<form action="/RollingMill/AddDischarge" id="addprofileform" method="post">*@
+        <div class="row">
+            <div class="col-lg-12">
+
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header">
+                        <b>Rolling Mill Shift Details (Today)</b>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <b>Date:</b> @(Model.Date != null ? Model.Date.Value.ToString("dd-MM-yyyy") : "-")
+                            </div>
+                            <div class="form-group col-md-3">
+                                <b>Plant:</b> @Model.Plant
+                            </div>
+                            <div class="form-group col-md-3">
+                                <b>Shift:</b> @Model.Shift
+                            </div>
+                            <div class="form-group col-md-3">
+                                <b>Shift Incharge:</b> @Model.ShiftIncharge
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card m-b-30">
+                    <div class="card-header bg-white text-right">
+                        <button type="submit" class="btn btn-primary">Discharged</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label>Date</label>
+                                <input type="date" class="form-control" id="date" name="Date" />
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Shift</label>
+                                @Html.TextBoxFor(m => m.Shift, new { @class = "form-control", @readonly = "readonly" })
+                                @Html.HiddenFor(m => m.Shift)
+                                @*<select class="form-control" name="Shift">
+                            <option selected disabled>-- please select --</option>
+                            <option value="Morning">Morning</option>
+                            <option value="Afternoon">Afternoon</option>
+                            <option value="Night">Night</option>
+                            <option value="Long Morning">Long Morning</option>
+                            <option value="Long Night">Long Night</option>
+                        </select>*@
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Heat #</label>
+                                @Html.DropDownListFor(model => model.HeatNo,
+                                     ViewBag.HeatNo as SelectList,
+                                     "-- Select Heat # --",
+                                     new { @class = "form-control", id = "ddlgrade" })
+                                @Html.ValidationMessageFor(model => model.HeatNo, "", new { @class = "text-danger" })
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Boarding #</label>
+                                <input type="text" class="form-control" id="txtBoarding" name="BoardingNo" readonly>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Steel Grade</label>
+                                <input type="text" class="form-control" id="txtGrade" name="SteelGrade" readonly>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>P.O. Number</label>
+                                <input type="text" class="form-control" id="txtPONumber" name="PONumber" readonly />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="productSpec">Product Code</label>
+                                @* 2. VISIBLE INPUT FIELD *@
+                                <div class="input-group">
+                                    <input type="text"
+                                           id="productSpec"
+                                           class="form-control"
+                                           placeholder="-- Select Product Grade --"
+                                           readonly
+                                           name="ProductCode">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleDropdownBtn">
+                                            <i class="fa fa-caret-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @* 3. CUSTOM MULTI-COLUMN DROPDOWN TABLE *@
+                                <div id="multiColumnDropdown" class="dropdown-menu-custom shadow" style="display: none;">
+                                    <table class="table table-hover table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 30%;">Spec/Grade</th>
+                                                <th style="width: 30%;">Steel Grade</th>
+                                                <th style="width: 10%;">L</th>
+                                                <th style="width: 10%;">W</th>
+                                                <th style="width: 20%;">Billet Length (m)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="specGradeBody">
+                                            @* DATA ROWS WILL BE POPULATED BY JAVASCRIPT *@
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Finished Product Grade</label>
+                                <select class="form-control" name="NewSteelGrade">
+                                    <option selected disabled>-- please select --</option>
+                                    <option value="ASTM A615 G40">ASTM A615 G40</option>
+                                    <option value="ASTM A615 G60">ASTM A615 G60</option>
+                                    <option value="ASTM A615 G75">ASTM A615 G75</option>
+                                    <option value="ASTM A615 G80">ASTM A615 G80</option>
+                                    <option value="ASTM A706 G60">ASTM A706 G60</option>
+                                    <option value="ASTM A706 G75">ASTM A706 G75</option>
+                                    <option value="ASTM A706 G80">ASTM A706 G80</option>
+                                    <option value="SAE 1008">SAE 1008</option>
+                                    <option value="SAE 1006">SAE 1006</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Cobble</label>
+                                <input type="number" step="0.001" class="form-control" name="Cobble" placeholder="0">
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Hot Out</label>
+                                <input type="number" step="0.001" class="form-control" name="HotOut" placeholder="0">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Total Billet</label>
+                                <input type="text" class="form-control" id="txtTotalBillet" name="TotalBillet" readonly>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Total Weight (MT)</label>
+                                <input type="number" class="form-control" id="txtTotalWeight" name="TotalWeight" readonly>
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label>Discharge Seq.</label>
+                                <input type="number" class="form-control" value="0" name="DischargingSequence">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*</form>*@
+    }
+
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label><b>Filter by Shift</b></label>
+                            <select id="shiftFilter" class="form-control">
+                                <option value="">All</option>
+                                <option value="Morning">Morning</option>
+                                <option value="Afternoon">Afternoon</option>
+                                <option value="Night">Night</option>
+                                <option value="Long Morning">Long Morning</option>
+                                <option value="Long Night">Long Night</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Discharging Seq.</th>
+                                    @*<th>Date</th>*@
+                                    <th>Shift</th>
+                                    <th>Heat #</th>
+                                    @*<th>Boarding #</th>*@
+                                    <th>Steel Grade</th>
+                                    <th>Total Billet</th>
+                                    <th>Total Weight (MT)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.SubmittedHeat != null)
+                                {
+                                    foreach (var item in Model.SubmittedHeat)
+                                    {
+                                        var gregorian = new CultureInfo("en-US");
+                                        gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+                                        <tr>
+                                            <td>@item.DischargingSequence</td>
+                                            @*<td>@(item.Date.ToString("dd-MM-yyyy", gregorian))</td>*@
+                                            <td>@item.Shift</td>
+                                            <td>@item.HeatNo</td>
+                                            @*<td>@item.BoardingNo</td>*@
+                                            <td>@item.SteelGrade</td>
+                                            <td>@item.TotalBillet</td>
+                                            <td>@item.TotalWeight</td>
+                                            <td>
+                                                @switch (item.HeatStatus)
+                                                {
+                                                    case 102:
+                                                        <span class="badge badge-success">Charging</span>
+                                                        break;
+
+                                                    case 103:
+                                                        <span class="badge badge-warning">Discharged</span>
+                                                        break;
+
+                                                    default:
+                                                        <span class="badge badge-light">Unknown</span>
+                                                        break;
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+    // JAVASCRIPT FOR MULTI-COLUMN DROPDOWN
+    $(document).ready(function () {
+        debugger
+        const gradeDataJson = '@Html.Raw(ViewBag.GradeDataJson)';
+        let gradeData = [];
+
+        try {
+            gradeData = JSON.parse(gradeDataJson);
+        } catch (e) {
+            console.error("Error parsing Grade Data JSON:", e);
+            return;
+        }
+
+        const $specGradeBody = $('#specGradeBody');
+        const $inputField = $('#productSpec');
+        const $dropdownTable = $('#multiColumnDropdown');
+        const $toggleBtn = $('#toggleDropdownBtn');
+        const $hiddenIdField = $('#hiddenProductID');
+        const $billetLengthField = $('#billetLength');
+        const $crossSectionField = $('#crosssection');
+        const $steelGradeField = $('#steelGrade');   // ✅ add this input in HTML
+
+        // ----------------------------
+        // POPULATE DROPDOWN TABLE
+        // ----------------------------
+        gradeData.forEach(item => {
+            const row = `
+                <tr
+                    data-id="${item.ProductID}"
+                    data-spec="${item.SpecGrade}"
+                    data-grade="${item.SteelGrade}"
+                    data-l="${item.Length}"
+                    data-w="${item.Width}"
+                    data-billet="${item.BilletLength}">
+                    <td>${item.SpecGrade}</td>
+                    <td>${item.SteelGrade}</td>
+                    <td>${item.Length}</td>
+                    <td>${item.Width}</td>
+                    <td>${item.BilletLength}</td>
+                </tr>`;
+            $specGradeBody.append(row);
+        });
+
+        // ----------------------------
+        // TOGGLE DROPDOWN
+        // ----------------------------
+        $toggleBtn.on('click', function () {
+            $dropdownTable.toggle();
+        });
+
+        // ----------------------------
+        // ROW CLICK EVENT
+        // ----------------------------
+        $specGradeBody.on('click', 'tr', function () {
+
+            const $row = $(this);
+
+            const selectedId = $row.data('id');
+            const selectedSpec = $row.data('spec');
+            const selectedGrade = $row.data('grade');
+            const billetLength = $row.data('billet');
+
+            const length = $row.data('l');
+            const width = $row.data('w');
+            const crossSectionValue = length + 'x' + width;
+
+            // ✅ SET VALUES
+            debugger
+            $inputField.val(selectedSpec);
+            $hiddenIdField.val(selectedId);
+            $billetLengthField.val(billetLength);
+            $crossSectionField.val(crossSectionValue);
+            $steelGradeField.val(selectedGrade);     // ✅ Fixed variable
+
+            $dropdownTable.hide();
+        });
+
+        // ----------------------------
+        // HIDE DROPDOWN IF CLICK OUTSIDE
+        // ----------------------------
+        $(document).on('click', function (e) {
+            if (!$dropdownTable.is(e.target) &&
+                $dropdownTable.has(e.target).length === 0 &&
+                !$toggleBtn.is(e.target) &&
+                !$inputField.is(e.target)) {
+                $dropdownTable.hide();
+            }
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        $("input[type='number']").attr("step", "any");
+
+        $("#date").val(new Date().toISOString().split('T')[0]);
+
+        $("#ddlgrade").on("change", function () {
+
+            debugger
+
+            var heatNo = $(this).val();
+
+            if (heatNo === "") {
+                clearFields();
+                return;
+            }
+
+            $.ajax({
+                url: '/RollingMill/GetChargingByHeat',
+                type: 'GET',
+                data: { heatNo: heatNo },
+                success: function (res) {
+
+                    if (res) {
+                        debugger
+                        $("#txtBoarding").val(res.BoardingNo);
+                        $("#txtGrade").val(res.SteelGrade);
+                        $("#txtprofile").val(res.Profile);
+                        $("#txtTotalBillet").val(res.TotalBillet);
+                        $("#txtTotalWeight").val(res.TotalWeight);
+                        $("#txtBilletLength").val(res.BilletLength);
+                    }
+                    else {
+                        clearFields();
+                    }
+                }
+            });
+        });
+
+        function clearFields() {
+            $("#txtBoarding").val('');
+            $("#txtGrade").val('');
+            $("#txtSize").val('');
+            $("#txtWeight").val('');
+            $("#txtTotalBillet").val('');
+            $("#txtTotalWeight").val('');
+        }
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+
+        let isSubmitting = false;   // 🔐 double-submit lock
+
+        $("#addprofileform").on("submit", function (e) {
+            e.preventDefault(); // ❗ pehle submit roko
+
+            if (isSubmitting) return; // already submitting
+
+            Swal.fire({
+                title: 'Confirm Submission',
+                text: 'Are you sure you want to submit this Heat Record?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Submit',
+                cancelButtonText: 'Cancel',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    isSubmitting = true; // 🔒 lock
+
+                    // Disable submit button
+                    $("#addprofileform")
+                        .find("button[type='submit']")
+                        .prop("disabled", true)
+                        .text("Submitting...");
+
+                    // Finally submit form
+                    $("#addprofileform")[0].submit();
+                }
+            });
+        });
+
+    });
+</script>
+<script>
+    document.getElementById("ddlgrade").addEventListener("change", function () {
+        let heatNo = this.value;
+
+        // set PO number same as Heat #
+        document.getElementById("txtPONumber").value = heatNo;
+    });
+</script>

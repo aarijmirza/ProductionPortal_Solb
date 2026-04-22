@@ -1,0 +1,135 @@
+﻿@model List<DAL.Models.ScrapyardBLL>
+@using System.Globalization
+@{
+    ViewBag.Title = "Heat Detail";
+    // Get the first record to display common header info
+    var header = Model.FirstOrDefault();
+    string heatNo = header?.HeatNo ?? "N/A";
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+}
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Scrapyard Heat Detail</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("List", "Scrapyard")">Scrapyard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="row">
+
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Heat Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label>Date</label>
+                            <p class="form-control-static">
+                                <strong>@header.Date.Value.ToString("dd-MM-yyyy", gregorian)</strong>
+                            </p>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Time</label>
+                            <p class="form-control-static">
+                                <strong>@header.Time.Value.ToString(@"hh\:mm")</strong>
+                            </p>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Heat #</label>
+                            <p class="form-control-static">
+                                <strong>@heatNo</strong>
+                            </p>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Total Buckets</label>
+                            <p class="form-control-static">
+                                <strong>@Model.Count()</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Bucket Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Bucket</th>
+                                    <th>Light Scrap</th>
+                                    <th>HMS</th>
+                                    <th>Return Metal</th>
+                                    <th>Return Bar</th>
+                                    <th>Metal Skull</th>
+                                    <th>DRI</th>
+                                    <th>Coal</th>
+                                    <th>Lime</th>
+                                    <th>Dololime</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td><strong>@item.Bucket</strong></td>
+                                        <td>@(item.LightScrap ?? 0)</td>
+                                        <td>@(item.HMS ?? 0)</td>
+                                        <td>@(item.ReturnMetal ?? 0)</td>
+                                        <td>@(item.ReturnBar ?? 0)</td>
+                                        <td>@(item.MetalSkull ?? 0)</td>
+                                        <td>@(item.DRI ?? 0)</td>
+                                        <td>@(item.Coal ?? 0)</td>
+                                        <td>@(item.Lime ?? 0)</td>
+                                        <td>@(item.Dololime ?? 0)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">System Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Created By</label>
+                            <p class="form-control-static">@header.CreatedBy</p>
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Created Date</label>
+                            <p class="form-control-static">@header.CreatedDate.Value.ToString("dd-MM-yyyy", gregorian)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

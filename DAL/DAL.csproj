@@ -35,7 +35,7 @@
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Oracle.ManagedDataAccess, Version=4.122.23.1, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=MSIL">
-      <HintPath>..\packages\Oracle.ManagedDataAccess.23.9.1\lib\net472\Oracle.ManagedDataAccess.dll</HintPath>
+      <HintPath>..\packages\Oracle.ManagedDataAccess.23.7.0\lib\net472\Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -48,12 +48,12 @@
     <Reference Include="System.Formats.Asn1, Version=8.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Formats.Asn1.8.0.1\lib\net462\System.Formats.Asn1.dll</HintPath>
     </Reference>
-    <Reference Include="System.Memory, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Memory.4.6.0\lib\net462\System.Memory.dll</HintPath>
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Numerics.Vectors, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Numerics.Vectors.4.6.0\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.0\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
@@ -80,10 +80,38 @@
   <ItemGroup>
     <Compile Include="DBHelper\L2DBHelper.cs" />
     <Compile Include="DBHelper\DBHelper.cs" />
+    <Compile Include="Models\BilletBoardBLL.cs" />
+    <Compile Include="Models\BilletChargingBLL.cs" />
+    <Compile Include="Models\BilletDischargingBLL.cs" />
+    <Compile Include="Models\BilletGrades.cs" />
+    <Compile Include="Models\BundlingSectionBLL.cs" />
+    <Compile Include="Models\CCMYeildBLL.cs" />
+    <Compile Include="Models\CCMBLL.cs" />
+    <Compile Include="Models\CCMChemicalAnalysisBLL.cs" />
+    <Compile Include="Models\DailySummaryReportBLL.cs" />
+    <Compile Include="Models\DelayAgencyBLL.cs" />
+    <Compile Include="Models\DelayComponentBLL.cs" />
+    <Compile Include="Models\DelayEquipmentBLL.cs" />
+    <Compile Include="Models\ElectricArcFurnaceBLL.cs" />
+    <Compile Include="Models\HeatChemistryBLL.cs" />
+    <Compile Include="Models\LaddleFurnaceBLL.cs" />
+    <Compile Include="Models\PlantDelayBLL.cs" />
+    <Compile Include="Models\QCHBIDRIAnalysisBLL.cs" />
+    <Compile Include="Models\QCInspectionDataBLL.cs" />
+    <Compile Include="Models\QCInspectionDataRMBLL.cs" />
+    <Compile Include="Models\RMChemicalAnalysisBLL.cs" />
+    <Compile Include="Models\RMShiftDetailsBLL.cs" />
+    <Compile Include="Models\RollingMillMaster.cs" />
+    <Compile Include="Models\SampleHBIDRIBLL.cs" />
+    <Compile Include="Models\ScrapyardBLL.cs" />
     <Compile Include="Models\DelaysBLL.cs" />
     <Compile Include="Models\LFMeltShopBLL.cs" />
     <Compile Include="Models\ElectrodeBLL.cs" />
     <Compile Include="Models\EAFMeltShopBLL.cs" />
+    <Compile Include="Models\ShiftDetails.cs" />
+    <Compile Include="Models\ShiftEntryBLL.cs" />
+    <Compile Include="Models\SlagSampleAnalysisBLL.cs" />
+    <Compile Include="Models\SlagByProductAnalysisBLL.cs" />
     <Compile Include="Models\UserBLL.cs" />
     <Compile Include="Models\UserRoleBLL.cs" />
     <Compile Include="Models\ViewModel.cs" />

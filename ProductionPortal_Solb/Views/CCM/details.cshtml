@@ -1,0 +1,250 @@
+﻿@model DAL.Models.CCMBLL
+@using System.Globalization
+
+@{
+    ViewBag.Title = "CCM MeltShop Record Details";
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+}
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">CCM MeltShop Record Details</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "CCM")">CCM MeltShop</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="xp-contentbar">
+    <div class="row">
+
+        <div class="col-lg-12">
+            <div class="card m-b-30">
+
+                @* --- Card Header for Title and Actions --- *@
+                <div class="card-body">
+
+                    @* --- Section 1: Basic Heat Info (2 Columns) --- *@
+                    <h5 class="card-title mb-3">Basic Information</h5>
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Date / Shift:</dt>
+                                <dd class="col-sm-8">
+                                    @Model.Date.ToString("dd-MM-yyyy", gregorian) (@Model.Shift)
+                                </dd>
+
+                                <dt class="col-sm-4">Heat No. / Sequence:</dt>
+                                <dd class="col-sm-8">@Model.HeatNo / @Model.SequenceHeat</dd>
+
+                                <dt class="col-sm-4">Grade:</dt>
+                                <dd class="col-sm-8">@Model.Grade</dd>
+
+                                <dt class="col-sm-4">Strand:</dt>
+                                <dd class="col-sm-8">@Model.Strand</dd>
+                            </dl>
+                        </div>
+
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Open Time:</dt>
+                                <dd class="col-sm-8">
+                                    @Model.OpenTime
+                                </dd>
+
+                                <dt class="col-sm-4">Close Time:</dt>
+                                <dd class="col-sm-8">
+                                    @Model.CloseTime
+                                </dd>
+
+                                <dt class="col-sm-4">Casting Time (min):</dt>
+                                <dd class="col-sm-8">
+                                    @(Model.CastingTime?.ToString("N2"))
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <hr class="mt-4 mb-4" />
+
+                    @* --- Section 2: Material & Equipment Info (4 Columns) --- *@
+                    <h5 class="card-title mb-3">Material & Equipment</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="d-block font-weight-bold">Ladle/Steel</label>
+                            <p>Ladle No: @Model.LadleNo</p>
+                            <p>Ladle Temp (°C): @Model.LadleTemperature</p>
+                            <p>Molten Steel (ton): @Model.MoltenSteel</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="d-block font-weight-bold">Tundish/Shroud</label>
+                            <p>Tundish No: @Model.TundishNo</p>
+                            <p>Tundish Life (Heats): @Model.TundishLife</p>
+                            <p>Shroud Life (Heats): @Model.ShroudLife</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="d-block font-weight-bold">Billet Info</label>
+                            <p>Billet Size (mm²): @Model.BilletSize</p>
+                            <p>Billet Length (m): @Model.BilletLength</p>
+                            <p>Billet No: @Model.BilletNumber</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="d-block font-weight-bold">Time & Life</label>
+                            <p>Time on Turret (min): @Model.TimeOnTurret</p>
+                            <p>Plate Life (Heats): @Model.PlateLife</p>
+                        </div>
+                    </div>
+
+                    <hr class="mt-4 mb-4" />
+
+                    @* --- Section 3: Calculated Values & Temperatures --- *@
+                    <h5 class="card-title mb-3">Results & Temperatures</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="d-block font-weight-bold">Billet Weight</label>
+                            <p class="h5 text-success">@(Model.BilletTotalWeight?.ToString("N2")) ton</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="d-block font-weight-bold">Productivity</label>
+                            <p class="h5 text-info">@(Model.Productivitytonhr?.ToString("N2"))</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="d-block font-weight-bold">Yield</label>
+                            <p class="h5 text-info">@(Model.Yeild?.ToString("N2")) %</p>
+                        </div>
+
+                        @* --- Steel Temperature: Only show values that exist (Corrected logic) --- *@
+                        <div class="col-md-3">
+                            <label class="d-block font-weight-bold">Steel Temperatures (°C)</label>
+
+                            @{
+                                // Create a list of nullable decimal/double properties for the temperatures
+                                var steelTemps = new List<decimal?>
+                                                    {
+                                    Model.SteelTemperature1,
+                                    Model.SteelTemperature2,
+                                    Model.SteelTemperature3,
+                                    Model.SteelTemperature4
+                                };
+
+                                bool hasTemperatures = false;
+                                int tempIndex = 1;
+                                foreach (var temp in steelTemps)
+                                {
+                                    if (temp.HasValue)
+                                    {
+                                        <span class="badge badge-secondary mr-1" title="@string.Format("Temp {0}", tempIndex)">
+                                            @temp.Value.ToString("N0")
+                                        </span>
+                                        hasTemperatures = true;
+                                    }
+                                    tempIndex++;
+                                }
+
+                                if (!hasTemperatures)
+                                {
+                                    <p class="text-muted">No temperatures recorded.</p>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <hr class="w-100" /> @* Separator for the next two columns *@
+
+        <div class="col-lg-6">
+            <div class="card m-b-30">
+                <div class="card-header bg-white">
+                    <h5>LF Leave Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">C %:</dt>
+                        <dd class="col-sm-3">@Model.LF_C</dd>
+
+                        <dt class="col-sm-3">Mn %:</dt>
+                        <dd class="col-sm-3">@Model.LF_Mn</dd>
+
+                        <dt class="col-sm-3">Si %:</dt>
+                        <dd class="col-sm-3">@Model.LF_Si</dd>
+
+                        <dt class="col-sm-3">S %:</dt>
+                        <dd class="col-sm-3">@Model.LF_S</dd>
+
+                        <dt class="col-sm-3">T.E %:</dt>
+                        <dd class="col-sm-3">@Model.LF_TE</dd>
+
+                        <dt class="col-sm-3">Mn / Si:</dt>
+                        <dd class="col-sm-3">@Model.LF_MnSi</dd>
+
+                        <dt class="col-sm-3">Mn / S:</dt>
+                        <dd class="col-sm-3">@Model.LF_MnS</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card m-b-30">
+                <div class="card-header bg-white">
+                    <h5>CCM Chemical Analysis Samples</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr class="bg-light">
+                                <th>Sample</th>
+                                <th>C %</th>
+                                <th>Si %</th>
+                                <th>Mn %</th>
+                                <th>P %</th>
+                                <th>S %</th>
+                                <th>TE %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Analysis != null && Model.Analysis.Any())
+                            {
+                                foreach (var analysis in Model.Analysis)
+                                {
+                                    <tr>
+                                        <td>@analysis.Sample</td>
+                                        <td>@analysis.C</td>
+                                        <td>@analysis.Si</td>
+                                        <td>@analysis.Mn</td>
+                                        <td>@analysis.P</td>
+                                        <td>@analysis.S</td>
+                                        <td>@analysis.TE</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="7" class="text-center text-muted">No chemical analysis samples recorded.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <a href="@Url.Action("list", "CCM")" class="btn btn-primary"><i class="icon-list"></i> Back to List</a>
+        </div>
+    </div>
+</div>

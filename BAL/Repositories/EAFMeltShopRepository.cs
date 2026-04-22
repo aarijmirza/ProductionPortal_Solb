@@ -206,7 +206,7 @@ namespace BAL.Repositories
             try
             {
                 int rtn = 0;
-                SqlParameter[] p = new SqlParameter[11];
+                SqlParameter[] p = new SqlParameter[12];
                 p[0] = new SqlParameter("@PlantID", bll.PlantID);
                 p[1] = new SqlParameter("@PlantName", bll.PlantName);
                 p[2] = new SqlParameter("@HeatID", bll.HeatID);
@@ -218,6 +218,7 @@ namespace BAL.Repositories
                 p[8] = new SqlParameter("@CreatedDate", bll.CreatedDate);
                 p[9] = new SqlParameter("@CreatedBy", bll.CreatedBy);
                 p[10] = new SqlParameter("@HeatNo", bll.HeatNo);
+                p[11] = new SqlParameter("@DelayName", bll.GROUP_ORD);
 
                 rtn = (new DBHelper().ExecuteNonQueryReturn)("sp_InsertDelays", p);
                 return rtn;

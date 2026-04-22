@@ -1,0 +1,578 @@
+﻿@model DAL.Models.ViewModel.EAFReportVM
+@using System.Globalization
+@{
+    Layout = null;
+    //var first = Model?.EAFdata?.FirstOrDefault();
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+
+    var list = Model.EAFdata ?? new List<DAL.Models.ElectricArcFurnaceBLL>();
+    int n = list.Count;
+
+    // helpers
+    decimal Sum(Func<DAL.Models.ElectricArcFurnaceBLL, decimal?> f) => list.Sum(x => f(x) ?? 0);
+    decimal Avg(Func<DAL.Models.ElectricArcFurnaceBLL, decimal?> f) => n > 0 ? list.Average(x => f(x) ?? 0) : 0;
+
+    // ===== Averages =====
+    var avgPOT = Avg(x => x.PowerOn);
+    var avgTAT = Avg(x => x.TAT);
+    var avgDelay = Avg(x => x.TotalDelay);
+    var avgTTT = Avg(x => x.TaptoTap);
+    var avgBaskets = Avg(x => x.NoofBaskets);
+
+    var avgScrap = Avg(x => x.Scrap);
+    var avgHBI = Avg(x => x.HBI);
+    var avgDRI = Avg(x => x.DRI);
+    var avgChargeWt = Avg(x => x.TotalChargeWeight);
+
+    var avgTapWt = Avg(x => x.TotalTappingWeight);
+    var avgYield = Avg(x => x.Yeild);
+
+    var avgEnergy = Avg(x => x.EnergyKWH);
+    var avgSpecEnergy = Avg(x => x.SpecEnergy);
+
+    var avgTapTemp = Avg(x => x.TapTemp);
+    var avgTapC = Avg(x => x.TappingC);
+
+    var avgInjCarbon = Avg(x => x.InjCarbon);
+    var avgChargeCoal = Avg(x => x.ChargeCoal);
+    var avgSpecCarbon = Avg(x => x.SpecCarbon);
+
+    var avgLime = Avg(x => x.Lime);
+    var avgDolo = Avg(x => x.Dololime);
+
+    var avgOxygen = Avg(x => x.Oxygen);
+    var avgSpecOxy = Avg(x => x.SpecOxygen);
+
+    var avgLPG = Avg(x => x.LPG);
+
+    // ===== Totals =====
+    var totPOT = Sum(x => x.PowerOn);
+    var totTAT = Sum(x => x.TAT);
+    var totDelay = Sum(x => x.TotalDelay);
+    var totTTT = Sum(x => x.TaptoTap);
+    var totBaskets = Sum(x => x.NoofBaskets);
+
+    var totScrap = Sum(x => x.Scrap);
+    var totHBI = Sum(x => x.HBI);
+    var totDRI = Sum(x => x.DRI);
+    var totChargeWt = Sum(x => x.TotalChargeWeight);
+
+    var totTapWt = Sum(x => x.TotalTappingWeight);
+    // Yield total usually not summed; keep "-" or compute weighted if needed
+
+    var totEnergy = Sum(x => x.EnergyKWH);
+    // SpecEnergy total usually not summed; keep "-"
+
+    // TapTemp total not summed; keep "-"
+    // TapC total not summed; keep "-"
+
+    var totInjCarbon = Sum(x => x.InjCarbon);
+    var totChargeCoal = Sum(x => x.ChargeCoal);
+    // SpecCarbon total usually not summed; keep "-"
+
+    var totLime = Sum(x => x.Lime);
+    var totDolo = Sum(x => x.Dololime);
+
+    var totOxygen = Sum(x => x.Oxygen);
+    // SpecOxygen total usually not summed; keep "-"
+
+    var totLPG = Sum(x => x.LPG);
+}
+
+@functions {
+    decimal Sum(Func<DAL.Models.ElectricArcFurnaceBLL, decimal?> selector)
+    {
+        return Model.EAFdata.Sum(x => selector(x) ?? 0);
+    }
+
+    decimal Avg(Func<DAL.Models.ElectricArcFurnaceBLL, decimal?> selector)
+    {
+        return Model.EAFdata.Any()
+            ? Model.EAFdata.Average(x => selector(x) ?? 0)
+            : 0;
+    }
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Electric Arc Furnace [EAF] Heat Summary</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sheet {
+            margin: 10px auto;
+            border: 1px solid #000;
+            padding: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 19px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 10px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f2f2f2;
+            font-size: 15px;
+        }
+
+        .red {
+            color: #c00000;
+            font-weight: bold;
+        }
+
+        .text-top {
+            vertical-align: top;
+        }
+
+        .logo-cell img {
+            max-height: 60px;
+            margin-top: 10px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .legend-cell {
+            font-size: 9px;
+        }
+
+        @@media print {
+            body {
+                margin: 0;
+            }
+
+            .sheet {
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+    <div class="sheet">
+        <!-- LOGO + TITLES -->
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width: 180px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+
+                <td class="center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">ELECTRIC ARC FURNACE [EAF] DEPARTMENT</div>
+                    <div class="sub-header">DAILY HEAT SUMMARY REPORT</div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- DATE / SHIFT / TEAM -->
+        <table>
+            <tr>
+                <td class="bold" style="width:60px;">Date</td>
+                <td style="width:140px;"></td>
+
+                <td class="bold center" style="width:60px;">Shift :</td>
+                <td style="width:140px;"></td>
+
+                <td class="bold center" style="width:90px;">Group :</td>
+                <td style="width:140px;"></td>
+
+            </tr>
+        </table>
+
+        <!-- PRODUCTION DESCRIPTION -->
+        <table style="margin-top:4px;">
+            <tr>
+                <td colspan="28" class="section-title">PRODUCTION DESCRIPTION</td>
+            </tr>
+            <tr class="center small bold">
+                <td rowspan="2">Sr. No.</td>
+                <td rowspan="2">Heat No.</td>
+                <td rowspan="2">Steel Grade</td>
+                <td rowspan="2">Heat Start</td>
+                <td rowspan="2">Heat Stop</td>
+                <td colspan="4">P.O.T</td>
+                <td rowspan="2">No. of Basket</td>
+                <td colspan="4">Metallic Charge [ton]</td>
+                <td rowspan="2">Total Tapping Weight [ton]</td>
+                <td rowspan="2">Yeild [%]</td>
+                <td colspan="2">Energy</td>
+                <td rowspan="2">Tapping Temperature [C]</td>
+
+                <td rowspan="2">Tapping C [%]</td>
+                <td colspan="3">Carbon</td>
+                <td colspan="2">Additives</td>
+                <td colspan="2">Oxygen</td>
+                <td rowspan="2">LPG [Nm3]</td>
+            </tr>
+
+            <tr class="center small bold">
+                @*<td>Actual Wt.</td>
+            <td>Theor Wt.</td>
+            <td>Actual%</td>*@
+
+                <td>P.O.T [min]</td>
+                <td>TAT [min]</td>
+                <td>Delay [min]</td>
+                <td>TTT [min]</td>
+
+                <td>Scrap [t]</td>
+                <td>HBI [t]</td>
+                <td>DRI [t]</td>
+                <td>Total Charge Weight [t]</td>
+
+                <td>Energy [KWH]</td>
+                <td>Spec [KWH / t]</td>
+
+                <td>Injected Carbon [kg]</td>
+                <td>Charge Coal [kg]</td>
+                <td>Spec. Carbon [kg]</td>
+
+                <td>Lime [kg]</td>
+                <td>Dolo [kg]</td>
+                <td>Oxygen [Nm3]</td>
+                <td>Spec  [Nm3 / t]</td>
+            </tr>
+
+            <!-- 8 Production Blank Rows -->
+            @foreach (var row in Model.EAFdata.Select((item, index) => new { item, index }))
+            {
+                <tr>
+                    <td class="center">@(row.index + 1)</td>
+                    <td>@row.item.HeatNo</td>
+                    <td>@row.item.Grade</td>
+                    <td>@row.item.HeatStart</td>
+                    <td>@row.item.HeatStop</td>
+                    <td>@row.item.PowerOn</td>
+                    <td>@row.item.TAT</td>
+                    <td>@row.item.TotalDelay</td>
+                    <td>@row.item.TaptoTap</td>
+                    <td>@row.item.NoofBaskets</td>
+                    <td>@row.item.Scrap</td>
+                    <td>@row.item.HBI</td>
+                    <td>@row.item.DRI</td>
+                    <td>@row.item.TotalChargeWeight</td>
+                    <td>@row.item.TotalTappingWeight</td>
+                    <td>@row.item.Yeild</td>
+                    <td>@row.item.EnergyKWH</td>
+                    <td>@row.item.SpecEnergy</td>
+                    <td>@row.item.TapTemp</td>
+                    <td>@row.item.TappingC</td>
+                    <td>@row.item.InjCarbon</td>
+                    <td>@row.item.ChargeCoal</td>
+                    <td>@row.item.SpecCarbon</td>
+                    <td>@row.item.Lime</td>
+                    <td>@row.item.Dololime</td>
+                    <td>@row.item.Oxygen</td>
+                    <td>@row.item.SpecOxygen</td>
+                    <td>@row.item.LPG</td>
+                </tr>
+            }
+            <!-- TOTALS -->
+            <tr class="total-row small">
+                <td colspan="5" class="right bold">Average</td>
+
+                <td class="center">@avgPOT.ToString("0")</td>
+                <td class="center">@avgTAT.ToString("0")</td>
+                <td class="center">@avgDelay.ToString("0")</td>
+                <td class="center">@avgTTT.ToString("0")</td>
+
+                <td class="center">@avgBaskets.ToString("0")</td>
+
+                <td class="center">@avgScrap.ToString("0.##")</td>
+                <td class="center">@avgHBI.ToString("0.##")</td>
+                <td class="center">@avgDRI.ToString("0.##")</td>
+                <td class="center">@avgChargeWt.ToString("0.##")</td>
+
+                <td class="center">@avgTapWt.ToString("0.##")</td>
+                <td class="center">@avgYield.ToString("0.00")</td>
+
+                <td class="center">@avgEnergy.ToString("0")</td>
+                <td class="center">@avgSpecEnergy.ToString("0.000")</td>
+
+                <td class="center">@avgTapTemp.ToString("0")</td>
+                <td class="center">@avgTapC.ToString("0.00")</td>
+
+                <td class="center">@avgInjCarbon.ToString("0")</td>
+                <td class="center">@avgChargeCoal.ToString("0")</td>
+                <td class="center">@avgSpecCarbon.ToString("0.##")</td>
+
+                <td class="center">@avgLime.ToString("0")</td>
+                <td class="center">@avgDolo.ToString("0")</td>
+
+                <td class="center">@avgOxygen.ToString("0")</td>
+                <td class="center">@avgSpecOxy.ToString("0.###")</td>
+
+                <td class="center">@avgLPG.ToString("0")</td>
+            </tr>
+            <tr class="total-row small">
+                <td colspan="5" class="right bold">Total</td>
+
+                <td class="center">@totPOT.ToString("0")</td>
+                <td class="center">@totTAT.ToString("0")</td>
+                <td class="center">@totDelay.ToString("0")</td>
+                <td class="center">@totTTT.ToString("0")</td>
+
+                <td class="center">@totBaskets.ToString("0")</td>
+
+                <td class="center">@totScrap.ToString("0.##")</td>
+                <td class="center">@totHBI.ToString("0.##")</td>
+                <td class="center">@totDRI.ToString("0.##")</td>
+                <td class="center">@totChargeWt.ToString("0.##")</td>
+
+                <td class="center">@totTapWt.ToString("0.##")</td>
+                <td class="center">-</td>
+
+                <td class="center">@totEnergy.ToString("0")</td>
+                <td class="center">-</td>
+
+                <td class="center">-</td>
+                <td class="center">-</td>
+
+                <td class="center">@totInjCarbon.ToString("0")</td>
+                <td class="center">@totChargeCoal.ToString("0")</td>
+                <td class="center">-</td>
+
+                <td class="center">@totLime.ToString("0")</td>
+                <td class="center">@totDolo.ToString("0")</td>
+
+                <td class="center">@totOxygen.ToString("0")</td>
+                <td class="center">-</td>
+
+                <td class="center">@totLPG.ToString("0")</td>
+            </tr>
+
+            <tr class="total-row small">
+                <td colspan="5" class="right bold">Specific</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+            </tr>
+        </table>
+
+        <table style="width:100%;margin-top:4px;">
+            <tr>
+                <td>
+                    <table style="width:100%;margin-top:4px;">
+                        <tr>
+                            <td colspan="10" class="section-title" style="border:1px solid #000;">
+                                TAPPING ADDITIONS
+                            </td>
+                        </tr>
+
+
+                        <tr class="small center bold">
+                            <td style="border:1px solid #000;">Sr. No.</td>
+                            <td style="border:1px solid #000;">Heat #</td>
+                            <td style="border:1px solid #000;">C [kg]</td>
+                            <td style="border:1px solid #000;">FeMn [kg]</td>
+                            <td style="border:1px solid #000;">FeSi [kg]</td>
+                            <td style="border:1px solid #000;">FeSiMn [kg]</td>
+                            <td style="border:1px solid #000;">Lime [kg]</td>
+                            <td style="border:1px solid #000;">CAF2 [kg]</td>
+                            <td style="border:1px solid #000;">Dolo [kg]</td>
+                            <td style="border:1px solid #000;">C_INJ</td>
+                        </tr>
+
+                        @foreach (var row in Model.EAFdata.Select((item, index) => new { item, index }))
+                        {
+                            <tr>
+                                <td class="center">@(row.index + 1)</td>
+                                <td>@row.item.HeatNo</td>
+                                <td>@row.item.Carbon</td>
+                                <td>@row.item.FeMn</td>
+                                <td>@row.item.FeSi</td>
+                                <td>@row.item.SiMn</td>
+                                <td>@row.item.Lime</td>
+                                <td>@row.item.Dololime</td>
+                                <td>@row.item.Dololime</td>
+                                <td>@row.item.InjCarbon</td>
+                            </tr>
+                        }
+
+                        <tr>
+                            <td colspan="2" class="right bold">Average</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2" class="right bold">Total</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                        </tr>
+                    </table>
+                </td>
+
+                <td>
+                    <table style="width:100%;margin-top:4px;">
+                        <tr>
+                            <td colspan="10" class="section-title" style="border:1px solid #000;">
+                                REFRACTORY LIFE
+                            </td>
+                        </tr>
+
+
+                        <tr class="small center bold">
+                            <td style="border:1px solid #000;">Sr. No.</td>
+                            <td style="border:1px solid #000;">Hearth</td>
+                            <td style="border:1px solid #000;">Wall</td>
+                            <td style="border:1px solid #000;">Roof</td>
+                            <td style="border:1px solid #000;">EBT</td>
+                            <td style="border:1px solid #000;">Gunning</td>
+                            <td style="border:1px solid #000;">Fettling</td>
+                        </tr>
+
+                        @foreach (var row in Model.EAFdata.Select((item, index) => new { item, index }))
+                        {
+                            <tr>
+                                <td class="center">@(row.index + 1)</td>
+                                <td>@row.item.Hearth</td>
+                                <td>@row.item.Wall</td>
+                                <td>@row.item.Roof</td>
+                                <td>@row.item.EBT</td>
+                                <td>@row.item.Gunning</td>
+                                <td>@row.item.Fettling</td>
+                            </tr>
+                        }
+
+                        <tr>
+                            <td colspan="1" class="right bold">Average</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="1" class="right bold">Total</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                            <td>0.00</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <table style="margin-top:4px;">
+            <tr>
+                <td style="width:30%">
+                    <table style="margin-top:4px;">
+                        <tr>
+                            <td>POT = Power On Time </td>
+                        </tr>
+                        <tr>
+                            <td>TTT = Tap To Tap </td>
+                        </tr>
+                        <tr>
+                            <td>TAT = Turn Around Time </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width:70%">
+                    <table style="margin-top:4px;">
+                        <tr>
+                            <label for="heatno">Remarks: </label>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+</body>
+</html>

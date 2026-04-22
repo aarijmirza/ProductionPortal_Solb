@@ -1,0 +1,267 @@
+﻿@using System.Globalization
+@model DAL.Models.ViewModel.LFReportVM
+@{
+    Layout = null;
+
+    var list = Model.LFdata ?? new List<DAL.Models.LaddleFurnaceBLL>();
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Laddle Furnace [LF] Daily Heat Summary</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sheet {
+            margin: 10px auto;
+            border: 1px solid #000;
+            padding: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 12px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f2f2f2;
+            font-size: medium;
+        }
+
+        .red {
+            color: #c00000;
+            font-weight: bold;
+        }
+
+        .text-top {
+            vertical-align: top;
+        }
+
+        .logo-cell img {
+            max-height: 90px;
+            margin-top: 10px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .legend-cell {
+            font-size: 9px;
+        }
+
+        @@media print {
+            body {
+                margin: 0;
+            }
+
+            .sheet {
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <div class="sheet">
+        <!-- LOGO + TITLES -->
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width: 180px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+
+                <td class="center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">LADDLE FURNACE [LF] DEPARTMENT</div>
+                    <div class="sub-header">DAILY HEAT SUMMARY REPORT</div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- DATE / SHIFT / TEAM -->
+        <table>
+            <tr>
+                <td class="bold" style="width:1px;">Date</td>
+                <td style="width:140px;">@DateTime.Now.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)</td>
+
+            </tr>
+        </table>
+
+        <!-- PRODUCTION DESCRIPTION -->
+        <table style="margin-top:4px;">
+            <tr>
+                <td colspan="28" class="section-title">PRODUCTION DESCRIPTION</td>
+            </tr>
+            <tr class="center small bold">
+                <td rowspan="2">Sr. No.</td>
+                <td rowspan="2">Heat #</td>
+                <td rowspan="2">Grade</td>
+                <td colspan="2">Recarburizer</td>
+                <td colspan="4">Alloys</td>
+                <td colspan="3">Fluxes</td>
+                <td rowspan="2">Flour Spar [kg]</td>
+                <td rowspan="2">Rice Husk [kg]</td>
+                <td rowspan="2">Casi Wire [meter]</td>
+                <td rowspan="2">CaFe Wire [meter]</td>
+                <td rowspan="2">CaC2 [kg]</td>
+                <td rowspan="2">Syn. Slag [kg]</td>
+                <td rowspan="2">Electrode [Pcs]</td>
+                <td rowspan="2">Energy [KWH]</td>
+                <td rowspan="2">Nitrogen [NM3]</td>
+                <td rowspan="2">Argon [NM3]</td>
+                <td rowspan="2">Liq. Steel [t]</td>
+                @*<td rowspan="2">Remarks</td>*@
+            </tr>
+
+            <tr class="center small bold">
+                <td>Silo [kg]</td>
+                <td>Small Bags [kg]</td>
+
+                <td>Fesi [kg]</td>
+                <td>FeMn [kg]</td>
+                <td>SiMn [kg]</td>
+                <td>Total Alloys</td>
+
+                <td>Lime [3~12] [kg]</td>
+                <td>Dololime [kg]</td>
+                <td>MgO [kg]</td>
+            </tr>
+            @foreach (var row in Model.LFdata.Select((item, index) => new { item, index }))
+            {
+                <tr>
+                    <td class="center">@(row.index + 1)</td>
+                    <td>@row.item.HeatNo</td>
+                    <td>@row.item.Grade</td>
+                    <td>@row.item.RecarburizerSilo</td>
+                    <td>@row.item.RecarburizerBags</td>
+                    <td>@row.item.FeSi</td>
+                    <td>@row.item.FeMn</td>
+                    <td>@row.item.SiMn</td>
+                    <td>@row.item.TotalAlloys</td>
+                    <td>@row.item.Lime312mm</td>
+                    <td>@row.item.Dololime</td>
+                    <td>@row.item.MgO</td>
+                    <td>@row.item.FlourSpar</td>
+                    <td>@row.item.RiceHusk</td>
+                    <td>@row.item.CaSi</td>
+                    <td>@row.item.CafeWire</td>
+                    <td>@row.item.Cac2</td>
+                    <td>@row.item.SynSlag</td>
+                    <td>@row.item.Electrode</td>
+                    <td>@row.item.KWH</td>
+                    <td>@row.item.Nitrogen</td>
+                    <td>@row.item.Argon</td>
+                    <td>@row.item.LMForCasting</td>
+                    @*<td>@item.Remarks</td>*@
+                </tr>
+            }
+            <!-- TOTALS -->
+            <tr class="total-row small">
+                <td colspan="3" class="right bold">Average</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+            </tr>
+            <tr class="total-row small">
+                <td colspan="3" class="right bold">Total</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+            </tr>
+        </table>
+
+
+
+    </div>
+</body>
+</html>
