@@ -215,7 +215,7 @@ namespace BAL.Repositories
         {
             try
             {
-                SqlParameter[] p = new SqlParameter[13];
+                SqlParameter[] p = new SqlParameter[15];
 
                 p[0] = new SqlParameter("@HeatNo", model.HeatNo);
                 p[1] = new SqlParameter("@BoardingNo", model.BilletBoardingNo);
@@ -243,8 +243,8 @@ namespace BAL.Repositories
 
                 p[11] = new SqlParameter("@CreatedBy", model.CreatedBy);
                 p[12] = new SqlParameter("@CreatedDate", model.CreatedDate);
-                p[13] = new SqlParameter("Date", model.Date);
-                p[14] = new SqlParameter("Shift", model.Shift);
+                p[13] = new SqlParameter("@Date", model.Date);
+                p[14] = new SqlParameter("@Shift", model.Shift);
 
                 return (new DBHelper().ExecuteNonQueryReturn)("sp_InsertBundleSection", p);
             }
