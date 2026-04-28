@@ -196,17 +196,19 @@ namespace ProductionPortal_Solb.Controllers
             model.Shift = todayShiftDetails.Shift;
             model.CreatedDate = DateTime.Now;
             model.CreatedBy = User.Identity.Name;
+            model.StatusID = 1;
 
             int rtn = rm.InsertBilletCharging(model);
 
-            if (rtn > 0)
+            if (rtn < 0)
             {
                 TempData["SuccessMessage"] = "Heat charged successfully.";
                 return RedirectToAction("AddCharge");
             }
 
             TempData["ErrorMessage"] = "Data not saved.";
-            return View("~/Views/RollingMill/Charging/Add.cshtml", model);
+
+            return RedirectToAction("AddCharge");
         }
 
         //[HttpPost]

@@ -251,7 +251,7 @@ namespace ProductionPortal_Solb.Controllers
         {
             var data = repo.GetAllChemistry()
                            .Where(x => x.HeatNo == heatNo)
-                           .OrderBy(x => x.SampleNo)
+                           .OrderBy(x => x.NoOfBillets)
                            .ToList();
 
             return Json(data, JsonRequestBehavior.AllowGet);
@@ -752,6 +752,27 @@ namespace ProductionPortal_Solb.Controllers
                 vm
             );
         }
+        public ActionResult BilletBoardPDF(DateTime? from, DateTime? to)
+        {
+            DateTime fromDate = from ?? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            DateTime toDate = to ?? DateTime.Now;
 
+            // ✅ include whole last day
+            DateTime toInclusive = toDate.Date.AddDays(1);
+
+
+            var vm = new BilletBoardingPDFVM
+            {
+                BilletBoards = repo.GetBilletBoardingByDate(fromDate.Date, toInclusive),
+                Samples = repo.GetHeatChemistryByDate(fromDate.Date, toInclusive),
+                FromDate = fromDate,
+                ToDate = toDate
+            };
+
+            return View(
+                "~/Views/Quality/BilletBoard/BilletBoardingPDF.cshtml",
+                vm
+            );
+        }
     }
 }

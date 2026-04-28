@@ -3,7 +3,7 @@
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>D:\Projects Published\ProductionPortal</_PublishTargetUrl>
-    <History>True|2026-04-14T07:24:55.8466521Z||;True|2026-04-13T16:21:33.0937352+03:00||;True|2026-04-12T13:43:44.1746579+03:00||;True|2026-03-29T10:15:52.5820749+03:00||;True|2026-03-04T16:28:08.5428144+03:00||;True|2026-02-18T11:12:23.8976218+03:00||;True|2026-02-09T14:32:55.0115409+03:00||;True|2026-01-06T10:02:36.8716376+03:00||;True|2026-01-05T10:47:14.4346134+03:00||;True|2026-01-05T10:41:41.5914957+03:00||;True|2026-01-05T10:36:00.2213442+03:00||;True|2026-01-04T14:46:59.9435604+03:00||;True|2026-01-04T10:42:35.7660719+03:00||;True|2026-01-04T09:58:21.6078875+03:00||;True|2026-01-01T13:14:56.5022414+03:00||;True|2025-12-31T16:35:52.2479286+03:00||;True|2025-12-30T13:55:49.4393983+03:00||;True|2025-12-30T10:06:42.1636281+03:00||;True|2025-12-30T09:54:25.6549873+03:00||;True|2025-12-30T08:48:25.4947066+03:00||;True|2025-12-28T13:10:03.8553360+03:00||;True|2025-12-28T11:23:54.4126477+03:00||;True|2025-12-28T09:30:12.5978653+03:00||;False|2025-12-28T09:29:38.0287181+03:00||;True|2025-12-25T10:37:15.8387312+03:00||;True|2025-12-24T15:29:55.7660509+03:00||;True|2025-12-24T15:26:06.0613177+03:00||;True|2025-12-23T13:38:11.6512698+03:00||;True|2025-12-23T13:22:49.4354608+03:00||;True|2025-12-22T11:01:33.2722549+03:00||;True|2025-12-09T12:22:01.6230459+03:00||;True|2025-12-08T16:23:09.7335474+03:00||;True|2025-12-02T14:39:17.0740850+03:00||;False|2025-12-02T14:37:25.3670153+03:00||;True|2025-11-25T13:58:42.7838275+03:00||;False|2025-11-25T13:58:17.1042823+03:00||;False|2025-11-25T13:57:59.1798211+03:00||;True|2025-11-20T11:33:46.2994312+03:00||;True|2025-11-20T10:49:25.7509962+03:00||;True|2025-11-18T16:34:51.4873132+03:00||;True|2025-11-17T15:38:04.6151242+03:00||;True|2025-11-17T10:46:30.7048195+03:00||;True|2025-11-11T10:27:28.0450174+03:00||;</History>
+    <History>True|2026-04-28T08:05:53.5798706Z||;True|2026-04-28T10:20:47.2499043+03:00||;True|2026-04-14T10:24:55.8466521+03:00||;True|2026-04-13T16:21:33.0937352+03:00||;True|2026-04-12T13:43:44.1746579+03:00||;True|2026-03-29T10:15:52.5820749+03:00||;True|2026-03-04T16:28:08.5428144+03:00||;True|2026-02-18T11:12:23.8976218+03:00||;True|2026-02-09T14:32:55.0115409+03:00||;True|2026-01-06T10:02:36.8716376+03:00||;True|2026-01-05T10:47:14.4346134+03:00||;True|2026-01-05T10:41:41.5914957+03:00||;True|2026-01-05T10:36:00.2213442+03:00||;True|2026-01-04T14:46:59.9435604+03:00||;True|2026-01-04T10:42:35.7660719+03:00||;True|2026-01-04T09:58:21.6078875+03:00||;True|2026-01-01T13:14:56.5022414+03:00||;True|2025-12-31T16:35:52.2479286+03:00||;True|2025-12-30T13:55:49.4393983+03:00||;True|2025-12-30T10:06:42.1636281+03:00||;True|2025-12-30T09:54:25.6549873+03:00||;True|2025-12-30T08:48:25.4947066+03:00||;True|2025-12-28T13:10:03.8553360+03:00||;True|2025-12-28T11:23:54.4126477+03:00||;True|2025-12-28T09:30:12.5978653+03:00||;False|2025-12-28T09:29:38.0287181+03:00||;True|2025-12-25T10:37:15.8387312+03:00||;True|2025-12-24T15:29:55.7660509+03:00||;True|2025-12-24T15:26:06.0613177+03:00||;True|2025-12-23T13:38:11.6512698+03:00||;True|2025-12-23T13:22:49.4354608+03:00||;True|2025-12-22T11:01:33.2722549+03:00||;True|2025-12-09T12:22:01.6230459+03:00||;True|2025-12-08T16:23:09.7335474+03:00||;True|2025-12-02T14:39:17.0740850+03:00||;False|2025-12-02T14:37:25.3670153+03:00||;True|2025-11-25T13:58:42.7838275+03:00||;False|2025-11-25T13:58:17.1042823+03:00||;False|2025-11-25T13:57:59.1798211+03:00||;True|2025-11-20T11:33:46.2994312+03:00||;True|2025-11-20T10:49:25.7509962+03:00||;True|2025-11-18T16:34:51.4873132+03:00||;True|2025-11-17T15:38:04.6151242+03:00||;True|2025-11-17T10:46:30.7048195+03:00||;True|2025-11-11T10:27:28.0450174+03:00||;</History>
     <LastFailureDetails />
   </PropertyGroup>
   <ItemGroup>
@@ -5723,25 +5723,25 @@
       <publishTime>09/10/2013 16:29:20</publishTime>
     </File>
     <File Include="bin/BAL.dll">
-      <publishTime>04/14/2026 10:24:41</publishTime>
+      <publishTime>04/28/2026 10:20:30</publishTime>
     </File>
     <File Include="bin/BAL.dll.config">
       <publishTime>11/10/2025 09:51:27</publishTime>
     </File>
     <File Include="bin/BAL.pdb">
-      <publishTime>04/14/2026 10:24:41</publishTime>
+      <publishTime>04/28/2026 10:20:30</publishTime>
     </File>
     <File Include="bin/BouncyCastle.Cryptography.dll">
       <publishTime>05/27/2024 09:55:46</publishTime>
     </File>
     <File Include="bin/DAL.dll">
-      <publishTime>04/14/2026 10:24:41</publishTime>
+      <publishTime>04/28/2026 10:20:29</publishTime>
     </File>
     <File Include="bin/DAL.dll.config">
       <publishTime>11/10/2025 09:51:26</publishTime>
     </File>
     <File Include="bin/DAL.pdb">
-      <publishTime>04/14/2026 10:24:41</publishTime>
+      <publishTime>04/28/2026 10:20:29</publishTime>
     </File>
     <File Include="bin/EPPlus.dll">
       <publishTime>01/30/2020 10:13:00</publishTime>
@@ -5978,10 +5978,10 @@
       <publishTime>12/21/2024 09:43:58</publishTime>
     </File>
     <File Include="bin/ProductionPortal_Solb.dll">
-      <publishTime>04/14/2026 10:24:42</publishTime>
+      <publishTime>04/28/2026 11:05:38</publishTime>
     </File>
     <File Include="bin/ProductionPortal_Solb.pdb">
-      <publishTime>04/14/2026 10:24:42</publishTime>
+      <publishTime>04/28/2026 11:05:38</publishTime>
     </File>
     <File Include="bin/roslyn/csc.exe">
       <publishTime>08/08/2018 05:38:48</publishTime>
@@ -6349,6 +6349,9 @@
     <File Include="Views/Quality/BilletBoard/BilletBoard.cshtml">
       <publishTime>03/04/2026 14:58:01</publishTime>
     </File>
+    <File Include="Views/Quality/BilletBoard/BilletBoardingPDF.cshtml">
+      <publishTime>04/28/2026 10:11:29</publishTime>
+    </File>
     <File Include="Views/Quality/BilletBoard/Boardingdetails.cshtml">
       <publishTime>04/14/2026 09:36:43</publishTime>
     </File>
@@ -6425,13 +6428,13 @@
       <publishTime>01/04/2026 14:34:29</publishTime>
     </File>
     <File Include="Views/RollingMill/Charging/add.cshtml">
-      <publishTime>04/12/2026 11:25:34</publishTime>
+      <publishTime>04/28/2026 11:00:56</publishTime>
     </File>
     <File Include="Views/RollingMill/Charging/list.cshtml">
       <publishTime>12/24/2025 13:50:50</publishTime>
     </File>
     <File Include="Views/RollingMill/Discharging/add.cshtml">
-      <publishTime>04/12/2026 11:21:41</publishTime>
+      <publishTime>04/28/2026 11:01:49</publishTime>
     </File>
     <File Include="Views/RollingMill/Discharging/list.cshtml">
       <publishTime>12/30/2025 11:31:30</publishTime>

@@ -25,6 +25,7 @@ namespace DAL.Models
         public string Shift { get; set; }
 
         // Sample Specific Data
+        public string NoOfBillets { get; set; }
         public string SampleNo { get; set; }
         public decimal? C { get; set; }
         public decimal? Si { get; set; }

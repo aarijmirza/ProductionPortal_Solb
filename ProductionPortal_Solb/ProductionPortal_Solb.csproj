@@ -2552,6 +2552,7 @@
     <Content Include="Views\SMPReports\ProductionSummary.cshtml" />
     <Content Include="Views\RMReports\list.cshtml" />
     <Content Include="Views\RollingMill\AddDetails.cshtml" />
+    <Content Include="Views\Quality\BilletBoard\BilletBoardingPDF.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Temp\" />

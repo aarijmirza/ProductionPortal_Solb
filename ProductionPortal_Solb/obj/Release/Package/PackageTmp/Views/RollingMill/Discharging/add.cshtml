@@ -136,13 +136,13 @@
                                 @Html.TextBoxFor(m => m.Shift, new { @class = "form-control", @readonly = "readonly" })
                                 @Html.HiddenFor(m => m.Shift)
                                 @*<select class="form-control" name="Shift">
-                            <option selected disabled>-- please select --</option>
-                            <option value="Morning">Morning</option>
-                            <option value="Afternoon">Afternoon</option>
-                            <option value="Night">Night</option>
-                            <option value="Long Morning">Long Morning</option>
-                            <option value="Long Night">Long Night</option>
-                        </select>*@
+                                        <option selected disabled>-- please select --</option>
+                                        <option value="Morning">Morning</option>
+                                        <option value="Afternoon">Afternoon</option>
+                                        <option value="Night">Night</option>
+                                        <option value="Long Morning">Long Morning</option>
+                                        <option value="Long Night">Long Night</option>
+                                    </select>*@
                             </div>
                             <div class="form-group col-md-2">
                                 <label>Heat #</label>
@@ -504,6 +504,16 @@
                 }
             });
         });
+
+        var msg = '@TempData["SuccessMessage"]';
+        if (msg) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: msg,
+                confirmButtonColor: '#3085d6'
+            });
+        }
 
     });
 </script>

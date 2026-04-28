@@ -951,6 +951,59 @@ namespace BAL.Repositories
                 return new List<SampleHBIDRIBLL>();
             }
         }
+        public List<BilletBoardBLL> GetBilletBoardingByDate(DateTime fromDate, DateTime toDateExclusive)
+        {
+            try
+            {
+                var lst = new List<BilletBoardBLL>();
 
+                SqlParameter[] p = new SqlParameter[2];
+                p[0] = new SqlParameter("@FromDate", SqlDbType.Date) { Value = fromDate.Date };
+                p[1] = new SqlParameter("@ToDate", SqlDbType.Date) { Value = toDateExclusive.Date };
+
+                DataTable dt = (new DBHelper().GetTableFromSP)("sp_GetBilletBoarding_ByDate", p);
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    lst = Newtonsoft.Json.JsonConvert
+                        .DeserializeObject<List<BilletBoardBLL>>(
+                            Newtonsoft.Json.JsonConvert.SerializeObject(dt)
+                        );
+                }
+
+                return lst;
+            }
+            catch
+            {
+                return new List<BilletBoardBLL>();
+            }
+        }
+        public List<HeatChemistryBLL> GetHeatChemistryByDate(DateTime fromDate, DateTime toDateExclusive)
+        {
+            try
+            {
+                var lst = new List<HeatChemistryBLL>();
+
+                SqlParameter[] p = new SqlParameter[2];
+                p[0] = new SqlParameter("@FromDate", SqlDbType.Date) { Value = fromDate.Date };
+                p[1] = new SqlParameter("@ToDate", SqlDbType.Date) { Value = toDateExclusive.Date };
+
+                DataTable dt = (new DBHelper().GetTableFromSP)("sp_GetHeatChemistry_ByDate", p);
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    lst = Newtonsoft.Json.JsonConvert
+                        .DeserializeObject<List<HeatChemistryBLL>>(
+                            Newtonsoft.Json.JsonConvert.SerializeObject(dt)
+                        );
+                }
+
+                return lst;
+            }
+            catch
+            {
+                return new List<HeatChemistryBLL>();
+            }
+        }
     }
 }

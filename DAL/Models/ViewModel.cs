@@ -117,7 +117,7 @@ namespace DAL.Models
             public string HeatNo { get; set; }
             public BilletChargingBLL Form { get; set; }
             public List<BundlingSectionBLL> SubmittedHeat { get; set; }
-        
+
             public RollingMillChargeVM()
             {
                 Form = new BilletChargingBLL();
@@ -182,6 +182,18 @@ namespace DAL.Models
 
             public List<SampleHBIDRIBLL> Samples { get; set; }
                 = new List<SampleHBIDRIBLL>();
+
+            public DateTime FromDate { get; set; }
+            public DateTime ToDate { get; set; }
+        }
+
+        public class BilletBoardingPDFVM
+        {
+            public List<BilletBoardBLL> BilletBoards { get; set; }
+                = new List<BilletBoardBLL>();
+
+            public List<HeatChemistryBLL> Samples { get; set; }
+                = new List<HeatChemistryBLL>();
 
             public DateTime FromDate { get; set; }
             public DateTime ToDate { get; set; }
