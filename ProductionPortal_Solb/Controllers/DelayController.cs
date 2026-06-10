@@ -24,29 +24,53 @@ namespace ProductionPortal_Solb.Controllers
             rm = new RollingMillRepository();
         }
         // GET: Delays
-        public ActionResult list()
+        public ActionResult list(DateTime? from, DateTime? to)
         {
-            var data = repo.GetAllRMDelay();
+            // 🔑 Default = TODAY
+            DateTime startDate = from ?? DateTime.Today;
+            DateTime endDate = to ?? DateTime.Today;
+
+            var data = repo.GetAllRMDelay(startDate, endDate);
             return View(data);
+        }
+
+        public ActionResult SMPdelaydetails()
+        {
+            return View();
         }
 
         public ActionResult add()
         {
-            var agencyList = repo.GetAllAgency().ToList(); // ensure it's a List
+            var agencyList = repo.GetAllAgency().ToList();
             ViewBag.Agencies = agencyList;
 
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
+            DateTime selectedDate = Session["RM_Date"] != null
+                ? Convert.ToDateTime(Session["RM_Date"])
+                : DateTime.Today;
 
-            // ✅ Aaj ki Shift Details uthao
+            string selectedPlant = Session["RM_Plant"] != null
+                ? Convert.ToString(Session["RM_Plant"])
+                : "";
+
+            string selectedShift = Session["RM_Shift"] != null
+                ? Convert.ToString(Session["RM_Shift"])
+                : "";
+
+            var nextDate = selectedDate.AddDays(1);
+
             var todayShiftDetails = rm.RollingMillDetails()
-                .Where(x => x.Date >= today && x.Date < tomorrow)
+                .Where(x =>
+                    x.Date >= selectedDate &&
+                    x.Date < nextDate &&
+                    x.Plant == selectedPlant &&
+                    x.Shift == selectedShift
+                )
                 .OrderByDescending(x => x.ID)
                 .FirstOrDefault();
 
             if (todayShiftDetails == null)
             {
-                TempData["ErrorMessage"] = "Please add Rolling Mill Details for today first.";
+                TempData["ErrorMessage"] = "Please select Rolling Mill Details first.";
                 return RedirectToAction("AddDetails", "RollingMill");
             }
 
@@ -55,27 +79,73 @@ namespace ProductionPortal_Solb.Controllers
                 Date = todayShiftDetails.Date,
                 Shift = todayShiftDetails.Shift,
                 Plant = todayShiftDetails.Plant,
-                Team = todayShiftDetails?.Team,
-                ShiftIncharge = todayShiftDetails?.ShiftIncharge
+                Team = todayShiftDetails.Team,
+                ShiftIncharge = todayShiftDetails.ShiftIncharge
             };
 
-            var equipment = repo.GetAllEquipments()
-              .Select(x => new
-              {
-                  Code = x.Code,
-                  Text = x.Description + " - " + x.LocationName
-              })
-              .ToList();
+            var equipment = repo.GetAllRMEquipments()
+                .Select(x => new
+                {
+                    Code = x.Code,
+                    Text = x.Description + " - " + x.LocationName
+                })
+                .ToList();
 
             ViewBag.Equipment = new SelectList(equipment, "Text", "Text");
-            //var equipment = repo.GetAllEquipments();
-            //ViewBag.Equipment = new SelectList(equipment, "Code", "Description");
 
             var component = repo.GetAllComponent();
             ViewBag.Component = new SelectList(component, "Code", "Description");
 
             return View(vm);
         }
+
+        //public ActionResult add()
+        //{
+        //    var agencyList = repo.GetAllAgency().ToList(); // ensure it's a List
+        //    ViewBag.Agencies = agencyList;
+
+        //    var today = DateTime.Today;
+        //    var tomorrow = today.AddDays(1);
+
+        //    // ✅ Aaj ki Shift Details uthao
+        //    var todayShiftDetails = rm.RollingMillDetails()
+        //        .Where(x => x.Date >= today && x.Date < tomorrow)
+        //        .OrderByDescending(x => x.ID)
+        //        .FirstOrDefault();
+
+        //    if (todayShiftDetails == null)
+        //    {
+        //        TempData["ErrorMessage"] = "Please add Rolling Mill Details for today first.";
+        //        return RedirectToAction("AddDetails", "RollingMill");
+        //    }
+
+        //    var vm = new DelaysVM
+        //    {
+        //        Date = todayShiftDetails.Date,
+        //        Shift = todayShiftDetails.Shift,
+        //        Plant = todayShiftDetails.Plant,
+        //        Team = todayShiftDetails?.Team,
+        //        ShiftIncharge = todayShiftDetails?.ShiftIncharge
+        //    };
+
+        //    var equipment = repo.GetAllEquipments()
+        //      .Select(x => new
+        //      {
+        //          Code = x.Code,
+        //          Text = x.Description + " - " + x.LocationName
+        //      })
+        //      .ToList();
+
+        //    ViewBag.Equipment = new SelectList(equipment, "Text", "Text");
+        //    //var equipment = repo.GetAllEquipments();
+        //    //ViewBag.Equipment = new SelectList(equipment, "Code", "Description");
+
+        //    var component = repo.GetAllComponent();
+        //    ViewBag.Component = new SelectList(component, "Code", "Description");
+
+        //    return View(vm);
+        //}
+
         [HttpPost]
         public ActionResult add(PlantDelayBLL data)
         {
@@ -97,7 +167,7 @@ namespace ProductionPortal_Solb.Controllers
                 }
 
 
-                data.Date = DateTime.Now;
+                //data.Date = DateTime.Now;
                 data.StatusID = 1;
                 data.CreatedDate = DateTime.Now;
                 data.CreatedBy = User.Identity.Name;
@@ -171,11 +241,6 @@ namespace ProductionPortal_Solb.Controllers
                 "application/pdf",
                 $"Delay_Report.pdf");
         }
-
-
-        // ---------------------------------------------------------
-        // Convert Model → DataTable
-        // ---------------------------------------------------------
         private DataTable BuildDelayDataTable(List<PlantDelayBLL> list)
         {
             DataTable dt = new DataTable();
@@ -221,10 +286,6 @@ namespace ProductionPortal_Solb.Controllers
 
             return dt;
         }
-
-        // ---------------------------------------------------------
-        // HEADER DESIGN
-        // ---------------------------------------------------------
         private void AddHeader(Document doc, string heading)
         {
             PdfPTable header = new PdfPTable(2);
@@ -257,11 +318,6 @@ namespace ProductionPortal_Solb.Controllers
             doc.Add(header);
             doc.Add(new Paragraph("\n"));
         }
-
-
-        // ---------------------------------------------------------
-        // PDF TABLE DESIGN
-        // ---------------------------------------------------------
         private PdfPTable BuildDelayPdfTable(DataTable dt)
         {
             // base columns ALWAYS shown
@@ -399,13 +455,11 @@ namespace ProductionPortal_Solb.Controllers
             return table;
         }
 
-
         public ActionResult SMPlist()
         {
             var data = repo.GetAllDelay();
             return View("~/Views/Meltshop/Delay/list.cshtml", data);
         }
-
 
         public ActionResult SMPadd()
         {
@@ -429,6 +483,7 @@ namespace ProductionPortal_Solb.Controllers
 
             return View("~/Views/Meltshop/Delay/add.cshtml");
         }
+
         [HttpPost]
         public ActionResult SMPadd(PlantDelayBLL data)
         {
@@ -473,6 +528,33 @@ namespace ProductionPortal_Solb.Controllers
             }
 
             return RedirectToAction("SMPlist");
+        }
+
+        [HttpPost]
+        public ActionResult AddDelayPopupDetail(FailureAnalysisBLL data)
+        {
+            try
+            {
+                if (data == null)
+                {
+                    TempData["ErrorMessage"] = "Invalid data.";
+                    return RedirectToAction("SMPList");
+                }
+
+                data.StatusID = 1;
+                data.CreatedDate = DateTime.Now;
+                data.CreatedBy = User.Identity.Name;
+
+                repo.InsertFailureAnalysis(data);
+
+                TempData["SuccessMessage"] = "Delay detail added successfully.";
+                return RedirectToAction("SMPList");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error while saving delay detail: " + ex.Message;
+                return RedirectToAction("SMPList");
+            }
         }
 
     }

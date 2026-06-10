@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using Org.BouncyCastle.Asn1.X500;
+using ProductionPortal_Solb.App_Start;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,6 +19,7 @@ using static DAL.Models.ViewModel;
 
 namespace ProductionPortal_Solb.Controllers
 {
+    [NoCache]
     public class QualityController : Controller
     {
         QualityRepository repo;
@@ -125,120 +127,159 @@ namespace ProductionPortal_Solb.Controllers
         [HttpPost]
         public ActionResult AddBillet(BilletBoardBLL data)
         {
-            if (data == null)
+            try
             {
-                TempData["ErrorMessage"] = "Invalid data.";
-                return View(data);
-            }
-
-            decimal billetLength = 0;
-            if (!string.IsNullOrWhiteSpace(data.BilletLength))
-            {
-                decimal.TryParse(data.BilletLength, out billetLength);
-            }
-
-            decimal billetWeight = 0;
-            if (!string.IsNullOrEmpty(data.CrossSection))
-            {
-                var parts = data.CrossSection.Replace(" ", "").ToLower().Split('x');
-
-                if (parts.Length == 2)
+                if (data == null)
                 {
-                    int w = 0;
-                    int h = 0;
+                    TempData["ErrorMessage"] = "Invalid data.";
+                    return RedirectToAction("AddBillet");
+                }
 
-                    int.TryParse(parts[0], out w);
-                    int.TryParse(parts[1], out h);
+                if (string.IsNullOrWhiteSpace(data.BilletBoarding))
+                {
+                    TempData["ErrorMessage"] = "Billet Boarding number is required.";
+                    return RedirectToAction("AddBillet");
+                }
 
-                    // Rule: 150x150
-                    if (w == 150 && h == 150)
+                if (data.Chemistry == null || !data.Chemistry.Any())
+                {
+                    TempData["ErrorMessage"] = "Chemistry data not found.";
+                    return RedirectToAction("AddBillet");
+                }
+
+                var validChemistry = data.Chemistry
+                    .Where(x => x != null && !string.IsNullOrWhiteSpace(x.HeatNo))
+                    .ToList();
+
+                if (!validChemistry.Any())
+                {
+                    TempData["ErrorMessage"] = "Heat No not found in chemistry.";
+                    return RedirectToAction("AddBillet");
+                }
+
+                // Unique HeatNos from posted chemistry
+                var uniqueHeatNos = validChemistry
+                    .Select(x => x.HeatNo.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                // 1) Check duplicate HeatNo inside same submitted form
+                if (uniqueHeatNos.Count != validChemistry.Select(x => x.HeatNo.Trim()).Count())
+                {
+                    TempData["ErrorMessage"] = "Duplicate Heat No found in submitted data.";
+                    return RedirectToAction("AddBillet");
+                }
+
+                // 2) Check duplicate Billet Boarding from DB
+                bool isBilletBoardingExists = repo.IsBilletBoardingExists(data.BilletBoarding.Trim());
+
+                if (isBilletBoardingExists)
+                {
+                    TempData["ErrorMessage"] = "This Billet Boarding number already exists.";
+                    return RedirectToAction("AddBillet");
+                }
+
+                // 3) Check duplicate HeatNos from DB
+                var duplicateHeatNos = repo.GetDuplicateHeatNos(uniqueHeatNos);
+
+                if (duplicateHeatNos != null && duplicateHeatNos.Any())
+                {
+                    TempData["ErrorMessage"] = "These Heat No(s) already exist: " + string.Join(", ", duplicateHeatNos);
+                    return RedirectToAction("AddBillet");
+                }
+
+                decimal billetLength = 0;
+                if (!string.IsNullOrWhiteSpace(data.BilletLength))
+                {
+                    decimal.TryParse(data.BilletLength, out billetLength);
+                }
+
+                decimal billetWeight = 0;
+                if (!string.IsNullOrEmpty(data.CrossSection))
+                {
+                    var parts = data.CrossSection.Replace(" ", "").ToLower().Split('x');
+
+                    if (parts.Length == 2)
                     {
-                        billetWeight = 175m * billetLength / 1000;
+                        int w = 0;
+                        int h = 0;
+
+                        int.TryParse(parts[0], out w);
+                        int.TryParse(parts[1], out h);
+
+                        if (w == 150 && h == 150)
+                        {
+                            billetWeight = 175m * billetLength / 1000;
+                        }
                     }
                 }
-            }
 
-            data.BilletWeight = billetWeight;
-            data.StatusID = 1;
-            data.CreatedDate = DateTime.Now;
-            data.CreatedBy = User.Identity.Name;
+                data.BilletWeight = billetWeight;
+                data.StatusID = 1;
+                data.CreatedDate = DateTime.Now;
+                data.CreatedBy = User.Identity.Name;
 
-            if (data.Chemistry == null || !data.Chemistry.Any())
-            {
-                TempData["ErrorMessage"] = "Chemistry data not found.";
-                return View(data);
-            }
+                int rtn = 0;
 
-            // Valid chemistry rows jahan HeatNo available ho
-            var validChemistry = data.Chemistry
-                .Where(x => x != null && !string.IsNullOrWhiteSpace(x.HeatNo))
-                .ToList();
-
-            if (!validChemistry.Any())
-            {
-                TempData["ErrorMessage"] = "Heat No not found in chemistry.";
-                return View(data);
-            }
-
-            int rtn = 0;
-
-            // 1) Pehle sari chemistry rows insert karo
-            foreach (var chem in validChemistry)
-            {
-                var chemData = new RMChemicalAnalysisBLL
+                // 4) Insert chemistry rows
+                foreach (var chem in validChemistry)
                 {
-                    HeatNo = chem.HeatNo.Trim(),
-                    StatusID = 1,
-                    CreatedDate = DateTime.Now,
-                    CreatedBy = User.Identity.Name,
+                    var chemData = new RMChemicalAnalysisBLL
+                    {
+                        HeatNo = chem.HeatNo.Trim(),
+                        StatusID = 1,
+                        CreatedDate = DateTime.Now,
+                        CreatedBy = User.Identity.Name,
 
-                    C = chem.C,
-                    Mn = chem.Mn,
-                    Si = chem.Si,
-                    P = chem.P,
-                    S = chem.S,
-                    N = chem.N,
-                    Ceq = chem.Ceq,
-                    HeatStatus = chem.HeatStatus,
-                    NoOfBillets = chem.NoOfBillets
-                };
+                        C = chem.C,
+                        Mn = chem.Mn,
+                        Si = chem.Si,
+                        P = chem.P,
+                        S = chem.S,
+                        N = chem.N,
+                        Ceq = chem.Ceq,
+                        HeatStatus = chem.HeatStatus,
+                        NoOfBillets = chem.NoOfBillets
+                    };
 
-                repo.InsertChemicalAnalysisRM(chemData);
-            }
+                   repo.InsertChemicalAnalysisRM(chemData);
+                }
 
-            // 2) Unique HeatNos ke against billet boarding sirf ek baar insert karo
-            var uniqueHeatNos = validChemistry
-                .Select(x => x.HeatNo.Trim())
-                .Distinct()
-                .ToList();
-
-            foreach (var heatNo in uniqueHeatNos)
-            {
-                var billetData = new BilletBoardBLL
+                // 5) Insert BilletBoarding once per unique HeatNo
+                foreach (var heatNo in uniqueHeatNos)
                 {
-                    HeatNo = heatNo,
-                    BilletLength = data.BilletLength,
-                    CrossSection = data.CrossSection,
-                    BilletWeight = data.BilletWeight,
-                    StatusID = 1,
-                    CreatedDate = DateTime.Now,
-                    CreatedBy = User.Identity.Name,
+                    var billetData = new BilletBoardBLL
+                    {
+                        HeatNo = heatNo,
+                        Date = data.Date,
+                        BilletLength = data.BilletLength,
+                        CrossSection = data.CrossSection,
+                        BilletWeight = data.BilletWeight,
+                        StatusID = 1,
+                        CreatedDate = DateTime.Now,
+                        CreatedBy = User.Identity.Name,
 
-                    PlantName = data.PlantName,
-                    Shift = data.Shift,
-                    SteelGrade = data.SteelGrade,
-                    Profile = data.Profile,
-                    Size = data.Size,
-                    BilletBoarding = data.BilletBoarding,
-                    ProductSpecs = data.ProductSpecs,
-                    Remarks = data.Remarks
-                };
+                        PlantName = data.PlantName,
+                        Shift = data.Shift,
+                        SteelGrade = data.SteelGrade,
+                        Profile = data.Profile,
+                        Size = data.Size,
+                        BilletBoarding = data.BilletBoarding.Trim(),
+                        ProductSpecs = data.ProductSpecs,
+                        Remarks = data.Remarks
+                    };
 
-                rtn = repo.InsertBilletBoarding(billetData);
+                    rtn = repo.InsertBilletBoarding(billetData);
+                }
+
+                TempData["SuccessMessage"] = "Billet Boarding inserted successfully against all Heat Numbers.";
+                return RedirectToAction("AddBillet");
             }
-
-            TempData["SuccessMessage"] = "Billet Boarding inserted successfully against all Heat Numbers.";
-            return RedirectToAction("BilletBoard");
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error while saving Billet Boarding: " + ex.Message;
+                return RedirectToAction("AddBillet");
+            }
         }
 
         [HttpGet]
@@ -274,6 +315,29 @@ namespace ProductionPortal_Solb.Controllers
         public ActionResult AddInspectionRM()
         {
             return View("~/Views/Quality/QCInspectionRM/AddInspectionRM.cshtml");
+        }
+        [HttpPost]
+        public ActionResult AddInspectionRM(RMQCInspectionBLL model)
+        {
+            // 🔥 Auto Calculation (IMPORTANT)
+            model.Accepted = model.TotalBundles - model.OnHold - model.Rejected;
+
+            model.CreatedOn = DateTime.Now;
+            model.CreatedBy = User.Identity.Name;
+            model.StatusID = 1;
+
+            bool isSaved = repo.SaveQCInspection(model);
+
+            if (isSaved)
+            {
+                TempData["Success"] = "QC Record Saved Successfully";
+            }
+            else
+            {
+                TempData["Error"] = "Error while saving";
+            }
+
+            return RedirectToAction("Index");
         }
         public ActionResult Inspectionlist()
         {
@@ -773,6 +837,12 @@ namespace ProductionPortal_Solb.Controllers
                 "~/Views/Quality/BilletBoard/BilletBoardingPDF.cshtml",
                 vm
             );
+        }
+
+        public ActionResult castmillCertificate()
+        {
+            var billets = repo.GetAllBoarding();
+            return View("~/Views/Quality/CastMillCertificate/castmillCertificate.cshtml", billets);
         }
     }
 }

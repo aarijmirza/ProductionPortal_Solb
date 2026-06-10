@@ -23,28 +23,55 @@ namespace BAL.Repositories
             _ds = new DataSet();
         }
 
-        public List<BilletDischargingBLL> GetDichargedHeat()
+        public List<BilletDischargingBLL> GetDichargedHeat(DateTime startDate, DateTime endDate)
         {
             try
             {
                 var lst = new List<BilletDischargingBLL>();
 
-                SqlParameter[] p = new SqlParameter[0];
+                SqlParameter[] p = new SqlParameter[]
+                {
+            new SqlParameter("@StartDate", startDate),
+            new SqlParameter("@EndDate", endDate)
+                };
 
                 _dt = (new DBHelper().GetTableFromSP)("sp_GetDichargedHeat", p);
-                if (_dt != null)
+
+                if (_dt != null && _dt.Rows.Count > 0)
                 {
-                    if (_dt.Rows.Count > 0)
-                    {
-                        lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<BilletDischargingBLL>>();
-                    }
+                    lst = JArray.Parse(JsonConvert.SerializeObject(_dt))
+                                .ToObject<List<BilletDischargingBLL>>();
                 }
 
                 return lst;
             }
-            catch (Exception ex)
+            catch
             {
-                return null;
+                return new List<BilletDischargingBLL>();
+            }
+        }
+
+
+        public List<BilletDischargingBLL> GetDichargedHeat2()
+        {
+            try
+            {
+                var lst = new List<BilletDischargingBLL>();
+
+
+                _dt = (new DBHelper().GetTableFromSP)("sp_GetDichargedHeat2");
+
+                if (_dt != null && _dt.Rows.Count > 0)
+                {
+                    lst = JArray.Parse(JsonConvert.SerializeObject(_dt))
+                                .ToObject<List<BilletDischargingBLL>>();
+                }
+
+                return lst;
+            }
+            catch
+            {
+                return new List<BilletDischargingBLL>();
             }
         }
 
@@ -211,6 +238,45 @@ namespace BAL.Repositories
             }
         }
 
+        public int UpdateRMShiftDetails(RMShiftDetailsBLL model)
+        {
+            SqlParameter[] p = {
+            new SqlParameter("@Date", model.Date),
+            new SqlParameter("@Plant", model.Plant),
+            new SqlParameter("@Shift", model.Shift),
+            new SqlParameter("@Team", model.Team),
+            new SqlParameter("@ShiftIncharge", model.ShiftIncharge)
+        };
+
+            return (new DBHelper().ExecuteNonQueryReturn)("sp_UpdateRMShiftDetails", p);
+        }
+
+        public bool IsShiftExist(DateTime date, string plant, string shift)
+        {
+            try
+            {
+                SqlParameter[] p = new SqlParameter[]
+                {
+            new SqlParameter("@Date", date),
+            new SqlParameter("@Plant", plant),
+            new SqlParameter("@Shift", shift)
+                };
+
+                var result = new DBHelper().ExecuteScalar("sp_CheckRMShiftExists", p);
+
+                if (result != null && result != DBNull.Value)
+                {
+                    return Convert.ToInt32(result) > 0;
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public int AddBundlingSection(BundlingSectionBLL model)
         {
             try
@@ -254,7 +320,39 @@ namespace BAL.Repositories
             }
         }
 
+        //public List<RMShiftDetailsBLL> RollingMillDetails()
+        //{
+        //    try
+        //    {
+        //        var lst = new List<RMShiftDetailsBLL>();
+
+        //        SqlParameter[] p = new SqlParameter[0];
+
+        //        _dt = (new DBHelper().GetTableFromSP)("sp_GetRMShiftDetails", p);
+        //        if (_dt != null)
+        //        {
+        //            if (_dt.Rows.Count > 0)
+        //            {
+        //                lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<RMShiftDetailsBLL>>();
+        //            }
+        //        }
+
+        //        return lst;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return null;
+        //    }
+        //}
+
         public List<RMShiftDetailsBLL> RollingMillDetails()
+        {
+            return DBHelper.GetList<RMShiftDetailsBLL>(
+                "SELECT * FROM RMShiftDetails WHERE StatusID = 1"
+            );
+        }
+
+        public List<RMShiftDetailsBLL> RMShiftDetailAll()
         {
             try
             {
@@ -262,7 +360,7 @@ namespace BAL.Repositories
 
                 SqlParameter[] p = new SqlParameter[0];
 
-                _dt = (new DBHelper().GetTableFromSP)("sp_GetRMShiftDetails", p);
+                _dt = (new DBHelper().GetTableFromSP)("sp_GetRMAllShiftDetails", p);
                 if (_dt != null)
                 {
                     if (_dt.Rows.Count > 0)

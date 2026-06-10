@@ -18,17 +18,36 @@ namespace ProductionPortal_Solb.Controllers
         //    return View();
         //}
 
+        //public ActionResult Index()
+        //{
+        //    var repo = new RollingMillRepository();
+
+        //    var today = DateTime.Today;
+        //    var tomorrow = today.AddDays(1);
+
+        //    bool hasTodayData = repo.RollingMillDetails()
+        //        .Any(x => x.Date >= today && x.Date < tomorrow);
+
+        //    ViewBag.HasRollingMillTodayData = hasTodayData;
+
+        //    return View();
+        //}
+
         public ActionResult Index()
         {
             var repo = new RollingMillRepository();
 
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
+            DateTime selectedDate = Session["RollingMillSelectedDate"] != null
+                ? Convert.ToDateTime(Session["RollingMillSelectedDate"])
+                : DateTime.Today;
 
-            bool hasTodayData = repo.RollingMillDetails()
-                .Any(x => x.Date >= today && x.Date < tomorrow);
+            var nextDate = selectedDate.AddDays(1);
 
-            ViewBag.HasRollingMillTodayData = hasTodayData;
+            bool hasSelectedDateData = repo.RollingMillDetails()
+                .Any(x => x.Date >= selectedDate && x.Date < nextDate);
+
+            ViewBag.HasRollingMillTodayData = hasSelectedDateData;
+            ViewBag.RollingMillSelectedDate = selectedDate.ToString("dd-MMM-yyyy");
 
             return View();
         }

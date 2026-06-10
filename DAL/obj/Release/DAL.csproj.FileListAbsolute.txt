@@ -60,3 +60,5 @@ D:\Projects\ProductionPortal_GIT\DAL\obj\Release\DAL.csproj.CoreCompileInputs.ca
 D:\Projects\ProductionPortal_GIT\DAL\obj\Release\DAL.csproj.Up2Date
 D:\Projects\ProductionPortal_GIT\DAL\obj\Release\DAL.dll
 D:\Projects\ProductionPortal_GIT\DAL\obj\Release\DAL.pdb
+D:\Projects\ProductionPortal_GIT\DAL\bin\Release\Newtonsoft.Json.dll
+D:\Projects\ProductionPortal_GIT\DAL\bin\Release\Newtonsoft.Json.xml

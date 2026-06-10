@@ -1,6 +1,25 @@
 ﻿@model DAL.Models.ViewModel.ShiftProductionReportVM
 @{
     Layout = null;
+
+    var data = Model.DischargedHeats;
+    var delays = Model.Delays;
+
+    // 🔥 Production Totals
+    decimal totalDischarge = data.Sum(x => x.TotalBillet ?? 0);
+    decimal totalRolled = data.Sum(x => x.TotalBillet ?? 0);
+    decimal totalCobble = data.Sum(x => (decimal)x.Cobble);
+    decimal totalHotOut = data.Sum(x => (decimal)x.HotOut);
+    decimal totalBundles = data.Sum(x => x.TotalBundleProduced ?? 0);
+
+    decimal totalOnHold = data.Sum(x => x.TotalBundleOnHold ?? 0);
+    decimal totalRejected = data.Sum(x => x.TotalRejectedBundle ?? 0);
+    decimal totalShortWeight = data.Sum(x => x.ShortBundleActualWeight ?? 0);
+
+    // 🔥 Delay Totals
+    int totalDelayDuration = delays.Sum(x => x.TotalDuration ?? 0);
+    int totalDelayCobble = delays.Sum(x => x.Cobble ?? 0);
+    int totalDelayHotOut = delays.Sum(x => x.HotOut ?? 0);
 }
 
 <!DOCTYPE html>
@@ -120,8 +139,8 @@
 
                 <td class="center">
                     <div class="header-title">SOLB STEEL COMPANY</div>
-                    <div class="sub-header">ROLLING MILL 2 DEPARTMENT</div>
-                    <div class="sub-header">ROLLING MILL 2 - SHIFT PRODUCTION REPORT</div>
+                    <div class="sub-header">ROLLING MILL DEPARTMENT</div>
+                    <div class="sub-header">ROLLING MILL - SHIFT PRODUCTION REPORT</div>
                     <div class="small">QFM-RM2-1007</div>
                 </td>
 
@@ -151,11 +170,11 @@
                 <td style="width:100px;"></td>
             </tr>
 
-            <tr>
-                <td class="bold">Fuel Consumption:</td>
-                <td colspan="3">0 (Liters)</td>
-                <td colspan="6"></td>
-            </tr>
+            @*<tr>
+                    <td class="bold">Fuel Consumption:</td>
+                    <td colspan="3">0 (Liters)</td>
+                    <td colspan="6"></td>
+                </tr>*@
         </table>
 
         <!-- DOWNTIME DESCRIPTION -->
@@ -233,13 +252,23 @@
 
 
             <!-- Total Row -->
+            @*<tr class="total-row small">
+                    <td class="right bold">Total</td>
+                    <td></td>
+                    <td></td>
+                    <td class="center">0</td>
+                    <td class="center">0</td>
+                    <td class="center">0</td>
+                    <td colspan="7"></td>
+                </tr>*@
+
             <tr class="total-row small">
                 <td class="right bold">Total</td>
                 <td></td>
                 <td></td>
-                <td class="center">0</td>
-                <td class="center">0</td>
-                <td class="center">0</td>
+                <td class="center">@totalDelayDuration</td>
+                <td class="center">@totalDelayCobble</td>
+                <td class="center">@totalDelayHotOut</td>
                 <td colspan="7"></td>
             </tr>
 
@@ -297,10 +326,13 @@
                         <td>@item.TotalBillet</td>
                         <td>@item.Cobble</td>
                         <td>@item.HotOut</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>@item.TotalBundleProduced</td>
+                        <td>@(item.TotalBundleOnHold.HasValue ? item.TotalBundleOnHold.Value.ToString("0.00") : "0.00")</td>
+                        <td>@(item.TotalRejectedBundle.HasValue ? item.TotalRejectedBundle.Value.ToString("0.00") : "0.00")</td>
+                        <td>@(item.ShortBundleActualWeight.HasValue ? item.ShortBundleActualWeight.Value.ToString("0.00") : "0.00")</td>
+                        @*<td>@(item.TotalBundleOnHold ?? 0)</td>
+                            <td>@(item.TotalRejectedBundle ?? 0)</td>
+                            <td>@(item.ShortBundleActualWeight ?? 0)</td>*@
                     </tr>
                 }
             }
@@ -323,16 +355,18 @@
                 </tr>
             }
             <!-- TOTALS -->
+            <!-- 🔥 AUTO TOTAL ROW -->
             <tr class="total-row small">
                 <td colspan="5" class="right bold">Total</td>
-                <td class="center">0</td>
-                <td class="center">0</td>
-                <td class="center">0</td>
-                <td class="center">0</td>
-                <td class="center">0</td>
-                <td class="center">0</td>
-                <td class="center">0</td>
-                <td class="center">0</td>
+
+                <td class="center">@totalDischarge</td>
+                <td class="center">@totalRolled</td>
+                <td class="center">@totalCobble</td>
+                <td class="center">@totalHotOut</td>
+                <td class="center">@totalBundles</td>
+                <td class="center">@totalOnHold</td>
+                <td class="center">@totalRejected</td>
+                <td class="center">@totalShortWeight.ToString("0.00")</td>
             </tr>
         </table>
 
@@ -346,12 +380,13 @@
                 <td style="width:50%; vertical-align:top; padding-right:6px;">
 
                     <!-- SHIFT PERFORMANCE SUMMARY -->
-                    <table style="width:100%; border-collapse:collapse;">
+
+                    <!--<table style="width:100%; border-collapse:collapse;">
                         <tr>
                             <td colspan="5" class="section-title center" style="border:1px solid #000;">Shift Performance Summary</td>
-                        </tr>
-                        <!-- Size header row -->
-                        <tr class="small center bold">
+                        </tr>-->
+                    <!-- Size header row -->
+                    <!--<tr class="small center bold">
                             <td style="border:1px solid #000;">Size (mm)</td>
                             <td style="border:1px solid #000;">12mm</td>
                             <td style="border:1px solid #000;">14mm</td>
@@ -485,7 +520,7 @@
                             <td style="border:1px solid #000;"></td>
                             <td style="border:1px solid #000;"></td>
                         </tr>
-                    </table>
+                    </table>-->
 
                 </td>
 

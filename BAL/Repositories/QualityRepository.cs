@@ -169,7 +169,7 @@ namespace BAL.Repositories
 
                 var Profile = model.Profile + model.Size;
 
-                p[0] = new SqlParameter("@Date", model.Date ?? DateTime.Now);
+                p[0] = new SqlParameter("@Date", model.Date);
                 p[1] = new SqlParameter("@HeatNo", model.HeatNo);
                 p[2] = new SqlParameter("@BilletBoarding", model.BilletBoarding);
                 p[3] = new SqlParameter("@PlantName", model.PlantName);
@@ -295,6 +295,62 @@ namespace BAL.Repositories
         //    }
         //}
 
+        public bool IsBilletBoardingExists(string billetBoarding)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+            new SqlParameter("@BilletBoarding", billetBoarding)
+        };
+
+                DataTable dt = (new DBHelper().GetTableFromSP)("sp_CheckBilletBoardingExists", p);
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    return Convert.ToInt32(dt.Rows[0]["Total"]) > 0;
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public List<string> GetDuplicateHeatNos(List<string> heatNos)
+        {
+            try
+            {
+                if (heatNos == null || !heatNos.Any())
+                    return new List<string>();
+
+                string heatNoCsv = string.Join(",", heatNos.Select(x => x.Trim()));
+
+                SqlParameter[] p =
+                {
+            new SqlParameter("@HeatNos", heatNoCsv)
+        };
+
+                DataTable dt = (new DBHelper().GetTableFromSP)("sp_GetDuplicateHeatNos", p);
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    return dt.AsEnumerable()
+                             .Select(x => Convert.ToString(x["HeatNo"]))
+                             .Where(x => !string.IsNullOrWhiteSpace(x))
+                             .ToList();
+                }
+
+                return new List<string>();
+            }
+            catch
+            {
+                return new List<string>();
+            }
+        }
+
         public BilletBoardBLL GetBilletDetails(int id)
         {
             try
@@ -303,22 +359,44 @@ namespace BAL.Repositories
 
                 SqlParameter[] p =
                 {
-                    new SqlParameter("@id", id)
-                };
+            new SqlParameter("@id", id)
+        };
 
-                _dt = (new DBHelper().GetTableFromSP)("sp_GetBilletDetailByID", p);
+                DataSet ds = (new DBHelper().GetDatasetFromSP)("sp_GetBilletDetailByID", p);
 
-                if (_dt != null && _dt.Rows.Count > 0)
+                if (ds != null && ds.Tables.Count > 0)
                 {
-                    obj = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt))
-                               .ToObject<List<BilletBoardBLL>>()
-                               .FirstOrDefault();
+                    // Table 0 = Header single record
+                    if (ds.Tables[0] != null && ds.Tables[0].Rows.Count > 0)
+                    {
+                        obj = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(ds.Tables[0]))
+                                    .ToObject<List<BilletBoardBLL>>()
+                                    .FirstOrDefault();
+                    }
 
                     if (obj != null)
                     {
-                        obj.Chemistry = !string.IsNullOrWhiteSpace(obj.HeatNo)
-                            ? GetChemicalAnalysisByHeatNo(obj.HeatNo)
-                            : new List<RMChemicalAnalysisBLL>();
+                        // Table 1 = Same Billet Boarding ke multiple Heat records
+                        if (ds.Tables.Count > 1 && ds.Tables[1] != null && ds.Tables[1].Rows.Count > 0)
+                        {
+                            obj.BilletBoardingHeats = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(ds.Tables[1]))
+                                                            .ToObject<List<BilletBoardBLL>>();
+                        }
+                        else
+                        {
+                            obj.BilletBoardingHeats = new List<BilletBoardBLL>();
+                        }
+
+                        // Table 2 = Chemical Analysis records
+                        if (ds.Tables.Count > 2 && ds.Tables[2] != null && ds.Tables[2].Rows.Count > 0)
+                        {
+                            obj.Chemistry = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(ds.Tables[2]))
+                                                  .ToObject<List<RMChemicalAnalysisBLL>>();
+                        }
+                        else
+                        {
+                            obj.Chemistry = new List<RMChemicalAnalysisBLL>();
+                        }
                     }
                 }
 
@@ -329,6 +407,41 @@ namespace BAL.Repositories
                 return null;
             }
         }
+
+        //public BilletBoardBLL GetBilletDetails(int id)
+        //{
+        //    try
+        //    {
+        //        BilletBoardBLL obj = null;
+
+        //        SqlParameter[] p =
+        //        {
+        //            new SqlParameter("@id", id)
+        //        };
+
+        //        _dt = (new DBHelper().GetTableFromSP)("sp_GetBilletDetailByID", p);
+
+        //        if (_dt != null && _dt.Rows.Count > 0)
+        //        {
+        //            obj = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt))
+        //                       .ToObject<List<BilletBoardBLL>>()
+        //                       .FirstOrDefault();
+
+        //            if (obj != null)
+        //            {
+        //                obj.Chemistry = !string.IsNullOrWhiteSpace(obj.HeatNo)
+        //                    ? GetChemicalAnalysisByHeatNo(obj.HeatNo)
+        //                    : new List<RMChemicalAnalysisBLL>();
+        //            }
+        //        }
+
+        //        return obj;
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return null;
+        //    }
+        //}
 
         public List<RMChemicalAnalysisBLL> GetChemicalAnalysisByHeatNo(string heatNo)
         {
@@ -433,7 +546,7 @@ namespace BAL.Repositories
             {
                 return 0;
             }
-        }        
+        }
         public int UpdateSlagByProduct(SlagByProductAnalysisBLL data)
         {
             try
@@ -1003,6 +1116,46 @@ namespace BAL.Repositories
             catch
             {
                 return new List<HeatChemistryBLL>();
+            }
+        }
+
+        public bool SaveQCInspection(RMQCInspectionBLL model)
+        {
+            try
+            {
+                SqlParameter[] p = new SqlParameter[]
+                {
+                    new SqlParameter("@ProductionDate", model.ProductionDate),
+                    new SqlParameter("@Shift", model.Shift),
+                    new SqlParameter("@HeatNo", model.HeatNo),
+
+                    new SqlParameter("@SteelGrade", model.SteelGrade),
+                    new SqlParameter("@BarSize", model.BarSize),
+
+                    new SqlParameter("@TotalBundles", model.TotalBundles),
+                    new SqlParameter("@OnHold", model.OnHold),
+                    new SqlParameter("@Rejected", model.Rejected),
+                    new SqlParameter("@Accepted", model.Accepted),
+
+                    new SqlParameter("@BundleSeriesOnHold", model.BundleSeriesOnHold ?? ""),
+                    new SqlParameter("@DefectCodes", model.DefectCodes ?? ""),
+                    new SqlParameter("@MRBNo", model.MRBNo ?? ""),
+
+                    new SqlParameter("@QCStatus", model.QCStatus ?? ""),
+                    new SqlParameter("@Remarks", model.Remarks ?? ""),
+
+                    new SqlParameter("@CreatedOn", model.CreatedOn),
+                    new SqlParameter("@CreatedBy", model.CreatedBy ?? ""),
+                    new SqlParameter("@StatusID", model.StatusID),
+                };
+
+                new DBHelper().ExecuteNonQuery("sp_SaveRMQCInspection", p);
+
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

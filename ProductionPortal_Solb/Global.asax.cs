@@ -1,23 +1,4 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Web;
-//using System.Web.Mvc;
-//using System.Web.Optimization;
-//using System.Web.Routing;
-
-//namespace ProductionPortal_Solb
-//{
-//    public class MvcApplication : System.Web.HttpApplication
-//    {
-//        protected void Application_Start()
-//        {
-//            AreaRegistration.RegisterAllAreas();
-//            FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
-//            RouteConfig.RegisterRoutes(RouteTable.Routes);
-//        }
-//    }
-//}
+﻿
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -39,8 +20,39 @@ namespace ProductionPortal_Solb
             RouteConfig.RegisterRoutes(RouteTable.Routes);
         }
 
+        //protected void Application_BeginRequest()
+        //{
+        //    HttpCookie langCookie = HttpContext.Current.Request.Cookies["lang"];
+        //    string lang = langCookie?.Value ?? "en"; // default to English
+
+        //    try
+        //    {
+        //        var cultureInfo = new CultureInfo(lang);
+        //        cultureInfo.DateTimeFormat.Calendar = new GregorianCalendar();
+
+        //        Thread.CurrentThread.CurrentCulture = cultureInfo;
+        //        Thread.CurrentThread.CurrentUICulture = cultureInfo;
+        //    }
+        //    catch
+        //    {
+        //        // fallback to default if culture not found
+        //        Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+        //        Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+        //    }
+        //}
+
         protected void Application_BeginRequest()
         {
+            // ✅ Disable browser cache on every request
+            Response.Cache.SetCacheability(HttpCacheability.NoCache);
+            Response.Cache.SetNoStore();
+            Response.Cache.SetExpires(DateTime.UtcNow.AddDays(-1));
+            Response.Cache.SetRevalidation(HttpCacheRevalidation.AllCaches);
+
+            Response.AppendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            Response.AppendHeader("Pragma", "no-cache");
+            Response.AppendHeader("Expires", "0");
+
             HttpCookie langCookie = HttpContext.Current.Request.Cookies["lang"];
             string lang = langCookie?.Value ?? "en"; // default to English
 
@@ -54,7 +66,6 @@ namespace ProductionPortal_Solb
             }
             catch
             {
-                // fallback to default if culture not found
                 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
                 Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
             }

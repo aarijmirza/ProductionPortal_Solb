@@ -16,6 +16,7 @@ namespace DAL.Models
         public string SteelGrade { get; set; }
         public string BilletSize { get; set; }
         public string Profile { get; set; }
+        public string ProductSpecs { get; set; }
         public string BilletLength { get; set; }
         public decimal? TotalBillet { get; set; }
         public decimal? TotalWeight { get; set; }

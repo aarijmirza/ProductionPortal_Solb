@@ -1029,24 +1029,44 @@ namespace ProductionPortal_Solb.Controllers
         //    return View(vm);
         //}
 
+        //public ActionResult ShiftProductionReport(DateTime? from, DateTime? to)
+        //{
+        //    // 🔑 Default = TODAY
+        //    DateTime startDate = from ?? DateTime.Today;
+        //    DateTime endDate = to ?? DateTime.Today;
+
+        //    var vm = new ShiftProductionReportVM
+        //    {
+        //        Delays = repo.GetAllRMDelay(startDate, endDate),
+        //        DischargedHeats = rm.GetDichargedHeat(startDate, endDate)
+        //    };
+
+        //    return View(vm);
+        //}
+
         public ActionResult ShiftProductionReport(DateTime? from, DateTime? to)
         {
-            // 🔑 Default = TODAY
             DateTime startDate = from ?? DateTime.Today;
             DateTime endDate = to ?? DateTime.Today;
 
+            var dischargedData = rm.GetDichargedHeat(startDate, endDate);
+            var delayData = repo.GetAllRMDelay(startDate, endDate);
+
             var vm = new ShiftProductionReportVM
             {
-                Delays = repo.GetAllRMDelay()
-                             .Where(x => x.CreatedDate >= startDate && x.Date <= endDate)
-                             .ToList(),
-
-                DischargedHeats = rm.GetDichargedHeat()
-                                    .Where(x => x.CreatedOn >= startDate && x.Date <= endDate)
-                                    .ToList()
+                Delays = delayData ?? new List<PlantDelayBLL>(),
+                DischargedHeats = dischargedData ?? new List<BilletDischargingBLL>()
             };
 
-            return View(vm);
+            // ===== OPTIONAL (ViewBag stuff same rakho) =====
+            ViewBag.TotalBundles = vm.DischargedHeats.Count;
+            ViewBag.Cobble = vm.Delays.Count(x => x.DelayType == "Cobble");
+            ViewBag.HotOut = vm.Delays.Count(x => x.DelayType == "HotOut");
+
+            ViewBag.From = startDate;
+            ViewBag.To = endDate;
+
+            return View(vm);   // 🔥 MOST IMPORTANT
         }
 
         //public ActionResult ShiftProductionReportPDF(DateTime? from, DateTime? to)

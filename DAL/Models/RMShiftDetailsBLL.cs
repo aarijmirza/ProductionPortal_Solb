@@ -18,4 +18,9 @@ namespace DAL.Models
         public string CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; }
     }
+    public class RollingMillPageVM
+    {
+        public RMShiftDetailsBLL Form { get; set; }
+        public List<RMShiftDetailsBLL> List { get; set; }
+    }
 }

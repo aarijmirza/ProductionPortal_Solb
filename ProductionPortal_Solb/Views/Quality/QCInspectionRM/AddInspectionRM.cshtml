@@ -1,1 +1,201 @@
-﻿
+﻿@using System.Globalization
+@model DAL.Models.ViewModel.RMChargingVM
+
+@{
+    ViewBag.Title = "add";
+}
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">QC Inspection Data - RM</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">QC Inspection Data - RM</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Records</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+<div class="xp-contentbar">
+
+    <div class="row">
+        <div class="col-md-7">
+
+            <div class="card">
+                <div class="card-body" style="height:500px; overflow-y:auto;">
+
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th>Production Date</th>
+                                <th>Shift</th>
+                                <th>Heat No</th>
+                                <th>Product</th>
+                                <th>Steel Grade</th>
+                                <th>Total Bundles</th>
+                                <th>On-Hold</th>
+                                <th>Reject</th>
+                                <th>Accepted</th>
+                                <th>Defect Code</th>
+                                <th>MRB No</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @*@foreach (var item in Model.ProductionList)
+                                {
+                                    <tr onclick="fillForm(this)"
+                                        data-heat="@item.HeatNo"
+                                        data-shift="@item.Shift"
+                                        data-grade="@item.SteelGrade"
+                                        data-size="@item.Product"
+                                        data-total="@item.TotalBundles"
+                                        data-onhold="@item.OnHold"
+                                        data-reject="@item.Reject"
+                                        data-accepted="@item.Accepted">
+
+                                        <td>@item.ProductionDate.ToString("dd-MM-yyyy")</td>
+                                        <td>@item.Shift</td>
+                                        <td>@item.HeatNo</td>
+                                        <td>@item.Product</td>
+                                        <td>@item.SteelGrade</td>
+                                        <td>@item.TotalBundles</td>
+                                        <td class="text-danger">@item.OnHold</td>
+                                        <td class="text-danger">@item.Reject</td>
+                                        <td>@item.Accepted</td>
+                                        <td>@item.DefectCode</td>
+                                        <td>@item.MRBNo</td>
+                                    </tr>
+                                }*@
+
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= RIGHT SIDE FORM ================= -->
+        <div class="col-md-5">
+
+            <div class="card">
+                <div class="card-body">
+
+
+                    <!-- Row 1 -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Production Date</label>
+                            <input type="text" id="prodDate" class="form-control" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Shift</label>
+                            <input type="text" id="shift" class="form-control" />
+                        </div>
+                    </div>
+
+                    <!-- Row 2 -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Heat No</label>
+                            <input type="text" id="heatNo" class="form-control" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Steel Grade</label>
+                            <input type="text" id="grade" class="form-control" />
+                        </div>
+                    </div>
+
+                    <!-- Row 3 -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Bar Size</label>
+                            <input type="text" id="size" class="form-control" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Total Bundles</label>
+                            <input type="text" id="totalBundles" class="form-control" />
+                        </div>
+                    </div>
+
+                    <!-- Row 4 -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>On-Hold</label>
+                            <input type="text" id="onHold" class="form-control text-danger" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Rejected</label>
+                            <input type="text" id="reject" class="form-control text-danger" />
+                        </div>
+                    </div>
+
+                    <!-- Row 5 -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Accepted</label>
+                            <input type="text" id="accepted" class="form-control" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>MRB No</label>
+                            <input type="text" class="form-control" />
+                        </div>
+                    </div>
+
+                    <!-- Row 6 -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Defect Code</label>
+                            <input type="text" class="form-control" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>QC Status</label>
+                            <select class="form-control">
+                                <option>Accepted</option>
+                                <option>Rejected</option>
+                                <option>Hold</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Full Width -->
+                    <div class="form-group">
+                        <label>Remarks</label>
+                        <textarea class="form-control"></textarea>
+                    </div>
+
+                    <button class="btn btn-success btn-block">Save</button>
+
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+<script>
+    function fillForm(row) {
+
+        document.getElementById("heatNo").value = row.dataset.heat;
+        document.getElementById("shift").value = row.dataset.shift;
+        document.getElementById("grade").value = row.dataset.grade;
+        document.getElementById("size").value = row.dataset.size;
+
+        document.getElementById("totalBundles").value = row.dataset.total;
+        document.getElementById("onHold").value = row.dataset.onhold;
+        document.getElementById("reject").value = row.dataset.reject;
+        document.getElementById("accepted").value = row.dataset.accepted;
+
+    }
+</script>

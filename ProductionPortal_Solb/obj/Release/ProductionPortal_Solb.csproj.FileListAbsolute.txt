@@ -266,3 +266,7 @@ D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\Newtonsoft.Json.Bson.
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\System.Collections.Immutable.xml
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\System.Reflection.Metadata.xml
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\System.Text.Encodings.Web.xml
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EntityFramework.dll
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EntityFramework.SqlServer.dll
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EntityFramework.xml
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EntityFramework.SqlServer.xml

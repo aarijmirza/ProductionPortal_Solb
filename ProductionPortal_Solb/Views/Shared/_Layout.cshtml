@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var selectedDate = Session["RM_Date"];
+    var selectedShift = Session["RM_Shift"];
+}
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -147,11 +151,20 @@
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("HeatChemistry", "Quality")">HEAT CHEMISTRY</a></li>
                                     </ul>
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("castmillCertificate", "Quality")">CAST / MILL CERTIFICATE</a></li>
+                                    </ul>
                                 }
                                 @if (User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User") || User.IsInRole("QC User"))
                                 {
                                     <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("AddInspectionRM", "Quality")">QC INSPECTION DATA - RM</a></li>
+                                    </ul>
+                                    <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("BilletBoard", "Quality")">BILLET BOARD</a></li>
+                                    </ul>
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("QCInspectionRMadd", "Quality")">RM MECHANICAL TEST RESULT</a></li>
                                     </ul>
                                 }
                                 @if (User.IsInRole("Administrator") || User.IsInRole("QC User"))
@@ -166,48 +179,46 @@
 
                             </li>
                         }
-                        @if (User.IsInRole("Rolling Mill User") || User.IsInRole("Administrator"))
+                        @if (User.IsInRole("Rolling Mill User") || User.IsInRole("Administrator") || User.IsInRole("user"))
                         {
                             <li>
-                                <a href="javaScript:void();">
+                                <a href="javascript:void(0);">
                                     <span>ROLLING MILL</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
-                                @*@if (ViewBag.HasRollingMillTodayData != true)
-                                    {
-                                        <ul class="xp-vertical-submenu">
-                                            <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
-                                            <li style="color:red; padding:10px;">
-                                                ⚠ Please add Rolling Mill Details for today first
-                                            </li>
-                                        </ul>
-                                    }*@
-                                @if (ViewBag.HasRollingMillTodayData == true)
+
+                                @if (selectedDate != null && selectedShift != null)
                                 {
                                     <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
-                                    </ul>
-                                    <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("AddCharge", "RollingMill")">BILLET CHARGING</a></li>
-                                    </ul>
-                                    <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("AddDischarge", "RollingMill")">FURNACE DISCHARGE</a></li>
-                                    </ul>
-                                    <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("AddBundleSection", "RollingMill")">BUNDLE SECTION</a></li>
-                                    </ul>
-                                    <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("list", "Delay")">DELAY RECORD</a></li>
+                                        <li><a href="@Url.Action("AddDetails","RollingMill")">DETAILS</a></li>
+                                        <li><a href="@Url.Action("AddCharge","RollingMill")">BILLET CHARGING</a></li>
+                                        <li><a href="@Url.Action("AddDischarge","RollingMill")">FURNACE DISCHARGE</a></li>
+                                        <li><a href="@Url.Action("AddBundleSection","RollingMill")">BUNDLE SECTION</a></li>
+                                        @if (User.IsInRole("User"))
+                                        {
+                                            <li><a href="@Url.Action("list", "Delay")">DELAY RECORD</a></li>
+                                        }
                                     </ul>
                                 }
                                 else
                                 {
                                     <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
+                                        <li><a href="@Url.Action("AddDetails","RollingMill")">ROLLING MILL DETAILS</a></li>
                                         <li style="color:red; padding:10px;">
-                                            ⚠ Please add Rolling Mill Details for today first
+                                            ⚠ Please select shift first
                                         </li>
                                     </ul>
                                 }
+                            </li>
+                        }
+                        @if (User.IsInRole("Administrator") || User.IsInRole("User"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>CMD MAINTENANCE</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("AnalysisReport", "Delay")">ANALYSIS REPORT</a></li>
+                                </ul>
                             </li>
                         }
                         @if (User.IsInRole("Administrator"))

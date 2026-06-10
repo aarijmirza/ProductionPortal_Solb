@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using ProductionPortal_Solb.App_Start;
+using System.Web;
 using System.Web.Mvc;
 
 namespace ProductionPortal_Solb
@@ -8,6 +9,7 @@ namespace ProductionPortal_Solb
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
             filters.Add(new HandleErrorAttribute());
+            filters.Add(new NoCacheAttribute());
         }
     }
 }

@@ -131,19 +131,11 @@
                                 <label>Date</label>
                                 <input type="date" class="form-control" id="date" name="Date" />
                             </div>
-                            <div class="form-group col-md-2">
-                                <label>Shift</label>
-                                @Html.TextBoxFor(m => m.Shift, new { @class = "form-control", @readonly = "readonly" })
-                                @Html.HiddenFor(m => m.Shift)
-                                @*<select class="form-control" name="Shift">
-                                        <option selected disabled>-- please select --</option>
-                                        <option value="Morning">Morning</option>
-                                        <option value="Afternoon">Afternoon</option>
-                                        <option value="Night">Night</option>
-                                        <option value="Long Morning">Long Morning</option>
-                                        <option value="Long Night">Long Night</option>
-                                    </select>*@
-                            </div>
+                            @*<div class="form-group col-md-2">
+            <label>Shift</label>
+            @Html.TextBoxFor(m => m.Shift, new { @class = "form-control", @readonly = "readonly" })
+            @Html.HiddenFor(m => m.Shift)
+        </div>*@
                             <div class="form-group col-md-2">
                                 <label>Heat #</label>
                                 @Html.DropDownListFor(model => model.HeatNo,
@@ -164,43 +156,12 @@
                                 <label>P.O. Number</label>
                                 <input type="text" class="form-control" id="txtPONumber" name="PONumber" readonly />
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-2">
                                 <label for="productSpec">Product Code</label>
-                                @* 2. VISIBLE INPUT FIELD *@
-                                <div class="input-group">
-                                    <input type="text"
-                                           id="productSpec"
-                                           class="form-control"
-                                           placeholder="-- Select Product Grade --"
-                                           readonly
-                                           name="ProductCode">
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" id="toggleDropdownBtn">
-                                            <i class="fa fa-caret-down"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                @* 3. CUSTOM MULTI-COLUMN DROPDOWN TABLE *@
-                                <div id="multiColumnDropdown" class="dropdown-menu-custom shadow" style="display: none;">
-                                    <table class="table table-hover table-sm mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 30%;">Spec/Grade</th>
-                                                <th style="width: 30%;">Steel Grade</th>
-                                                <th style="width: 10%;">L</th>
-                                                <th style="width: 10%;">W</th>
-                                                <th style="width: 20%;">Billet Length (m)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="specGradeBody">
-                                            @* DATA ROWS WILL BE POPULATED BY JAVASCRIPT *@
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <input type="text" class="form-control" id="txtProductSpecs" name="ProductSpecs" readonly>
                             </div>
+                        </div>
+                        <div class="form-row">                            
                             <div class="form-group col-md-2">
                                 <label>Finished Product Grade</label>
                                 <select class="form-control" name="NewSteelGrade">
@@ -261,6 +222,22 @@
                                 <option value="Long Night">Long Night</option>
                             </select>
                         </div>
+
+                        <!-- 🔥 NEW KPI BADGES -->
+                        <div class="col-md-6 d-flex align-items-end">
+
+                            <div class="mr-3">
+                                <small>Total Billet</small><br />
+                                <span class="badge badge-primary p-2" id="totalBilletBadge">0</span>
+                            </div>
+
+                            <div>
+                                <small>Total Billet Produced</small><br />
+                                <span class="badge badge-success p-2" id="totalProducedBadge">0</span>
+                            </div>
+
+                        </div>
+
                     </div>
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped">
@@ -327,7 +304,10 @@
 <script>
     // JAVASCRIPT FOR MULTI-COLUMN DROPDOWN
     $(document).ready(function () {
-        debugger
+
+        // 🔥 Recalculate after filter
+        calculateKPI();
+
         const gradeDataJson = '@Html.Raw(ViewBag.GradeDataJson)';
         let gradeData = [];
 
@@ -414,6 +394,31 @@
             }
         });
     });
+
+    function calculateKPI() {
+
+        var totalBillet = 0;
+        var totalProduced = 0;
+
+        var rows = document.querySelectorAll("tbody tr");
+
+        rows.forEach(function (row) {
+
+            if (row.style.display === "none") return; // skip hidden rows
+
+            var cols = row.querySelectorAll("td");
+
+            var billet = parseFloat(cols[4].innerText) || 0;
+            var weight = parseFloat(cols[5].innerText) || 0;
+
+            totalBillet += billet;
+            totalProduced += weight;
+
+        });
+
+        document.getElementById("totalBilletBadge").innerText = totalBillet;
+        document.getElementById("totalProducedBadge").innerText = totalProduced.toFixed(2);
+    }
 </script>
 
 <script>
@@ -448,6 +453,7 @@
                         $("#txtTotalBillet").val(res.TotalBillet);
                         $("#txtTotalWeight").val(res.TotalWeight);
                         $("#txtBilletLength").val(res.BilletLength);
+                        $("#txtProductSpecs").val(res.ProductSpecs);
                     }
                     else {
                         clearFields();
@@ -463,6 +469,7 @@
             $("#txtWeight").val('');
             $("#txtTotalBillet").val('');
             $("#txtTotalWeight").val('');
+            $("#txtProductSpecs").val('');
         }
     });
 </script>
@@ -523,5 +530,26 @@
 
         // set PO number same as Heat #
         document.getElementById("txtPONumber").value = heatNo;
+    });
+
+    document.getElementById("shiftFilter").addEventListener("change", function () {
+
+        var selectedShift = this.value.toLowerCase();
+        var rows = document.querySelectorAll("tbody tr");
+
+        rows.forEach(function (row) {
+
+            var rowShift = row.getAttribute("data-shift").toLowerCase();
+
+            if (selectedShift === "" || rowShift === selectedShift) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+
+        });
+
+        // 🔥 Recalculate after filter
+        calculateKPI();
     });
 </script>

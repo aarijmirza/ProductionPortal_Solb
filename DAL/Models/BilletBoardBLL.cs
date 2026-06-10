@@ -32,5 +32,6 @@ namespace DAL.Models
         public DateTime? UpdatedDate { get; set; }
         public List<RMChemicalAnalysisBLL> Chemistry { get; set; } = new List<RMChemicalAnalysisBLL>();
         public List<BilletGrades> Grades = new List<BilletGrades>();
+        public List<BilletBoardBLL> BilletBoardingHeats { get; set; }
     }
 }

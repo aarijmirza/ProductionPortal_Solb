@@ -2,367 +2,303 @@
 @model DAL.Models.ViewModel.RMChargingVM
 
 @{
-    ViewBag.Title = "add";
+    ViewBag.Title = "Billet Charging";
 }
+
+<style>
+    .used-heat-option {
+        background-color: #f8d7da !important;
+        color: #721c24 !important;
+        font-weight: bold;
+    }
+</style>
 
 <!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
     <div class="row">
         <div class="col-md-6 col-lg-6">
-            <h4 class="xp-page-title">Billet Charging</h4>
+            <h4 class="xp-page-title">Rolling Mill</h4>
         </div>
         <div class="col-md-6 col-lg-6">
             <div class="xp-breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
-                    <li class="breadcrumb-item"><a href="#">Billet Charging</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                    <li class="breadcrumb-item"><a href="#">Rolling Mill</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Billet Charging</li>
                 </ol>
             </div>
         </div>
     </div>
 </div>
 <!-- End XP Breadcrumbbar -->
+
 <div class="xp-contentbar">
 
     <form action="/RollingMill/AddCharge" id="addprofileform" method="post">
-        <div class="row">
-            <div class="col-lg-12">
 
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-header">
-                        <b>Rolling Mill Shift Details (Today)</b>
+        <!-- 🔥 SHIFT DETAILS CARD -->
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header">
+                <b>Rolling Mill Shift Details</b>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="col-md-3"><b>Date:</b> @(Model.Date?.ToString("dd-MM-yyyy") ?? "-")</div>
+                    <div class="col-md-3"><b>Plant:</b> @Model.Plant</div>
+                    <div class="col-md-3"><b>Shift:</b> @Model.Shift</div>
+                    <div class="col-md-3"><b>Incharge:</b> @Model.ShiftIncharge</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔥 FORM -->
+        <div class="card">
+            <div class="card-header text-right">
+                <button type="submit" class="btn btn-primary">Charge Heat</button>
+            </div>
+
+            <div class="card-body">
+                <div class="form-row">
+
+                    <!-- DATE -->
+                    <div class="col-md-2">
+                        <label>Date</label>
+                        <input type="date" class="form-control"
+                               name="Date"
+                               value="@(Model.Date?.ToString("yyyy-MM-dd"))" />
                     </div>
-                    <div class="card-body">
-                        <div class="form-row">
-                            <div class="form-group col-md-3">
-                                <b>Date:</b> @(Model.Date != null ? Model.Date.Value.ToString("dd-MM-yyyy") : "-")
-                            </div>
-                            <div class="form-group col-md-3">
-                                <b>Plant:</b> @Model.Plant
-                            </div>
-                            <div class="form-group col-md-3">
-                                <b>Shift:</b> @Model.Shift
-                            </div>
-                            <div class="form-group col-md-3">
-                                <b>Shift Incharge:</b> @Model.ShiftIncharge
-                            </div>
-                        </div>
+
+                    <!-- SHIFT -->
+                    <!--<div class="col-md-2">
+                        <label>Shift</label>
+                        <input type="text" class="form-control" value="@Model.Shift" readonly />
+                        <input type="hidden" name="Shift" value="@Model.Shift" />
+                    </div>-->
+                    <!-- HEAT -->
+                    <div class="col-md-2">
+                        <label>Heat #</label>
+                        @Html.DropDownListFor(m => m.HeatNo,
+                            (IEnumerable<SelectListItem>)ViewBag.HeatNo,
+                            "-- Select Heat --",
+                            new { @class = "form-control", id = "ddlHeat" })
                     </div>
+
+                    <!-- BOARDING -->
+                    <div class="col-md-2">
+                        <label>Boarding</label>
+                        <input type="text" id="txtBoarding" name="BoardingNo" class="form-control" readonly />
+                    </div>
+
+                    <!-- GRADE -->
+                    <div class="col-md-2">
+                        <label>Grade</label>
+                        <input type="text" id="txtGrade" name="SteelGrade" class="form-control" readonly />
+                    </div>
+
+                    <!-- SIZE -->
+                    <div class="col-md-2">
+                        <label>Size</label>
+                        <input type="text" id="txtSize" name="BilletSize" class="form-control" readonly />
+                    </div>
+
                 </div>
 
-                <div class="card m-b-30">
-                    <div class="card-header bg-white text-right">
-                        <button type="submit" class="btn btn-primary">Charge Heat</button>
+                <div class="form-row mt-2">
+
+                    <div class="col-md-2">
+                        <label>Length</label>
+                        <input type="text" id="txtBilletLength" name="BilletLength" class="form-control" readonly />
                     </div>
-                    <div class="card-body">
-                        <div class="form-row">
-                            <div class="form-group col-md-2">
-                                <label>Date</label>
-                                <input type="date" class="form-control" id="date" name="Date" />
-                            </div>
 
-                            @*<div class="form-group col-md-2">
-                                    <label>Shift</label>
-
-                                    @Html.DropDownListFor(
-                                        m => m.Shift,                 // ✅ model binding
-                                        ViewBag.Shift as SelectList,
-                                        "-- please select --",
-                                        new { @class = "form-control", id = "ddlShift" }
-                                    )
-                                </div>*@
-
-                            <div class="form-group col-md-2">
-                                <label>Shift</label>
-                                @Html.TextBoxFor(m => m.Shift, new
-                                {
-                                    @class = "form-control",
-                                    @readonly = "readonly"
-                                })
-                                @Html.HiddenFor(m => m.Shift)
-                            </div>
-
-                            <div class="form-group col-md-2">
-                                <label>Heat #</label>
-                                @Html.DropDownListFor(m => m.HeatNo,
-                            (IEnumerable<SelectListItem>)ViewBag.HeatNo,
-                            "-- Select Heat # --",
-                            new { @class = "form-control", id = "ddlHeat" })
-                            </div>
-
-                            <div class="form-group col-md-2">
-                                <label>Boarding #</label>
-                                <input type="text" class="form-control" id="txtBoarding" name="BoardingNo" readonly>
-                            </div>
-
-                            <div class="form-group col-md-2">
-                                <label>Steel Grade</label>
-                                <input type="text" class="form-control" id="txtGrade" name="SteelGrade" readonly>
-                            </div>
-
-                            <div class="form-group col-md-2">
-                                <label>Billet Size</label>
-                                <input type="text" class="form-control" id="txtSize" name="BilletSize" readonly>
-                            </div>
-
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-2">
-                                <label>Billet Length</label>
-                                <input type="text" class="form-control" id="txtBilletLength" name="BilletLength" readonly>
-                            </div>
-
-                            <div class="form-group col-md-2">
-                                <label>Total Billet</label>
-                                <input type="text" class="form-control" id="txtTotalBillet" name="TotalBillet" readonly>
-                            </div>
-
-                            <div class="form-group col-md-2">
-                                <label>Weight (MT)</label>
-                                <input type="text" class="form-control" id="txtWeight" name="Weight" readonly>
-                            </div>
-
-                            <div class="form-group col-md-2">
-                                <label>Total Weight (MT)</label>
-                                <input type="text" class="form-control" id="txtTotalWeight" name="TotalWeight" readonly>
-                            </div>
-
-                            <div class="form-group col-md-2">
-                                <label>Heat Sequence</label>
-                                <input type="number" class="form-control" value="0" name="HeatSequence">
-                            </div>
-                        </div>
+                    <div class="col-md-2">
+                        <label>Total Billet</label>
+                        <input type="text" id="txtTotalBillet" name="TotalBillet" class="form-control" />
                     </div>
+
+                    <div class="col-md-2">
+                        <label>Weight</label>
+                        <input type="text" id="txtWeight" name="Weight" class="form-control" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label>Total Weight</label>
+                        <input type="text" id="txtTotalWeight" name="TotalWeight" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label>Sequence</label>
+                        <input type="number" name="HeatSequence" class="form-control" value="0" />
+                    </div>
+
                 </div>
             </div>
         </div>
 
     </form>
 
-    <!-- ================= SUBMITTED HEAT TABLE ================= -->
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card m-b-30">
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <label><b>Filter by Shift</b></label>
-                            <select id="shiftFilter" class="form-control">
-                                <option value="">All</option>
-                                <option value="Morning">Morning</option>
-                                <option value="Afternoon">Afternoon</option>
-                                <option value="Night">Night</option>
-                                <option value="Long Morning">Long Morning</option>
-                                <option value="Long Night">Long Night</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Heat Seq.</th>
-                                    <th>Shift</th>
-                                    <th>Heat #</th>
-                                    <th>Steel Grade</th>
-                                    <th>Total Billet</th>
-                                    <th>Total Weight (MT)</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.SubmittedHeat != null)
-                                {
-                                    foreach (var item in Model.SubmittedHeat)
-                                    {
-                                        var gregorian = new CultureInfo("en-US");
-                                        gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
-                                        <tr data-shift="@item.Shift">
-                                            <td>@item.HeatSequence</td>
-                                            <td>@item.Shift</td>
-                                            <td>@item.HeatNo</td>
-                                            <td>@item.SteelGrade</td>
-                                            <td>@item.TotalBillet</td>
-                                            <td>@item.TotalWeight</td>
-                                            <td>
-                                                @switch (item.HeatStatus)
-                                                {
-                                                    case 102:
-                                                        <span class="badge badge-success">Charging</span>
-                                                        break;
+    <!-- 🔥 TABLE -->
+    <div class="card mt-3">
+        <div class="card-body">
 
-                                                    case 104:
-                                                        <span class="badge badge-warning">Discharged</span>
-                                                        break;
+            <select id="shiftFilter" class="form-control mb-2" style="width:200px;">
+                <option value="">All</option>
+                <option>Morning</option>
+                <option>Evening</option>
+                <option>Night</option>
+            </select>
 
-                                                    default:
-                                                        <span class="badge badge-light">Unknown</span>
-                                                        break;
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="mb-2">
+                <span class="badge badge-primary" id="totalBilletBadge">0</span>
+                <span class="badge badge-success" id="totalProducedBadge">0</span>
             </div>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Seq</th>
+                        <th>Shift</th>
+                        <th>Heat</th>
+                        <th>Billet</th>
+                        <th>Weight</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in Model.SubmittedHeat)
+                    {
+                        <tr data-shift="@item.Shift">
+                            <td>@item.HeatSequence</td>
+                            <td>@item.Shift</td>
+                            <td>@item.HeatNo</td>
+                            <td>@item.TotalBillet</td>
+                            <td>@item.TotalWeight</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
         </div>
     </div>
 
 </div>
 
-<!-- SCRIPTS -->
+<!-- 🔥 SCRIPTS -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script>
-    $(document).ready(function () {
 
-        $("#date").val(new Date().toISOString().split('T')[0]);
-
-        $("#ddlHeat").on("change", function () {
-
-            debugger
-
-            var heatNo = $(this).val();
-
-            if (heatNo === "") {
-                clearFields();
-                return;
-            }
-
-            $.ajax({
-                url: '/RollingMill/GetBilletBoardingByHeat',
-                type: 'GET',
-                data: { heatNo: heatNo },
-                success: function (res) {
-
-                    if (res) {
-                        debugger
-                        $("#txtBoarding").val(res.BoardingNo);
-                        $("#txtGrade").val(res.SteelGrade);
-                        $("#txtSize").val(res.BilletSize);
-                        $("#txtTotalBillet").val(res.NoOfBillet);
-                        $("#txtWeight").val(res.BilletWeight);
-                        $("#txtBilletLength").val(res.BilletLength);
-                    }
-                    else {
-                        clearFields();
-                    }
-                }
-            });
-        });
-
-        function clearFields() {
-            $("#txtBoarding").val('');
-            $("#txtGrade").val('');
-            $("#txtSize").val('');
-            $("#txtWeight").val('');
-            $("#txtTotalBillet").val('');
-            $("#txtTotalWeight").val('');
-        }
-
-    });
-
-    $('#ddlShift').on('change', function () {
-        debugger
-    var shift = $(this).val();
-    if (!shift) return;
-
-    window.location.href =
-        '@Url.Action("AddCharge", "RollingMill")' +
-        '?shift=' + encodeURIComponent(shift);
-});
-
-    document.getElementById("shiftFilter").addEventListener("change", function () {
-
-        var selectedShift = this.value.toLowerCase();
-        var rows = document.querySelectorAll("tbody tr");
-
-        rows.forEach(function (row) {
-
-            var rowShift = row.getAttribute("data-shift").toLowerCase();
-
-            if (selectedShift === "" || rowShift === selectedShift) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-            }
-
-        });
-    });
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-    $(document).ready(function () {
-
-        let isSubmitting = false;   // 🔐 double-submit lock
-
-        $("#addprofileform").on("submit", function (e) {
-            e.preventDefault(); // ❗ pehle submit roko
-
-            if (isSubmitting) return; // already submitting
-
-            Swal.fire({
-                title: 'Confirm Submission',
-                text: 'Are you sure you want to submit this Heat Record?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Submit',
-                cancelButtonText: 'Cancel',
-                allowOutsideClick: false,
-                allowEscapeKey: false
-            }).then((result) => {
-
-                if (result.isConfirmed) {
-
-                    isSubmitting = true; // 🔒 lock
-
-                    // Disable submit button
-                    $("#addprofileform")
-                        .find("button[type='submit']")
-                        .prop("disabled", true)
-                        .text("Submitting...");
-
-                    // Finally submit form
-                    $("#addprofileform")[0].submit();
-                }
-            });
-        });
-
-        var msg = '@TempData["SuccessMessage"]';
-        if (msg) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: msg,
-                confirmButtonColor: '#3085d6'
-            });
-        }
-    });
-</script>
-<script>
     function toNum(val) {
         return parseFloat(val) || 0;
     }
 
-    function calculateTotalWeight() {
-        debugger
-        var totalBillet = toNum($("#txtTotalBillet").val());
-        var weight = toNum($("#txtWeight").val());
+    var usedHeatNos = [
+    @if (Model.SubmittedHeat != null && Model.SubmittedHeat.Any())
+    {
+        foreach (var item in Model.SubmittedHeat)
+        {
+            <text>'@item.HeatNo',</text>
+        }
+    }
+];
 
-        var totalWeight = totalBillet * weight;
+usedHeatNos = usedHeatNos.map(function (x) {
+    return (x || '').trim().toUpperCase();
+});
 
-        $("#txtTotalWeight").val(totalWeight.toFixed(3));
+$("#ddlHeat option").each(function () {
+    var optionHeat = ($(this).val() || '').trim().toUpperCase();
+
+    if (usedHeatNos.indexOf(optionHeat) >= 0) {
+        $(this)
+            .addClass("used-heat-option")
+            .css({
+                "background-color": "#f8d7da",
+                "color": "#721c24",
+                "font-weight": "bold"
+            })
+            .text($(this).text() + " - Used");
+    }
+});
+
+    // 🔥 TOTAL WEIGHT (INPUT BASED)
+    $("#txtTotalBillet, #txtWeight").on("keyup change", function () {
+        var total = toNum($("#txtTotalBillet").val()) * toNum($("#txtWeight").val());
+        $("#txtTotalWeight").val(total.toFixed(2));
+    });
+
+    // 🔥 HEAT AUTO FILL
+    $("#ddlHeat").change(function () {
+
+        var heatNo = $(this).val();
+
+        if (!heatNo) {
+            clearFields();
+            return;
+        }
+
+        $.get('/RollingMill/GetBilletBoardingByHeat', { heatNo: heatNo }, function (res) {
+
+            if (!res) {
+                clearFields();
+                return;
+            }
+
+            $("#txtBoarding").val(res.BoardingNo || '');
+            $("#txtGrade").val(res.SteelGrade || '');
+            $("#txtSize").val(res.BilletSize || '');
+            $("#txtBilletLength").val(res.BilletLength || '');
+            $("#txtTotalBillet").val(res.NoOfBillet || 0);
+            $("#txtWeight").val(res.BilletWeight || 0);
+
+            // 🔥 Recalculate after autofill
+            var total = toNum(res.NoOfBillet) * toNum(res.BilletWeight);
+            $("#txtTotalWeight").val(total.toFixed(2));
+        });
+    });
+
+    function clearFields() {
+        $("#txtBoarding, #txtGrade, #txtSize, #txtBilletLength").val('');
+        $("#txtTotalBillet, #txtWeight, #txtTotalWeight").val('');
     }
 
-    // Trigger calculation when inputs change
-    $("#txtTotalBillet, #txtWeight").on("keyup change", function () {
-        calculateTotalWeight();
-    });
-</script>
+    // 🔥 FILTER
+    $("#shiftFilter").change(function () {
 
+        var shift = ($(this).val() || "").toLowerCase();
+
+        $("tbody tr").each(function () {
+
+            var rowShift = ($(this).data("shift") || "").toLowerCase();
+
+            if (!shift || rowShift === shift) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+
+        calculateTotals(); // 🔥 recalc after filter
+    });
+
+    // 🔥 TOTAL CALCULATION (VISIBLE ROWS)
+    function calculateTotals() {
+
+        var totalBillet = 0, totalWeight = 0;
+
+        $("tbody tr:visible").each(function () {
+
+            totalBillet += toNum($(this).find("td:eq(3)").text());
+            totalWeight += toNum($(this).find("td:eq(4)").text());
+
+        });
+
+        $("#totalBilletBadge").text(totalBillet);
+        $("#totalProducedBadge").text(totalWeight.toFixed(2));
+    }
+
+    // 🔥 INITIAL LOAD FIX (VERY IMPORTANT)
+    $(document).ready(function () {
+        calculateTotals();
+    });
+
+</script>

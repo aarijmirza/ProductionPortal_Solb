@@ -132,7 +132,7 @@
                                 @Html.DropDownListFor(model => model.Equipments,
                                  ViewBag.Equipment as SelectList,
                                  "-- Select Equipments --",
-                                 new { @class = "form-control", })
+                                 new { @class = "form-control select2", id = "ddlEquipments", name = "Equipments" })
 
                                 @*@Html.DropDownListFor(model => model.Equipments,
                                     ViewBag.Equipment as SelectList,

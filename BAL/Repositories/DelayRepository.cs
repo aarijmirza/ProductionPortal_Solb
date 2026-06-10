@@ -1,4 +1,5 @@
 ﻿using DAL.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -21,28 +22,31 @@ namespace BAL.Repositories
             _ds = new DataSet();
         }
 
-        public List<PlantDelayBLL> GetAllRMDelay()
+        public List<PlantDelayBLL> GetAllRMDelay(DateTime startDate, DateTime endDate)
         {
             try
             {
                 var lst = new List<PlantDelayBLL>();
 
-                SqlParameter[] p = new SqlParameter[0];
+                SqlParameter[] p = new SqlParameter[]
+                {
+            new SqlParameter("@StartDate", startDate),
+            new SqlParameter("@EndDate", endDate)
+                };
 
                 _dt = (new DBHelper().GetTableFromSP)("sp_GetAllRMDelays", p);
-                if (_dt != null)
+
+                if (_dt != null && _dt.Rows.Count > 0)
                 {
-                    if (_dt.Rows.Count > 0)
-                    {
-                        lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<PlantDelayBLL>>();
-                    }
+                    lst = JArray.Parse(JsonConvert.SerializeObject(_dt))
+                                .ToObject<List<PlantDelayBLL>>();
                 }
 
                 return lst;
             }
-            catch (Exception ex)
+            catch
             {
-                return null;
+                return new List<PlantDelayBLL>();
             }
         }
 
@@ -121,6 +125,32 @@ namespace BAL.Repositories
                 return null;
             }
         }
+
+        public List<DelayEquipmentBLL> GetAllRMEquipments()
+        {
+            try
+            {
+                var lst = new List<DelayEquipmentBLL>();
+
+                SqlParameter[] p = new SqlParameter[0];
+
+                _dt = (new DBHelper().GetTableFromSP)("sp_GetRMDelayEquipments");
+                if (_dt != null)
+                {
+                    if (_dt.Rows.Count > 0)
+                    {
+                        lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<DelayEquipmentBLL>>();
+                    }
+                }
+
+                return lst;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
         public List<DelayComponentBLL> GetAllComponent()
         {
             try
@@ -254,6 +284,36 @@ namespace BAL.Repositories
                 Team = dt.Rows[0]["Team"].ToString(),
                 ShiftIncharge = dt.Rows[0]["ShiftIncharge"].ToString()
             };
+        }
+
+        public int InsertFailureAnalysis(FailureAnalysisBLL data)
+        {
+            try
+            {
+                int rtn = 0;
+
+                SqlParameter[] p = new SqlParameter[11];
+
+                p[0] = new SqlParameter("@DelayID", data.DelayID ?? (object)DBNull.Value);
+                p[1] = new SqlParameter("@LastPMDate", data.LastPMDate ?? (object)DBNull.Value);
+                p[2] = new SqlParameter("@FailureReportStatus", data.FailureReportStatus ?? (object)DBNull.Value);
+                p[3] = new SqlParameter("@IncreaseMTBF", data.IncreaseMTBF ?? (object)DBNull.Value);
+                p[4] = new SqlParameter("@DecreaseMTTR", data.DecreaseMTTR ?? (object)DBNull.Value);
+                p[5] = new SqlParameter("@SAPBreakdownOrder", data.SAPBreakdownOrder ?? (object)DBNull.Value);
+                p[6] = new SqlParameter("@FailureCategory1Component", data.FailureCategory1Component ?? (object)DBNull.Value);
+                p[7] = new SqlParameter("@FailureCategory2RootCause", data.FailureCategory2RootCause ?? (object)DBNull.Value);
+                p[8] = new SqlParameter("@StatusID", data.StatusID ?? (object)DBNull.Value);
+                p[9] = new SqlParameter("@CreatedBy", data.CreatedBy ?? (object)DBNull.Value);
+                p[10] = new SqlParameter("@CreatedDate", data.CreatedDate ?? (object)DBNull.Value);
+
+                rtn = (new DBHelper().ExecuteNonQueryReturn)("sp_InsertFailureAnalysis", p);
+
+                return rtn;
+            }
+            catch (Exception ex)
+            {
+                return 0;
+            }
         }
     }
 }

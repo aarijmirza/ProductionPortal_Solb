@@ -477,8 +477,118 @@
     });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
+    $(document).ready(function () {
+
+        var errorMessage = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(TempData["ErrorMessage"])))';
+        var successMessage = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(TempData["SuccessMessage"])))';
+
+        if (errorMessage && errorMessage !== '') {
+            Swal.fire({
+                title: 'Error',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+
+        if (successMessage && successMessage !== '') {
+            Swal.fire({
+                title: 'Success',
+                text: successMessage,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        }
+
+    });
+</script>
+<script>
+    $(document).ready(function () {
+
+        let isSubmitting = false;
+
+        $("#addprofileform").on("submit", function (e) {
+            e.preventDefault();
+
+            if (isSubmitting) return;
+
+            var billetBoarding = $("#billetboarding").val().trim();
+
+            if (billetBoarding === "") {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Billet Boarding number is required.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            var heatNos = [];
+            var duplicateHeatNos = [];
+
+            $("#chemBody").find("input[name*='.HeatNo']").each(function () {
+                var heatNo = $(this).val().trim().toUpperCase();
+
+                if (heatNo !== "") {
+                    if (heatNos.indexOf(heatNo) >= 0) {
+                        duplicateHeatNos.push(heatNo);
+                    } else {
+                        heatNos.push(heatNo);
+                    }
+                }
+            });
+
+            if (heatNos.length === 0) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Please enter at least one Heat No.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            if (duplicateHeatNos.length > 0) {
+                Swal.fire({
+                    title: 'Duplicate Heat No',
+                    text: 'Duplicate Heat No found: ' + duplicateHeatNos.join(', '),
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Confirm Submission',
+                text: 'Are you sure you want to submit this Billet Boarding?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Submit',
+                cancelButtonText: 'Cancel',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    isSubmitting = true;
+
+                    $("#addprofileform")
+                        .find("button[type='submit']")
+                        .prop("disabled", true)
+                        .text("Submitting...");
+
+                    $("#addprofileform")[0].submit();
+                }
+            });
+        });
+
+    });
+</script>
+
+@*<script>
     $(document).ready(function () {
 
         let isSubmitting = false;   // 🔐 double-submit lock
@@ -516,4 +626,4 @@
         });
 
     });
-</script>
+</script>*@

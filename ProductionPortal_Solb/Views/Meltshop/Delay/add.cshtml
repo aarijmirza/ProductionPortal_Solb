@@ -3,21 +3,9 @@
 @{
     ViewBag.Title = "add";
 }
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
-<script>
-    $(document).ready(function () {
-        $('#ddlEquipments').select2({
-            placeholder: "-- Select Equipments --",
-            allowClear: true,
-            search: true,
-            width: '100%'
-        });
-    });
-</script>
 
- @*Start XP Breadcrumbbar*@ 
+
+@*Start XP Breadcrumbbar*@
 <div class="xp-breadcrumbbar">
     <div class="row">
         <div class="col-md-6 col-lg-6">
@@ -34,7 +22,7 @@
         </div>
     </div>
 </div>
- @*End XP Breadcrumbbar*@ 
+@*End XP Breadcrumbbar*@
 
 <div class="xp-contentbar">
     <form action="/delay/SMPadd" id="addprofileform" method="post">
@@ -111,9 +99,9 @@
                             <div class="form-group col-md-6">
                                 <label>Equipment</label>
                                 @Html.DropDownListFor(model => model.Equipments,
-                                    ViewBag.Equipment as SelectList,
-                                    "-- Select Equipments --",
-                                    new { @class = "form-control select2", id = "ddlEquipments", name = "Equipments" })
+                  ViewBag.Equipment as SelectList,
+                  "-- Select Equipments --",
+                  new { @class = "form-control select2", id = "ddlEquipments", name = "Equipments" })
                             </div>
                             <div class="form-group col-md-6">
                                 <label>Component</label>
@@ -151,61 +139,72 @@
     </form>
 </div>
 
- @*SCRIPTS*@ 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+@*SCRIPTS*@
+<!-- 1️⃣ jQuery (ONLY ONE, no duplicates) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<!-- 2️⃣ Popper (Bootstrap dependency) -->
+<script src="~/assets/js/popper.min.js"></script>
+
+<!-- 3️⃣ Bootstrap JS (THIS DEFINES `bootstrap`) -->
+<script src="~/assets/js/bootstrap.min.js"></script>
+
+<!-- 4️⃣ Bootstrap Select -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-        $(document).ready(function () {
+    $(document).ready(function () {
 
-            $("#date").val(new Date().toISOString().split('T')[0]);
+        $("#date").val(new Date().toISOString().split('T')[0]);
 
-            // When Department or AgencyType radios change → filter dropdown
-            $("input[name='Area'], input[name='DelayType']").on("change", function () {
-                filterAgencies();
-            });
+        // When Department or AgencyType radios change → filter dropdown
+        $("input[name='Area'], input[name='DelayType']").on("change", function () {
+            filterAgencies();
+        });
 
-            // When Agency selected → show code in textbox
-            $("#AgencyDropdown").on("change", function () {
-                var selectedValue = $(this).val();
-                var selectedName = $(this).val();
-                $("#AgencyCodeInput").val(selectedValue); // fill code
-                $("#AgencyCodeInput").val(selectedName); // fill code
-            });
+        // When Agency selected → show code in textbox
+        $("#AgencyDropdown").on("change", function () {
+            var selectedValue = $(this).val();
+            var selectedName = $(this).val();
+            $("#AgencyCodeInput").val(selectedValue); // fill code
+            $("#AgencyCodeInput").val(selectedName); // fill code
+        });
 
-            function filterAgencies() {
-                var selectedDept = $("input[name='Area']:checked").val();
-                var selectedDelay = $("input[name='DelayType']:checked").val();
+        function filterAgencies() {
+            var selectedDept = $("input[name='Area']:checked").val();
+            var selectedDelay = $("input[name='DelayType']:checked").val();
 
-                $("#AgencyDropdown option").show(); // reset
+            $("#AgencyDropdown option").show(); // reset
 
-                // Filter options
-                $("#AgencyDropdown option").not(":first").each(function () {
-                    var dept = $(this).data("department");
-                    var delay = $(this).data("delaytype");
+            // Filter options
+            $("#AgencyDropdown option").not(":first").each(function () {
+                var dept = $(this).data("department");
+                var delay = $(this).data("delaytype");
 
-                    if (dept !== selectedDept || delay !== selectedDelay) {
-                        $(this).hide();
-                    }
-                });
-
-                // Reset dropdown & code input
-                $("#AgencyDropdown").val("");
-                $("#AgencyCodeInput").val("");
-            }
-
-            // Show/hide Cobbles & Hot Out row based on Department radio
-            $("input[name='Area']").on("change", function () {
-                var selectedDept = $("input[name='Area']:checked").val();
-
-                if (selectedDept === "Rolling Mill") {
-                    $("#rollingMillRow").show();
-                } else {
-                    $("#rollingMillRow").hide();
+                if (dept !== selectedDept || delay !== selectedDelay) {
+                    $(this).hide();
                 }
             });
 
+            // Reset dropdown & code input
+            $("#AgencyDropdown").val("");
+            $("#AgencyCodeInput").val("");
+        }
+
+        // Show/hide Cobbles & Hot Out row based on Department radio
+        $("input[name='Area']").on("change", function () {
+            var selectedDept = $("input[name='Area']:checked").val();
+
+            if (selectedDept === "Rolling Mill") {
+                $("#rollingMillRow").show();
+            } else {
+                $("#rollingMillRow").hide();
+            }
         });
-    </script>
+
+    });
+</script>
 
 

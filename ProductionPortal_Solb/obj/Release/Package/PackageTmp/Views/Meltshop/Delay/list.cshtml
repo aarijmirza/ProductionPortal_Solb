@@ -104,6 +104,12 @@
                                         <td>@item.Equipments</td>
                                         <td>@item.Reason</td>
                                         <td>
+                                            <a href="javascript:void(0);"
+                                               onclick="openDelayPopup('@item.ID', '@(item.Date?.ToString(" yyyy-MM-dd"))', '@item.Area' )"
+                                               class="btn btn-sm btn-success">
+                                                <i class="mdi mdi-plus"></i>
+                                            </a>
+
                                             <a href="@Url.Action("details", "CCM", new { ID = item.ID })" class="btn btn-sm btn-info" onclick="event.stopPropagation();">
                                                 <i class="mdi mdi-book-open-page-variant"></i>
                                             </a>
@@ -114,19 +120,20 @@
                                             </a>
                                         </td>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<!-- End XP Contentbar -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- End XP Contentbar -->
 
-<script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script>
     $(document).ready(function () {
 
         function parseDateFlexible(dateStr) {
@@ -214,13 +221,11 @@
         });
 
     });
-</script>
+    </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
+    <script>
     $(document).ready(function () {
         var msg = '@TempData["SuccessMessage"]';
         if (msg) {
@@ -251,4 +256,121 @@
             }
         });
     }
-</script>
+    </script>
+
+    <script>
+        function openDelayPopup(id, date, area) {
+            $("#popupDelayID").val(id);
+            $("#popupDate").val(date);
+            $("#popupArea").val(area);
+            $("#popupDuration").val('');
+
+            $("#delayPopupModal").modal("show");
+        }
+
+        $(document).on("change keyup", "input[name='StartTime'], input[name='EndTime']", function () {
+            var start = $("input[name='StartTime']").val();
+            var end = $("input[name='EndTime']").val();
+
+            if (start && end) {
+                var startDate = new Date("2000-01-01T" + start);
+                var endDate = new Date("2000-01-01T" + end);
+
+                if (endDate < startDate) {
+                    endDate.setDate(endDate.getDate() + 1);
+                }
+
+                var diffMs = endDate - startDate;
+                var diffMins = Math.floor(diffMs / 60000);
+
+                var hours = Math.floor(diffMins / 60);
+                var minutes = diffMins % 60;
+
+                $("#popupDuration").val(hours + "h " + minutes + "m");
+            }
+        });
+    </script>
+
+    <!-- Add Extra Delay Detail Modal -->
+    <div class="modal fade" id="delayPopupModal" tabindex="-1" role="dialog" aria-labelledby="delayPopupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+
+                <form action="/Delay/AddDelayPopupDetail" method="post" id="delayPopupForm">
+
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="delayPopupModalLabel">Failure Analysis Detail</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <input type="hidden" id="popupDelayID" name="DelayID" />
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Last P.M Date</label>
+                                <input type="date" id="popupDate" name="LastPMDate" class="form-control" />
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label>Failure Report Status</label>
+                                <select class="form-control" name="FailureReportStatus">
+                                    <option selected disabled>-- please select --</option>
+                                    <option value="Done">Done</option>
+                                    <option value="Not Done">Not Done</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>
+                                    Long term Action To increase MTBF
+                                </label>
+                                <textarea class="form-control" rows="3" name="IncreaseMTBF"></textarea>
+                            </div>
+
+                            <div class="form-group col-md-6">
+                                <label>
+                                    Long term Action To decrease MTTR
+                                </label>
+                                <textarea class="form-control" rows="3" name="DecreaseMTTR"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>SAP Breakdown Order</label>
+                                <input type="text" id="popupDate" name="SAPBreakdownOrder" class="form-control" />
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label>Failure Category1 (Component)</label>
+                                <input type="text" id="popupDate" name="FailureCategory1Component" class="form-control" />
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label>Failure Category2 (Root Cause)</label>
+                                <input type="text" id="popupDate" name="FailureCategory2RootCause" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            Close
+                        </button>
+
+                        <button type="submit" class="btn btn-primary">
+                            Save
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>

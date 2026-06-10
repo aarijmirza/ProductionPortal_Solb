@@ -2,139 +2,138 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!-- Start XP Breadcrumbbar -->
+<!-- ================= BREADCRUMB ================= -->
 <div class="xp-breadcrumbbar">
     <div class="row">
-        <div class="col-md-6 col-lg-6">
+        <div class="col-md-6">
             <h4 class="xp-page-title">Rolling Mill</h4>
         </div>
-        <div class="col-md-6 col-lg-6">
-            <div class="xp-breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
-                    <li class="breadcrumb-item"><a href="#">Rolling Mill Plant</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Reports</li>
-                </ol>
-            </div>
+        <div class="col-md-6">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">Rolling Mill Plant</li>
+                <li class="breadcrumb-item active">Reports</li>
+            </ol>
         </div>
     </div>
 </div>
-<!-- End XP Breadcrumbbar -->
-<!-- Filters Section -->
-<div class="xp-breadcrumbbar" style="padding: 50px 30px 0 30px;">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <form id="filterForm" class="d-flex justify-content-between">
 
-                        <div class="d-flex">
-                            <div class="form-group mr-3">
-                                <label for="fromDate" class="mr-2">From</label>
-                                <input type="date" id="fromDate" class="form-control" />
-                            </div>
-
-                            <div class="form-group mr-3">
-                                <label for="toDate" class="mr-2">To</label>
-                                <input type="date" id="toDate" class="form-control" />
-                            </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Filter Section -->
+<!-- ================= FILTER SECTION ================= -->
 <div class="xp-contentbar">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card m-b-30">
-                <div class="card-body">
-                    <div class="form-row">
-                        <div class="col-md-3 col-lg-3 col-xl-3">
-                            <!-- Sizing Card -->
-                            <div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">Shift Production Report</h5>
-                                    <a href="@Url.Action("ShiftProductionReport", "Reporting")" class="btn btn-primary" target="_blank">View Report</a>
-                                </div>
-                            </div>
-                            <!-- Sizing Card -->
-                        </div>
-                        <div class="col-md-3 col-lg-3 col-xl-3">
-                            <!-- Sizing Card -->
-                            <div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">Monthly Perfomance Report</h5>
-                                    <a href="@Url.Action("RMMonthlyPerformanceReport", "Reporting")" class="btn btn-primary" target="_blank">View Report</a>
-                                </div>
-                            </div>
-                            <!-- Sizing Card -->
-                        </div>
-                        <div class="col-md-3 col-lg-3 col-xl-3">
-                            <!-- Sizing Card -->
-                            <div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">Daily Production Report</h5>
-                                    <a href="@Url.Action("DailyProductionRM", "Reporting")" class="btn btn-primary" target="_blank">View Report</a>
-                                </div>
-                            </div>
-                            <!-- Sizing Card -->
-                        </div>
-                        <!--<div class="col-md-3 col-lg-3 col-xl-3">-->
-                            <!-- Sizing Card -->
-                            <!--<div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">Daily Production Statistic Report</h5>
-                                    <a href="@Url.Action("StatisticReport", "SMPReports")" class="btn btn-primary" target="_blank">View Report</a>
-                                </div>
-                            </div>-->
-                            <!-- Sizing Card -->
-                        <!--</div>
-                        <div class="col-md-3 col-lg-3 col-xl-3">-->
-                            <!-- Sizing Card -->
-                            <!--<div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">CCM Yeild Breakdown Report</h5>
-                                    <a href="@Url.Action("DailySummary", "SMPReports")" class="btn btn-primary" target="_blank">View Report</a>
-                                </div>
-                            </div>-->
-                            <!-- Sizing Card -->
-                        <!--</div>-->
-                    </div>
+    <div class="card mb-3">
+        <div class="card-body">
+
+            <div class="row align-items-end">
+
+                <div class="col-md-3">
+                    <label>From Date</label>
+                    <input type="date" id="fromDate" class="form-control" />
                 </div>
+
+                <div class="col-md-3">
+                    <label>To Date</label>
+                    <input type="date" id="toDate" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <button class="btn btn-primary mt-4" id="applyFilter">
+                        Apply Filter
+                    </button>
+                </div>
+
             </div>
 
         </div>
     </div>
+
+    <!-- ================= REPORT CARDS ================= -->
+    <div class="row">
+
+        <!-- Shift Production -->
+        <div class="col-md-3">
+            <div class="card border-danger mb-3">
+                <div class="card-body text-center">
+                    <h5>Shift Production Report</h5>
+                    <button class="btn btn-primary openReport"
+                            data-url="@Url.Action("ShiftProductionReport", "Reporting")">
+                        View Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly -->
+        <div class="col-md-3">
+            <div class="card border-danger mb-3">
+                <div class="card-body text-center">
+                    <h5>Monthly Performance</h5>
+                    <button class="btn btn-primary openReport"
+                            data-url="@Url.Action("RMMonthlyPerformanceReport", "Reporting")">
+                        View Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily -->
+        <div class="col-md-3">
+            <div class="card border-danger mb-3">
+                <div class="card-body text-center">
+                    <h5>Daily Production</h5>
+                    <button class="btn btn-primary openReport"
+                            data-url="@Url.Action("DailyProductionRM", "Reporting")">
+                        View Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
+<!-- ================= SCRIPTS ================= -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
 
 <script>
     $(document).ready(function () {
-        // ✅ Default dates
-        var today = new Date();
-        var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
-        function formatDate(d) {
-            return d.toISOString().split('T')[0];
-        }
+        // ✅ Default = Today
+        var today = new Date().toISOString().split('T')[0];
+        $("#fromDate").val(today);
+        $("#toDate").val(today);
 
-        $('#fromDate').val(formatDate(today));
-        $('#toDate').val(formatDate(today));
+        // 🔥 Apply filter button (optional)
+        $("#applyFilter").click(function () {
 
-        // Export PDF (date-wise)
-        $('#exportPdf').click(function () {
-            var from = $('#fromDate').val() || '';
-            var to   = $('#toDate').val() || '';
+            if (!$("#fromDate").val() || !$("#toDate").val()) {
+                alert("Please select dates");
+                return;
+            }
 
-            var url = '@Url.Action("DailyHeatSummary", "MeltShop")'
-                + '?from=' + encodeURIComponent(from)
-                + '&to=' + encodeURIComponent(to);
-
-            window.open(url, '_blank');
+            alert("Filter applied. Now click any report.");
         });
+
+        // 🔥 Open report with filters
+        $(document).on("click", ".openReport", function () {
+
+            var from = $("#fromDate").val();
+            var to = $("#toDate").val();
+
+            if (!from || !to) {
+                alert("Please select From & To dates");
+                return;
+            }
+
+            var baseUrl = $(this).data("url");
+
+            var finalUrl = baseUrl
+                + "?from=" + encodeURIComponent(from)
+                + "&to=" + encodeURIComponent(to);
+
+            window.open(finalUrl, "_blank");
+        });
+
     });
 </script>

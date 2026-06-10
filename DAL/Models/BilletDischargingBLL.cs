@@ -19,9 +19,13 @@ namespace DAL.Models
         public string PONumber { get; set; }
         public int Cobble { get; set; }
         public int HotOut { get; set; }
-        public decimal TotalBillet { get; set; }
+        public decimal? TotalBillet { get; set; }
         public decimal? FuelConsumption { get; set; }
-        public decimal TotalWeight { get; set; }
+        public decimal? TotalWeight { get; set; }
+        public decimal? TotalBundleProduced { get; set; }
+        public decimal? ShortBundleActualWeight { get; set; }
+        public decimal? TotalBundleOnHold { get; set; }
+        public decimal? TotalRejectedBundle { get; set; }
         public int StatusID { get; set; }
         public int HeatStatus { get; set; }
         public string CreatedBy { get; set; }

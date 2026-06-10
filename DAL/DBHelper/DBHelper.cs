@@ -5,6 +5,7 @@ using System.Web;
 using System.Data.SqlClient;
 using System.Data;
 using System.Configuration;
+using Newtonsoft.Json;
 
 namespace WebAPICode.Helpers
 {
@@ -47,6 +48,35 @@ namespace WebAPICode.Helpers
                 connection.Close();
 
             }
+        }
+
+        public static List<T> GetList<T>(string query)
+        {
+            var list = new List<T>();
+
+            using (SqlConnection con = new SqlConnection(connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand(query, con))
+                {
+                    cmd.CommandType = CommandType.Text;
+
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        DataTable dt = new DataTable();
+                        da.Fill(dt);
+
+                        if (dt != null && dt.Rows.Count > 0)
+                        {
+                            list = Newtonsoft.Json.JsonConvert
+                                .DeserializeObject<List<T>>(
+                                    Newtonsoft.Json.JsonConvert.SerializeObject(dt)
+                                );
+                        }
+                    }
+                }
+            }
+
+            return list;
         }
 
         public DataTable GetTableFromQuery(string query, params SqlParameter[] parameters)
