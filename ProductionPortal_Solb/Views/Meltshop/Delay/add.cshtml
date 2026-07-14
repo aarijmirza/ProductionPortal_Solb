@@ -4,6 +4,32 @@
     ViewBag.Title = "add";
 }
 
+<style>
+    .select2-container {
+        width: 100% !important;
+    }
+
+        .select2-container .select2-selection--single {
+            height: 36px !important;
+            border: 1px solid #e8edf3 !important;
+            border-radius: 5px !important;
+            background-color: #f3f5f8 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #8798ad !important;
+        font-size: 15px !important;
+        line-height: 36px !important;
+        padding-left: 12px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 8px !important;
+    }
+</style>
 
 @*Start XP Breadcrumbbar*@
 <div class="xp-breadcrumbbar">
@@ -34,33 +60,56 @@
                         <button type="submit" class="btn btn-primary">Submit</button>
                     </div>
                     <div class="card-body">
-                        <div class="form-row mb-4">
+                        <div class="form-row">
                             <div class="form-group col-md-3">
-                                <div class="custom-control custom-radio">
-                                    <input class="custom-control-input plant-radio" type="radio" id="radio2" name="Area" value="Steel Making" hidden checked>
-                                    <label class="custom-control-label" for="radio2">Steel Making Plant</label>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="form-row mb-4">
-                            <div class="form-group col-md-3">
-                                <div class="custom-control custom-radio">
-                                    <input class="custom-control-input plant-radio" type="radio" id="radio3" name="Plant" value="EAF">
-                                    <label class="custom-control-label" for="radio3">EAF</label>
-                                </div>
+                                <label>Date</label>
+                                <input type="date" class="form-control" id="date" name="Date">
                             </div>
                             <div class="form-group col-md-3">
-                                <div class="custom-control custom-radio">
-                                    <input class="custom-control-input plant-radio" type="radio" id="radio4" name="Plant" value="LF">
-                                    <label class="custom-control-label" for="radio4">LF</label>
-                                </div>
+                                <label for="date">Plant</label>
+                                @Html.DropDownListFor(m => m.Plant, new List<SelectListItem>
+                                {
+                                    new SelectListItem { Text = "-- please select --", Value = "" },
+                                    new SelectListItem { Text = "Electric Arc Furnace (EAF)", Value = "EAF" },
+                                    new SelectListItem { Text = "Laddle Furnace (LF)", Value = "LF" },
+                                    new SelectListItem { Text = "Continous Casting Machine (CCM)", Value = "CCM" }
+                                }, new { @class = "form-control" })
                             </div>
                             <div class="form-group col-md-3">
-                                <div class="custom-control custom-radio">
-                                    <input class="custom-control-input plant-radio" type="radio" id="radio5" name="Plant" value="CCM">
-                                    <label class="custom-control-label" for="radio5">CCM</label>
-                                </div>
+                                <label for="date">Shift</label>
+                                @Html.DropDownListFor(m => m.Shift, new List<SelectListItem>
+                                {
+                                    new SelectListItem { Text = "-- please select --", Value = "" },
+                                    new SelectListItem { Text = "Morning", Value = "Morning" },
+                                    new SelectListItem { Text = "Afternoon", Value = "Afternoon" },
+                                    new SelectListItem { Text = "Night", Value = "Night" },
+                                    new SelectListItem { Text = "Long Morning", Value = "Long Morning" },
+                                    new SelectListItem { Text = "Long Night", Value = "Long Night" }
+                                }, new { @class = "form-control" })
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="date">Team</label>
+                                @Html.DropDownListFor(m => m.Team, new List<SelectListItem>
+                                {
+                                    new SelectListItem { Text = "-- please select --", Value = "" },
+                                    new SelectListItem { Text = "Team A", Value = "Team A" },
+                                    new SelectListItem { Text = "Team B", Value = "Team B" },
+                                    new SelectListItem { Text = "Team C", Value = "Team C" }
+                                }, new { @class = "form-control" })
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="date">Shift Incharge</label>
+                                @Html.DropDownListFor(m => m.ShiftIncharge, new List<SelectListItem>
+                                {
+                                    new SelectListItem { Text = "-- please select --", Value = "" },
+                                    new SelectListItem { Text = "Muhammad Ali", Value = "Muhammad Ali" },
+                                    new SelectListItem { Text = "Altaf Khan", Value = "Altaf Khan" },
+                                    new SelectListItem { Text = "Waseem Akram", Value = "Waseem Akram" }
+                                }, new { @class = "form-control" })
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>Break Out</label>
+                                <input type="text" class="form-control" name="HotOut" value="0" />
                             </div>
                         </div>
                         <div class="form-row">
@@ -83,10 +132,6 @@
                                 <input type="text" id="AgencyCodeInput" class="form-control" name="AgencyCode" readonly />
                             </div>
                             <div class="form-group col-md-3">
-                                <label>Date</label>
-                                <input type="date" class="form-control" id="date" name="Date" readonly>
-                            </div>
-                            <div class="form-group col-md-3">
                                 <label>Start Time</label>
                                 <input type="time" class="form-control" name="StartTime" />
                             </div>
@@ -96,19 +141,30 @@
                             </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-2">
+                                <label>Area</label>
+                                <select class="form-control" name="Area" id="ddlArea">
+                                    <option value="" selected>-- please select --</option>
+                                    <option value="2">EAF</option>
+                                    <option value="3">LF</option>
+                                    <option value="4">CCM</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
                                 <label>Equipment</label>
                                 @Html.DropDownListFor(model => model.Equipments,
-                  ViewBag.Equipment as SelectList,
-                  "-- Select Equipments --",
-                  new { @class = "form-control select2", id = "ddlEquipments", name = "Equipments" })
+                                    new SelectList(Enumerable.Empty<SelectListItem>()),
+                                    "-- Select Equipments --",
+                                    new { @class = "form-control select2", id = "ddlEquipments", name = "Equipments" })
                             </div>
                             <div class="form-group col-md-6">
-                                <label>Component</label>
-                                @Html.DropDownListFor(model => model.Components,
+                                <label>Component Failed</label>
+                                <input type="text" class="form-control" name="Components" />
+
+                                @*@Html.DropDownListFor(model => model.Components,
                                     ViewBag.Component as SelectList,
                                     "-- Select Components --",
-                                    new { @class = "form-control select2", id = "ddlComponents", @disabled = "disabled" })
+                                    new { @class = "form-control select2", id = "ddlComponents", @disabled = "disabled" })*@
                             </div>
                         </div>
                         <div class="form-row">
@@ -141,70 +197,107 @@
 
 @*SCRIPTS*@
 <!-- 1️⃣ jQuery (ONLY ONE, no duplicates) -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- 2️⃣ Popper (Bootstrap dependency) -->
-<script src="~/assets/js/popper.min.js"></script>
-
-<!-- 3️⃣ Bootstrap JS (THIS DEFINES `bootstrap`) -->
-<script src="~/assets/js/bootstrap.min.js"></script>
-
-<!-- 4️⃣ Bootstrap Select -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
     $(document).ready(function () {
 
         $("#date").val(new Date().toISOString().split('T')[0]);
 
-        // When Department or AgencyType radios change → filter dropdown
-        $("input[name='Area'], input[name='DelayType']").on("change", function () {
-            filterAgencies();
+        // Equipment searchable dropdown
+        $("#ddlEquipments").select2({
+            placeholder: "-- Select Equipments --",
+            allowClear: true,
+            width: "100%"
         });
 
-        // When Agency selected → show code in textbox
-        $("#AgencyDropdown").on("change", function () {
-            var selectedValue = $(this).val();
-            var selectedName = $(this).val();
-            $("#AgencyCodeInput").val(selectedValue); // fill code
-            $("#AgencyCodeInput").val(selectedName); // fill code
+        // Component searchable dropdown
+        $("#ddlComponents").select2({
+            placeholder: "-- Select Components --",
+            allowClear: true,
+            width: "100%"
         });
 
-        function filterAgencies() {
-            var selectedDept = $("input[name='Area']:checked").val();
-            var selectedDelay = $("input[name='DelayType']:checked").val();
+        $("#ddlArea").on("change", function () {
 
-            $("#AgencyDropdown option").show(); // reset
+            var areaId = $(this).val();
 
-            // Filter options
-            $("#AgencyDropdown option").not(":first").each(function () {
-                var dept = $(this).data("department");
-                var delay = $(this).data("delaytype");
+            $("#ddlEquipments").empty().append('<option value="">-- Select Equipments --</option>');
+            $("#ddlComponents").empty().append('<option value="">-- Select Components --</option>');
+            $("#ddlComponents").prop("disabled", true);
 
-                if (dept !== selectedDept || delay !== selectedDelay) {
-                    $(this).hide();
+            // Select2 refresh
+            $("#ddlEquipments").trigger("change");
+            $("#ddlComponents").trigger("change");
+
+            if (!areaId) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetEquipmentByArea", "Delay")',
+                type: 'GET',
+                data: { areaId: areaId },
+                success: function (res) {
+
+                    if (res && res.length > 0) {
+                        $.each(res, function (i, item) {
+                            $("#ddlEquipments").append(
+                                new Option(item.Text, item.Value, false, false)
+                            );
+                        });
+                    }
+
+                    // Select2 refresh after adding options
+                    $("#ddlEquipments").trigger("change");
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Unable to load equipment.'
+                    });
                 }
             });
+        });
 
-            // Reset dropdown & code input
-            $("#AgencyDropdown").val("");
-            $("#AgencyCodeInput").val("");
-        }
+        $("#AgencyDropdown").on("change", function () {
+            $("#AgencyCodeInput").val($(this).val());
+        });
 
-        // Show/hide Cobbles & Hot Out row based on Department radio
-        $("input[name='Area']").on("change", function () {
-            var selectedDept = $("input[name='Area']:checked").val();
+        let isSubmitting = false;
 
-            if (selectedDept === "Rolling Mill") {
-                $("#rollingMillRow").show();
-            } else {
-                $("#rollingMillRow").hide();
-            }
+        $("#addprofileform").on("submit", function (e) {
+            e.preventDefault();
+
+            if (isSubmitting) return;
+
+            Swal.fire({
+                title: 'Confirm Submission',
+                text: 'Are you sure you want to submit this delay record?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Submit',
+                cancelButtonText: 'Cancel',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    isSubmitting = true;
+
+                    $("#addprofileform")
+                        .find("button[type='submit']")
+                        .prop("disabled", true)
+                        .text("Submitting...");
+
+                    $("#addprofileform")[0].submit();
+                }
+            });
         });
 
     });
 </script>
-
-

@@ -1,0 +1,835 @@
+﻿@model DAL.Models.PlantDelayBLL
+@using System.Globalization
+
+@{
+    ViewBag.Title = "Maintenance Detail";
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+
+    var analysis = ViewBag.Analysis as DAL.Models.FailureAnalysisBLL;
+
+    bool hasAnalysis = analysis != null && analysis.ID > 0;
+
+    bool hasLastPMDate = analysis != null && analysis.LastPMDate.HasValue;
+    bool hasFailureReportStatus = analysis != null && !string.IsNullOrWhiteSpace(analysis.FailureReportStatus);
+    bool hasIncreaseMTBF = analysis != null && !string.IsNullOrWhiteSpace(analysis.IncreaseMTBF);
+    bool hasIncreaseMTBF1 = analysis != null && !string.IsNullOrWhiteSpace(analysis.IncreaseMTBF1);
+    bool hasDecreaseMTTR = analysis != null && !string.IsNullOrWhiteSpace(analysis.DecreaseMTTR);
+    bool hasDecreaseMTTR1 = analysis != null && !string.IsNullOrWhiteSpace(analysis.DecreaseMTTR1);
+    bool hasSAPBreakdownOrder = analysis != null && !string.IsNullOrWhiteSpace(analysis.SAPBreakdownOrder);
+    bool hasFailureCategory1Component = analysis != null && !string.IsNullOrWhiteSpace(analysis.FailureCategory1Component);
+    bool hasFailureCategory2RootCause = analysis != null && !string.IsNullOrWhiteSpace(analysis.FailureCategory2RootCause);
+
+    var actions = ViewBag.Actions as List<DAL.Models.FailureAnalysisBLL>
+    ?? new List<DAL.Models.FailureAnalysisBLL>();
+
+    bool showFailureReportStatus = Model != null
+        && Model.TotalDuration.HasValue
+        && Model.TotalDuration.Value >= 60;
+}
+
+<style>
+    .detail-wrap {
+        padding: 20px;
+    }
+
+    .main-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+        margin-bottom: 18px;
+        overflow: hidden;
+    }
+
+    .main-card-header {
+        background: #7f1010;
+        color: #fff;
+        padding: 14px 18px;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .main-card-body {
+        padding: 18px;
+    }
+
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+        .info-list li {
+            display: flex;
+            /*justify-content: space-between;*/
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+            .info-list li:last-child {
+                border-bottom: none;
+            }
+
+    .info-label {
+        color: #6b7280;
+        font-weight: 700;
+        min-width: 160px;
+    }
+
+    .info-value {
+        color: #222;
+        font-weight: 600;
+        text-align: right;
+        word-break: break-word;
+    }
+
+    .text-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 15px;
+        min-height: 120px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.05);
+        margin-bottom: 15px;
+    }
+
+    .text-card-title {
+        color: #7f1010;
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .text-card-value {
+        color: #222;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .status-active {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .status-inactive {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .detail-wrap {
+            padding: 0;
+        }
+
+        .main-card,
+        .text-card {
+            box-shadow: none;
+        }
+    }
+
+    .mtbf-mttr-wrapper {
+        width: 100%;
+    }
+
+    .mtbf-mttr-row {
+        margin-bottom: 10px;
+        padding: 10px 0;
+        border-bottom: 1px dashed #e5e7eb;
+    }
+
+        .mtbf-mttr-row:first-child {
+            padding-top: 0;
+        }
+
+        .mtbf-mttr-row textarea {
+            min-height: 58px;
+            resize: vertical;
+        }
+
+    .mtbf-mttr-remove {
+        margin-top: -5px;
+        margin-bottom: 10px;
+    }
+
+    @@media (max-width: 767px) {
+        .mtbf-mttr-remove {
+            text-align: left !important;
+        }
+    }
+</style>
+
+@if (Model == null)
+{
+    <div class="xp-contentbar">
+        <div class="alert alert-danger">Record not found.</div>
+        <a href="@Url.Action("list", "Maintenance")" class="btn btn-secondary">Back</a>
+    </div>
+    return;
+}
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row">
+        <div class="col-md-6">
+            <h4 class="xp-page-title">Maintenance Detail</h4>
+        </div>
+        <div class="col-md-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("list", "Maintenance")">Maintenance</a>
+                    </li>
+                    <li class="breadcrumb-item active">Detail</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <div class="main-card">
+        <div class="main-card-header">
+            Maintenance / Delay Detail
+        </div>
+
+        <div class="main-card-body">
+            <div class="row">
+
+                <!-- LEFT LIST -->
+                <div class="col-md-6">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">Date</span>
+                            <span class="info-value">
+                                @(Model.Date.HasValue ? Model.Date.Value.ToString("dd-MMM-yyyy", gregorian) : "-")
+                            </span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Delay Code</span>
+                            <span class="info-value">@(Model.Delaycode ?? "-")</span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Area</span>
+                            <span class="info-value">@(Model.Area ?? "-")</span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Plant</span>
+                            <span class="info-value">@(Model.Plant ?? "-")</span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Shift</span>
+                            <span class="info-value">@(Model.Shift ?? "-")</span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Team</span>
+                            <span class="info-value">@(Model.Team ?? "-")</span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Shift Incharge</span>
+                            <span class="info-value">@(Model.ShiftIncharge ?? "-")</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Created By</span>
+                            <span class="info-value">@(Model.CreatedBy ?? "-")</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- RIGHT LIST -->
+                <div class="col-md-6">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">Start Time</span>
+                            <span class="info-value">
+                                @(Model.StartTime.HasValue ? Model.StartTime.Value.ToString(@"hh\:mm") : "-")
+                            </span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">End Time</span>
+                            <span class="info-value">
+                                @(Model.EndTime.HasValue ? Model.EndTime.Value.ToString(@"hh\:mm") : "-")
+                            </span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Total Duration</span>
+                            <span class="info-value">
+                                @(Model.TotalDuration.HasValue ? Model.TotalDuration.Value + " Min" : "-")
+                            </span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Cobble</span>
+                            <span class="info-value">@(Model.Cobble.HasValue ? Model.Cobble.Value.ToString() : "0")</span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Hot Out</span>
+                            <span class="info-value">@(Model.HotOut.HasValue ? Model.HotOut.Value.ToString() : "0")</span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Delay Type</span>
+                            <span class="info-value">@(Model.DelayType ?? "-")</span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Agency Name</span>
+                            <span class="info-value">@(Model.AgencyName ?? "-")</span>
+                        </li>
+
+                        <li>
+                            <span class="info-label">Agency Code</span>
+                            <span class="info-value">@(Model.AgencyCode ?? "-")</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Created Date</span>
+                            <span class="info-value">
+                                @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("dd-MMM-yyyy hh:mm tt", gregorian) : "-")
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- EQUIPMENT CARD -->
+    <div class="main-card">
+        <div class="main-card-header">
+            Equipment Information
+        </div>
+
+        <div class="main-card-body">
+            <div class="row">
+
+                <div class="col-md-6">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">Equipment</span>
+                            <span class="info-value">@(Model.Equipments ?? "-")</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">Delay Description</span>
+                            <span class="info-value">@(Model.DelayDescription ?? "-")</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">Reason for Occurence</span>
+                            <span class="info-value">@(Model.ReasonForOccurence ?? "-")</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">Action Taken</span>
+                            <span class="info-value">@(Model.ActionTaken ?? "-")</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELAY CORRECTION / UPDATE FORM -->
+    @if (Model.ReasonForOccurence1 == null || Model.ActionTaken1 == null || Model.ReasonForOccurence1 == "" || Model.ActionTaken1 == "")
+    {
+        <div class="main-card">
+            <div class="main-card-header">
+                Delay Correction / Additional Remarks
+            </div>
+
+            <div class="main-card-body">
+
+                @using (Html.BeginForm("UpdateDelayCorrection", "Maintenance", FormMethod.Post, new { id = "delayCorrectionForm" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="DelayID" value="@Model.ID" />
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Delay Description</label>
+                                <textarea class="form-control"
+                                          rows="4"
+                                          name="DelayDescription1"
+                                          placeholder="Enter delay description">@Model.DelayDescription1</textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Reason for Occurrence</label>
+                                <textarea class="form-control"
+                                          rows="4"
+                                          name="ReasonforOccurence1"
+                                          placeholder="Enter reason for occurrence">@Model.ReasonForOccurence1</textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Action Taken</label>
+                                <textarea class="form-control"
+                                          rows="4"
+                                          name="ActionTaken1"
+                                          placeholder="Enter action taken">@Model.ActionTaken1</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-right mt-2">
+                        <button type="submit" class="btn btn-success">
+                            Update Delay Remarks
+                        </button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    }
+
+    else
+    {
+        <div class="main-card">
+            <div class="main-card-header">
+                Delay Correction / Additional Remarks
+            </div>
+
+            <div class="main-card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <ul class="info-list">
+                            <li>
+                                <span class="info-label">Delay Description</span>
+                                <span class="info-value">@(Model.DelayDescription1 ?? "-")</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <ul class="info-list">
+                            <li>
+                                <span class="info-label">Reason for Occurence</span>
+                                <span class="info-value">@(Model.ReasonForOccurence1 ?? "-")</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <ul class="info-list">
+                            <li>
+                                <span class="info-label">Action Taken</span>
+                                <span class="info-value">@(Model.ActionTaken1 ?? "-")</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    }
+
+    <!-- MAINTENANCE ANALYSIS INPUT FORM -->
+    <div class="main-card">
+        <div class="main-card-header">
+            Maintenance Analysis Form
+        </div>
+
+        <div class="main-card-body">
+
+            @using (Html.BeginForm("InsertMaintenanceAnalysis", "Maintenance", FormMethod.Post, new { id = "analysisForm" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="ID" value="@(analysis != null ? analysis.ID : 0)" />
+                <input type="hidden" name="DelayID" value="@Model.ID" />
+                <input type="hidden" name="StatusID" value="1" />
+
+                if (hasAnalysis)
+                {
+                    <div class="alert alert-info">
+                        Existing analysis found. Filled fields are locked. Empty fields are available for input.
+                        <br />
+                        <b>Analysis Code:</b> @(analysis.AnalysisCode ?? "-")
+                    </div>
+                }
+
+                <div class="row">
+
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>Last PM Date</label>
+                            <input type="date"
+                                   name="LastPMDate"
+                                   class="form-control"
+                                   value="@(hasLastPMDate ? analysis.LastPMDate.Value.ToString("yyyy-MM-dd") : "")"/>
+                        </div>
+                    </div>
+
+                    @if (showFailureReportStatus)
+                    {
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Failure Report Status</label>
+
+                                @if (hasFailureReportStatus)
+                                {
+                                    <input type="text"
+                                           class="form-control"
+                                           value="@analysis.FailureReportStatus"
+                                           readonly />
+
+                                    <input type="hidden"
+                                           name="FailureReportStatus"
+                                           value="@analysis.FailureReportStatus" />
+                                }
+                                else
+                                {
+                                    <select name="FailureReportStatus" class="form-control">
+                                        <option value="">-- Select Status --</option>
+                                        <option value="Open">Open</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Completed">Completed</option>
+                                    </select>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>SAP Breakdown Order</label>
+                            <input type="text"
+                                   name="SAPBreakdownOrder"
+                                   class="form-control"
+                                   maxlength="50"
+                                   value="@(hasSAPBreakdownOrder ? analysis.SAPBreakdownOrder : "")"
+                                   placeholder="Enter SAP Breakdown Order"/>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="mtbf-mttr-wrapper">
+
+                    <div id="mtbfMttrRows">
+
+                        <div class="row mtbf-mttr-row">
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Long Term Action Taken to Increase MTBF</label>
+
+                                    <textarea name="IncreaseMTBF"
+                                              class="form-control"
+                                              rows="3"
+                                              placeholder="Enter MTBF improvement remarks">@(analysis != null ? analysis.IncreaseMTBF : "")</textarea>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Long Term Action Taken to Decrease MTTR</label>
+
+                                    <textarea name="DecreaseMTTR"
+                                              class="form-control"
+                                              rows="3"
+                                              placeholder="Enter MTTR reduction details">@(analysis != null ? analysis.DecreaseMTTR : "")</textarea>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        @if (hasIncreaseMTBF1 || hasDecreaseMTTR1)
+                        {
+                            <div class="row mtbf-mttr-row">
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Additional Action to Increase MTBF</label>
+
+                                        <textarea name="IncreaseMTBF1"
+                                                  class="form-control"
+                                                  rows="3"
+                                                  placeholder="Enter additional MTBF action">@(analysis != null ? analysis.IncreaseMTBF1 : "")</textarea>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Additional Action to Decrease MTTR</label>
+
+                                        <textarea name="DecreaseMTTR1"
+                                                  class="form-control"
+                                                  rows="3"
+                                                  placeholder="Enter additional MTTR action">@(analysis != null ? analysis.DecreaseMTTR1 : "")</textarea>
+                                    </div>
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+
+                    @if (!hasIncreaseMTBF1 && !hasDecreaseMTTR1)
+                    {
+                        <div class="row">
+                            <div class="col-md-12 text-right mb-3">
+                                <button type="button"
+                                        id="btnAddMtbfMttr"
+                                        class="btn btn-sm btn-success">
+                                    + Add More
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+
+                <!--<div class="row mtbf-mttr-row" id="mtbfMttrRows">
+
+        <div class="col-md-5">
+            <div class="form-group">
+                <label>Action Taken to Increase MTBF</label>
+                <textarea name="IncreaseMTBFAction[]"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Enter MTBF improvement remarks"></textarea>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="form-group">
+                <label>Action Taken Decrease MTTR</label>
+                <textarea name="DecreaseMTTRAction[]"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Enter MTTR reduction details"></textarea>
+            </div>
+        </div>
+
+
+        <div class="col-md-2" style=" align-content: center;">
+            <div class="col-md-12 text-right">
+                <button type="button" id="btnAddMtbfMttr" class="btn btn-sm btn-success">
+                    + Add More
+                </button>
+            </div>
+        </div>-->
+
+                @*<div class="col-md-6">
+                <div class="form-group">
+                    <label>Action Taken to Increase MTBF</label>
+                    <textarea name="IncreaseMTBF1"
+                              class="form-control"
+                              rows="2"
+                              placeholder="Enter MTBF improvement remarks"
+                              @(hasIncreaseMTBF1 ? "readonly" : "")>@(hasIncreaseMTBF1 ? analysis.IncreaseMTBF1 : "")</textarea>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>Action Taken Decrease MTTR</label>
+                    <textarea name="DecreaseMTTR"
+                              class="form-control"
+                              rows="2"
+                              placeholder="Enter MTTR reduction details"
+                              @(hasDecreaseMTTR ? "readonly" : "")>@(hasDecreaseMTTR ? analysis.DecreaseMTTR : "")</textarea>
+                </div>
+            </div>*@
+
+                <!--</div>-->
+
+                <div class="row">
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Failure Category 1 - Component</label>
+                            <textarea name="FailureCategory1Component"
+                                      class="form-control"
+                                      rows="2"
+                                      placeholder="Enter component failure category">@(hasFailureCategory1Component ? analysis.FailureCategory1Component : "")</textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Failure Category 2 - Root Cause</label>
+
+                            @if (hasFailureCategory2RootCause)
+                            {
+                                <input type="text"
+                                       class="form-control"
+                                       value="@analysis.FailureCategory2RootCause"/>
+
+                                <input type="hidden"
+                                       name="FailureCategory2RootCause"
+                                       value="@analysis.FailureCategory2RootCause" />
+                            }
+                            else
+                            {
+                                <select class="form-control" name="FailureCategory2RootCause">
+                                    <option value="">-- please select --</option>
+                                    <option value="Shortage of Spares">Shortage of Spares</option>
+                                    <option value="Can Be avoided">Can Be avoided</option>
+                                    <option value="Machine Poor Condition">Machine Poor Condition</option>
+                                    <option value="Undetectable failure">Undetectable failure</option>
+                                    <option value="Poor Operation Condition">Poor Operation Condition</option>
+                                    <option value="Human Mistake">Human Mistake</option>
+                                    <option value="Design issues">Design issues</option>
+                                </select>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="text-right mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save"></i>
+                        @(hasAnalysis ? "Update Missing Information" : "Save Analysis")
+                    </button>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <div class="text-right no-print">
+        <a href="@Url.Action("list", "Maintenance")" class="btn btn-secondary">
+            Back
+        </a>
+
+        <button type="button" class="btn btn-danger" onclick="window.print()">
+            Print
+        </button>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+
+        $("#analysisForm").on("submit", function (e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: "Confirm Submission",
+                text: "Are you sure you want to save this maintenance analysis?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, Save",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $("#analysisForm")[0].submit();
+                }
+            });
+        });
+
+    });
+</script>
+<script>
+    $(document).ready(function () {
+
+        $("#btnAddMtbfMttr").on("click", function () {
+
+            if ($("#additionalMtbfMttrRow").length > 0) {
+                return;
+            }
+
+            var html = `
+                <div class="mtbf-mttr-row" id="additionalMtbfMttrRow">
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Additional Action to Increase MTBF</label>
+
+                                <textarea name="IncreaseMTBF1"
+                                          class="form-control"
+                                          rows="3"
+                                          placeholder="Enter additional MTBF action"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Additional Action to Decrease MTTR</label>
+
+                                <textarea name="DecreaseMTTR1"
+                                          class="form-control"
+                                          rows="3"
+                                          placeholder="Enter additional MTTR action"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 text-right mtbf-mttr-remove">
+                            <button type="button"
+                                    class="btn btn-sm btn-danger btnRemoveMtbfMttr">
+                                Remove
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+
+            $("#mtbfMttrRows").append(html);
+            $("#btnAddMtbfMttr").hide();
+        });
+
+        $(document).on("click", ".btnRemoveMtbfMttr", function () {
+            $(this).closest(".mtbf-mttr-row").remove();
+            $("#btnAddMtbfMttr").show();
+        });
+
+    });
+</script>

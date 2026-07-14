@@ -22,7 +22,7 @@ namespace DAL.Models
         public string RoleName { get; set; }
         public string Password { get; set; }
         public int StatusID { get; set; }
-        public DateTime CreatedDate { get; set; }
+        public DateTime? CreatedDate { get; set; }
         public string CreatedBy { get; set; }
         public List<UserRoleBLL> UserRole { get; set; }
     }

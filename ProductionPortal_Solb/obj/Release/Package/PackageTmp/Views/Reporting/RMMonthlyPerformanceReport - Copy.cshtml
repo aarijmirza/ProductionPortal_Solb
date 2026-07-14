@@ -1,0 +1,391 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Monthly Performance Report</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sheet {
+            margin: 10px auto;
+            border: 1px solid #000;
+            padding: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+            font-size: 28px;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 9px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        .red {
+            color: #c00000;
+            font-weight: bold;
+        }
+
+        .text-top {
+            vertical-align: top;
+        }
+
+        .logo-cell img {
+            max-height: 90px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .legend-cell {
+            font-size: 9px;
+        }
+
+        @@media print {
+            body {
+                margin: 0;
+            }
+
+            .sheet {
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sheet">
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width: 180px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+                <td class="center">
+                    <div class="bold">Monthly Performance Report</div>
+                </td>
+                <td class="right" style="width:210px; font-size:22px;">
+                    <b>Date:</b> September 2025
+                </td>
+            </tr>
+        </table>
+        <table style="margin-top:10px;">
+            <tr class="center" style="font-weight:bold; font-size:15px">
+                <td>Month</td>
+                <td>Size</td>
+                <td>Plan</td>
+                <td>Rolled Billet</td>
+                <td>Finished Product <br /> Thoer Wt.</td>
+                <td>Final Product <br /> Monthly Total</td>
+            </tr>
+            <tr class="center" style="font-size:13px">
+                <td>September</td>
+                <td>12mm</td>
+                <td>150.000</td>
+                <td>150.000</td>
+                <td>150.000</td>
+                <td>150.000</td>
+            </tr>
+        </table>
+        <!-- ================= CHARTS LAYOUT ================= -->
+        <table style="margin-top:8px;">
+            <tr>
+                <!-- LEFT COLUMN -->
+                <td style="padding-right:5px;">
+
+                    <!-- CUMULATIVE -->
+                    <div class="chart-box">
+                        <div class="chart-title center" style="font-size:24px; font-weight:bold">Cumulative Plan vs Actual (MTD)</div>
+                        <div style="display:flex; justify-content:center; align-items:center;">
+                            <canvas id="cumulativeChart" width="250" height="250"></canvas>
+                        </div>
+                    </div>
+
+                </td>
+
+                <!-- RIGHT COLUMN -->
+                <td style="padding-left:5px;">
+                    <div class="chart-box"  style="width:90%; margin:0 auto;">
+                        <div class="chart-title center" style="font-size:24px; font-weight:bold">Monthly Tonnage</div>
+                        <canvas id="monthlyTonnage" height="70"></canvas>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <!-- ================= CHARTS LAYOUT ================= -->
+        <table style="margin-top:8px;">
+            <tr>
+                <td>
+                    <!-- YTD SIZE MIX -->
+                    <div class="chart-box" style="width:90%; margin:0 auto;">
+                        <div class="chart-title center" style="font-size:24px; font-weight:bold;">
+                            Year-To-Date Size Mix (Tonnage)
+                        </div>
+                        <canvas id="ytdSizeMix" height="50"></canvas>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ================= JS CHARTS ================= -->
+    <script>
+        /* ================= YTD SIZE MIX ================= */
+        new Chart(document.getElementById('ytdSizeMix'), {
+            type: 'bar',
+            data: {
+                labels: ['10mm', '12mm', '14mm', '16mm', '18mm', '20mm', '25mm', '32mm'],
+                datasets: [{
+                    data: [18000, 76000, 92000, 112000, 9000, 68000, 70000, 80000],
+                    backgroundColor: 'darkgray',
+                    barThickness: 70,        // fixed bar width (px)
+                    maxBarThickness: 75,     // safety limit
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false },
+
+                    datalabels: {
+                        formatter: (v, ctx) => {
+                            return ctx.chart.data.labels[ctx.dataIndex] + '\n' + v.toLocaleString();
+                        },
+
+                        color: '#fff',
+                        backgroundColor: '#333',
+                        borderRadius: 4,
+                        padding: 6,
+
+                        font: {
+                            size: 9,
+                            weight: 'bold'
+                        },
+
+                        anchor: 'end',
+                        align: 'top',
+                        offset: -15,
+                        clamp: true
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            display: false    // 👈 SIDE NUMBERS HIDE
+                        },
+                    },
+                    y: {
+                        display: false,
+                        beginAtZero: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            display: false    // 👈 SIDE NUMBERS HIDE
+                        },
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+
+        /* ================= CUMULATIVE ================= */
+        new Chart(document.getElementById('cumulativeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Cumulative Plan', 'Actual Month-To-Date'],
+                datasets: [{
+                    data: [46980, 44778],
+                    backgroundColor: ['#c00000', 'darkgray'],
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: false,           // 👈 auto stretch band
+                maintainAspectRatio: false,  // 👈 size fix allow
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        align: 'center',
+                        labels: {
+                            font: { size: 10 },
+                            boxWidth: 12
+                        }
+                    }
+                }
+            }
+        });
+
+
+        /* ================= MONTHLY TONNAGE ================= */
+        const lineOnTopPlugin = {
+            id: 'lineOnTop',
+            afterDatasetsDraw(chart, args, pluginOptions) {
+                const lineDatasetIndex = pluginOptions.lineIndex ?? 1; // 👈 line dataset index
+                const meta = chart.getDatasetMeta(lineDatasetIndex);
+                if (meta && meta.controller) {
+                    meta.controller.draw(); // 👈 redraw line on top
+                }
+            }
+        };
+
+        new Chart(document.getElementById('monthlyTonnage'), {
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Actual',
+                        data: [52000, 46000, 53000, 50000, 49000, 54000, 47000, 52000, 28000, 48000, 47000, 50000],
+                        backgroundColor: 'darkgray',
+                        order: 1
+                    },
+                    {
+                        type: 'line',
+                        label: 'Plan',
+                        data: [50000, 47000, 51000, 49000, 50500, 48000, 50000, 26000, 48000, 47000, 49000, 49500],
+                        borderColor: '#c00000',
+                        backgroundColor: '#c00000',
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#a5173e',
+                        tension: 0.3,
+                        order: 999
+                    },
+                ]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'top',   // top / bottom / left / right
+                        align: 'end',
+                        labels: {
+                            font: {
+                                size: 10       // 👈 legend text small
+                            },
+                            boxWidth: 12,      // 👈 color box width
+                            boxHeight: 10,     // 👈 color box height
+                            padding: 8         // 👈 space between legend items
+                        }
+                    },
+                    tooltip: { enabled: false }, // 👈 hover bilkul band
+
+                    datalabels: {
+                        formatter: (v) => v.toLocaleString(),
+
+                        font: {
+                            size: 9,
+                            weight: 'bold'
+                        },
+
+                        color: (ctx) =>
+                            ctx.dataset.type === 'line' ? '#c00000' : '#000',
+
+                        // =========================
+                        // POSITIONING
+                        // =========================
+                        anchor: (ctx) =>
+                            ctx.dataset.type === 'line' ? 'end' : 'center',
+
+                        align: (ctx) =>
+                            ctx.dataset.type === 'line' ? 'top' : 'end',
+
+                        // 👇 Negative offset = bar ke andar
+                        offset: (ctx) =>
+                            ctx.dataset.type === 'line' ? 10 : 40,
+
+                        clamp: true,
+                        clip: false
+                    },
+
+                    lineOnTop: { lineIndex: 1 } // 👈 line dataset index
+                },
+                scales: {
+                    x: {
+                        display: false,
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        display: false,
+                        beginAtZero: true,
+                        ticks: {
+                            display: false    // 👈 SIDE NUMBERS HIDE
+                        },
+                        grid: {
+                            display: false,
+                            drawTicks: false
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels, lineOnTopPlugin]
+        });
+    </script>
+</body>
+</html>

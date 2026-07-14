@@ -11,6 +11,7 @@ namespace DAL.Models
     {
         public int ID { get; set; }
         public DateTime? Date { get; set; }
+        public string Delaycode { get; set; }
         public string Area { get; set; }
         public string Plant { get; set; }
         public string Shift { get; set; }
@@ -29,8 +30,11 @@ namespace DAL.Models
         public string Equipments { get; set; }
         public string Reason { get; set; }
         public string DelayDescription { get; set; }
+        public string DelayDescription1 { get; set; }
         public string ReasonForOccurence { get; set; }
+        public string ReasonForOccurence1 { get; set; }
         public string ActionTaken { get; set; }
+        public string ActionTaken1 { get; set; }
         public int StatusID { get; set; }
         public DateTime? CreatedDate { get; set; }
         public string CreatedBy { get; set; }

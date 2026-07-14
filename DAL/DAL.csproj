@@ -96,14 +96,18 @@
     <Compile Include="Models\DelayComponentBLL.cs" />
     <Compile Include="Models\DelayEquipmentBLL.cs" />
     <Compile Include="Models\ElectricArcFurnaceBLL.cs" />
+    <Compile Include="Models\FailureAnalysisActionBLL.cs" />
     <Compile Include="Models\FailureAnalysisBLL.cs" />
     <Compile Include="Models\HeatChemistryBLL.cs" />
     <Compile Include="Models\LaddleFurnaceBLL.cs" />
+    <Compile Include="Models\PlantConsumptionBLL.cs" />
     <Compile Include="Models\PlantDelayBLL.cs" />
     <Compile Include="Models\QCHBIDRIAnalysisBLL.cs" />
     <Compile Include="Models\QCInspectionDataBLL.cs" />
     <Compile Include="Models\QCInspectionDataRMBLL.cs" />
+    <Compile Include="Models\RawStockBLL.cs" />
     <Compile Include="Models\RMChemicalAnalysisBLL.cs" />
+    <Compile Include="Models\RMHourlyDischargeBLL.cs" />
     <Compile Include="Models\RMQCInspectionBLL.cs" />
     <Compile Include="Models\RMShiftDetailsBLL.cs" />
     <Compile Include="Models\RollingMillMaster.cs" />
@@ -117,6 +121,7 @@
     <Compile Include="Models\ShiftEntryBLL.cs" />
     <Compile Include="Models\SlagSampleAnalysisBLL.cs" />
     <Compile Include="Models\SlagByProductAnalysisBLL.cs" />
+    <Compile Include="Models\SupplyChainDailyBLL.cs" />
     <Compile Include="Models\UserBLL.cs" />
     <Compile Include="Models\UserRoleBLL.cs" />
     <Compile Include="Models\ViewModel.cs" />

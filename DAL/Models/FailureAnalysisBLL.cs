@@ -14,11 +14,21 @@ namespace DAL.Models
 
         public DateTime? LastPMDate { get; set; }
 
+        public string AnalysisCode { get; set; }
+
         public string FailureReportStatus { get; set; }
 
         public string IncreaseMTBF { get; set; }
 
+        public string IncreaseMTBF1 { get; set; }
+
         public string DecreaseMTTR { get; set; }
+
+        public string DecreaseMTTR1 { get; set; }
+
+        public string ActionType { get; set; }
+
+        public string ActionRemarks { get; set; }
 
         public string SAPBreakdownOrder { get; set; }
 
@@ -36,5 +46,6 @@ namespace DAL.Models
 
         public DateTime? UpdatedDate { get; set; }
 
+        public List<FailureAnalysisActionBLL> Actions { get; set; }
     }
 }

@@ -1,0 +1,436 @@
+﻿@using System
+@using System.Globalization
+@using System.Collections.Generic
+@using System.Linq
+@model DAL.Models.ViewModel.CCMMeltShopVM
+
+@{
+    Layout = null;
+
+    var list = Model != null && Model.CCM != null
+        ? Model.CCM
+        : new List<DAL.Models.CCMBLL>();
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+
+    Func<decimal?, string> D0 = value =>
+    {
+        return value.HasValue ? value.Value.ToString("N0") : "0";
+    };
+
+    Func<decimal?, string> D2 = value =>
+    {
+        return value.HasValue ? value.Value.ToString("N2") : "0.00";
+    };
+
+    Func<TimeSpan?, string> T = value =>
+    {
+        return value.HasValue ? value.Value.ToString(@"hh\:mm") : "";
+    };
+
+    Func<DAL.Models.CCMBLL, int> StrandCount = item =>
+    {
+        if (item == null)
+        {
+            return 0;
+        }
+
+        int count = 0;
+
+        if (!string.IsNullOrWhiteSpace(item.Strand1)) count++;
+        if (!string.IsNullOrWhiteSpace(item.Strand2)) count++;
+        if (!string.IsNullOrWhiteSpace(item.Strand3)) count++;
+        if (!string.IsNullOrWhiteSpace(item.Strand4)) count++;
+        if (!string.IsNullOrWhiteSpace(item.Strand5)) count++;
+
+        return count;
+    };
+
+    string reportDate = list.Any()
+        ? list.First().Date.ToString("dd-MM-yyyy", gregorian)
+        : DateTime.Now.ToString("dd-MM-yyyy", gregorian);
+
+    int totalHeats = list.Count;
+
+    decimal avgDuration = list.Any() ? list.Average(x => x.CastingTime ?? 0) : 0;
+    decimal avgLadleStart = list.Any() ? list.Average(x => x.LadleWeightStart ?? 0) : 0;
+    decimal avgLadleEnd = list.Any() ? list.Average(x => x.LadleWeightEnd ?? 0) : 0;
+    decimal avgYield = list.Any() ? list.Average(x => x.Yeild ?? x.Yield ?? 0) : 0;
+
+    decimal totalDuration = list.Sum(x => x.CastingTime ?? 0);
+    decimal totalLadleStart = list.Sum(x => x.LadleWeightStart ?? 0);
+    decimal totalLadleEnd = list.Sum(x => x.LadleWeightEnd ?? 0);
+
+    decimal totalPrime1Length = list.Sum(x => x.Prime1Length ?? 0);
+    decimal totalPrime1Pcs = list.Sum(x => x.Prime1Pcs ?? 0);
+
+    decimal totalPrime2Length = list.Sum(x => x.Prime2Length ?? 0);
+    decimal totalPrime2Pcs = list.Sum(x => x.Prime2Pcs ?? 0);
+
+    decimal totalVarLengthPcs = list.Sum(x => x.VarLengthPcs ?? 0);
+    decimal totalEndCutPcs = list.Sum(x => x.EndCutPcs ?? 0);
+
+    decimal totalPrime1Wt = list.Sum(x => x.Prime1Wt ?? 0);
+    decimal totalPrime2Wt = list.Sum(x => x.Prime2Wt ?? 0);
+    decimal totalVLenWt = list.Sum(x => x.VLenWt ?? 0);
+    decimal totalEndWt = list.Sum(x => x.EndWt ?? 0);
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Continuous Casting Machine [CCM] Daily Heat Summary Report</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+        }
+
+        .print-btn {
+            margin: 10px;
+            padding: 7px 15px;
+            background: #74000a;
+            color: #ffffff;
+            border: none;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .sheet {
+            margin: 10px auto;
+            border: 1px solid #000;
+            padding: 4px;
+            width: 100%;
+            background: #ffffff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: middle;
+        }
+
+        .no-border td,
+        .no-border th {
+            border: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 11px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f2f2f2;
+            font-size: medium;
+        }
+
+        .logo-cell img {
+            max-height: 90px;
+            margin-top: 10px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .nowrap {
+            white-space: nowrap;
+        }
+
+        @@page {
+            size: A4 landscape;
+            margin: 6mm;
+        }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                background: #ffffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .sheet {
+                margin: 0;
+                border: none;
+                padding: 0;
+                width: 100%;
+            }
+
+            th,
+            td {
+                font-size: 9px;
+                padding: 2px;
+            }
+
+            .header-title {
+                font-size: 24px;
+            }
+
+            .sub-header {
+                font-size: 16px;
+            }
+
+            .section-title {
+                background-color: #f2f2f2 !important;
+            }
+
+            .total-row {
+                background-color: #f9f9f9 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button type="button" class="print-btn no-print" onclick="window.print()">
+        Print / Save PDF
+    </button>
+
+    <div class="sheet">
+
+        <!-- LOGO + TITLES -->
+        <table class="no-border">
+            <tr>
+                <td class="logo-cell" style="width:180px;">
+                    <img src="~/assets/images/logo.png" />
+                </td>
+
+                <td class="center">
+                    <div class="header-title">SOLB STEEL COMPANY</div>
+                    <div class="sub-header">CONTINUOUS CASTING MACHINE [CCM] DEPARTMENT</div>
+                    <div class="sub-header">DAILY HEAT SUMMARY REPORT</div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- DATE -->
+        <table>
+            <tr>
+                <td class="bold nowrap" style="width:140px;">Production Date For:</td>
+                <td style="width:160px;">@reportDate</td>
+
+                <td class="bold nowrap" style="width:90px;">Total Heats</td>
+                <td class="center" style="width:80px;">@totalHeats</td>
+
+                <td></td>
+            </tr>
+        </table>
+
+        <!-- PRODUCTION DESCRIPTION -->
+        <table style="margin-top:4px;">
+            <tr>
+                <td colspan="22" class="section-title">PRODUCTION DESCRIPTION</td>
+            </tr>
+
+            <tr class="center small bold">
+                <td rowspan="2">Sr. No.</td>
+                <td rowspan="2">Heat No.</td>
+                <td rowspan="2">Steel Grade</td>
+                <td rowspan="2">Ladle No.</td>
+                <td rowspan="2">No. In Seq</td>
+                <td rowspan="2">Strands</td>
+
+                <td colspan="3">Times</td>
+
+                <td colspan="2">Ladle Weight</td>
+
+                <td rowspan="2">Yield</td>
+
+                <td colspan="10">Billets</td>
+            </tr>
+
+            <tr class="center small bold">
+                <td>Cast Start</td>
+                <td>Cast Stop</td>
+                <td>Duration<br />(mins.)</td>
+
+                <td>Start<br />(t)</td>
+                <td>End<br />(t)</td>
+
+                <td>Prime 1<br />Length (m)</td>
+                <td>Prime 1<br />(pcs)</td>
+
+                <td>Prime 2<br />Length (m)</td>
+                <td>Prime 2<br />(pcs)</td>
+
+                <td>Var. Length<br />(pcs)</td>
+                <td>End Cut<br />(pcs)</td>
+
+                <td>Prime 1 Wt<br />(t)</td>
+                <td>Prime 2 Wt<br />(t)</td>
+                <td>V. Len Wt<br />(t)</td>
+                <td>End Wt<br />(t)</td>
+            </tr>
+
+            @if (list.Any())
+            {
+                foreach (var row in list.Select((item, index) => new { item, index }))
+                {
+                    <tr class="small">
+                        <td class="center">@(row.index + 1)</td>
+
+                        <td class="center">@(row.item.HeatNo ?? "-")</td>
+                        <td class="center">@(row.item.Grade ?? row.item.GRADE_ID ?? "-")</td>
+                        <td class="center">@D0(row.item.LadleNo)</td>
+                        <td class="center">@D0(row.item.SequenceHeat)</td>
+                        <td class="center">@StrandCount(row.item)</td>
+
+                        <td class="center">@T(row.item.OpenTime)</td>
+                        <td class="center">@T(row.item.CloseTime)</td>
+                        <td class="center">@D2(row.item.CastingTime)</td>
+
+                        <td class="center">@D2(row.item.LadleWeightStart)</td>
+                        <td class="center">@D2(row.item.LadleWeightEnd)</td>
+
+                        <td class="center">@D2(row.item.Yeild ?? row.item.Yield)</td>
+
+                        <td class="center">@D2(row.item.Prime1Length)</td>
+                        <td class="center">@D0(row.item.Prime1Pcs)</td>
+
+                        <td class="center">@D2(row.item.Prime2Length)</td>
+                        <td class="center">@D0(row.item.Prime2Pcs)</td>
+
+                        <td class="center">@D0(row.item.VarLengthPcs)</td>
+                        <td class="center">@D0(row.item.EndCutPcs)</td>
+
+                        <td class="center">@D2(row.item.Prime1Wt)</td>
+                        <td class="center">@D2(row.item.Prime2Wt)</td>
+                        <td class="center">@D2(row.item.VLenWt)</td>
+                        <td class="center">@D2(row.item.EndWt)</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr class="small">
+                    <td class="center">1</td>
+                    <td class="center">-</td>
+                    <td class="center">-</td>
+                    <td class="center">0</td>
+                    <td class="center">0</td>
+                    <td class="center">0</td>
+
+                    <td class="center"></td>
+                    <td class="center"></td>
+                    <td class="center">0.00</td>
+
+                    <td class="center">0.00</td>
+                    <td class="center">0.00</td>
+
+                    <td class="center">0.00</td>
+
+                    <td class="center">0.00</td>
+                    <td class="center">0</td>
+
+                    <td class="center">0.00</td>
+                    <td class="center">0</td>
+
+                    <td class="center">0</td>
+                    <td class="center">0</td>
+
+                    <td class="center">0.00</td>
+                    <td class="center">0.00</td>
+                    <td class="center">0.00</td>
+                    <td class="center">0.00</td>
+                </tr>
+            }
+
+            <!-- AVERAGE -->
+            <tr class="total-row small">
+                <td colspan="8" class="right bold">Average</td>
+
+                <td class="center">@avgDuration.ToString("N2")</td>
+                <td class="center">@avgLadleStart.ToString("N2")</td>
+                <td class="center">@avgLadleEnd.ToString("N2")</td>
+                <td class="center">@avgYield.ToString("N2")</td>
+
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+            </tr>
+
+            <!-- TOTAL -->
+            <tr class="total-row small">
+                <td colspan="8" class="right bold">Total</td>
+
+                <td class="center">@totalDuration.ToString("N2")</td>
+                <td class="center">@totalLadleStart.ToString("N2")</td>
+                <td class="center">@totalLadleEnd.ToString("N2")</td>
+                <td class="center">-</td>
+
+                <td class="center">@totalPrime1Length.ToString("N2")</td>
+                <td class="center">@totalPrime1Pcs.ToString("N0")</td>
+
+                <td class="center">@totalPrime2Length.ToString("N2")</td>
+                <td class="center">@totalPrime2Pcs.ToString("N0")</td>
+
+                <td class="center">@totalVarLengthPcs.ToString("N0")</td>
+                <td class="center">@totalEndCutPcs.ToString("N0")</td>
+
+                <td class="center">@totalPrime1Wt.ToString("N2")</td>
+                <td class="center">@totalPrime2Wt.ToString("N2")</td>
+                <td class="center">@totalVLenWt.ToString("N2")</td>
+                <td class="center">@totalEndWt.ToString("N2")</td>
+            </tr>
+        </table>
+
+    </div>
+
+</body>
+</html>

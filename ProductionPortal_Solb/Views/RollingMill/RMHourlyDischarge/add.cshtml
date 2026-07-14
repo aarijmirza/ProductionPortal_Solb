@@ -1,0 +1,286 @@
+﻿@using System.Globalization
+@model DAL.Models.ViewModel.RMHourlyDischargeVM
+
+@{
+    var pageModel = Model ?? new DAL.Models.ViewModel.RMHourlyDischargeVM();
+
+    string shift = pageModel.Shift ?? "";
+
+    List<Tuple<string, string>> timeSlots = new List<Tuple<string, string>>();
+
+    if (shift == "Morning" || shift == "Afternoon" || shift == "Evening" || shift == "Long Morning")
+    {
+        timeSlots = new List<Tuple<string, string>>
+{
+            Tuple.Create("07:00:00", "08:00:00"),
+            Tuple.Create("08:00:00", "09:00:00"),
+            Tuple.Create("09:00:00", "10:00:00"),
+            Tuple.Create("10:00:00", "11:00:00"),
+            Tuple.Create("11:00:00", "12:00:00"),
+            Tuple.Create("12:00:00", "13:00:00"),
+            Tuple.Create("13:00:00", "14:00:00"),
+            Tuple.Create("14:00:00", "15:00:00")
+        };
+    }
+    else if (shift == "Night" || shift == "Long Night")
+    {
+        timeSlots = new List<Tuple<string, string>>
+{
+            Tuple.Create("23:00:00", "00:00:00"),
+            Tuple.Create("00:00:00", "01:00:00"),
+            Tuple.Create("01:00:00", "02:00:00"),
+            Tuple.Create("02:00:00", "03:00:00"),
+            Tuple.Create("03:00:00", "04:00:00"),
+            Tuple.Create("04:00:00", "05:00:00"),
+            Tuple.Create("05:00:00", "06:00:00"),
+            Tuple.Create("06:00:00", "07:00:00")
+        };
+    }
+}
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Rolling Mill</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Rolling Mill</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Hourly Discharge Breakdown</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+
+<div class="xp-contentbar">
+    <form action="/RollingMill/RMHourlyDischarge" id="addprofileform" method="post">
+        <!-- SHIFT DETAILS CARD -->
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header">
+                <b>Rolling Mill Shift Details</b>
+            </div>
+
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="col-md-3">
+                        <b>Date:</b> @(Model.Date?.ToString("dd-MM-yyyy") ?? "-")
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Plant:</b> @Model.Plant
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Shift:</b> @pageModel.Shift
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Incharge:</b> @Model.ShiftIncharge
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM -->
+        <div class="card">
+            <div class="card-header bg-white text-right">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+
+            <div class="card-body">
+
+                <table class="table table-bordered text-center" style="">
+                    <thead>
+                        <tr style="background:#f2f2f2;">
+                            <th style="">From</th>
+                            <th style="">To</th>
+                            <th style="" ;">No. of<br />Billet</th>
+                            <th style="" ;">No. of<br />Cobble</th>
+                            <th style="">Reject</th>
+                            <th>Billet Heat Nos.</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (int i = 0; i < timeSlots.Count; i++)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="text"
+                                           name="RMHourlyDischarge[@i].TimeFrom"
+                                           class="form-control text-center"
+                                           value="@timeSlots[i].Item1"
+                                           readonly />
+                                </td>
+
+                                <td>
+                                    <input type="text"
+                                           name="RMHourlyDischarge[@i].TimeTo"
+                                           class="form-control text-center"
+                                           value="@timeSlots[i].Item2"
+                                           readonly />
+                                </td>
+
+                                <td style="">
+                                    <input type="number"
+                                           name="RMHourlyDischarge[@i].NoofBillets"
+                                           class="form-control text-center billet-input"
+                                           value="0"
+                                           min="0" />
+                                </td>
+
+                                <td>
+                                    <input type="number"
+                                           name="RMHourlyDischarge[@i].NoofCobble"
+                                           class="form-control text-center cobble-input"
+                                           value="0.00"
+                                           step="0.01"
+                                           min="0" />
+                                </td>
+
+                                <td style="">
+                                    <input type="number"
+                                           name="RMHourlyDischarge[@i].Reject"
+                                           class="form-control text-center reject-input"
+                                           value="0"
+                                           min="0" />
+                                </td>
+
+                                <td>
+                                    <input type="text"
+                                           name="RMHourlyDischarge[@i].BilletHeatNo"
+                                           class="form-control text-center"
+                                           placeholder="D260001(15), D260002(8)" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label>Safety Issues During Shift</label>
+                        <textarea name="SafetyIssueShift" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Messages During Shift</label>
+                        <textarea name="MessageShift" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label>Fuel Consumption Start</label>
+                        <input type="text" name="FuelConsumptionStart" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Fuel Consumption End</label>
+                        <input type="text" name="FuelConsumptionEnd" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Total Consumption</label>
+                        <input type="text" name="TotalConsumption" class="form-control" readonly />
+                    </div>
+
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label>Electricity Start</label>
+                        <input type="text" name="FuelConsumptionStart" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Electricity End</label>
+                        <input type="text" name="FuelConsumptionEnd" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Total Consumption</label>
+                        <input type="text" name="TotalConsumption" class="form-control" readonly />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    $(document).ready(function () {
+
+        $("input[name='FuelConsumptionStart'], input[name='FuelConsumptionEnd']").on("keyup change input", function () {
+            var start = parseFloat($("input[name='FuelConsumptionStart']").val()) || 0;
+            var end = parseFloat($("input[name='FuelConsumptionEnd']").val()) || 0;
+
+            var total = end - start;
+
+            if (total < 0) {
+                total = 0;
+            }
+
+            $("input[name='TotalConsumption']").val(total.toFixed(2));
+        });
+
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+
+        let isSubmitting = false;   // 🔐 double-submit lock
+
+        $("#addprofileform").on("submit", function (e) {
+            e.preventDefault(); // ❗ pehle submit roko
+
+            if (isSubmitting) return; // already submitting
+
+            Swal.fire({
+                title: 'Confirm Submission',
+                text: 'Are you sure you want to submit this Heat Record?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Submit',
+                cancelButtonText: 'Cancel',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    isSubmitting = true; // 🔒 lock
+
+                    // Disable submit button
+                    $("#addprofileform")
+                        .find("button[type='submit']")
+                        .prop("disabled", true)
+                        .text("Submitting...");
+
+                    // Finally submit form
+                    $("#addprofileform")[0].submit();
+                }
+            });
+        });
+
+        var msg = '@TempData["SuccessMessage"]';
+        if (msg) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: msg,
+                confirmButtonColor: '#3085d6'
+            });
+        }
+    });
+</script>

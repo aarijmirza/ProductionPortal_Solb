@@ -1,0 +1,1682 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    :root {
+        --brand: #a91435;
+        --brand-dark: #76001d;
+        --red: #d60000;
+        --green: #158f63;
+        --orange: #efa500;
+        --blue: #245f96;
+        --page-bg: #eef1f5;
+        --card-bg: #ffffff;
+        --border: #d8dee8;
+        --grid: #e8ecf1;
+        --text: #1d2430;
+        --muted: #697386;
+        --radius: 13px;
+        --shadow: 0 5px 18px rgba(17, 24, 39, .06);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--page-bg);
+        color: var(--text);
+    }
+
+    .xp-contentbar {
+        padding: 20px !important;
+        background: var(--page-bg) !important;
+    }
+
+    .smp-dashboard {
+        width: 100%;
+        max-width: 1480px;
+        margin: 0 auto;
+    }
+
+    /* ============================
+       ACTIONS
+    ============================ */
+
+    .dashboard-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
+    }
+
+    .print-btn {
+        background: var(--brand);
+        color: #fff;
+        border: 0;
+        border-radius: 8px;
+        padding: 9px 16px;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+        .print-btn:hover {
+            background: var(--brand-dark);
+        }
+
+        .print-btn i {
+            margin-right: 6px;
+        }
+
+    /* ============================
+       MAIN SHELL
+    ============================ */
+
+    .dashboard-shell {
+        background: #f6f7f9;
+        border: 1px solid #cfd5de;
+        border-top: 8px solid var(--brand);
+        padding: 22px;
+        box-shadow: 0 8px 28px rgba(17, 24, 39, .08);
+    }
+
+    /* ============================
+       HEADER
+    ============================ */
+
+    .dashboard-header {
+        display: grid;
+        grid-template-columns: 135px 1fr 235px;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .header-logo {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+        .header-logo img {
+            width: 118px;
+            max-height: 88px;
+            object-fit: contain;
+        }
+
+    .header-title h1 {
+        margin: 0;
+        color: #172033;
+        font-size: 34px;
+        line-height: 1.05;
+        font-weight: 900;
+        letter-spacing: -.7px;
+    }
+
+    .header-title p {
+        margin: 8px 0 0;
+        font-size: 13px;
+        color: #303846;
+        font-weight: 650;
+    }
+
+    .header-meta {
+        text-align: right;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.65;
+    }
+
+        .header-meta strong {
+            display: block;
+            margin-bottom: 2px;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .header-meta i {
+            margin-right: 5px;
+            color: var(--brand);
+        }
+
+    /* ============================
+       KPI GRID
+    ============================ */
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .kpi-card {
+        position: relative;
+        min-height: 112px;
+        padding: 15px 15px 13px 18px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+        .kpi-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: var(--orange);
+        }
+
+        .kpi-card.good::before {
+            background: var(--green);
+        }
+
+        .kpi-card.bad::before {
+            background: var(--brand);
+        }
+
+    .kpi-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .kpi-name {
+        font-size: 11px;
+        color: #202632;
+        font-weight: 900;
+        line-height: 1.25;
+    }
+
+    .kpi-badge {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background: var(--orange);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 10px;
+        font-weight: 900;
+    }
+
+    .kpi-card.good .kpi-badge {
+        background: var(--green);
+    }
+
+    .kpi-card.bad .kpi-badge {
+        background: var(--brand);
+    }
+
+    .kpi-value {
+        margin-top: 10px;
+        color: #111827;
+        font-size: 26px;
+        line-height: 1;
+        font-weight: 900;
+    }
+
+    .kpi-target {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* ============================
+       COMMON CARDS
+    ============================ */
+
+    .dashboard-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .card-header {
+        min-height: 49px;
+        padding: 13px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .card-title {
+        margin: 0;
+        color: var(--text);
+        font-size: 16px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+        .card-title i {
+            color: var(--brand);
+        }
+
+    .card-note {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .card-body {
+        padding: 16px;
+    }
+
+    /* ============================
+       OVERVIEW
+    ============================ */
+
+    .overview-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(280px, .8fr);
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+    .variance-card .card-body {
+        padding: 0;
+    }
+
+    .variance-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+        .variance-table th {
+            background: #e4e8ee;
+            padding: 12px 10px;
+            text-align: center;
+            color: #202632;
+            font-weight: 900;
+        }
+
+        .variance-table td {
+            padding: 14px 10px;
+            text-align: center;
+            border-bottom: 1px solid #edf0f4;
+            font-weight: 700;
+        }
+
+            .variance-table td:first-child {
+                text-align: left;
+                padding-left: 20px;
+                color: var(--muted);
+                font-weight: 800;
+            }
+
+        .variance-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+    .positive {
+        color: var(--green) !important;
+    }
+
+    .negative {
+        color: #e00000 !important;
+    }
+
+    .yearly-body {
+        height: 202px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .single-donut-wrap {
+        width: 168px;
+        height: 168px;
+        position: relative;
+    }
+
+    .donut-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        color: #111827;
+        font-size: 28px;
+        font-weight: 900;
+    }
+
+    /* ============================
+       MAIN ANALYTICS
+    ============================ */
+
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+    .chart-box {
+        height: 265px;
+        position: relative;
+    }
+
+    /* ============================
+       DELAYS
+    ============================ */
+
+    .delay-list {
+        display: grid;
+        gap: 9px;
+    }
+
+    .delay-row {
+        display: grid;
+        grid-template-columns: 28px minmax(105px, 1fr) 76px 40px minmax(95px, 1fr);
+        gap: 8px;
+        align-items: center;
+        padding: 9px 8px;
+        border: 1px solid #edf0f4;
+        border-radius: 9px;
+        background: #fbfcfd;
+    }
+
+    .delay-rank {
+        width: 23px;
+        height: 23px;
+        border-radius: 50%;
+        background: var(--brand);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 900;
+    }
+
+        .delay-rank.orange {
+            background: var(--orange);
+        }
+
+    .delay-name {
+        color: #202632;
+        font-size: 11px;
+        font-weight: 850;
+    }
+
+    .delay-track {
+        height: 6px;
+        border-radius: 20px;
+        background: #e9edf2;
+        overflow: hidden;
+    }
+
+        .delay-track span {
+            display: block;
+            height: 100%;
+            background: var(--brand);
+            border-radius: 20px;
+        }
+
+        .delay-track.orange span {
+            background: var(--orange);
+        }
+
+    .delay-min {
+        text-align: right;
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .delay-area {
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.2;
+        font-weight: 650;
+    }
+
+    .delay-note {
+        margin-top: 12px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #f5f6f8;
+        color: #303846;
+        font-size: 10px;
+        line-height: 1.4;
+        font-weight: 700;
+    }
+
+    /* ============================
+       LOWER GRID
+    ============================ */
+
+    .lower-grid {
+        display: grid;
+        grid-template-columns: minmax(300px, .8fr) minmax(360px, 1fr) minmax(0, 1.8fr);
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+    .utility-chart-box {
+        height: 250px;
+        position: relative;
+    }
+
+    .composition-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .mini-donut-card {
+        min-height: 250px;
+        padding: 14px 12px;
+        border: 1px solid #e2e6ec;
+        border-radius: 10px;
+        background: #fafbfc;
+        text-align: center;
+    }
+
+    .mini-donut-title {
+        margin-bottom: 10px;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .mini-donut-wrap {
+        width: 125px;
+        height: 125px;
+        position: relative;
+        margin: 0 auto 11px;
+    }
+
+    .mini-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 21px;
+        font-weight: 900;
+        pointer-events: none;
+    }
+
+    .legend-list {
+        display: grid;
+        gap: 5px;
+        text-align: left;
+        font-size: 9px;
+        color: #303846;
+        font-weight: 750;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .legend-color {
+        width: 9px;
+        height: 9px;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    .production-chart-box {
+        height: 250px;
+        position: relative;
+    }
+
+    /* ============================
+       FOOTER
+    ============================ */
+
+    .dashboard-footer {
+        margin-top: 8px;
+        padding-top: 12px;
+        border-top: 1px solid #cfd5de;
+        color: var(--muted);
+        text-align: right;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+        .dashboard-footer strong {
+            color: var(--brand);
+        }
+
+    /* ============================
+       RESPONSIVE
+    ============================ */
+
+    @@media (max-width: 1250px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .analytics-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+            .analytics-grid > :last-child {
+                grid-column: 1 / -1;
+            }
+
+        .lower-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .production-card {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @@media (max-width: 850px) {
+        .dashboard-header {
+            grid-template-columns: 1fr;
+            text-align: center;
+        }
+
+        .header-logo {
+            justify-content: center;
+        }
+
+        .header-meta {
+            text-align: center;
+        }
+
+        .overview-grid,
+        .analytics-grid,
+        .lower-grid {
+            grid-template-columns: 1fr;
+        }
+
+            .analytics-grid > :last-child,
+            .production-card {
+                grid-column: auto;
+            }
+    }
+
+    @@media (max-width: 600px) {
+        .xp-contentbar {
+            padding: 8px !important;
+        }
+
+        .dashboard-shell {
+            padding: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 27px;
+        }
+
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .composition-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .delay-row {
+            grid-template-columns: 28px 1fr 40px;
+        }
+
+        .delay-track,
+        .delay-area {
+            display: none;
+        }
+    }
+
+    /* ============================
+       PRINT
+    ============================ */
+
+    @@media print {
+        @@page {
+            size: A4 landscape;
+            margin: 5mm;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        .no-print,
+        .xp-breadcrumbbar,
+        .navbar,
+        .sidebar,
+        .footer,
+        .xp-leftbar,
+        .xp-rightbar,
+        .xp-topbar {
+            display: none !important;
+        }
+
+        html,
+        body,
+        .xp-contentbar {
+            background: #fff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .smp-dashboard {
+            max-width: none !important;
+            width: 100% !important;
+        }
+
+        .dashboard-shell {
+            border: 1px solid #bbb !important;
+            border-top: 7px solid #a91435 !important;
+            padding: 10px !important;
+            box-shadow: none !important;
+        }
+
+        .dashboard-header {
+            margin-bottom: 9px !important;
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 6px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .kpi-card {
+            min-height: 78px !important;
+            padding: 8px 8px 7px 11px !important;
+            box-shadow: none !important;
+        }
+
+        .kpi-value {
+            font-size: 18px !important;
+            margin-top: 5px !important;
+        }
+
+        .overview-grid {
+            grid-template-columns: 2fr .7fr !important;
+            gap: 7px !important;
+            margin-bottom: 7px !important;
+        }
+
+        .analytics-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 7px !important;
+            margin-bottom: 7px !important;
+        }
+
+        .lower-grid {
+            grid-template-columns: .8fr 1fr 1.8fr !important;
+            gap: 7px !important;
+        }
+
+        .dashboard-card,
+        .kpi-card {
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+        }
+
+        .card-header {
+            min-height: 34px !important;
+            padding: 8px 9px !important;
+        }
+
+        .card-title {
+            font-size: 12px !important;
+        }
+
+        .card-body {
+            padding: 8px !important;
+        }
+
+        .chart-box,
+        .utility-chart-box,
+        .production-chart-box {
+            height: 165px !important;
+        }
+
+        .yearly-body {
+            height: 145px !important;
+        }
+
+        .single-donut-wrap {
+            width: 130px !important;
+            height: 130px !important;
+        }
+
+        .composition-grid {
+            gap: 5px !important;
+        }
+
+        .mini-donut-card {
+            min-height: 165px !important;
+            padding: 6px !important;
+        }
+
+        .mini-donut-wrap {
+            width: 88px !important;
+            height: 88px !important;
+        }
+
+        .legend-list {
+            font-size: 7px !important;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row">
+        <div class="col-md-9">
+            <h4 class="xp-page-title">SMP Daily Dashboard</h4>
+        </div>
+        <div class="col-md-3 text-right">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">Steel Melting Plant</li>
+                <li class="breadcrumb-item active">Dashboard</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="smp-dashboard">
+
+        <div class="dashboard-actions no-print">
+            <button type="button" class="print-btn" onclick="printSMPDashboard()">
+                <i class="fa-solid fa-print"></i>
+                Print / Save PDF
+            </button>
+        </div>
+
+        <div class="dashboard-shell">
+
+            <!-- HEADER -->
+            <header class="dashboard-header">
+                <div class="header-logo">
+                    <img src="~/assets/images/logo.png" alt="SOLB Steel" />
+                </div>
+
+                <div class="header-title">
+                    <h1>SMP Dashboard</h1>
+                    <p>Steel Making Plant • Production / Utilities / Reliability</p>
+                </div>
+
+                <div class="header-meta">
+                    <strong>
+                        <i class="fa-regular fa-calendar-days"></i>
+                        Date: 10-Jun-2026
+                    </strong>
+                    Daily Management View
+                </div>
+            </header>
+
+            <!-- KPI CARDS -->
+            <section class="kpi-grid">
+
+                <div class="kpi-card">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Heat Count</div>
+                        <div class="kpi-badge">H</div>
+                    </div>
+                    <div class="kpi-value">22</div>
+                    <div class="kpi-target">Target: 24 heats</div>
+                </div>
+
+                <div class="kpi-card good">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Billet Output (MT)</div>
+                        <div class="kpi-badge">B</div>
+                    </div>
+                    <div class="kpi-value">2,980</div>
+                    <div class="kpi-target">Target: 3,000 MT</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Yield (%)</div>
+                        <div class="kpi-badge">Y</div>
+                    </div>
+                    <div class="kpi-value">86.9</div>
+                    <div class="kpi-target">Target: 87%</div>
+                </div>
+
+                <div class="kpi-card good">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Productivity (t/hr)</div>
+                        <div class="kpi-badge">P</div>
+                    </div>
+                    <div class="kpi-value">141</div>
+                    <div class="kpi-target">Target: 140 t/hr</div>
+                </div>
+
+                <div class="kpi-card bad">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Power Consumption</div>
+                        <div class="kpi-badge">E</div>
+                    </div>
+                    <div class="kpi-value">608</div>
+                    <div class="kpi-target">Target: 602 kWh/t</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-head">
+                        <div class="kpi-name">TTT Time (min)</div>
+                        <div class="kpi-badge">T</div>
+                    </div>
+                    <div class="kpi-value">60.2</div>
+                    <div class="kpi-target">Target: 60 min</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Power-on Time (min)</div>
+                        <div class="kpi-badge">O</div>
+                    </div>
+                    <div class="kpi-value">60.2</div>
+                    <div class="kpi-target">Target: 48 min</div>
+                </div>
+
+                <div class="kpi-card bad">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Heat Weight (t)</div>
+                        <div class="kpi-badge">W</div>
+                    </div>
+                    <div class="kpi-value">136</div>
+                    <div class="kpi-target">Target: 140 t</div>
+                </div>
+
+            </section>
+
+            <!-- OVERVIEW -->
+            <section class="overview-grid">
+
+                <div class="dashboard-card variance-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-column"></i>
+                            Production Variance
+                        </h3>
+                        <span class="card-note">Daily / MTD / YTD</span>
+                    </div>
+
+                    <div class="card-body">
+                        <table class="variance-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Daily</th>
+                                    <th>MTD</th>
+                                    <th>YTD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Actual</td>
+                                    <td>2,500</td>
+                                    <td>20,000</td>
+                                    <td>50,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Target</td>
+                                    <td>2,510</td>
+                                    <td>21,000</td>
+                                    <td>60,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Variance</td>
+                                    <td class="positive">+10</td>
+                                    <td class="positive">+1,000</td>
+                                    <td class="negative">-10,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Yearly Production Achievement</h3>
+                    </div>
+
+                    <div class="yearly-body">
+                        <div class="single-donut-wrap">
+                            <canvas id="yearlyChart"></canvas>
+                            <div class="donut-center">70%</div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ANALYTICS -->
+            <section class="analytics-grid">
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-column"></i>
+                            Performance KPIs (%)
+                        </h3>
+                        <span class="card-note">Target vs Actual</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="chart-box">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-regular fa-clock"></i>
+                            Top 5 Delays
+                        </h3>
+                        <span class="card-note">Minutes</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="delay-list">
+
+                            <div class="delay-row">
+                                <div class="delay-rank orange">1</div>
+                                <div class="delay-name">Planned DT</div>
+                                <div class="delay-track orange">
+                                    <span style="width:100%;"></span>
+                                </div>
+                                <div class="delay-min">480</div>
+                                <div class="delay-area">PM / planned stop</div>
+                            </div>
+
+                            <div class="delay-row">
+                                <div class="delay-rank">2</div>
+                                <div class="delay-name">CCM Downtime</div>
+                                <div class="delay-track">
+                                    <span style="width:20%;"></span>
+                                </div>
+                                <div class="delay-min">45</div>
+                                <div class="delay-area">Casting area</div>
+                            </div>
+
+                            <div class="delay-row">
+                                <div class="delay-rank">3</div>
+                                <div class="delay-name">Other Unplanned</div>
+                                <div class="delay-track">
+                                    <span style="width:12%;"></span>
+                                </div>
+                                <div class="delay-min">30</div>
+                                <div class="delay-area">Balance of DT</div>
+                            </div>
+
+                            <div class="delay-row">
+                                <div class="delay-rank">4</div>
+                                <div class="delay-name">EAF Downtime</div>
+                                <div class="delay-track">
+                                    <span style="width:8%;"></span>
+                                </div>
+                                <div class="delay-min">20</div>
+                                <div class="delay-area">Furnace area</div>
+                            </div>
+
+                            <div class="delay-row">
+                                <div class="delay-rank orange">5</div>
+                                <div class="delay-name">LRF Downtime</div>
+                                <div class="delay-track orange">
+                                    <span style="width:5%;"></span>
+                                </div>
+                                <div class="delay-min">16</div>
+                                <div class="delay-area">Refining area</div>
+                            </div>
+
+                        </div>
+
+                        <div class="delay-note">
+                            Other unplanned represents the remaining downtime after the listed equipment delays.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-flask"></i>
+                            Raw Material Consumption
+                        </h3>
+                        <span class="card-note">Kg/t</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="chart-box">
+                            <canvas id="rawMaterialChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- LOWER SECTION -->
+            <section class="lower-grid">
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-bolt"></i>
+                            Utility Consumption
+                        </h3>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="utility-chart-box">
+                            <canvas id="utilityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            Operational Composition
+                        </h3>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="composition-grid">
+
+                            <div class="mini-donut-card">
+                                <div class="mini-donut-title">Charge Mix</div>
+
+                                <div class="mini-donut-wrap">
+                                    <canvas id="chargeMixChart"></canvas>
+                                </div>
+
+                                <div class="legend-list">
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#d60000;"></span>
+                                        DRI — 42%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#245f96;"></span>
+                                        HBI — 32%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#c7c7c7;"></span>
+                                        Scrap — 26%
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mini-donut-card">
+                                <div class="mini-donut-title">Availability Breakdown</div>
+
+                                <div class="mini-donut-wrap">
+                                    <canvas id="availabilityChart"></canvas>
+                                    <div class="mini-center">90%</div>
+                                </div>
+
+                                <div class="legend-list">
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#a91435;"></span>
+                                        Operation — 2%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#245f96;"></span>
+                                        Mechanical — 3%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#bfc5ce;"></span>
+                                        Electrical — 1%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#5d9138;"></span>
+                                        Refractory — 4%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#efa500;"></span>
+                                        Other — 4%
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card production-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-line"></i>
+                            Daily Production Actual Vs Plan
+                        </h3>
+                        <span class="card-note">Current month</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="production-chart-box">
+                            <canvas id="dailyProductionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <footer class="dashboard-footer">
+                <strong>Solb Steel</strong> &nbsp;•&nbsp; SMP Dashboard
+            </footer>
+
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+    Chart.defaults.font.family = "Segoe UI, Arial, sans-serif";
+    Chart.defaults.color = "#384152";
+
+    const gridColor = "#e8ecf1";
+    const redColor = "#d60000";
+    const grayColor = "#9da3ab";
+    const blueColor = "#245f96";
+
+    const valueLabelPlugin = {
+        id: "valueLabelPlugin",
+        afterDatasetsDraw(chart) {
+            const ctx = chart.ctx;
+
+            ctx.save();
+            ctx.fillStyle = "#202632";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+            ctx.font = "700 10px Segoe UI";
+
+            chart.data.datasets.forEach(function (dataset, datasetIndex) {
+                if (dataset.type === "line") {
+                    return;
+                }
+
+                const meta = chart.getDatasetMeta(datasetIndex);
+
+                if (meta.hidden) {
+                    return;
+                }
+
+                meta.data.forEach(function (element, index) {
+                    const value = dataset.data[index];
+
+                    if (value === null || value === undefined) {
+                        return;
+                    }
+
+                    ctx.fillText(value, element.x, element.y - 5);
+                });
+            });
+
+            ctx.restore();
+        }
+    };
+
+    new Chart(document.getElementById("yearlyChart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Achievement", "Remaining"],
+            datasets: [{
+                data: [70, 30],
+                backgroundColor: [redColor, "#d8d8d8"],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "58%",
+            animation: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("performanceChart"), {
+        type: "bar",
+        data: {
+            labels: ["Performance", "Availability", "Quality"],
+            datasets: [
+                {
+                    label: "Target",
+                    data: [86, 87, 96],
+                    backgroundColor: grayColor,
+                    borderRadius: 4,
+                    barThickness: 25
+                },
+                {
+                    label: "Actual",
+                    data: [76, 61, 100],
+                    backgroundColor: redColor,
+                    borderRadius: 4,
+                    barThickness: 25
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            layout: {
+                padding: {
+                    top: 15
+                }
+            },
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 12,
+                        usePointStyle: false,
+                        font: {
+                            size: 10,
+                            weight: "bold"
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 110,
+                    ticks: {
+                        stepSize: 25,
+                        font: {
+                            size: 10
+                        }
+                    },
+                    grid: {
+                        color: gridColor
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 10,
+                            weight: "bold"
+                        }
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            }
+        },
+        plugins: [valueLabelPlugin]
+    });
+
+    new Chart(document.getElementById("rawMaterialChart"), {
+        type: "bar",
+        data: {
+            labels: [
+                "FeSi",
+                "SiMn",
+                "Fluorspar",
+                "Calcined C",
+                "Charge Coal",
+                "Rice Husk",
+                "Lime",
+                "Dolo Lime"
+            ],
+            datasets: [
+                {
+                    label: "Actual",
+                    data: [2.1, 10.4, 0.6, 11, 8.4, 0.7, 22, 31],
+                    backgroundColor: redColor,
+                    borderRadius: 3,
+                    barThickness: 17
+                },
+                {
+                    label: "Target",
+                    data: [2, 18, 1, 20, 16, 1, 24, 31],
+                    type: "line",
+                    borderColor: blueColor,
+                    backgroundColor: blueColor,
+                    borderWidth: 3,
+                    pointRadius: 2,
+                    pointHoverRadius: 2,
+                    tension: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            layout: {
+                padding: {
+                    top: 15
+                }
+            },
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 16,
+                        font: {
+                            size: 10,
+                            weight: "bold"
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 35,
+                    ticks: {
+                        stepSize: 5,
+                        font: {
+                            size: 9
+                        }
+                    },
+                    grid: {
+                        color: gridColor
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            }
+        },
+        plugins: [valueLabelPlugin]
+    });
+
+    new Chart(document.getElementById("utilityChart"), {
+        type: "bar",
+        data: {
+            labels: ["LPG", "O₂", "Argon", "N₂"],
+            datasets: [
+                {
+                    label: "Target",
+                    data: [100, 100, 100, 100],
+                    backgroundColor: grayColor,
+                    borderRadius: 3,
+                    barThickness: 22
+                },
+                {
+                    label: "Actual",
+                    data: [168, 89, 11, 410],
+                    backgroundColor: redColor,
+                    borderRadius: 3,
+                    barThickness: 22
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            layout: {
+                padding: {
+                    top: 15
+                }
+            },
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 450,
+                    ticks: {
+                        stepSize: 100,
+                        font: {
+                            size: 9
+                        }
+                    },
+                    grid: {
+                        color: gridColor
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            }
+        },
+        plugins: [valueLabelPlugin]
+    });
+
+    new Chart(document.getElementById("chargeMixChart"), {
+        type: "doughnut",
+        data: {
+            labels: ["DRI", "HBI", "Scrap"],
+            datasets: [{
+                data: [42, 32, 26],
+                backgroundColor: [
+                    redColor,
+                    blueColor,
+                    "#c7c7c7"
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "57%",
+            animation: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("availabilityChart"), {
+        type: "doughnut",
+        data: {
+            labels: [
+                "Available",
+                "Operation",
+                "Mechanical",
+                "Electrical",
+                "Refractory",
+                "Other"
+            ],
+            datasets: [{
+                data: [90, 2, 3, 1, 2, 2],
+                backgroundColor: [
+                    "#d8d8d8",
+                    "#a91435",
+                    blueColor,
+                    "#bfc5ce",
+                    "#5d9138",
+                    "#efa500"
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "57%",
+            animation: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("dailyProductionChart"), {
+        type: "bar",
+        data: {
+            labels: [
+                "1", "2", "3", "4", "5", "6", "7",
+                "8", "9", "10", "11", "12", "13", "14",
+                "15", "16", "17", "18", "19", "20", "21"
+            ],
+            datasets: [
+                {
+                    label: "Actual",
+                    data: [
+                        1800, 1600, 2000, 2100, 2200,
+                        1600, 1000, 600, 2400, 2000,
+                        1600, 2000, 2100, 2200, 1600,
+                        1000, 600, 2400, 1800, 1600, 2000
+                    ],
+                    backgroundColor: redColor,
+                    borderRadius: 3,
+                    barThickness: 16
+                },
+                {
+                    label: "Plan",
+                    data: [
+                        1800, 2000, 2000, 2100, 2200,
+                        2100, 2100, 2100, 4000, 2000,
+                        1600, 2100, 600, 2300, 1600,
+                        1000, 600, 2400, 1800, 1600, 2000
+                    ],
+                    type: "line",
+                    borderColor: blueColor,
+                    backgroundColor: blueColor,
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    tension: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            layout: {
+                padding: {
+                    top: 15
+                }
+            },
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 15,
+                        font: {
+                            size: 10,
+                            weight: "bold"
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 4200,
+                    ticks: {
+                        stepSize: 1000,
+                        font: {
+                            size: 9
+                        }
+                    },
+                    grid: {
+                        color: gridColor
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        display: false
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            }
+        },
+        plugins: [valueLabelPlugin]
+    });
+
+    function printSMPDashboard() {
+        window.print();
+    }
+</script>

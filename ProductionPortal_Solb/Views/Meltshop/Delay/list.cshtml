@@ -54,9 +54,6 @@
                                 </a>
                             </div>
                             <div class="form-group d-flex align-items-end">
-                                @*<button type="button" id="exportExcel" class="btn btn-success mr-2">
-                                        <i class="fa fa-file-excel-o"></i> Export Excel
-                                    </button>*@
                                 <button type="button" id="exportPdf" class="btn btn-danger mr-2">
                                     <i class="fa fa-file-pdf-o"></i> Export PDF
                                 </button>
@@ -104,13 +101,13 @@
                                         <td>@item.Equipments</td>
                                         <td>@item.Reason</td>
                                         <td>
-                                            <a href="javascript:void(0);"
+                                            @*<a href="javascript:void(0);"
                                                onclick="openDelayPopup('@item.ID', '@(item.Date?.ToString(" yyyy-MM-dd"))', '@item.Area' )"
                                                class="btn btn-sm btn-success">
                                                 <i class="mdi mdi-plus"></i>
-                                            </a>
+                                            </a>*@
 
-                                            <a href="@Url.Action("SMPdelaydetails", "Delay", new { ID = item.ID })" class="btn btn-sm btn-info" onclick="event.stopPropagation();">
+                                            <a href="@Url.Action("SMPdetails", "Delay", new { ID = item.ID })" class="btn btn-sm btn-info" onclick="event.stopPropagation();">
                                                 <i class="mdi mdi-book-open-page-variant"></i>
                                             </a>
                                             <a href="javascript:void(0);"

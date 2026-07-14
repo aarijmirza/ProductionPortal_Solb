@@ -1,0 +1,1013 @@
+﻿
+@model DAL.Models.UtilityDailyReportVM
+@using System.Globalization
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Utility Daily Report";
+
+    var reportDate = Model != null ? Model.ReportDate : DateTime.Today;
+
+    var smp = Model != null ? Model.SMP : null;
+    var rm1 = Model != null ? Model.RM1 : null;
+    var rm2 = Model != null ? Model.RM2 : null;
+
+    Func<string, decimal> ToDec = value =>
+    {
+        decimal result;
+        if (string.IsNullOrWhiteSpace(value))
+            return 0;
+
+        value = value.Trim();
+
+        if (decimal.TryParse(value, out result))
+            return result;
+
+        return 0;
+    };
+
+    Func<decimal?, decimal> ToDecNullable = value =>
+    {
+        return value.HasValue ? value.Value : 0;
+    };
+
+    Func<decimal, string> F = value =>
+    {
+        return value.ToString("0.00");
+    };
+
+    Func<decimal, decimal, string> VarianceText = (actual, target) =>
+    {
+        if (target <= 0)
+            return "-";
+
+        decimal v = ((actual - target) / target) * 100;
+
+        if (v > 0)
+            return "▲ +" + v.ToString("0.00") + "%";
+
+        if (v < 0)
+            return "▼ " + v.ToString("0.00") + "%";
+
+        return "0.00%";
+    };
+
+    Func<decimal, decimal, string> VarianceClass = (actual, target) =>
+    {
+        if (target <= 0)
+            return "neutral";
+
+        return actual > target ? "bad" : "good";
+    };
+
+    Func<decimal, decimal, string> StatusText = (actual, target) =>
+    {
+        if (target <= 0)
+            return "N/A";
+
+        decimal v = ((actual - target) / target) * 100;
+
+        if (actual <= target)
+            return "Good";
+
+        if (v <= 5)
+            return "Acceptable";
+
+        return "High";
+    };
+
+    Func<decimal, decimal, string> StatusClass = (actual, target) =>
+    {
+        if (target <= 0)
+            return "na";
+
+        decimal v = ((actual - target) / target) * 100;
+
+        if (actual <= target)
+            return "good";
+
+        if (v <= 5)
+            return "warn";
+
+        return "bad";
+    };
+
+    Func<decimal, decimal, string> BarWidth = (actual, target) =>
+    {
+        if (target <= 0)
+            return "0";
+
+        decimal pct = (actual / target) * 100;
+
+        if (pct > 100)
+            pct = 100;
+
+        if (pct < 0)
+            pct = 0;
+
+        return pct.ToString("0");
+    };
+
+    decimal smpProduction = ToDec(smp != null ? smp.TotalProductBillet : "");
+    decimal rm1Production = ToDec(rm1 != null ? rm1.TotalProductBillet : "");
+    decimal rm2Production = ToDec(rm2 != null ? rm2.TotalProductBillet : "");
+    decimal rmProduction = rm1Production + rm2Production;
+    decimal totalProduction = smpProduction + rmProduction;
+
+    decimal smpPowerActual = ToDec(smp != null ? smp.PowerConsumptionKWHton : "");
+    decimal smpPowerTarget = ToDec(smp != null ? smp.PowerConsumptionKWHtarget : "");
+
+    decimal smpWaterActual = ToDec(smp != null ? smp.WaterConsumptionM3 : "");
+    decimal smpWaterTarget = ToDec(smp != null ? smp.WaterConsumptionTarget : "");
+
+    decimal smpOxygenActual = ToDec(smp != null ? smp.OxygenNm3ton : "");
+    decimal smpOxygenTarget = ToDec(smp != null ? smp.OxygenNm3tonTarget : "");
+
+    decimal smpNitrogenActual = ToDec(smp != null ? smp.NitrogenNm3ton : "");
+    decimal smpNitrogenTarget = ToDec(smp != null ? smp.NitrogenNm3tonTarget : "");
+
+    decimal smpArgonActual = ToDec(smp != null ? smp.ArgonNm3ton : "");
+    decimal smpArgonTarget = ToDec(smp != null ? smp.ArgonNm3tonTarget : "");
+
+    decimal smpLpgActual = ToDec(smp != null ? smp.LPGm3ton : "");
+    decimal smpLpgTarget = ToDec(smp != null ? smp.LPGNm3tonTarget : "");
+
+    decimal rmPowerActual = rmProduction > 0
+        ? ((ToDec(rm1 != null ? rm1.PowerConsumption : "") + ToDec(rm2 != null ? rm2.PowerConsumption : "")) / rmProduction)
+        : 0;
+
+    decimal rmPowerTarget = ToDec(rm1 != null ? rm1.PowerConsumptionKWHtarget : "");
+    if (rmPowerTarget <= 0)
+    {
+        rmPowerTarget = ToDec(rm2 != null ? rm2.PowerConsumptionKWHtarget : "");
+    }
+
+    decimal rmWaterActual = rmProduction > 0
+        ? ((ToDec(rm1 != null ? rm1.WaterConsumption : "") + ToDec(rm2 != null ? rm2.WaterConsumption : "")) / rmProduction)
+        : 0;
+
+    decimal rmWaterTarget = ToDec(rm1 != null ? rm1.WaterConsumptionTarget : "");
+    if (rmWaterTarget <= 0)
+    {
+        rmWaterTarget = ToDec(rm2 != null ? rm2.WaterConsumptionTarget : "");
+    }
+
+    decimal rmFuelActual = rmProduction > 0
+        ? ((ToDecNullable(rm1 != null ? rm1.FuelConsumption : null) + ToDecNullable(rm2 != null ? rm2.FuelConsumption : null)) / rmProduction)
+        : 0;
+
+    decimal rmFuelTarget = 0;
+
+    bool smpPowerIssue = smpPowerTarget > 0 && smpPowerActual > smpPowerTarget;
+    bool smpNitrogenIssue = smpNitrogenTarget > 0 && smpNitrogenActual > smpNitrogenTarget;
+    bool rmGood = (rmPowerTarget > 0 && rmPowerActual <= rmPowerTarget) || (rmWaterTarget > 0 && rmWaterActual <= rmWaterTarget);
+}
+
+<style>
+    :root {
+        --solb-maroon: #7f1010;
+        --solb-maroon-dark: #5f0b0b;
+        --solb-red: #a6173f;
+        --solb-grey: #f4f6f8;
+        --text-main: #222;
+        --text-muted: #6b7280;
+        --line: #e5e7eb;
+        --green: #198754;
+        --orange: #fd7e14;
+        --red: #c1121f;
+        --blue: #0d6efd;
+        --shadow: 0 4px 16px rgba(0,0,0,.08);
+    }
+
+    body {
+        background: #eef2f6;
+    }
+
+    .utility-dashboard {
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--solb-maroon-dark), var(--solb-maroon));
+        color: #fff;
+        border-radius: 14px;
+        padding: 22px 24px;
+        margin-bottom: 18px;
+        box-shadow: var(--shadow);
+    }
+
+        .dashboard-header h3 {
+            margin: 0;
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: .3px;
+        }
+
+        .dashboard-header small {
+            color: rgba(255,255,255,.92);
+            font-size: 13px;
+        }
+
+    .filter-card {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+        margin-bottom: 18px;
+        border-left: 5px solid var(--solb-maroon);
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .kpi-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 16px;
+        min-height: 112px;
+        box-shadow: var(--shadow);
+        border-left: 6px solid var(--solb-maroon);
+    }
+
+        .kpi-card.good {
+            border-left-color: var(--green);
+        }
+
+        .kpi-card.warn {
+            border-left-color: var(--orange);
+        }
+
+        .kpi-card.bad {
+            border-left-color: var(--red);
+        }
+
+    .kpi-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+
+    .kpi-value {
+        margin-top: 12px;
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--text-main);
+        line-height: 1;
+    }
+
+        .kpi-value small {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .kpi-value.green {
+            color: var(--green);
+        }
+
+        .kpi-value.orange {
+            color: var(--orange);
+        }
+
+        .kpi-value.red {
+            color: var(--red);
+        }
+
+    .kpi-sub {
+        margin-top: 9px;
+        color: #888;
+        font-size: 12px;
+    }
+
+    .section-card {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        margin-bottom: 18px;
+        overflow: hidden;
+    }
+
+    .section-card-header {
+        background: var(--solb-maroon);
+        color: #fff;
+        padding: 13px 16px;
+        font-size: 15px;
+        font-weight: 900;
+        text-transform: uppercase;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .section-card-header.dark {
+            background: #343a40;
+        }
+
+        .section-card-header span {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: none;
+            opacity: .95;
+        }
+
+    .section-card-body {
+        padding: 0;
+    }
+
+    .utility-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+        .utility-table th {
+            background: #f6f7f9;
+            color: #333;
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--line);
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+            .utility-table th:first-child {
+                text-align: left;
+            }
+
+        .utility-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 12px;
+            vertical-align: middle;
+            background: #fff;
+        }
+
+        .utility-table tr:nth-child(even) td {
+            background: #fcfcfc;
+        }
+
+        .utility-table tr:last-child td {
+            border-bottom: none;
+        }
+
+    .metric {
+        font-weight: 800;
+        color: #333;
+    }
+
+    .num {
+        text-align: center;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .good {
+        color: var(--green);
+    }
+
+    .bad {
+        color: var(--red);
+    }
+
+    .neutral {
+        color: var(--text-muted);
+    }
+
+    .barbox {
+        width: 220px;
+        max-width: 100%;
+        height: 10px;
+        background: #edf1f5;
+        border-radius: 20px;
+        overflow: hidden;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .bar {
+        display: block;
+        height: 100%;
+        border-radius: 20px;
+        background: var(--green);
+    }
+
+        .bar.warn {
+            background: var(--orange);
+        }
+
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 82px;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+        .badge-status.good {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .badge-status.warn {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-status.bad {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .badge-status.na {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 10px;
+    }
+
+    .summary-box {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        border-left: 6px solid var(--solb-maroon);
+        padding: 16px;
+        min-height: 160px;
+    }
+
+        .summary-box h5 {
+            color: var(--solb-maroon);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 13px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+
+    .summary-point {
+        display: grid;
+        grid-template-columns: 20px 1fr;
+        gap: 8px;
+        margin: 9px 0;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+        .summary-point b {
+            font-weight: 900;
+        }
+
+    .icon-good {
+        color: var(--green);
+        font-weight: 900;
+    }
+
+    .icon-warn {
+        color: var(--orange);
+        font-weight: 900;
+    }
+
+    .icon-bad {
+        color: var(--red);
+        font-weight: 900;
+    }
+
+    @@media (max-width: 1200px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-header .text-right {
+            text-align: left !important;
+            margin-top: 12px;
+        }
+
+        .section-card-header {
+            display: block;
+        }
+
+            .section-card-header span {
+                display: block;
+                margin-top: 4px;
+            }
+    }
+
+    @@media print {
+        .no-print,
+        .xp-breadcrumbbar,
+        .navbar,
+        .sidebar,
+        .footer,
+        header {
+            display: none !important;
+        }
+
+        html,
+        body {
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .xp-contentbar {
+            padding: 0 !important;
+            margin: 0 !important;
+            background: #fff !important;
+        }
+
+        .dashboard-header,
+        .kpi-card,
+        .section-card,
+        .summary-box,
+        .filter-card {
+            box-shadow: none !important;
+        }
+
+        .dashboard-header {
+            background: #7f1010 !important;
+            color: #fff !important;
+            border-radius: 10px !important;
+            margin-bottom: 10px !important;
+            padding: 16px 20px !important;
+        }
+
+            .dashboard-header h3,
+            .dashboard-header small,
+            .dashboard-header b,
+            .dashboard-header div {
+                color: #fff !important;
+            }
+
+        .kpi-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .kpi-card {
+            border: 1px solid #ddd !important;
+            border-left: 5px solid #7f1010 !important;
+            border-radius: 10px !important;
+            min-height: 90px !important;
+            padding: 10px !important;
+        }
+
+        .section-card {
+            border: 1px solid #ddd !important;
+            border-radius: 10px !important;
+            page-break-inside: avoid !important;
+            margin-bottom: 10px !important;
+        }
+
+        .section-card-header {
+            background: #7f1010 !important;
+            color: #fff !important;
+        }
+
+            .section-card-header.dark {
+                background: #343a40 !important;
+            }
+
+        .utility-table th {
+            background: #f3f3f3 !important;
+            color: #333 !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .utility-table td {
+            border: 1px solid #eee !important;
+            background: #fff !important;
+        }
+
+        .summary-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+        }
+
+        .summary-box {
+            border: 1px solid #ddd !important;
+            border-left: 5px solid #7f1010 !important;
+            border-radius: 10px !important;
+            page-break-inside: avoid !important;
+        }
+
+        @@page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row">
+        <div class="col-md-8">
+            <h4 class="xp-page-title">Utility Daily Report</h4>
+        </div>
+        <div class="col-md-4 text-right">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")">
+                        <i class="icon-home"></i>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">Utility</li>
+                <li class="breadcrumb-item active">Daily Report</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar utility-dashboard">
+
+    <div class="filter-card no-print">
+        <form method="get" action="@Url.Action("UtilityDailyReport", "Reporting")">
+            <div class="row align-items-end">
+                <div class="col-md-3">
+                    <label><b>Date</b></label>
+                    <input type="date"
+                           name="date"
+                           class="form-control"
+                           value="@reportDate.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary">
+                        Load Report
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-danger"
+                            onclick="printUtilityReport()">
+                        Print
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h3>Utility Daily Report</h3>
+                <small>
+                    <b>Steel Melting Plant & Rolling Mill Analysis</b>
+                </small>
+            </div>
+            <div class="col-md-4 text-right">
+                <div><b>Date:</b> @reportDate.ToString("dd MMM yyyy")</div>
+                <div><b>Report No:</b> UDR-@reportDate.ToString("yyyyMMdd")</div>
+            </div>
+        </div>
+    </div>
+
+    <section class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Production Volume</div>
+            <div class="kpi-value">@F(totalProduction) <small>Ton</small></div>
+            <div class="kpi-sub">SMP: @F(smpProduction) | RM: @F(rmProduction)</div>
+        </div>
+
+        <div class="kpi-card @(smpPowerIssue ? "warn" : "good")">
+            <div class="kpi-label">SMP Power Compliance</div>
+            <div class="kpi-value @(smpPowerIssue ? "orange" : "green")">
+                @(smpPowerTarget > 0 ? F((smpPowerActual / smpPowerTarget) * 100) + "%" : "-")
+            </div>
+            <div class="kpi-sub">Actual: @F(smpPowerActual) vs Target: @F(smpPowerTarget)</div>
+        </div>
+
+        <div class="kpi-card good">
+            <div class="kpi-label">Rolling Mill Status</div>
+            <div class="kpi-value green">@(rmGood ? "Good" : "Review")</div>
+            <div class="kpi-sub">RM1 + RM2 combined performance</div>
+        </div>
+
+        <div class="kpi-card @(smpPowerIssue || smpNitrogenIssue ? "warn" : "good")">
+            <div class="kpi-label">Excess Cost Risk</div>
+            <div class="kpi-value @(smpPowerIssue || smpNitrogenIssue ? "orange" : "green")">
+                @(smpPowerIssue || smpNitrogenIssue ? "Medium" : "Low")
+            </div>
+            <div class="kpi-sub">Based on power and gas variance</div>
+        </div>
+    </section>
+
+    <div class="section-card">
+        <div class="section-card-header">
+            <div>SMP Utilities Consumption</div>
+            <span>Production: @F(smpProduction) Ton</span>
+        </div>
+
+        <div class="section-card-body">
+            <table class="utility-table">
+                <thead>
+                    <tr>
+                        <th style="width:22%">Metric Per Ton</th>
+                        <th style="width:12%">Actual</th>
+                        <th style="width:12%">Target</th>
+                        <th style="width:12%">Variance</th>
+                        <th style="width:28%">Performance</th>
+                        <th style="width:14%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric">Power Consumption (KWH)</td>
+                        <td class="num">@F(smpPowerActual)</td>
+                        <td class="num">@F(smpPowerTarget)</td>
+                        <td class="num @VarianceClass(smpPowerActual, smpPowerTarget)">
+                            @VarianceText(smpPowerActual, smpPowerTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(smpPowerActual > smpPowerTarget ? "warn" : "")"
+                                      style="width:@BarWidth(smpPowerActual, smpPowerTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(smpPowerActual, smpPowerTarget)">
+                                @StatusText(smpPowerActual, smpPowerTarget)
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="metric">Water Consumption (M³)</td>
+                        <td class="num">@F(smpWaterActual)</td>
+                        <td class="num">@F(smpWaterTarget)</td>
+                        <td class="num @VarianceClass(smpWaterActual, smpWaterTarget)">
+                            @VarianceText(smpWaterActual, smpWaterTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(smpWaterActual > smpWaterTarget ? "warn" : "")"
+                                      style="width:@BarWidth(smpWaterActual, smpWaterTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(smpWaterActual, smpWaterTarget)">
+                                @StatusText(smpWaterActual, smpWaterTarget)
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="metric">Oxygen (Nm³)</td>
+                        <td class="num">@F(smpOxygenActual)</td>
+                        <td class="num">@F(smpOxygenTarget)</td>
+                        <td class="num @VarianceClass(smpOxygenActual, smpOxygenTarget)">
+                            @VarianceText(smpOxygenActual, smpOxygenTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(smpOxygenActual > smpOxygenTarget ? "warn" : "")"
+                                      style="width:@BarWidth(smpOxygenActual, smpOxygenTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(smpOxygenActual, smpOxygenTarget)">
+                                @StatusText(smpOxygenActual, smpOxygenTarget)
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="metric">Nitrogen (Nm³)</td>
+                        <td class="num">@F(smpNitrogenActual)</td>
+                        <td class="num">@F(smpNitrogenTarget)</td>
+                        <td class="num @VarianceClass(smpNitrogenActual, smpNitrogenTarget)">
+                            @VarianceText(smpNitrogenActual, smpNitrogenTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(smpNitrogenActual > smpNitrogenTarget ? "warn" : "")"
+                                      style="width:@BarWidth(smpNitrogenActual, smpNitrogenTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(smpNitrogenActual, smpNitrogenTarget)">
+                                @StatusText(smpNitrogenActual, smpNitrogenTarget)
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="metric">Argon (Nm³)</td>
+                        <td class="num">@F(smpArgonActual)</td>
+                        <td class="num">@F(smpArgonTarget)</td>
+                        <td class="num @VarianceClass(smpArgonActual, smpArgonTarget)">
+                            @VarianceText(smpArgonActual, smpArgonTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(smpArgonActual > smpArgonTarget ? "warn" : "")"
+                                      style="width:@BarWidth(smpArgonActual, smpArgonTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(smpArgonActual, smpArgonTarget)">
+                                @StatusText(smpArgonActual, smpArgonTarget)
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="metric">LPG (Nm³)</td>
+                        <td class="num">@F(smpLpgActual)</td>
+                        <td class="num">@F(smpLpgTarget)</td>
+                        <td class="num @VarianceClass(smpLpgActual, smpLpgTarget)">
+                            @VarianceText(smpLpgActual, smpLpgTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(smpLpgActual > smpLpgTarget ? "warn" : "")"
+                                      style="width:@BarWidth(smpLpgActual, smpLpgTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(smpLpgActual, smpLpgTarget)">
+                                @StatusText(smpLpgActual, smpLpgTarget)
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-card-header dark">
+            <div>Rolling Mill Utilities Consumption</div>
+            <span>Production: @F(rmProduction) Ton | RM1: @F(rm1Production) | RM2: @F(rm2Production)</span>
+        </div>
+
+        <div class="section-card-body">
+            <table class="utility-table">
+                <thead>
+                    <tr>
+                        <th style="width:22%">Metric Per Ton</th>
+                        <th style="width:12%">Actual</th>
+                        <th style="width:12%">Target</th>
+                        <th style="width:12%">Variance</th>
+                        <th style="width:28%">Performance</th>
+                        <th style="width:14%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric">Power Consumption (KWH)</td>
+                        <td class="num">@F(rmPowerActual)</td>
+                        <td class="num">@F(rmPowerTarget)</td>
+                        <td class="num @VarianceClass(rmPowerActual, rmPowerTarget)">
+                            @VarianceText(rmPowerActual, rmPowerTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(rmPowerActual > rmPowerTarget ? "warn" : "")"
+                                      style="width:@BarWidth(rmPowerActual, rmPowerTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(rmPowerActual, rmPowerTarget)">
+                                @StatusText(rmPowerActual, rmPowerTarget)
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="metric">Water Consumption (M³)</td>
+                        <td class="num">@F(rmWaterActual)</td>
+                        <td class="num">@F(rmWaterTarget)</td>
+                        <td class="num @VarianceClass(rmWaterActual, rmWaterTarget)">
+                            @VarianceText(rmWaterActual, rmWaterTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(rmWaterActual > rmWaterTarget ? "warn" : "")"
+                                      style="width:@BarWidth(rmWaterActual, rmWaterTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(rmWaterActual, rmWaterTarget)">
+                                @StatusText(rmWaterActual, rmWaterTarget)
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="metric">Fuel Consumption (Liter)</td>
+                        <td class="num">@F(rmFuelActual)</td>
+                        <td class="num">-</td>
+                        <td class="num neutral">-</td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar" style="width:0%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status na">N/A</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="summary-grid">
+        <div class="summary-box">
+            <h5>Overall Performance Summary</h5>
+
+            <div class="summary-point">
+                <span class="@(rmGood ? "icon-good" : "icon-warn")">@(rmGood ? "✓" : "!")</span>
+                <div>
+                    <b>Rolling Mill:</b>
+                    RM1 and RM2 combined utility performance is
+                    <b>@(rmGood ? "within acceptable range" : "requiring review")</b>.
+                </div>
+            </div>
+
+            <div class="summary-point">
+                <span class="@(smpPowerIssue ? "icon-warn" : "icon-good")">@(smpPowerIssue ? "!" : "✓")</span>
+                <div>
+                    <b>SMP Power:</b>
+                    Actual @F(smpPowerActual) vs Target @F(smpPowerTarget).
+                    Status: <b>@StatusText(smpPowerActual, smpPowerTarget)</b>.
+                </div>
+            </div>
+
+            <div class="summary-point">
+                <span class="@(smpNitrogenIssue ? "icon-warn" : "icon-good")">@(smpNitrogenIssue ? "!" : "✓")</span>
+                <div>
+                    <b>Gas Consumption:</b>
+                    Oxygen, Nitrogen, Argon and LPG are compared against configured targets.
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-box">
+            <h5>Cost Impact & Recommendations</h5>
+
+            <div class="summary-point">
+                <span class="@(smpPowerIssue ? "icon-bad" : "icon-good")">➜</span>
+                <div>
+                    <b>Power Review:</b>
+                    @(smpPowerIssue
+                        ? "SMP power is above target. Review EAF/LF cycles and high-load equipment."
+                        : "SMP power is within target range.")
+                </div>
+            </div>
+
+            <div class="summary-point">
+                <span class="@(smpNitrogenIssue ? "icon-warn" : "icon-good")">➜</span>
+                <div>
+                    <b>Nitrogen:</b>
+                    @(smpNitrogenIssue
+                        ? "Nitrogen is above target. Check leakage, purge cycle and distribution line."
+                        : "Nitrogen consumption is within target range.")
+                </div>
+            </div>
+
+            <div class="summary-point">
+                <span class="icon-good">➜</span>
+                <div>
+                    <b>Rolling Mill:</b>
+                    Continue monitoring RM1/RM2 power, water and fuel consumption per ton.
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    function printUtilityReport() {
+        window.print();
+    }
+</script>

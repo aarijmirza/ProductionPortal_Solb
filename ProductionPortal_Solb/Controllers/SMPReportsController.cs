@@ -44,5 +44,9 @@ namespace ProductionPortal_Solb.Controllers
         {
             return View();
         }
+        public ActionResult SMPDailyDashboard()
+        {
+            return View();
+        }
     }
 }

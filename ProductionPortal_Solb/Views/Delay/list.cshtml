@@ -55,36 +55,48 @@
         <div class="col-lg-12">
             <div class="card mb-3">
                 <div class="card-body">
-                    <form id="filterForm" class="d-flex justify-content-between">
+                    <form id="filterForm" method="get" action="@Url.Action("list", "Delay")" class="d-flex justify-content-between">
 
                         <div class="d-flex">
                             <div class="form-group mr-3">
-                                <label for="fromDate" class="mr-2">From</label>
-                                <input type="date" id="fromDate" class="form-control" />
+                                <label for="filterDate" class="mr-2">Select Date</label>
+                                <input type="date"
+                                       id="filterDate"
+                                       name="date"
+                                       class="form-control"
+                                       value="@ViewBag.SelectedDate" />
                             </div>
 
-                            <div class="form-group mr-3">
-                                <label for="toDate" class="mr-2">To</label>
-                                <input type="date" id="toDate" class="form-control" />
+                            <div class="col-md-2">
+                                <label>Plant</label>
+                                <select id="plantFilter" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Rolling Mill 1">RM1</option>
+                                    <option value="Rolling Mill 2">RM2</option>
+                                </select>
                             </div>
 
                             <div class="form-group mr-3">
                                 <label for="shiftFilter">Shift</label>
-                                <select id="shiftFilter" class="form-control">
-                                    <option value="">All</option>
-                                    <option value="Morning">Morning</option>
-                                    <option value="Evening">Evening</option>
-                                    <option value="Night">Night</option>
+                                <select id="shiftFilter" name="shift" class="form-control">
+                                    <option value="" @(ViewBag.Shift == "" ? "selected" : "")>All</option>
+                                    <option value="Morning" @(ViewBag.Shift == "Morning" ? "selected" : "")>Morning</option>
+                                    <option value="Afternoon" @(ViewBag.Shift == "Evening" ? "selected" : "")>Afternoon</option>
+                                    <option value="Night" @(ViewBag.Shift == "Night" ? "selected" : "")>Night</option>
+                                    <option value="Long Morning" @(ViewBag.Shift == "Long Morning" ? "selected" : "")>Long Morning</option>
+                                    <option value="Long Night" @(ViewBag.Shift == "Long Night" ? "selected" : "")>Long Night</option>
                                 </select>
                             </div>
 
                             <div class="form-group d-flex align-items-end mr-3">
-                                <button type="button" id="filterBtn" class="btn btn-primary mr-2">Filter</button>
-                                <button type="button" id="clearBtn" class="btn btn-secondary">Clear</button>
+                                <button type="submit" class="btn btn-primary mr-2">Filter</button>
+
+                                <a href="@Url.Action("list", "Delay")" class="btn btn-secondary">
+                                    Clear
+                                </a>
                             </div>
 
                             <div class="form-group d-flex align-items-end mr-3">
-
                                 <div>
                                     <small>Total Records</small><br />
                                     <span class="badge badge-primary p-2" id="totalRecordCount">0</span>
@@ -94,7 +106,6 @@
                                     <small>Total Delay Time</small><br />
                                     <span class="badge badge-success p-2" id="totalDelayTime">0</span>
                                 </div>
-
                             </div>
                         </div>
 
@@ -104,15 +115,12 @@
                                     <i class="fa fa-plus-circle"></i> Add Delay
                                 </a>
                             </div>
+
                             <div class="form-group d-flex align-items-end">
-                                @*<button type="button" id="exportExcel" class="btn btn-success mr-2">
-                                        <i class="fa fa-file-excel-o"></i> Export Excel
-                                    </button>*@
                                 <button type="button" id="exportPdf" class="btn btn-danger mr-2">
                                     <i class="fa fa-file-pdf-o"></i> Export PDF
                                 </button>
                             </div>
-
                         </div>
                     </form>
                 </div>
@@ -162,21 +170,21 @@
                                             <td>@item.Equipments</td>
                                             <td>@item.Reason</td>
                                             <td>
-                                                <a href="javascript:void(0);"
-                                                   onclick="openDelayPopup('@item.ID', '@(item.Date?.ToString(" yyyy-MM-dd"))', '@item.Area' )"
+                                                @*<a href="javascript:void(0);"
+                                                   onclick="openDelayPopup('@item.ID', '@(item.Date?.ToString("yyyy-MM-dd"))', '@item.Area' )"
                                                    class="btn btn-sm btn-success">
                                                     <i class="mdi mdi-plus"></i>
-                                                </a>
+                                                </a>*@
 
-                                                <a href="@Url.Action("details", "CCM", new { ID = item.ID })"
+                                                @*<a href="@Url.Action("details", "CCM", new { ID = item.ID })"
                                                    class="btn btn-sm btn-info"
                                                    onclick="event.stopPropagation();">
                                                     <i class="mdi mdi-book-open-page-variant"></i>
-                                                </a>
+                                                </a>*@
 
                                                 <a href="javascript:void(0);"
-                                                   onclick="confirmDelete('@item.ID')"
-                                                   class="btn btn-sm btn-danger">
+                                                   class="btn btn-sm btn-danger btn-delete"
+                                                   data-id="@item.ID">
                                                     <i class="mdi mdi-trash-can"></i>
                                                 </a>
                                             </td>
@@ -224,83 +232,157 @@
 <!-- End XP Contentbar -->
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     var table;
 
     $(document).ready(function () {
 
-        table = $('#delayListTable').DataTable();
-
-        var today = new Date();
-
-        function formatDate(d) {
-            return d.toISOString().split('T')[0];
+        // ==============================
+        // DATATABLE INIT - ONLY ONCE
+        // ==============================
+        if ($.fn.DataTable.isDataTable('#delayListTable')) {
+            table = $('#delayListTable').DataTable();
+        } else {
+            table = $('#delayListTable').DataTable({
+                order: [[0, 'desc']],
+                pageLength: 10
+            });
         }
 
-        $('#fromDate').val(formatDate(today));
-        $('#toDate').val(formatDate(today));
+        updateSummary();
 
-        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        table.on('draw', function () {
+            updateSummary();
+        });
 
-            var from = $('#fromDate').val();
-            var to = $('#toDate').val();
-            var shift = $('#shiftFilter').val();
+        // ==============================
+        // FILTER FORM VALIDATION
+        // Single date only
+        // ==============================
+        $('#filterForm').on('submit', function (e) {
 
-            var rowDate = parseDMY(data[0]);
-            var rowArea = data[1];
-            var rowShift = data[2];
+            var selectedDate = $('#filterDate').val();
 
-            if (rowArea !== "Rolling Mill")
+            if (!selectedDate) {
+                e.preventDefault();
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Date Required',
+                    text: 'Please select date.'
+                });
+
                 return false;
-
-            if (shift && rowShift !== shift)
-                return false;
-
-            if (from) {
-                var fromDate = new Date(from);
-                fromDate.setHours(0, 0, 0, 0);
-                if (rowDate < fromDate) return false;
-            }
-
-            if (to) {
-                var toDate = new Date(to);
-                toDate.setHours(23, 59, 59, 999);
-                if (rowDate > toDate) return false;
             }
 
             return true;
         });
 
-        table.draw();
-        updateSummary();
+        // ==============================
+        // EXPORT PDF - SINGLE DATE
+        // ==============================
+        $('#exportPdf').on('click', function () {
 
-        $('#filterBtn').click(function () {
-            table.draw();
+            var selectedDate = $('#filterDate').val() || '';
+            var shift = $('#shiftFilter').val() || '';
+
+            if (!selectedDate) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Date Required',
+                    text: 'Please select date before exporting.'
+                });
+                return;
+            }
+
+            var url = '@Url.Action("GenerateDelayReportPDF", "RollingMill")'
+                + '?startdate=' + encodeURIComponent(selectedDate)
+                + '&enddate=' + encodeURIComponent(selectedDate)
+                + '&shift=' + encodeURIComponent(shift);
+
+            window.open(url, '_blank');
         });
 
-        $('#clearBtn').click(function () {
-            $('#fromDate').val('');
-            $('#toDate').val('');
-            $('#shiftFilter').val('');
-            table.draw();
+        // ==============================
+        // DELETE BUTTON
+        // ==============================
+        $(document).on('click', '.btn-delete', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var id = $(this).data('id');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This record will be permanently deleted.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    window.location.href = '/delay/delete?ID=' + id;
+                }
+            });
         });
 
-        table.on('draw', function () {
-            updateSummary();
+        // ==============================
+        // MODAL DURATION CALCULATION
+        // ==============================
+        $(document).on('change keyup', "input[name='StartTime'], input[name='EndTime']", function () {
+
+            var start = $("input[name='StartTime']").val();
+            var end = $("input[name='EndTime']").val();
+
+            if (start && end) {
+                var startDate = new Date('2000-01-01T' + start);
+                var endDate = new Date('2000-01-01T' + end);
+
+                if (endDate < startDate) {
+                    endDate.setDate(endDate.getDate() + 1);
+                }
+
+                var diffMs = endDate - startDate;
+                var diffMins = Math.floor(diffMs / 60000);
+
+                var hours = Math.floor(diffMins / 60);
+                var minutes = diffMins % 60;
+
+                $('#popupDuration').val(hours + 'h ' + minutes + 'm');
+            }
         });
+
     });
 
+    // ==============================
+    // OPEN FAILURE ANALYSIS POPUP
+    // ==============================
+    function openDelayPopup(id, date, area) {
+        $('#popupDelayID').val(id);
+        $('#popupDate').val(date);
+        $('#popupArea').val(area);
+        $('#popupDuration').val('');
+
+        $('#delayPopupModal').modal('show');
+    }
+
+    // ==============================
+    // SUMMARY CALCULATION
+    // ==============================
     function updateSummary() {
         if (!table) return;
 
-        var filteredData = table.rows({ search: 'applied' }).data();
-        var totalRecords = filteredData.length;
+        var data = table.rows({ search: 'applied' }).data();
+
+        var totalRecords = data.length;
         var totalDuration = 0;
 
-        for (var i = 0; i < filteredData.length; i++) {
-            var row = filteredData[i];
-            var durationText = $('<div>').html(row[5]).text().trim();
+        for (var i = 0; i < data.length; i++) {
+            var durationText = $('<div>').html(data[i][5]).text().trim();
             totalDuration += parseDurationToMinutes(durationText);
         }
 
@@ -329,7 +411,13 @@
             }
         }
 
-        return 0;
+        var hourMatch = value.match(/(\d+)\s*h/i);
+        var minMatch = value.match(/(\d+)\s*m/i);
+
+        var hours = hourMatch ? parseInt(hourMatch[1], 10) : 0;
+        var mins = minMatch ? parseInt(minMatch[1], 10) : 0;
+
+        return (hours * 60) + mins;
     }
 
     function formatMinutes(totalMinutes) {
@@ -344,194 +432,9 @@
 
         return minutes + ' min';
     }
-
-    function parseDMY(dateStr) {
-        var parts = dateStr.split('-');
-        return new Date(parts[2], parts[1] - 1, parts[0], 0, 0, 0);
-    }
-</script>
-
-<script>
-
-    $(document).ready(function () {
-
-        var table = $('#delayListTable').DataTable();
-
-        // 🔹 Set default dates = TODAY
-        var today = new Date();
-
-        function formatDate(d) {
-            return d.toISOString().split('T')[0];
-        }
-
-        $('#fromDate').val(formatDate(today));
-        $('#toDate').val(formatDate(today));
-
-        // 🔹 Custom filter
-        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-
-            var from = $('#fromDate').val();
-            var to = $('#toDate').val();
-            var shift = $('#shiftFilter').val();
-
-            var rowDate = parseDMY(data[0]);   // Date column
-            var rowArea = data[1];             // Area column
-            var rowShift = data[2];            // ⚠️ Shift column index
-
-            // ONLY Rolling Mill
-            if (rowArea !== "Rolling Mill")
-                return false;
-
-            // SHIFT FILTER
-            if (shift && rowShift !== shift)
-                return false;
-
-            // FROM DATE
-            if (from) {
-                var fromDate = new Date(from);
-                fromDate.setHours(0, 0, 0, 0);
-                if (rowDate < fromDate) return false;
-            }
-
-            // TO DATE
-            if (to) {
-                var toDate = new Date(to);
-                toDate.setHours(23, 59, 59, 999);
-                if (rowDate > toDate) return false;
-            }
-
-            return true;
-        });
-
-        // 🔹 Apply filter immediately on page load
-        table.draw();
-
-        // 🔹 Filter button
-        $('#filterBtn').click(function () {
-            table.draw();
-            updateTotalCount();
-        });
-
-        // 🔹 Clear button
-        $('#clearBtn').click(function () {
-            $('#fromDate').val('');
-            $('#toDate').val('');
-            $('#shiftFilter').val('');
-            table.draw();
-            updateTotalCount();
-        });
-
-    });
-
-    function updateTotalCount() {
-        var count = table.rows({ filter: 'applied' }).count();
-        $('#totalRecordCount').text(count);
-    }
-
-    // Helper: dd-MM-yyyy → Date
-    function parseDMY(dateStr) {
-        var parts = dateStr.split('-');
-        return new Date(parts[2], parts[1] - 1, parts[0], 0, 0, 0);
-    }
-
-    var exportPDFUrl = '@Url.Action("GenerateDelayReportPDF", "RollingMill")';
-
-    $('#exportPdf').click(function () {
-
-        var from = $('#fromDate').val() || '';
-        var to = $('#toDate').val() || '';
-        var shift = $('#shiftFilter').val() || '';
-
-        var url = exportPDFUrl
-            + '?startdate=' + encodeURIComponent(from)
-            + '&enddate=' + encodeURIComponent(to)
-            + '&shift=' + encodeURIComponent(shift);
-        window.open(url, '_blank');
-        //window.location.href = url;
-    });
 </script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-$(document).ready(function () {
-
-    var successMsg = '@TempData["SuccessMessage"]';
-    var errorMsg   = '@TempData["ErrorMessage"]';
-
-    if (successMsg) {
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: successMsg,
-            confirmButtonColor: '#3085d6'
-        });
-    }
-    else if (errorMsg) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: errorMsg,
-            confirmButtonColor: '#d33'
-        });
-    }
-
-    function confirmDelete(ID) {
-
-        Swal.fire({
-            title: "Are you sure?",
-            text: "This record will be permanently deleted.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6",
-            confirmButtonText: "Yes, delete it!"
-        }).then((result) => {
-
-            if (result.isConfirmed) {
-                // Redirect to delete action
-                window.location.href = '/delay/delete?ID=' + ID;
-            }
-        });
-    }
-
-});
-</script>
-
-
-<script>
-    function openDelayPopup(id, date, area) {
-        $("#popupDelayID").val(id);
-        $("#popupDate").val(date);
-        $("#popupArea").val(area);
-        $("#popupDuration").val('');
-
-        $("#delayPopupModal").modal("show");
-    }
-
-    $(document).on("change keyup", "input[name='StartTime'], input[name='EndTime']", function () {
-        var start = $("input[name='StartTime']").val();
-        var end = $("input[name='EndTime']").val();
-
-        if (start && end) {
-            var startDate = new Date("2000-01-01T" + start);
-            var endDate = new Date("2000-01-01T" + end);
-
-            if (endDate < startDate) {
-                endDate.setDate(endDate.getDate() + 1);
-            }
-
-            var diffMs = endDate - startDate;
-            var diffMins = Math.floor(diffMs / 60000);
-
-            var hours = Math.floor(diffMins / 60);
-            var minutes = diffMins % 60;
-
-            $("#popupDuration").val(hours + "h " + minutes + "m");
-        }
-    });
-</script>
 
 <!-- Add Extra Delay Detail Modal -->
 <div class="modal fade" id="delayPopupModal" tabindex="-1" role="dialog" aria-labelledby="delayPopupModalLabel" aria-hidden="true">

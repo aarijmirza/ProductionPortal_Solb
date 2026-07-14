@@ -47,6 +47,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositories\BoardingRepository.cs" />
     <Compile Include="Repositories\CCMRespository.cs" />
+    <Compile Include="Repositories\ConsumptionRepository.cs" />
     <Compile Include="Repositories\DelayRepository.cs" />
     <Compile Include="Repositories\LFMeltShopRepository.cs" />
     <Compile Include="Repositories\EAFMeltShopRepository.cs" />
@@ -56,9 +57,12 @@
     <Compile Include="Repositories\RMReportsRepository.cs" />
     <Compile Include="Repositories\SMPReportsRepository.cs" />
     <Compile Include="Repositories\ScrapyardRepository.cs" />
+    <Compile Include="Repositories\StockRepository.cs" />
+    <Compile Include="Repositories\SupplyChainRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="Repositories\UserRoleRepository.cs" />
     <Compile Include="Repositories\LoginRepository.cs" />
+    <Compile Include="Repositories\UtilityRepository.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

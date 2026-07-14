@@ -1,8 +1,48 @@
-﻿@model DAL.Models.ViewModel.RollingMillChargeVM
+﻿@using System.Globalization
+@model DAL.Models.ViewModel.RollingMillChargeVM
 @{
     ViewBag.Title = "Bundle Section";
-}
 
+    var pageModel = Model ?? new DAL.Models.ViewModel.RollingMillChargeVM();
+}
+<style>
+    /* Select2 ko Bootstrap form-control jesa banane ke liye */
+    .select2-container {
+        width: 100% !important;
+    }
+
+        .select2-container .select2-selection--single {
+            height: 36px !important;
+            border: 1px solid #e8edf3 !important;
+            border-radius: 5px !important;
+            background-color: #f3f5f8 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #8798ad !important;
+        font-size: 16px !important;
+        line-height: 45px !important;
+        padding-left: 15px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 8px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+        color: #8798ad !important;
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #80bdff !important;
+        outline: 0 !important;
+        box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, .25) !important;
+    }
+</style>
 <!-- ================= BREADCRUMB ================= -->
 <div class="xp-breadcrumbbar">
     <div class="row">
@@ -28,38 +68,68 @@
     @using (Html.BeginForm("InsertBundleSection", "RollingMill", FormMethod.Post, new { id = "addprofileform" }))
     {
         @Html.AntiForgeryToken()
+        <input type="hidden" id="hdnID" name="ID" value="0" />
+
+        <!-- SHIFT DETAILS CARD -->
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header">
+                <b>Rolling Mill Shift Details</b>
+            </div>
+
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="col-md-3">
+                        <b>Date:</b> @(Model.Date?.ToString("dd-MM-yyyy") ?? "-")
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Plant:</b> @Model.Plant
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Shift:</b> @Model.Shift
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Incharge:</b> @Model.ShiftIncharge
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <!-- ================= FORM ================= -->
         <div class="card m-b-30">
             <div class="card-header bg-white text-right">
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" id="btnSubmit" class="btn btn-primary">Submit</button>
             </div>
 
             <div class="card-body">
 
                 <!-- ROW 1 -->
                 <div class="form-row">
-                    <div class="form-group col-md-2">
-                        <label>Date</label>
-                        <input type="date" class="form-control" id="date" name="Date" />
-                    </div>
+                    @*<div class="form-group col-md-2">
+                            <label>Date</label>
+                            <input type="date" class="form-control" id="date" name="Date" />
+                        </div>*@
 
-                    <div class="form-group col-md-2">
-                        <label>Shift</label>
-                        <select class="form-control" name="Shift">
-                            <option selected disabled>-- please select --</option>
-                            <option value="Morning">Morning</option>
-                            <option value="Afternoon">Afternoon</option>
-                            <option value="Night">Night</option>
-                            <option value="Long Morning">Long Morning</option>
-                            <option value="Long Night">Long Night</option>
-                        </select>
-                    </div>
+                    @*<div class="form-group col-md-2">
+                            <label>Shift</label>
+                            <select class="form-control" name="Shift">
+                                <option selected disabled>-- please select --</option>
+                                <option value="Morning">Morning</option>
+                                <option value="Evening">Afternoon</option>
+                                <option value="Night">Night</option>
+                                <option value="Long Morning">Long Morning</option>
+                                <option value="Long Night">Long Night</option>
+                            </select>
+                        </div>*@
                     <div class="form-group col-md-2">
                         <label>Heat #</label>
                         @Html.DropDownListFor(m => m.HeatNo,
-                            (IEnumerable<SelectListItem>)ViewBag.HeatNo,
-                            "-- Select Heat # --",
-                            new { @class = "form-control", id = "ddlHeat" })
+         (IEnumerable<SelectListItem>)ViewBag.HeatNo,
+         "-- Select Heat --",
+         new { @class = "form-control select2-heat", id = "ddlHeat" })
                     </div>
 
                     <div class="form-group col-md-2">
@@ -77,12 +147,6 @@
                         <input type="text" id="txtHeat" class="form-control" name="PONumber" readonly />
                     </div>
 
-
-                </div>
-
-                <!-- ROW 2 -->
-                <div class="form-row">
-
                     <div class="form-group col-md-2">
                         <label>Total Bundles</label>
                         <input type="number" id="totalBundles" class="form-control" name="TotalBundleProduced" step="any" />
@@ -93,6 +157,11 @@
                         <input type="number" id="perCoilWeight" class="form-control" name="PerCoilWeight" step="any" />
                     </div>
 
+                </div>
+
+                <!-- ROW 2 -->
+                <div class="form-row">
+
                     <div class="form-group col-md-2">
                         <label>Total Weight (MT)</label>
                         <input type="text" id="theoreticalWeight" class="form-control" name="TheoriticalWeight" readonly />
@@ -100,7 +169,7 @@
 
                     <div class="form-group col-md-6">
                         <label>Remarks</label>
-                        <textarea class="form-control" rows="2" name="Remarks"></textarea>
+                        <textarea class="form-control" id="txtRemarks" rows="2" name="Remarks"></textarea>
                     </div>
 
                     <div class="form-group col-md-2 d-flex align-items-end">
@@ -125,6 +194,22 @@
     <!-- ================= SUBMITTED HEAT TABLE ================= -->
     <div class="card m-b-30">
         <div class="card-body">
+
+            <select id="shiftFilter" class="form-control mb-2" style="width:200px;">
+                <option value="">All</option>
+                <option value="Morning" @(Model.Shift == "Morning" ? "selected" : "")>Morning</option>
+                <option value="Evening" @(Model.Shift == "Evening" ? "selected" : "")>Evening</option>
+                <option value="Night" @(Model.Shift == "Night" ? "selected" : "")>Night</option>
+                <option value="Long Morning" @(Model.Shift == "Long Morning" ? "selected" : "")>Long Morning</option>
+                <option value="Long Night" @(Model.Shift == "Long Night" ? "selected" : "")>Long Night</option>
+            </select>
+
+            @*<div class="mb-2">
+                    <span class="badge badge-primary" id="totalBilletBadge">0</span>
+                    <span class="badge badge-success" id="totalProducedBadge">0</span>
+                </div>*@
+
+
             <div class="table-responsive">
                 <table class="table table-bordered table-striped">
                     <thead>
@@ -135,14 +220,15 @@
                             <th>Total Bundles</th>
                             <th>Total Weight (MT)</th>
                             <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="bundleTableBody">
                         @if (Model.SubmittedHeat != null)
                         {
                             foreach (var item in Model.SubmittedHeat)
                             {
-                                <tr>
+                                <tr data-shift="@item.Shift">
                                     <td>@item.HeatNo</td>
                                     <td>@item.BilletBoardingNo</td>
                                     <td>@item.SteelGrade</td>
@@ -164,6 +250,29 @@
                                                 break;
                                         }
                                     </td>
+                                    <td>
+                                        <a href="javascript:void(0);"
+                                           class="btn btn-sm btn-info btn-edit"
+                                           data-id="@item.ID"
+                                           data-date="@(item.Date.HasValue ? item.Date.Value.ToString("yyyy-MM-dd") : "")"
+                                           data-shift="@item.Shift"
+                                           data-heat="@item.HeatNo"
+                                           data-boarding="@item.BilletBoardingNo"
+                                           data-grade="@item.SteelGrade"
+                                           data-ponumber="@item.PONumber"
+                                           data-bundles="@item.TotalBundleProduced"
+                                           data-weight="@item.TheoriticalWeight"
+                                           data-remarks="@item.Remarks">
+                                            Edit
+                                        </a>
+
+                                        <a href="javascript:void(0);"
+                                           class="btn btn-sm btn-danger btn-delete"
+                                           data-id="@item.ID">
+                                            <i class="mdi mdi-trash-can"></i>
+                                        </a>
+                                    </td>
+
                                 </tr>
                             }
                         }
@@ -176,86 +285,303 @@
 </div>
 
 <!-- ================= SCRIPTS ================= -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-<script>
-    // 🔹 Heat change → fetch details
-    $("#ddlHeat").on("change", function () {
-        let heatNo = $(this).val();
-        if (!heatNo) return;
-
-        $.get("/RollingMill/GetChargingByHeat", { heatNo: heatNo }, function (res) {
-            if (!res) return;
-
-            $("#txtBoarding").val(res.BoardingNo);
-            $("#txtHeat").val(res.HeatNo);
-            $("#txtGrade").val(res.SteelGrade);
-        });
-    });
-
-    // 🔹 Calculate Total Weight
-    function calculateWeight() {
-        let bundles = parseFloat($("#totalBundles").val()) || 0;
-        let perCoil = parseFloat($("#perCoilWeight").val()) || 0;
-        let total = bundles * perCoil;
-        $("#theoreticalWeight").val(total > 0 ? total.toFixed(3) : "");
-    }
-
-    $("#totalBundles, #perCoilWeight").on("input", calculateWeight);
-</script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     $(document).ready(function () {
 
-        let isSubmitting = false;   // 🔐 double-submit lock
+        // ==============================
+        // SELECT2 INIT
+        // ==============================
+        $('#ddlHeat').select2({
+            placeholder: '-- Select Heat --',
+            allowClear: true,
+            width: '100%'
+        });
+
+        // ==============================
+        // CLEAR FIELDS
+        // ==============================
+        function clearHeatFields() {
+            $("#txtBoarding").val('');
+            $("#txtHeat").val('');
+            $("#txtGrade").val('');
+        }
+
+        // ==============================
+        // HEAT CHANGE - FETCH DETAILS
+        // ==============================
+        $('#ddlHeat').on('change select2:select', function () {
+
+            var heatNo = $(this).val();
+
+            clearHeatFields();
+
+            if (!heatNo) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetChargingByHeat", "RollingMill")',
+                type: 'GET',
+                data: { heatNo: heatNo },
+                success: function (res) {
+
+                    console.log("GetChargingByHeat Response:", res);
+
+                    if (!res) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No Data Found',
+                            text: 'No charging data found against this Heat No.'
+                        });
+                        return;
+                    }
+
+                    $("#txtBoarding").val(res.BoardingNo || '');
+                    $("#txtHeat").val(res.HeatNo || heatNo);
+                    $("#txtGrade").val(res.SteelGrade || '');
+                },
+                error: function (xhr) {
+                    console.log("AJAX Error:", xhr.responseText);
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Server Error',
+                        text: 'Unable to fetch heat details.'
+                    });
+                }
+            });
+        });
+
+        // ==============================
+        // CALCULATE TOTAL WEIGHT
+        // ==============================
+        function calculateWeight() {
+            var bundles = parseFloat($("#totalBundles").val()) || 0;
+            var perCoil = parseFloat($("#perCoilWeight").val()) || 0;
+            var total = bundles * perCoil;
+
+            $("#theoreticalWeight").val(total > 0 ? total.toFixed(3) : "");
+        }
+
+        $("#totalBundles, #perCoilWeight").on("input", calculateWeight);
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        function toNum(val) {
+            return parseFloat($.trim(val)) || 0;
+        }
+
+        function normalizeShift(val) {
+            return (val || "").toString().trim().toLowerCase();
+        }
+
+        function calculateBundleTotals() {
+            var totalBundles = 0;
+            var totalWeight = 0;
+
+            $("#bundleTableBody tr:visible").each(function () {
+                totalBundles += toNum($(this).find("td:eq(3)").text());
+                totalWeight += toNum($(this).find("td:eq(4)").text());
+            });
+
+            $("#totalBundleBadge").text(totalBundles);
+            $("#totalWeightBadge").text(totalWeight.toFixed(3));
+        }
+
+        function applyBundleFilter() {
+            var selectedShift = normalizeShift($("#shiftFilter").val());
+
+            $("#bundleTableBody tr").each(function () {
+                var rowShift = normalizeShift($(this).attr("data-shift"));
+
+                if (selectedShift === "" || rowShift === selectedShift) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            calculateBundleTotals();
+        }
+
+        $("#shiftFilter").off("change").on("change", function () {
+            applyBundleFilter();
+        });
+
+        applyBundleFilter();
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        $(document).on("click", ".btn-edit", function () {
+
+            var id = $(this).data("id");
+            var date = $(this).data("date");
+            var shift = $(this).data("shift");
+            var heat = $(this).data("heat");
+            var boarding = $(this).data("boarding");
+            var grade = $(this).data("grade");
+            var poNumber = $(this).data("ponumber");
+            var bundles = $(this).data("bundles");
+            var totalWeight = $(this).data("weight");
+            var remarks = $(this).data("remarks");
+
+            $("#hdnID").val(id);
+            $("#date").val(date);
+            $("#ddlShift").val(shift);
+
+            $("#ddlHeat").val(heat).trigger("change.select2");
+
+            $("#txtBoarding").val(boarding);
+            $("#txtGrade").val(grade);
+            $("#txtHeat").val(poNumber || heat);
+
+            $("#totalBundles").val(bundles);
+            $("#theoreticalWeight").val(totalWeight);
+            $("#txtRemarks").val(remarks || "");
+
+            $("#btnSubmit")
+                .removeClass("btn-primary")
+                .addClass("btn-warning")
+                .text("Update");
+
+            $("html, body").animate({
+                scrollTop: $("#addprofileform").offset().top - 80
+            }, 400);
+        });
+
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        let isSubmitting = false;
 
         $("#addprofileform").on("submit", function (e) {
-            e.preventDefault(); // ❗ pehle submit roko
+            e.preventDefault();
 
-            if (isSubmitting) return; // already submitting
+            if (isSubmitting) {
+                return;
+            }
+
+            var id = parseInt($("#hdnID").val()) || 0;
+            var isUpdate = id > 0;
+
+            var heatNo = $("#ddlHeat").val();
+            var bundles = parseFloat($("#totalBundles").val()) || 0;
+            var perCoilWeight = parseFloat($("#perCoilWeight").val()) || 0;
+
+            if (!heatNo) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Heat Required",
+                    text: "Please select Heat No."
+                });
+                return;
+            }
+
+            if (bundles <= 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Total Bundles Required",
+                    text: "Please enter valid Total Bundles."
+                });
+                return;
+            }
+
+            if (perCoilWeight <= 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Per Coil Weight Required",
+                    text: "Please enter valid Per Coil Weight."
+                });
+                return;
+            }
 
             Swal.fire({
-                title: 'Confirm Submission',
-                text: 'Are you sure you want to submit this Heat Record?',
-                icon: 'warning',
+                title: isUpdate ? "Confirm Update" : "Confirm Submission",
+                text: isUpdate
+                    ? "Are you sure you want to update this bundle record?"
+                    : "Are you sure you want to submit this bundle record?",
+                icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: 'Yes, Submit',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: isUpdate ? "Yes, Update" : "Yes, Submit",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
                 allowOutsideClick: false,
                 allowEscapeKey: false
             }).then((result) => {
 
                 if (result.isConfirmed) {
 
-                    isSubmitting = true; // 🔒 lock
+                    isSubmitting = true;
 
-                    // Disable submit button
-                    $("#addprofileform")
-                        .find("button[type='submit']")
+                    $("#btnSubmit")
                         .prop("disabled", true)
-                        .text("Submitting...");
+                        .text(isUpdate ? "Updating..." : "Submitting...");
 
-                    // Finally submit form
                     $("#addprofileform")[0].submit();
                 }
             });
         });
 
-    });
-</script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        var successMsg = '@TempData["SuccessMessage"]';
+        var errorMsg = '@TempData["ErrorMessage"]';
 
-<script>
-    $(document).ready(function () {
-        var msg = '@TempData["SuccessMessage"]';
-        if (msg) {
+        if (successMsg) {
             Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: msg,
-                confirmButtonColor: '#3085d6'
+                icon: "success",
+                title: "Success",
+                text: successMsg,
+                confirmButtonColor: "#3085d6"
             });
         }
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: errorMsg,
+                confirmButtonColor: "#d33"
+            });
+        }
+
+    });
+
+    // ==============================
+    // DELETE
+    // ==============================
+    $(document).on("click", ".btn-delete", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var id = $(this).data("id");
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This record will be permanently deleted.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+                window.location.href = '/RollingMill/deleteBundle?ID=' + id;
+            }
+        });
     });
 </script>

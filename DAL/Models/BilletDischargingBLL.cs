@@ -22,6 +22,7 @@ namespace DAL.Models
         public decimal? TotalBillet { get; set; }
         public decimal? FuelConsumption { get; set; }
         public decimal? TotalWeight { get; set; }
+        public decimal? TheoriticalWeight { get; set; }
         public decimal? TotalBundleProduced { get; set; }
         public decimal? ShortBundleActualWeight { get; set; }
         public decimal? TotalBundleOnHold { get; set; }
@@ -30,7 +31,10 @@ namespace DAL.Models
         public int HeatStatus { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedOn { get; set; }
+        public string UpdatedBy { get; set; }
+        public DateTime? UpdatedDate { get; set; }
         public DateTime Date { get; set; }
+        public string Plant { get; set; }
         public string PlantName { get; set; }
         public string ProductSpecs { get; set; }
         public string Grade { get; set; }

@@ -12,6 +12,7 @@ namespace DAL.Models
         public DateTime Date { get; set; }
         public string HeatNo { get; set; }
         public string Shift { get; set; }
+        public string Plant { get; set; }
         public string BoardingNo { get; set; }
         public string SteelGrade { get; set; }
         public string BilletSize { get; set; }
@@ -26,5 +27,6 @@ namespace DAL.Models
         public int StatusID { get; set; }
         public DateTime CreatedDate { get; set; }
         public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
     }
 }

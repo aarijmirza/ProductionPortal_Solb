@@ -1,0 +1,284 @@
+﻿@model DAL.Models.PlantDelayBLL
+@using System.Globalization
+
+@{
+    ViewBag.Title = "Delay Details";
+}
+
+
+
+<style>
+        .detail-card {
+            border: 1px solid #e8edf3;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .detail-header {
+            background: #f8f9fb;
+            border-bottom: 1px solid #e8edf3;
+            padding: 15px 20px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            background: #f3f5f8;
+            border: 1px solid #e8edf3;
+            border-radius: 5px;
+            min-height: 38px;
+            padding: 9px 12px;
+            font-size: 14px;
+            color: #333;
+            word-break: break-word;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #444;
+            border-left: 4px solid #b30d0d;
+            padding-left: 10px;
+            margin: 20px 0 15px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-back {
+            min-width: 100px;
+        }
+    </style>
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Delay Detail</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("SMPlist", "Delay")">Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+@if (Model == null)
+{
+    <div class="xp-contentbar">
+        <div class="alert alert-danger">
+            Record not found or model is empty.
+        </div>
+
+        <a href="@Url.Action("Index", "Delay")" class="btn btn-secondary">
+            Back
+        </a>
+    </div>
+
+    return;
+}
+<div class="xp-contentbar">
+
+    <div class="card detail-card">
+        <div class="detail-header d-flex justify-content-between align-items-center">
+            <span>Delay Record Details</span>
+
+            @if (Model.StatusID == 1)
+            {
+                <span class="status-badge status-active">Active</span>
+            }
+            else
+            {
+                <span class="status-badge status-inactive">Inactive</span>
+            }
+        </div>
+
+        <div class="card-body">
+
+            <div class="section-title">General Information</div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Date</div>
+                    <div class="detail-value">
+                        @(Model.Date != null ? Convert.ToDateTime(Model.Date).ToString("dd-MMM-yyyy") : "-")
+                    </div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Area</div>
+                    <div class="detail-value">@(Model.Area ?? "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Plant</div>
+                    <div class="detail-value">@(Model.Plant ?? "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Shift</div>
+                    <div class="detail-value">@(Model.Shift ?? "-")</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Team</div>
+                    <div class="detail-value">@(Model.Team ?? "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Shift Incharge</div>
+                    <div class="detail-value">@(Model.ShiftIncharge ?? "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Start Time</div>
+                    <div class="detail-value">
+                        @(Model.StartTime != null ? Model.StartTime.ToString() : "-")
+                    </div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">End Time</div>
+                    <div class="detail-value">
+                        @(Model.EndTime != null ? Model.EndTime.ToString() : "-")
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">Delay Summary</div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Total Duration</div>
+                    <div class="detail-value">
+                        @(Model.TotalDuration != null ? Model.TotalDuration.ToString() + " Minutes" : "-")
+                    </div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Cobble</div>
+                    <div class="detail-value">@(Model.Cobble != null ? Model.Cobble.ToString() : "0")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Hot Out</div>
+                    <div class="detail-value">@(Model.HotOut != null ? Model.HotOut.ToString() : "0")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Delay Type</div>
+                    <div class="detail-value">@(Model.DelayType ?? "-")</div>
+                </div>
+            </div>
+
+            <div class="section-title">Agency / Equipment Information</div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Agency Name</div>
+                    <div class="detail-value">@(Model.AgencyName ?? "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Equipment</div>
+                    <div class="detail-value">@(Model.Equipments ?? "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Component</div>
+                    <div class="detail-value">@(Model.Component ?? "-")</div>
+                </div>
+
+            </div>
+
+            <div class="section-title">Reason / Action Details</div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <div class="detail-label">Reason</div>
+                    <div class="detail-value" style="min-height:70px;">
+                        @(Model.Reason ?? "-")
+                    </div>
+                </div>
+
+                <div class="form-group col-md-6">
+                    <div class="detail-label">Delay Description</div>
+                    <div class="detail-value" style="min-height:70px;">
+                        @(Model.DelayDescription ?? "-")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <div class="detail-label">Reason For Occurence</div>
+                    <div class="detail-value" style="min-height:100px;">
+                        @(Model.ReasonForOccurence ?? "-")
+                    </div>
+                </div>
+
+                <div class="form-group col-md-6">
+                    <div class="detail-label">Action Taken</div>
+                    <div class="detail-value" style="min-height:100px;">
+                        @(Model.ActionTaken ?? "-")
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">System Information</div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Created By</div>
+                    <div class="detail-value">@(Model.CreatedBy ?? "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Created Date</div>
+                    <div class="detail-value">
+                        @(Model.CreatedDate != null ? Convert.ToDateTime(Model.CreatedDate).ToString("dd-MMM-yyyy hh:mm tt") : "-")
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-right mt-3">
+                <a href="@Url.Action("Index", "Delay")" class="btn btn-secondary btn-back">
+                    Back
+                </a>
+
+                <a href="@Url.Action("Edit", "Delay", new { id = Model.ID })" class="btn btn-warning">
+                    Edit
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</div>

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Xml.Linq;
+using WebAPICode.Helpers;
 using static DAL.Models.ViewModel;
 
 namespace ProductionPortal_Solb.Controllers
@@ -23,14 +24,30 @@ namespace ProductionPortal_Solb.Controllers
             repo = new DelayRespository();
             rm = new RollingMillRepository();
         }
-        // GET: Delays
-        public ActionResult list(DateTime? from, DateTime? to)
-        {
-            // 🔑 Default = TODAY
-            DateTime startDate = from ?? DateTime.Today;
-            DateTime endDate = to ?? DateTime.Today;
 
-            var data = repo.GetAllRMDelay(startDate, endDate);
+        public ActionResult list(DateTime? date, string shift, string plant)
+        {
+            DateTime selectedDate = date ?? DateTime.Today;
+
+            //var data = repo.GetAllRMDelay(selectedDate, selectedDate, shift);
+
+            var data = repo.GetAllRMDelay(selectedDate, selectedDate, shift)
+                                ?? new List<PlantDelayBLL>();
+
+            if (!string.IsNullOrWhiteSpace(plant))
+            {
+
+                data = data
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.Plant) &&
+                        x.Plant.Trim().Equals(plant, StringComparison.OrdinalIgnoreCase)
+                    )
+                    .ToList();
+            }
+
+            ViewBag.SelectedDate = selectedDate.ToString("yyyy-MM-dd");
+            ViewBag.Shift = shift ?? "";
+
             return View(data);
         }
 
@@ -166,22 +183,24 @@ namespace ProductionPortal_Solb.Controllers
                     data.DelayType = selectedAgency.DelayType;
                 }
 
+                // Delay Code Auto Generate
+                data.Delaycode = repo.GenerateDelayCode();
 
                 //data.Date = DateTime.Now;
                 data.StatusID = 1;
                 data.CreatedDate = DateTime.Now;
                 data.CreatedBy = User.Identity.Name;
-               // int rtn1 = AddEntry(data);
+                // int rtn1 = AddEntry(data);
                 int rtn = repo.Insert(data);
                 if (rtn > 0)
                 {
                     TempData["SuccessMessage"] = "Data saved successfully";
                 }
-                else
-                {
-                    TempData["ErrorMessage"] = "Data not saved. Please try again.";
-                    return RedirectToAction("list"); // 👈 back to form
-                }
+                //else
+                //{
+                //    TempData["ErrorMessage"] = "Data not saved. Please try again.";
+                //    return RedirectToAction("list"); // 👈 back to form
+                //}
             }
             else
             {
@@ -191,6 +210,8 @@ namespace ProductionPortal_Solb.Controllers
 
             return RedirectToAction("list");
         }
+
+
 
         public ActionResult AddEntry()
         {
@@ -504,6 +525,8 @@ namespace ProductionPortal_Solb.Controllers
                     data.DelayType = selectedAgency.DelayType;
                 }
 
+                // Delay Code Auto Generate
+                data.Delaycode = repo.GenerateSMPDelayCode();
 
                 data.Date = DateTime.Now;
                 data.StatusID = 1;
@@ -557,5 +580,31 @@ namespace ProductionPortal_Solb.Controllers
             }
         }
 
+        [HttpGet]
+        public JsonResult GetEquipmentByArea(int areaId)
+        {
+            var equipment = repo.GetEquipmentByArea(areaId)
+                .Select(x => new
+                {
+                    Value = x.Description,
+                    Text = x.Description
+                })
+                .ToList();
+
+            return Json(equipment, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult SMPdetails(int id)
+        {
+            var model = repo.GetDelayByID(id);
+
+            if (model == null)
+            {
+                TempData["ErrorMessage"] = "Record not found.";
+                return RedirectToAction("Index");
+            }
+
+            return View("~/Views/Meltshop/Delay/detail.cshtml", model);
+        }
     }
 }

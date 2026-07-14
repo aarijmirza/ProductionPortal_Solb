@@ -1,0 +1,223 @@
+﻿@{
+    ViewBag.Title = "Raw Material Stock";
+}
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Raw Material Stock</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Inventory</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Stock Entry</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <form action="/RawMaterialStock/Add" id="stockForm" method="post">
+
+        <div class="row">
+            <div class="col-lg-12">
+
+                <!-- HEADER CARD -->
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="mb-0">
+                                    Usable Stock (SAP Storage Locations P002, P004, P105, P011)
+                                </h5>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <button type="submit" class="btn btn-primary">
+                                    Submit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>Date</label>
+                                <input type="date" class="form-control" id="date" name="Date" />
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label>Stock Type</label>
+                                <select class="form-control" id="stockType" name="StockType">
+                                    <option value="Usable Stock">Usable Stock</option>
+                                    <option value="Rejected / Unadjusted Stock">Rejected / Unadjusted Stock</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label>SAP Storage Location</label>
+                                <select class="form-control" name="StorageLocation">
+                                    <option value="">-- please select --</option>
+                                    <option value="P002">P002</option>
+                                    <option value="P004">P004</option>
+                                    <option value="P105">P105</option>
+                                    <option value="P011">P011</option>
+                                    <option value="P012">P012</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>Item Code</label>
+                                <input type="text" class="form-control" name="ItemCode" placeholder="4500000046" />
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label>Material</label>
+                                <input type="text" class="form-control" name="Material" placeholder="DRI / HBI / Scrap" />
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label>Current Stock</label>
+                                <input type="number" step="0.001" class="form-control" name="CurrentStock" placeholder="0.000" />
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label>Average Daily Issuance (TO)</label>
+                                <input type="number" step="0.001" class="form-control" name="AverageDailyIssuance" placeholder="0.000" />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>Production Days</label>
+                                <input type="number" step="1" class="form-control" name="ProductionDays" placeholder="0" />
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label>Lead Time</label>
+                                <input type="number" step="1" class="form-control" name="LeadTime" placeholder="0" />
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>Current Order Qty</label>
+                                <input type="number" step="0.001" class="form-control" name="CurrentOrderQty" placeholder="0.000" />
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label>Remarks</label>
+                                <textarea class="form-control" rows="3" name="Remarks" placeholder="Enter PO / PR / shipment remarks"></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- LIST / TABLE CARD -->
+                <div class="card m-b-30">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Stock Records</h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped" id="stockTable">
+                                <thead>
+                                    <tr>
+                                        <th>Item Code</th>
+                                        <th>Material</th>
+                                        <th>Current Stock</th>
+                                        <th>Avg Daily Issuance</th>
+                                        <th>Production Days</th>
+                                        <th>Lead Time</th>
+                                        <th>Current Order Qty</th>
+                                        <th>Remarks</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @* Example dynamic rows *@
+                                    @*@foreach (var item in Model)
+                                        {
+                                            <tr>
+                                                <td>@item.ItemCode</td>
+                                                <td>@item.Material</td>
+                                                <td>@item.CurrentStock</td>
+                                                <td>@item.AverageDailyIssuance</td>
+                                                <td>@item.ProductionDays</td>
+                                                <td>@item.LeadTime</td>
+                                                <td>@item.CurrentOrderQty</td>
+                                                <td>@item.Remarks</td>
+                                                <td>
+                                                    <a href="#" class="btn btn-sm btn-info">Edit</a>
+                                                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                                                </td>
+                                            </tr>
+                                        }*@
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+
+        // Today date default
+        $("#date").val(new Date().toISOString().split('T')[0]);
+
+        // Storage location auto change on stock type
+        $("#stockType").on("change", function () {
+            var stockType = $(this).val();
+
+            if (stockType === "Rejected / Unadjusted Stock") {
+                $("select[name='StorageLocation']").val("P012");
+            } else {
+                $("select[name='StorageLocation']").val("");
+            }
+        });
+
+        // Submit confirmation
+        $("#stockForm").on("submit", function (e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: "Confirm Submission",
+                text: "Are you sure you want to save this stock record?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, Submit",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $("#stockForm")[0].submit();
+                }
+            });
+        });
+
+    });
+</script>

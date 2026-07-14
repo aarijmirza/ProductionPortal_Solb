@@ -3,6 +3,20 @@
 
 @{
     ViewBag.Title = "Billet Charging";
+
+    var pageModel = Model ?? new DAL.Models.ViewModel.RMChargingVM();
+
+    int nextSequence = 1;
+
+    if (Model.SubmittedHeat != null && Model.SubmittedHeat.Any())
+    {
+        nextSequence = Model.SubmittedHeat
+            .Where(x => x.Shift == Model.Shift)
+            .Select(x => x.HeatSequence)
+            .Where(x => x > 0)
+            .DefaultIfEmpty(0)
+            .Max() + 1;
+    }
 }
 
 <style>
@@ -10,6 +24,60 @@
         background-color: #f8d7da !important;
         color: #721c24 !important;
         font-weight: bold;
+    }
+
+    #txtHeatSequence {
+        background-color: #e9ecef !important;
+        cursor: not-allowed;
+        font-weight: bold;
+    }
+
+    input[readonly] {
+        background-color: #e9ecef !important;
+        cursor: not-allowed;
+    }
+
+    #remainingBilletText {
+        font-size: 12px;
+        display: block;
+        margin-top: 4px;
+    }
+
+    /* Select2 ko Bootstrap form-control jesa banane ke liye */
+    .select2-container {
+        width: 100% !important;
+    }
+
+        .select2-container .select2-selection--single {
+            height: 36px !important;
+            border: 1px solid #e8edf3 !important;
+            border-radius: 5px !important;
+            background-color: #f3f5f8 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #8798ad !important;
+        font-size: 16px !important;
+        line-height: 45px !important;
+        padding-left: 15px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 8px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+        color: #8798ad !important;
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #80bdff !important;
+        outline: 0 !important;
+        box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, .25) !important;
     }
 </style>
 
@@ -22,7 +90,11 @@
         <div class="col-md-6 col-lg-6">
             <div class="xp-breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
                     <li class="breadcrumb-item"><a href="#">Rolling Mill</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Billet Charging</li>
                 </ol>
@@ -35,70 +107,78 @@
 <div class="xp-contentbar">
 
     <form action="/RollingMill/AddCharge" id="addprofileform" method="post">
-
-        <!-- 🔥 SHIFT DETAILS CARD -->
+        <input type="hidden" id="hdnID" name="ID" value="0" />
+        <!-- SHIFT DETAILS CARD -->
         <div class="card mb-3 shadow-sm">
             <div class="card-header">
                 <b>Rolling Mill Shift Details</b>
             </div>
+
             <div class="card-body">
                 <div class="form-row">
-                    <div class="col-md-3"><b>Date:</b> @(Model.Date?.ToString("dd-MM-yyyy") ?? "-")</div>
-                    <div class="col-md-3"><b>Plant:</b> @Model.Plant</div>
-                    <div class="col-md-3"><b>Shift:</b> @Model.Shift</div>
-                    <div class="col-md-3"><b>Incharge:</b> @Model.ShiftIncharge</div>
+                    <div class="col-md-3">
+                        <b>Date:</b> @(Model.Date?.ToString("dd-MM-yyyy") ?? "-")
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Plant:</b> @Model.Plant
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Shift:</b> @Model.Shift
+                    </div>
+
+                    <div class="col-md-3">
+                        <b>Incharge:</b> @Model.ShiftIncharge
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 🔥 FORM -->
+        <!-- FORM -->
         <div class="card">
             <div class="card-header text-right">
-                <button type="submit" class="btn btn-primary">Charge Heat</button>
+                <button type="submit" id="btnSubmit" class="btn btn-primary">
+                    Charge Heat
+                </button>
             </div>
 
             <div class="card-body">
+
                 <div class="form-row">
-
-                    <!-- DATE -->
-                    <div class="col-md-2">
-                        <label>Date</label>
-                        <input type="date" class="form-control"
-                               name="Date"
-                               value="@(Model.Date?.ToString("yyyy-MM-dd"))" />
-                    </div>
-
-                    <!-- SHIFT -->
-                    <!--<div class="col-md-2">
-                        <label>Shift</label>
-                        <input type="text" class="form-control" value="@Model.Shift" readonly />
-                        <input type="hidden" name="Shift" value="@Model.Shift" />
-                    </div>-->
-                    <!-- HEAT -->
                     <div class="col-md-2">
                         <label>Heat #</label>
                         @Html.DropDownListFor(m => m.HeatNo,
                             (IEnumerable<SelectListItem>)ViewBag.HeatNo,
                             "-- Select Heat --",
-                            new { @class = "form-control", id = "ddlHeat" })
+                            new { @class = "form-control select2-heat", id = "ddlHeat" })
                     </div>
 
-                    <!-- BOARDING -->
                     <div class="col-md-2">
                         <label>Boarding</label>
-                        <input type="text" id="txtBoarding" name="BoardingNo" class="form-control" readonly />
+                        <input type="text"
+                               id="txtBoarding"
+                               name="BoardingNo"
+                               class="form-control"
+                               readonly />
                     </div>
 
-                    <!-- GRADE -->
                     <div class="col-md-2">
                         <label>Grade</label>
-                        <input type="text" id="txtGrade" name="SteelGrade" class="form-control" readonly />
+                        <input type="text"
+                               id="txtGrade"
+                               name="SteelGrade"
+                               class="form-control"
+                               readonly />
                     </div>
 
-                    <!-- SIZE -->
                     <div class="col-md-2">
                         <label>Size</label>
-                        <input type="text" id="txtSize" name="BilletSize" class="form-control" readonly />
+                        <input type="text"
+                               id="txtSize"
+                               name="BilletSize"
+                               class="form-control"
+                               readonly />
                     </div>
 
                 </div>
@@ -107,27 +187,49 @@
 
                     <div class="col-md-2">
                         <label>Length</label>
-                        <input type="text" id="txtBilletLength" name="BilletLength" class="form-control" readonly />
+                        <input type="text"
+                               id="txtBilletLength"
+                               name="BilletLength"
+                               class="form-control"
+                               readonly />
                     </div>
 
                     <div class="col-md-2">
                         <label>Total Billet</label>
-                        <input type="text" id="txtTotalBillet" name="TotalBillet" class="form-control" />
+                        <input type="number"
+                               id="txtTotalBillet"
+                               name="TotalBillet"
+                               class="form-control"
+                               min="1"
+                               step="1" />
+
+                        <small class="text-danger" id="remainingBilletText"></small>
                     </div>
 
                     <div class="col-md-2">
                         <label>Weight</label>
-                        <input type="text" id="txtWeight" name="Weight" class="form-control" />
+                        <input type="text"
+                               id="txtWeight"
+                               name="Weight"
+                               class="form-control" />
                     </div>
 
                     <div class="col-md-2">
                         <label>Total Weight</label>
-                        <input type="text" id="txtTotalWeight" name="TotalWeight" class="form-control" readonly />
+                        <input type="text"
+                               id="txtTotalWeight"
+                               name="TotalWeight"
+                               class="form-control"
+                               readonly />
                     </div>
 
                     <div class="col-md-2">
                         <label>Sequence</label>
-                        <input type="number" name="HeatSequence" class="form-control" value="0" />
+                        <input type="number"
+                               id="txtHeatSequence"
+                               name="HeatSequence"
+                               class="form-control"
+                               value="@nextSequence" />
                     </div>
 
                 </div>
@@ -136,15 +238,17 @@
 
     </form>
 
-    <!-- 🔥 TABLE -->
+    <!-- TABLE -->
     <div class="card mt-3">
         <div class="card-body">
 
             <select id="shiftFilter" class="form-control mb-2" style="width:200px;">
                 <option value="">All</option>
-                <option>Morning</option>
-                <option>Evening</option>
-                <option>Night</option>
+                <option value="Morning" @(Model.Shift == "Morning" ? "selected" : "")>Morning</option>
+                <option value="Evening" @(Model.Shift == "Evening" ? "selected" : "")>Evening</option>
+                <option value="Night" @(Model.Shift == "Night" ? "selected" : "")>Night</option>
+                <option value="Long Morning" @(Model.Shift == "Long Morning" ? "selected" : "")>Long Morning</option>
+                <option value="Long Night" @(Model.Shift == "Long Night" ? "selected" : "")>Long Night</option>
             </select>
 
             <div class="mb-2">
@@ -160,19 +264,44 @@
                         <th>Heat</th>
                         <th>Billet</th>
                         <th>Weight</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
 
-                <tbody>
-                    @foreach (var item in Model.SubmittedHeat)
+                <tbody id="chargingTableBody">
+                    @if (Model.SubmittedHeat != null && Model.SubmittedHeat.Any())
                     {
-                        <tr data-shift="@item.Shift">
-                            <td>@item.HeatSequence</td>
-                            <td>@item.Shift</td>
-                            <td>@item.HeatNo</td>
-                            <td>@item.TotalBillet</td>
-                            <td>@item.TotalWeight</td>
-                        </tr>
+                        foreach (var item in Model.SubmittedHeat)
+                        {
+                            <tr data-shift="@item.Shift">
+                                <td>@item.HeatSequence</td>
+                                <td>@item.Shift</td>
+                                <td>@item.HeatNo</td>
+                                <td>@item.TotalBillet</td>
+                                <td>@item.TotalWeight</td>
+                                <td>
+                                    <a href="javascript:void(0);"
+                                       class="btn btn-sm btn-info btn-edit"
+                                       data-id="@item.ID"
+                                       data-heat="@item.HeatNo"
+                                       data-boarding="@item.BoardingNo"
+                                       data-grade="@item.SteelGrade"
+                                       data-size="@item.BilletSize"
+                                       data-length="@item.BilletLength"
+                                       data-billet="@item.TotalBillet"
+                                       data-weight="@item.Weight"
+                                       data-totalweight="@item.TotalWeight"
+                                       data-sequence="@item.HeatSequence">
+                                        Edit
+                                    </a>
+                                    <a href="javascript:void(0);"
+                                       class="btn btn-sm btn-danger btn-delete"
+                                       data-id="@item.ID">
+                                        <i class="mdi mdi-trash-can"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
@@ -181,124 +310,384 @@
     </div>
 
 </div>
-
-<!-- 🔥 SCRIPTS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    $(document).ready(function () {
 
-    function toNum(val) {
-        return parseFloat(val) || 0;
-    }
+        // ==============================
+        // SELECT2 INIT
+        // ==============================
+        $('#ddlHeat').select2({
+            placeholder: '-- Select Heat --',
+            allowClear: true,
+            width: '100%'
+        });
 
-    var usedHeatNos = [
-    @if (Model.SubmittedHeat != null && Model.SubmittedHeat.Any())
-    {
-        foreach (var item in Model.SubmittedHeat)
-        {
-            <text>'@item.HeatNo',</text>
+        function toNum(val) {
+            return parseFloat(val) || 0;
         }
-    }
-];
 
-usedHeatNos = usedHeatNos.map(function (x) {
-    return (x || '').trim().toUpperCase();
-});
+        function clearFields() {
+            $("#txtBoarding").val('');
+            $("#txtGrade").val('');
+            $("#txtSize").val('');
+            $("#txtBilletLength").val('');
 
-$("#ddlHeat option").each(function () {
-    var optionHeat = ($(this).val() || '').trim().toUpperCase();
+            $("#txtTotalBillet")
+                .val('')
+                .removeAttr("max")
+                .removeAttr("data-remaining");
 
-    if (usedHeatNos.indexOf(optionHeat) >= 0) {
-        $(this)
-            .addClass("used-heat-option")
-            .css({
-                "background-color": "#f8d7da",
-                "color": "#721c24",
-                "font-weight": "bold"
-            })
-            .text($(this).text() + " - Used");
-    }
-});
+            $("#txtWeight").val('');
+            $("#txtTotalWeight").val('');
+            $("#remainingBilletText").text('');
+        }
 
-    // 🔥 TOTAL WEIGHT (INPUT BASED)
-    $("#txtTotalBillet, #txtWeight").on("keyup change", function () {
-        var total = toNum($("#txtTotalBillet").val()) * toNum($("#txtWeight").val());
-        $("#txtTotalWeight").val(total.toFixed(2));
-    });
+        function calculateInputTotalWeight() {
+            var totalBillet = toNum($("#txtTotalBillet").val());
+            var weight = toNum($("#txtWeight").val());
+            var total = totalBillet * weight;
 
-    // 🔥 HEAT AUTO FILL
-    $("#ddlHeat").change(function () {
+            $("#txtTotalWeight").val(total.toFixed(2));
+        }
 
-        var heatNo = $(this).val();
+        // ==============================
+        // HEAT CHANGE - SELECT2 + NORMAL CHANGE
+        // ==============================
+        $('#ddlHeat').on('change select2:select', function () {
 
-        if (!heatNo) {
+            var heatNo = $(this).val();
+
             clearFields();
-            return;
-        }
 
-        $.get('/RollingMill/GetBilletBoardingByHeat', { heatNo: heatNo }, function (res) {
-
-            if (!res) {
-                clearFields();
+            if (!heatNo) {
                 return;
             }
 
-            $("#txtBoarding").val(res.BoardingNo || '');
-            $("#txtGrade").val(res.SteelGrade || '');
-            $("#txtSize").val(res.BilletSize || '');
-            $("#txtBilletLength").val(res.BilletLength || '');
-            $("#txtTotalBillet").val(res.NoOfBillet || 0);
-            $("#txtWeight").val(res.BilletWeight || 0);
+            $.ajax({
+                url: '@Url.Action("GetBilletBoardingByHeat", "RollingMill")',
+                type: 'GET',
+                data: { heatNo: heatNo },
+                success: function (res) {
 
-            // 🔥 Recalculate after autofill
-            var total = toNum(res.NoOfBillet) * toNum(res.BilletWeight);
-            $("#txtTotalWeight").val(total.toFixed(2));
+                    console.log("GetBilletBoardingByHeat Response:", res);
+
+                    if (!res) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No Data Found',
+                            text: 'No billet boarding data found against this Heat No.'
+                        });
+                        return;
+                    }
+
+                    var requiredBillet = toNum(res.NoOfBillet);
+                    var alreadyChargedBillet = toNum(res.AlreadyChargedBillet);
+                    var remainingBillet = toNum(res.RemainingBillet);
+                    var billetWeight = toNum(res.BilletWeight);
+
+                    if (remainingBillet <= 0) {
+                        clearFields();
+
+                        $('#ddlHeat').val(null).trigger('change.select2');
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Heat Fully Used',
+                            text: 'This Heat No billet quantity is already completed.'
+                        });
+
+                        return;
+                    }
+
+                    $("#txtBoarding").val(res.BoardingNo || '');
+                    $("#txtGrade").val(res.SteelGrade || '');
+                    $("#txtSize").val(res.BilletSize || '');
+                    $("#txtBilletLength").val(res.BilletLength || '');
+                    $("#txtWeight").val(billetWeight);
+
+                    $("#txtTotalBillet")
+                        .val(remainingBillet)
+                        .attr("max", remainingBillet)
+                        .attr("data-remaining", remainingBillet);
+
+                    $("#remainingBilletText").text(
+                        "Required: " + requiredBillet +
+                        " | Charged: " + alreadyChargedBillet +
+                        " | Remaining: " + remainingBillet
+                    );
+
+                    calculateInputTotalWeight();
+                },
+                error: function (xhr) {
+                    console.log("AJAX Error:", xhr.responseText);
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Server Error',
+                        text: 'Unable to fetch heat details.'
+                    });
+                }
+            });
         });
+
+        // ==============================
+        // TOTAL WEIGHT CALCULATION
+        // ==============================
+        $("#txtWeight, #txtTotalBillet").on("keyup change input", function () {
+
+            var enteredBillet = toNum($("#txtTotalBillet").val());
+            var remainingBillet = toNum($("#txtTotalBillet").attr("data-remaining"));
+
+            if (remainingBillet > 0 && enteredBillet > remainingBillet) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Billet Quantity',
+                    text: 'You cannot enter more than remaining billet. Remaining billet is ' + remainingBillet + '.'
+                });
+
+                $("#txtTotalBillet").val(remainingBillet);
+            }
+
+            calculateInputTotalWeight();
+        });
+
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        function toNum(val) {
+            return parseFloat($.trim(val)) || 0;
+        }
+
+        function normalizeShift(val) {
+            return (val || "").toString().trim().toLowerCase();
+        }
+
+        function calculateChargingTotals() {
+            var totalBillet = 0;
+            var totalWeight = 0;
+
+            $("#chargingTableBody tr:visible").each(function () {
+                totalBillet += toNum($(this).find("td:eq(3)").text());
+                totalWeight += toNum($(this).find("td:eq(4)").text());
+            });
+
+            $("#totalBilletBadge").text(totalBillet);
+            $("#totalProducedBadge").text(totalWeight.toFixed(2));
+        }
+
+        function applyChargingFilter() {
+            var selectedShift = normalizeShift($("#shiftFilter").val());
+
+            $("#chargingTableBody tr").each(function () {
+                var rowShift = normalizeShift($(this).attr("data-shift"));
+
+                if (selectedShift === "" || rowShift === selectedShift) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            calculateChargingTotals();
+        }
+
+        $("#shiftFilter").off("change").on("change", function () {
+            applyChargingFilter();
+        });
+
+        applyChargingFilter();
     });
 
-    function clearFields() {
-        $("#txtBoarding, #txtGrade, #txtSize, #txtBilletLength").val('');
-        $("#txtTotalBillet, #txtWeight, #txtTotalWeight").val('');
-    }
+</script>
 
-    // 🔥 FILTER
-    $("#shiftFilter").change(function () {
+<script>
+    $(document).ready(function () {
 
-        var shift = ($(this).val() || "").toLowerCase();
+        let isSubmitting = false;
 
-        $("tbody tr").each(function () {
+        $("#addprofileform").off("submit").on("submit", function (e) {
+            e.preventDefault();
 
-            var rowShift = ($(this).data("shift") || "").toLowerCase();
+            if (isSubmitting) {
+                return;
+            }
 
-            if (!shift || rowShift === shift) {
-                $(this).show();
-            } else {
-                $(this).hide();
+            var id = parseInt($("#hdnID").val()) || 0;
+            var isUpdate = id > 0;
+
+            var heatNo = $("#ddlHeat").val();
+            var totalBillet = parseFloat($("#txtTotalBillet").val()) || 0;
+            var weight = parseFloat($("#txtWeight").val()) || 0;
+
+            if (!heatNo) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Heat Required",
+                    text: "Please select Heat No."
+                });
+                return;
+            }
+
+            if (totalBillet <= 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Total Billet Required",
+                    text: "Please enter valid Total Billet."
+                });
+                return;
+            }
+
+            if (weight <= 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Weight Required",
+                    text: "Please enter valid Weight."
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: isUpdate ? "Confirm Update" : "Confirm Charging",
+                text: isUpdate
+                    ? "Are you sure you want to update this charged heat?"
+                    : "Are you sure you want to charge this heat?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: isUpdate ? "Yes, Update" : "Yes, Charge",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    isSubmitting = true;
+
+                    $("#btnSubmit")
+                        .prop("disabled", true)
+                        .text(isUpdate ? "Updating..." : "Charging...");
+
+                    $("#addprofileform")[0].submit();
+                }
+            });
+        });
+
+        var successMsg = '@TempData["SuccessMessage"]';
+        var errorMsg = '@TempData["ErrorMessage"]';
+
+        if (successMsg) {
+            Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: successMsg,
+                confirmButtonColor: "#3085d6"
+            });
+        }
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: errorMsg,
+                confirmButtonColor: "#d33"
+            });
+        }
+
+    });
+
+
+
+    // ==============================
+    // DELETE
+    // ==============================
+    $(document).on("click", ".btn-delete", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var id = $(this).data("id");
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This record will be permanently deleted.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+                window.location.href = '/RollingMill/deleteCharging?ID=' + id;
             }
         });
-
-        calculateTotals(); // 🔥 recalc after filter
     });
+</script>
 
-    // 🔥 TOTAL CALCULATION (VISIBLE ROWS)
-    function calculateTotals() {
+<script>
+    $(document).ready(function () {
 
-        var totalBillet = 0, totalWeight = 0;
+        $(document).on("click", ".btn-edit", function () {
 
-        $("tbody tr:visible").each(function () {
+            var id = $(this).data("id");
+            var heat = ($(this).data("heat") || "").toString().trim();
+            var boarding = $(this).data("boarding");
+            var grade = $(this).data("grade");
+            var size = $(this).data("size");
+            var length = $(this).data("length");
+            var billet = $(this).data("billet");
+            var weight = $(this).data("weight");
+            var totalWeight = $(this).data("totalweight");
+            var sequence = $(this).data("sequence");
 
-            totalBillet += toNum($(this).find("td:eq(3)").text());
-            totalWeight += toNum($(this).find("td:eq(4)").text());
+            $("#hdnID").val(id);
 
+            // ✅ Edit mode main disabled/used heat ko bhi select allow karo
+            var option = $("#ddlHeat option").filter(function () {
+                return ($(this).val() || "").toString().trim().toLowerCase() === heat.toLowerCase();
+            });
+
+            if (option.length > 0) {
+                option.prop("disabled", false);
+                $("#ddlHeat").val(option.val()).trigger("change.select2");
+            } else {
+                var newOption = new Option(heat, heat, true, true);
+                $("#ddlHeat").append(newOption).trigger("change.select2");
+            }
+
+            $("#txtBoarding").val(boarding || "");
+            $("#txtGrade").val(grade || "");
+            $("#txtSize").val(size || "");
+            $("#txtBilletLength").val(length || "");
+
+            $("#txtTotalBillet")
+                .val(billet)
+                .removeAttr("max")
+                .removeAttr("data-remaining");
+
+            $("#txtWeight").val(weight || "");
+            $("#txtTotalWeight").val(totalWeight || "");
+            $("#txtHeatSequence").val(sequence || "");
+
+            $("#remainingBilletText").text("Edit mode: update existing charged heat.");
+
+            $("#btnSubmit")
+                .removeClass("btn-primary")
+                .addClass("btn-warning")
+                .text("Update Heat");
+
+            $("html, body").animate({
+                scrollTop: $("#addprofileform").offset().top - 80
+            }, 400);
         });
 
-        $("#totalBilletBadge").text(totalBillet);
-        $("#totalProducedBadge").text(totalWeight.toFixed(2));
-    }
-
-    // 🔥 INITIAL LOAD FIX (VERY IMPORTANT)
-    $(document).ready(function () {
-        calculateTotals();
     });
-
 </script>

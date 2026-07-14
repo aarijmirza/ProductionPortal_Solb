@@ -1,7 +1,35 @@
 ﻿@{
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<style>
+    .filter-popup {
+        display: none;
+        position: fixed;
+        top: 85px;
+        right: 25px;
+        min-width: 260px;
+        background: #0d6efd;
+        color: #fff;
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        z-index: 99999;
+        box-shadow: 0 5px 18px rgba(0,0,0,.22);
+    }
 
+        .filter-popup.success {
+            background: #198754;
+        }
+
+        .filter-popup.error {
+            background: #dc3545;
+        }
+
+        .filter-popup.info {
+            background: #0d6efd;
+        }
+</style>
 <!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
     <div class="row">
@@ -20,87 +48,171 @@
     </div>
 </div>
 <!-- End XP Breadcrumbbar -->
-<!-- Filters Section -->
-<div class="xp-breadcrumbbar" style="padding: 50px 30px 0 30px;">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <form id="filterForm" class="d-flex justify-content-between">
+<div class="xp-contentbar">
+    <div id="filterPopup" class="filter-popup"></div>
+    <div class="card mb-3">
+        <div class="card-body">
 
-                        <div class="d-flex">
-                            <div class="form-group mr-3">
-                                <label for="fromDate" class="mr-2">From</label>
-                                <input type="date" id="fromDate" class="form-control" />
-                            </div>
+            <div class="row align-items-end">
 
-                            <div class="form-group mr-3">
-                                <label for="toDate" class="mr-2">To</label>
-                                <input type="date" id="toDate" class="form-control" />
-                            </div>
-                    </form>
+                <div class="col-sm-1 col-md-1 col-lg-2 col-xl-2">
+                    <div class="form-group">
+                        <label for="fromDate">From Date</label>
+                        <input type="date" id="fromDate" class="form-control" />
+                    </div>
                 </div>
+
+                <div class="col-sm-1 col-md-1 col-lg-2 col-xl-2">
+                    <div class="form-group">
+                        <label for="toDate">To Date</label>
+                        <input type="date" id="toDate" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="col-sm-1 col-md-2 col-lg-2 col-xl-4">
+                    <div class="form-group">
+                        <button type="button" id="todayBtn" class="btn btn-info">
+                            Today
+                        </button>
+
+                        <button type="button" id="filterBtn" class="btn btn-primary">
+                            <i class="fa fa-filter"></i> Apply Filter
+                        </button>
+
+                        <button type="button" id="clearBtn" class="btn btn-secondary">
+                            <i class="fa fa-times"></i> Clear
+                        </button>
+                    </div>
+                </div>
+
             </div>
+
         </div>
     </div>
-</div>
-<!-- Filter Section -->
-<div class="xp-contentbar">
+
     <div class="row">
         <div class="col-lg-12">
             <div class="card m-b-30">
                 <div class="card-body">
                     <div class="form-row">
-                        <div class="col-md-3 col-lg-3 col-xl-3">
+                        <!--</div>-->
+                        <div class="col-md-3 col-lg-4 col-xl-4">
                             <!-- Sizing Card -->
-                            <div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">Daily Production Summary Report</h5>
-                                    <a href="@Url.Action("ProductionSummary", "SMPReports")" class="btn btn-primary" target="_blank">View Report</a>
+                            <div class="card border-danger mb-3">
+                                <div class="card-body text-center">
+                                    <h5>EAF Heat Summary Report</h5>
+
+                                    <button class="btn btn-primary openReport mb-2"
+                                            data-url="@Url.Action("DailyHeatSummary", "MeltShop")">
+                                        View Report
+                                    </button>
+
+                                    <button class="btn btn-success downloadReport mb-2"
+                                            data-url="@Url.Action("DailyHeatSummary", "MeltShop")">
+                                        Download Report
+                                    </button>
                                 </div>
                             </div>
                             <!-- Sizing Card -->
                         </div>
-                        <div class="col-md-3 col-lg-3 col-xl-3">
+                        <div class="col-md-3 col-lg-4 col-xl-4">
                             <!-- Sizing Card -->
-                            <div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">Daily Perfomance Report</h5>
-                                    <a href="@Url.Action("DailySummary", "SMPReports")" class="btn btn-primary" target="_blank">View Report</a>
+                            <div class="card border-danger mb-3">
+                                <div class="card-body text-center">
+                                    <h5>LF Heat Summary Report</h5>
+
+                                    <button class="btn btn-primary openReport mb-2"
+                                            data-url="@Url.Action("LFDailyHeatSummary", "MeltShop")">
+                                        View Report
+                                    </button>
+
+                                    <button class="btn btn-success downloadReport mb-2"
+                                            data-url="@Url.Action("LFDailyHeatSummary", "MeltShop")">
+                                        Download Report
+                                    </button>
                                 </div>
                             </div>
                             <!-- Sizing Card -->
                         </div>
-                        <div class="col-md-3 col-lg-3 col-xl-3">
+                        <div class="col-md-3 col-lg-4 col-xl-4">
                             <!-- Sizing Card -->
-                            <div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">Daily Integrated Report</h5>
-                                    <a href="@Url.Action("IntegratedReport", "SMPReports")" class="btn btn-primary" target="_blank">View Report</a>
+                            <div class="card border-danger mb-3">
+                                <div class="card-body text-center">
+                                    <h5>CCM Heat Summary Report</h5>
+
+                                    <button class="btn btn-primary openReport mb-2"
+                                            data-url="@Url.Action("CCMDailyHeatSummary", "CCM")">
+                                        View Report
+                                    </button>
+
+                                    <button class="btn btn-success downloadReport mb-2"
+                                            data-url="@Url.Action("LFDailyHeatSummary", "MeltShop")">
+                                        Download Report
+                                    </button>
                                 </div>
                             </div>
                             <!-- Sizing Card -->
                         </div>
-                        <!--<div class="col-md-3 col-lg-3 col-xl-3">-->
+                        <!--<div class="col-md-3 col-lg-4 col-xl-4">-->
                             <!-- Sizing Card -->
-                            <!--<div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">Daily Production Statistic Report</h5>
-                                    <a href="@Url.Action("StatisticReport", "SMPReports")" class="btn btn-primary" target="_blank">View Report</a>
-                                </div>
-                            </div>-->
-                            <!-- Sizing Card -->
-                        <!--</div>
-                        <div class="col-md-3 col-lg-3 col-xl-3">-->
-                            <!-- Sizing Card -->
-                            <!--<div class="card border-danger m-b-30">
-                                <div class="card-body">
-                                    <h5 class="card-title">CCM Yeild Breakdown Report</h5>
-                                    <a href="@Url.Action("DailySummary", "SMPReports")" class="btn btn-primary" target="_blank">View Report</a>
+                            <!--<div class="card border-danger mb-3">
+                                <div class="card-body text-center">
+                                    <h5>Daily Performance Report</h5>
+
+                                    <button class="btn btn-primary openReport mb-2"
+                                            data-url="@Url.Action("DailySummary", "SMPReports")">
+                                        View Report
+                                    </button>
+
+                                    <button class="btn btn-success downloadReport mb-2"
+                                            data-url="@Url.Action("DailySummary", "SMPReports")">
+                                        Download Report
+                                    </button>
                                 </div>
                             </div>-->
                             <!-- Sizing Card -->
                         <!--</div>-->
+                        <div class="col-md-3 col-lg-4 col-xl-4">
+                            <!-- Sizing Card -->
+                            <div class="card border-danger mb-3">
+                                <div class="card-body text-center">
+                                    <h5>Daily Performance Report</h5>
+
+                                    <button class="btn btn-primary openReport mb-2"
+                                            data-url="@Url.Action("DailySummary", "SMPReports")">
+                                        View Report
+                                    </button>
+
+                                    <button class="btn btn-success downloadReport mb-2"
+                                            data-url="@Url.Action("DailySummary", "SMPReports")">
+                                        Download Report
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Sizing Card -->
+                        </div>
+                        <div class="col-md-3 col-lg-4 col-xl-4">
+                            <!-- Sizing Card -->
+
+                            <div class="card border-danger mb-3">
+                                <div class="card-body text-center">
+                                    <h5>Daily Integrated Report</h5>
+
+                                    <button class="btn btn-primary openReport mb-2"
+                                            data-url="@Url.Action("IntegratedReport", "SMPReports")">
+                                        View Report
+                                    </button>
+
+                                    <button class="btn btn-success downloadReport mb-2"
+                                            data-url="@Url.Action("IntegratedReport", "SMPReports")">
+                                        Download Report
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Sizing Card -->
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -109,32 +221,146 @@
     </div>
 </div>
 
+<!-- ================= SCRIPTS ================= -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
 
 <script>
     $(document).ready(function () {
-        // ✅ Default dates
-        var today = new Date();
-        var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
-        function formatDate(d) {
-            return d.toISOString().split('T')[0];
+        setTodayDefault();
+
+        function getTodayText() {
+            var today = new Date();
+            var yyyy = today.getFullYear();
+            var mm = String(today.getMonth() + 1).padStart(2, "0");
+            var dd = String(today.getDate()).padStart(2, "0");
+
+            return yyyy + "-" + mm + "-" + dd;
         }
 
-        $('#fromDate').val(formatDate(today));
-        $('#toDate').val(formatDate(today));
+        function setTodayDefault() {
+            var todayText = getTodayText();
 
-        // Export PDF (date-wise)
-        $('#exportPdf').click(function () {
-            var from = $('#fromDate').val() || '';
-            var to   = $('#toDate').val() || '';
+            if (!$("#fromDate").val()) {
+                $("#fromDate").val(todayText);
+            }
 
-            var url = '@Url.Action("DailyHeatSummary", "MeltShop")'
-                + '?from=' + encodeURIComponent(from)
-                + '&to=' + encodeURIComponent(to);
+            if (!$("#toDate").val()) {
+                $("#toDate").val(todayText);
+            }
+        }
 
-            window.open(url, '_blank');
+        function showMessage(message, type) {
+            var popup = $("#filterPopup");
+
+            popup.removeClass("success error info");
+
+            if (type === "success") {
+                popup.addClass("success");
+            } else if (type === "error") {
+                popup.addClass("error");
+            } else {
+                popup.addClass("info");
+            }
+
+            popup.text(message);
+            popup.stop(true, true).fadeIn(200);
+
+            setTimeout(function () {
+                popup.fadeOut(300);
+            }, 2000);
+        }
+
+        function validateDates() {
+            var fromDate = $("#fromDate").val();
+            var toDate = $("#toDate").val();
+
+            if (!fromDate) {
+                showMessage("Please select From Date.", "error");
+                return false;
+            }
+
+            if (!toDate) {
+                showMessage("Please select To Date.", "error");
+                return false;
+            }
+
+            if (fromDate > toDate) {
+                showMessage("From Date cannot be greater than To Date.", "error");
+                return false;
+            }
+
+            return true;
+        }
+
+        function buildReportUrl(baseUrl, download) {
+            var fromDate = $("#fromDate").val();
+            var toDate = $("#toDate").val();
+
+            var params = [];
+
+            if (fromDate) {
+                params.push("from=" + encodeURIComponent(fromDate));
+            }
+
+            if (toDate) {
+                params.push("to=" + encodeURIComponent(toDate));
+            }
+
+            params.push("download=" + encodeURIComponent(download));
+
+            if (params.length > 0) {
+                return baseUrl + "?" + params.join("&");
+            }
+
+            return baseUrl;
+        }
+
+        $("#todayBtn").click(function () {
+            var todayText = getTodayText();
+
+            $("#fromDate").val(todayText);
+            $("#toDate").val(todayText);
+
+            showMessage("Today date selected.", "success");
         });
+
+        $("#filterBtn").click(function () {
+            if (!validateDates()) {
+                return;
+            }
+
+            showMessage("Filter applied successfully. Please click View Report.", "success");
+        });
+
+        $("#clearBtn").click(function () {
+            $("#fromDate").val("");
+            $("#toDate").val("");
+
+            showMessage("Filter cleared.", "info");
+        });
+
+        $(document).on("click", ".openReport", function () {
+            if (!validateDates()) {
+                return;
+            }
+
+            var baseUrl = $(this).data("url");
+            var finalUrl = buildReportUrl(baseUrl, false);
+
+            window.open(finalUrl, "_blank");
+        });
+
+        $(document).on("click", ".downloadReport", function () {
+            if (!validateDates()) {
+                return;
+            }
+
+            var baseUrl = $(this).data("url");
+            var finalUrl = buildReportUrl(baseUrl, true);
+
+            window.open(finalUrl, "_blank");
+        });
+
     });
 </script>

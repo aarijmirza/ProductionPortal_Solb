@@ -108,6 +108,23 @@ namespace DAL.Models
 
         public GradeBLL Gradess { get; set; }
 
+        public decimal? LadleWeightStart { get; set; }
+        public decimal? LadleWeightEnd { get; set; }
+
+        public decimal? Prime1Length { get; set; }
+        public decimal? Prime1Pcs { get; set; }
+
+        public decimal? Prime2Length { get; set; }
+        public decimal? Prime2Pcs { get; set; }
+
+        public decimal? VarLengthPcs { get; set; }
+        public decimal? EndCutPcs { get; set; }
+
+        public decimal? Prime1Wt { get; set; }
+        public decimal? Prime2Wt { get; set; }
+        public decimal? VLenWt { get; set; }
+        public decimal? EndWt { get; set; }
+
     }
 
 

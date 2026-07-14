@@ -1,0 +1,308 @@
+﻿@model List<DAL.Models.SupplyChainDailyBLL>
+@using System.Globalization
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+
+    string fromDate = ViewBag.FromDate ?? DateTime.Today.ToString("yyyy-MM-dd");
+    string toDate = ViewBag.ToDate ?? DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<style>
+    .sc-list-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.08);
+        margin-bottom: 18px;
+        overflow: hidden;
+    }
+
+        .sc-list-card .card-header {
+            background: #991b1b;
+            color: #fff;
+            font-weight: 700;
+            padding: 12px 16px;
+        }
+
+    .filter-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.08);
+        margin-bottom: 18px;
+    }
+
+    .table thead th {
+        background: #7f1010;
+        color: #fff;
+        font-size: 12px;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .table td {
+        font-size: 12px;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .badge-soft-success {
+        background: #d1e7dd;
+        color: #0f5132;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+
+    .badge-soft-danger {
+        background: #f8d7da;
+        color: #842029;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+
+    .summary-mini {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+
+    .summary-pill {
+        background: #fff;
+        border-left: 4px solid #991b1b;
+        border-radius: 10px;
+        padding: 10px 14px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+        min-width: 170px;
+    }
+
+        .summary-pill small {
+            display: block;
+            color: #6c757d;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .summary-pill b {
+            color: #222;
+            font-size: 18px;
+        }
+</style>
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6">
+            <h4 class="xp-page-title">Supply Chain Dashboard List</h4>
+        </div>
+        <div class="col-md-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">Supply Chain List</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="card filter-card">
+        <div class="card-body">
+            <form method="get" action="@Url.Action("List", "SupplyChain")">
+                <div class="row align-items-end">
+
+                    <div class="col-md-3">
+                        <label>From Date</label>
+                        <input type="date"
+                               name="fromDate"
+                               class="form-control"
+                               value="@fromDate" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>To Date</label>
+                        <input type="date"
+                               name="toDate"
+                               class="form-control"
+                               value="@toDate" />
+                    </div>
+
+                    <div class="col-md-6 text-right">
+                        <button type="submit" class="btn btn-primary">
+                            Filter
+                        </button>
+
+                        <a href="@Url.Action("List", "SupplyChain")" class="btn btn-secondary">
+                            Clear
+                        </a>
+
+                        <a href="@Url.Action("Add", "SupplyChain")" class="btn btn-success">
+                            + Add New
+                        </a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @{
+        decimal totalInventory = Model != null
+            ? Model.Sum(x =>
+                (x.Scrap ?? 0) +
+                (x.DRI ?? 0) +
+                (x.HBI ?? 0) +
+                (x.Billet ?? 0) +
+                (x.Rebar ?? 0) +
+                (x.WireRodCoil ?? 0) +
+                (x.RebarInCoil ?? 0) +
+                (x.EpoxyRebar ?? 0))
+            : 0;
+
+        decimal totalDailyDispatch = Model != null
+            ? Model.Sum(x => x.DailyDispatch ?? 0)
+            : 0;
+
+        decimal totalMTDDispatch = Model != null
+            ? Model.Sum(x => x.MTDDispatch ?? 0)
+            : 0;
+
+        int totalRecords = Model != null ? Model.Count : 0;
+    }
+
+    <div class="summary-mini">
+        <div class="summary-pill">
+            <small>Total Records</small>
+            <b>@totalRecords</b>
+        </div>
+
+        <div class="summary-pill">
+            <small>Total Inventory MT</small>
+            <b>@totalInventory.ToString("N3")</b>
+        </div>
+
+        <div class="summary-pill">
+            <small>Daily Dispatch MT</small>
+            <b>@totalDailyDispatch.ToString("N3")</b>
+        </div>
+
+        <div class="summary-pill">
+            <small>MTD Dispatch MT</small>
+            <b>@totalMTDDispatch.ToString("N3")</b>
+        </div>
+    </div>
+
+    <div class="card sc-list-card">
+        <div class="card-header">
+            Supply Chain Daily Records
+        </div>
+
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Date</th>
+
+
+                        <th>Scrap</th>
+                        <th>DRI</th>
+                        <th>HBI</th>
+
+                        <th>Billet</th>
+                        <th>Rebar</th>
+                        <th>Wire Rod Coil</th>
+                        <th>Rebar in Coil</th>
+                        <th>Epoxy Rebar</th>
+
+                        @*<th>Raw Received</th>
+                        <th>Sub Raw</th>
+                        <th>Refractory</th>
+                        <th>Fuel Oil</th>
+                        <th>Other</th>
+
+                        <th>Mill Scale</th>
+                        <th>Slag</th>
+                        <th>Dust</th>
+                        <th>Sludge</th>*@
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <a href="@Url.Action("Add", "SupplyChain", new { id = item.ID })"
+                                       class="btn btn-sm btn-primary">
+                                        Edit
+                                    </a>
+
+                                    @*<a href="@Url.Action("SupplyChainReport", "Reporting", new { from = item.ReportDate.HasValue ? item.ReportDate.Value.ToString("yyyy-MM-dd") : "", to = item.ReportDate.HasValue ? item.ReportDate.Value.ToString("yyyy-MM-dd") : "" })"
+                                       target="_blank"
+                                       class="btn btn-sm btn-danger">
+                                        Report
+                                    </a>*@
+                                </td>
+
+                                <td>@(item.ReportDate.HasValue ? item.ReportDate.Value.ToString("dd-MMM-yyyy", gregorian) : "-")</td>
+
+                                <td>@((item.Scrap ?? 0).ToString("N3"))</td>
+                                <td>@((item.DRI ?? 0).ToString("N3"))</td>
+                                <td>@((item.HBI ?? 0).ToString("N3"))</td>
+
+                                <td>@((item.Billet ?? 0).ToString("N3"))</td>
+                                <td>@((item.Rebar ?? 0).ToString("N3"))</td>
+                                <td>@((item.WireRodCoil ?? 0).ToString("N3"))</td>
+                                <td>@((item.RebarInCoil ?? 0).ToString("N3"))</td>
+                                <td>@((item.EpoxyRebar ?? 0).ToString("N3"))</td>
+
+                                @*<td>@((item.RawMaterialsReceived ?? 0).ToString("N3"))</td>
+                                <td>@((item.SubRawMaterialsReceived ?? 0).ToString("N3"))</td>
+                                <td>@((item.RefractoryMaterialsReceived ?? 0).ToString("N3"))</td>
+                                <td>@((item.FuelOilReceived ?? 0).ToString("N3"))</td>
+                                <td>@((item.OtherReceived ?? 0).ToString("N3"))</td>*@
+
+                                @*<td>@((item.MillScale ?? 0).ToString("N3"))</td>
+                                <td>@((item.Slag ?? 0).ToString("N3"))</td>
+                                <td>@((item.Dust ?? 0).ToString("N3"))</td>
+                                <td>@((item.Sludge ?? 0).ToString("N3"))</td>*@
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="26" class="text-center text-muted">
+                                No supply chain records found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

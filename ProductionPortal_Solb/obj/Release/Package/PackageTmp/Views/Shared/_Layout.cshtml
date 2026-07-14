@@ -112,9 +112,15 @@
                 <div class="xp-navigationbar">
                     <ul class="xp-vertical-menu">
                         <li>
-                            <a href="@Url.Action("Index", "Home")">
-                                <i class="icon-speedometer"></i><span>Dashboard</span>
+                            <a href="javaScript:void();">
+                                <span>DASHBOARD'S</span><i class="icon-arrow-right pull-right"></i>
                             </a>
+                            <ul class="xp-vertical-submenu">
+                                <li><a href="@Url.Action("ReportingSection", "Reporting")">OPERATION DASHBOARD</a></li>
+                            </ul>
+                            <ul class="xp-vertical-submenu">
+                                <li><a href="@Url.Action("list", "Executive")">EXECUTIVE DASHBOARD</a></li>
+                            </ul>
                         </li>
                         @*<li class="xp-vertical-header">MELTSHOP SECTION</li>*@
                         @if (User.IsInRole("Administrator") || User.IsInRole("User") || User.IsInRole("Steel Making User") || User.IsInRole("QC User"))
@@ -179,7 +185,7 @@
 
                             </li>
                         }
-                        @if (User.IsInRole("Rolling Mill User") || User.IsInRole("Administrator"))
+                        @if (User.IsInRole("Rolling Mill User") || User.IsInRole("Administrator") || User.IsInRole("user"))
                         {
                             <li>
                                 <a href="javascript:void(0);">
@@ -192,8 +198,12 @@
                                         <li><a href="@Url.Action("AddDetails","RollingMill")">DETAILS</a></li>
                                         <li><a href="@Url.Action("AddCharge","RollingMill")">BILLET CHARGING</a></li>
                                         <li><a href="@Url.Action("AddDischarge","RollingMill")">FURNACE DISCHARGE</a></li>
+                                        <li><a href="@Url.Action("RMHourlyDischarge","RollingMill")">HOURLY DATA BREAKDOWN</a></li>
                                         <li><a href="@Url.Action("AddBundleSection","RollingMill")">BUNDLE SECTION</a></li>
-                                        <li><a href="@Url.Action("list","Delay")">DELAY RECORD</a></li>
+                                        @if (User.IsInRole("User") || User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User"))
+                                        {
+                                            <li><a href="@Url.Action("list", "Delay")">DELAY RECORD</a></li>
+                                        }
                                     </ul>
                                 }
                                 else
@@ -207,55 +217,58 @@
                                 }
                             </li>
                         }
-                        @*@if (User.IsInRole("Rolling Mill User") || User.IsInRole("Administrator"))
-                            {
-                                <li>
-                                    <a href="javaScript:void();">
-                                        <span>ROLLING MILL</span><i class="icon-arrow-right pull-right"></i>
-                                    </a>
-
-                                    @if (ViewBag.HasRollingMillTodayData == true)
-                                    {
-                                        <ul class="xp-vertical-submenu">
-                                            <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
-                                        </ul>
-                                        <ul class="xp-vertical-submenu">
-                                            <li><a href="@Url.Action("AddCharge", "RollingMill")">BILLET CHARGING</a></li>
-                                        </ul>
-                                        <ul class="xp-vertical-submenu">
-                                            <li><a href="@Url.Action("AddDischarge", "RollingMill")">FURNACE DISCHARGE</a></li>
-                                        </ul>
-                                        <ul class="xp-vertical-submenu">
-                                            <li><a href="@Url.Action("AddBundleSection", "RollingMill")">BUNDLE SECTION</a></li>
-                                        </ul>
-                                        <ul class="xp-vertical-submenu">
-                                            <li><a href="@Url.Action("list", "Delay")">DELAY RECORD</a></li>
-                                        </ul>
-                                    }
-                                    else
-                                    {
-                                        <ul class="xp-vertical-submenu">
-                                            <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
-                                            <li style="color:red; padding:10px;">
-                                                ⚠ Please add Rolling Mill Details for today first
-                                            </li>
-                                        </ul>
-                                    }
-                                </li>
-                            }*@
-                        @if (User.IsInRole("Administrator"))
+                        @if (User.IsInRole("Administrator") || User.IsInRole("User"))
                         {
                             <li>
                                 <a href="javaScript:void();">
-                                    <span>SECURITY</span><i class="icon-arrow-right pull-right"></i>
+                                    <span>CMD MAINTENANCE</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
-                                    <li><a href="@Url.Action("KPIAdd", "Security")">SHER DETAIL</a></li>
-                                    <li><a href="@Url.Action("FSadd", "Security")">FIRE SYSTEM KPI</a></li>
+                                    <li><a href="@Url.Action("list", "Maintenance")">DELAY ANALYSIS REPORT</a></li>
                                 </ul>
                             </li>
                         }
-                        @if (User.IsInRole("Administrator"))
+                        @if (User.IsInRole("Administrator") || User.IsInRole("Supply Chain"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>SUPPLY CHAIN</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("list", "SupplyChain")">SUPPLY CHAIN REPORT</a></li>
+                                </ul>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("add", "Stock")">MATERIAL STOCK</a></li>
+                                </ul>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("Stocklist", "Stock")">SUPPLY CHAIN STOCK</a></li>
+                                </ul>
+                            </li>
+                        }
+                        @if (User.IsInRole("Administrator") || User.IsInRole("User"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>UTILITY CONSUMPTION</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("add", "Consumption")">CONSUMPTIONS</a></li>
+                                </ul>
+                            </li>
+                        }
+                        @if (User.IsInRole("Administrator") || User.IsInRole("Sher"))
+                        {
+                            <li>
+                                <a href="javaScript:void();">
+                                    <span>HSE</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("KPIAdd", "Security")">SHER DETAIL</a></li>
+                                    @*<li><a href="@Url.Action("FSadd", "Security")">FIRE SYSTEM KPI</a></li>*@
+                                </ul>
+                            </li>
+                        }
+                        @if (User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User") || User.IsInRole("Supply Chain"))
                         {
                             <li>
                                 <a href="javaScript:void();">
@@ -264,7 +277,11 @@
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("list", "SMPReports")">SMP REPORTS</a></li>
                                     <li><a href="@Url.Action("list", "RMReports")">ROLLING MILL REPORTS</a></li>
-                                    <li><a href="@Url.Action("ProductionSummary", "SMPReports")">DIRECTOR SUMMARY REPORTS</a></li>
+                                    @*@if (User.IsInRole("Administrator") || User.IsInRole("User") || User.IsInRole("Supply Chain"))
+                                                                {
+                                        <li><a href="@Url.Action("ReportingSection", "Reporting")">OTHER REPORTS</a></li>
+                                                                }*@
+                                    @*<li><a href="@Url.Action("ProductionSummary", "SMPReports")">DIRECTOR SUMMARY REPORTS</a></li>*@
 
                                     @*<li><a href="@Url.Action("DownloadSMPIntegratedPDF", "Reporting")">SMP INTEGRATED REPORT</a></li>
                                         <li><a href="@Url.Action("DownloadSMPDailyReport", "Reporting")">SMP DAILY SUMMARY REPORT</a></li>

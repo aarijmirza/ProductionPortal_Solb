@@ -23,7 +23,7 @@ namespace BAL.Repositories
             _ds = new DataSet();
         }
 
-        public List<BilletDischargingBLL> GetDichargedHeat(DateTime startDate, DateTime endDate)
+        public List<BilletDischargingBLL> GetDichargedHeat(DateTime startDate, DateTime endDate, string shift)
         {
             try
             {
@@ -32,7 +32,8 @@ namespace BAL.Repositories
                 SqlParameter[] p = new SqlParameter[]
                 {
             new SqlParameter("@StartDate", startDate),
-            new SqlParameter("@EndDate", endDate)
+            new SqlParameter("@EndDate", endDate),
+            new SqlParameter("@Shift", shift)
                 };
 
                 _dt = (new DBHelper().GetTableFromSP)("sp_GetDichargedHeat", p);
@@ -134,23 +135,24 @@ namespace BAL.Repositories
         {
             try
             {
-                SqlParameter[] p = new SqlParameter[15];
+                SqlParameter[] p = new SqlParameter[16];
 
                 p[0] = new SqlParameter("@Date", model.Date);
                 p[1] = new SqlParameter("@Shift", model.Shift);
-                p[2] = new SqlParameter("@HeatNo", model.HeatNo);
-                p[3] = new SqlParameter("@BoardingNo", model.BoardingNo);
-                p[4] = new SqlParameter("@SteelGrade", model.SteelGrade);
-                p[5] = new SqlParameter("@BilletSize", model.BilletSize);
-                p[6] = new SqlParameter("@BilletLength", model.BilletLength);
-                p[7] = new SqlParameter("@Weight", model.Weight);
-                p[8] = new SqlParameter("@TotalBillet", model.TotalBillet);
-                p[9] = new SqlParameter("@TotalWeight", model.TotalWeight);
-                p[10] = new SqlParameter("@HeatSequence", model.HeatSequence);
-                p[11] = new SqlParameter("@HeatStatus", 102);
-                p[12] = new SqlParameter("@StatusID", model.StatusID);
-                p[13] = new SqlParameter("@CreatedBy", model.CreatedBy);
-                p[14] = new SqlParameter("@CreatedDate", model.CreatedDate);
+                p[2] = new SqlParameter("@Plant", model.Plant);
+                p[3] = new SqlParameter("@HeatNo", model.HeatNo);
+                p[4] = new SqlParameter("@BoardingNo", model.BoardingNo);
+                p[5] = new SqlParameter("@SteelGrade", model.SteelGrade);
+                p[6] = new SqlParameter("@BilletSize", model.BilletSize);
+                p[7] = new SqlParameter("@BilletLength", model.BilletLength);
+                p[8] = new SqlParameter("@Weight", model.Weight);
+                p[9] = new SqlParameter("@TotalBillet", model.TotalBillet);
+                p[10] = new SqlParameter("@TotalWeight", model.TotalWeight);
+                p[11] = new SqlParameter("@HeatSequence", model.HeatSequence);
+                p[12] = new SqlParameter("@HeatStatus", 102);
+                p[13] = new SqlParameter("@StatusID", model.StatusID);
+                p[14] = new SqlParameter("@CreatedBy", model.CreatedBy);
+                p[15] = new SqlParameter("@CreatedDate", model.CreatedDate);
 
                 return (new DBHelper().ExecuteNonQueryReturn)("sp_InsertBilletCharging", p);
             }
@@ -187,25 +189,26 @@ namespace BAL.Repositories
         {
             try
             {
-                SqlParameter[] p = new SqlParameter[17];
+                SqlParameter[] p = new SqlParameter[18];
 
                 p[0] = new SqlParameter("@Date", model.Date);
                 p[1] = new SqlParameter("@Shift", model.Shift);
-                p[2] = new SqlParameter("@HeatNo", model.HeatNo);
-                p[3] = new SqlParameter("@BoardingNo", model.BoardingNo);
-                p[4] = new SqlParameter("@SteelGrade", model.SteelGrade);
-                p[5] = new SqlParameter("@NewSteelGrade", model.NewSteelGrade);
-                p[6] = new SqlParameter("@ProductCode", model.ProductCode);
-                p[7] = new SqlParameter("@PONumber", model.PONumber);
-                p[8] = new SqlParameter("@Cobble", model.Cobble);
-                p[9] = new SqlParameter("@HotOut", model.HotOut);
-                p[10] = new SqlParameter("@TotalBillet", model.TotalBillet);
-                p[11] = new SqlParameter("@TotalWeight", model.TotalWeight);
-                p[12] = new SqlParameter("@DischargingSequence", model.DischargingSequence);
-                p[13] = new SqlParameter("@HeatStatus", 103);
-                p[14] = new SqlParameter("@StatusID", model.StatusID);
-                p[15] = new SqlParameter("@CreatedBy", model.CreatedBy);
-                p[16] = new SqlParameter("@CreatedOn", model.CreatedOn);
+                p[2] = new SqlParameter("@Plant", model.Plant);
+                p[3] = new SqlParameter("@HeatNo", model.HeatNo);
+                p[4] = new SqlParameter("@BoardingNo", model.BoardingNo);
+                p[5] = new SqlParameter("@SteelGrade", model.SteelGrade);
+                p[6] = new SqlParameter("@NewSteelGrade", model.NewSteelGrade);
+                p[7] = new SqlParameter("@ProductCode", model.ProductCode);
+                p[8] = new SqlParameter("@PONumber", model.PONumber);
+                p[9] = new SqlParameter("@Cobble", model.Cobble);
+                p[10] = new SqlParameter("@HotOut", model.HotOut);
+                p[11] = new SqlParameter("@TotalBillet", model.TotalBillet);
+                p[12] = new SqlParameter("@TotalWeight", model.TotalWeight);
+                p[13] = new SqlParameter("@DischargingSequence", model.DischargingSequence);
+                p[14] = new SqlParameter("@HeatStatus", 103);
+                p[15] = new SqlParameter("@StatusID", model.StatusID);
+                p[16] = new SqlParameter("@CreatedBy", model.CreatedBy);
+                p[17] = new SqlParameter("@CreatedOn", model.CreatedOn);
 
                 return (new DBHelper().ExecuteNonQueryReturn)("sp_InsertBilletDischarging", p);
             }
@@ -281,7 +284,7 @@ namespace BAL.Repositories
         {
             try
             {
-                SqlParameter[] p = new SqlParameter[15];
+                SqlParameter[] p = new SqlParameter[16];
 
                 p[0] = new SqlParameter("@HeatNo", model.HeatNo);
                 p[1] = new SqlParameter("@BoardingNo", model.BilletBoardingNo);
@@ -311,6 +314,7 @@ namespace BAL.Repositories
                 p[12] = new SqlParameter("@CreatedDate", model.CreatedDate);
                 p[13] = new SqlParameter("@Date", model.Date);
                 p[14] = new SqlParameter("@Shift", model.Shift);
+                p[15] = new SqlParameter("@Plant", model.Plant);
 
                 return (new DBHelper().ExecuteNonQueryReturn)("sp_InsertBundleSection", p);
             }
@@ -319,31 +323,6 @@ namespace BAL.Repositories
                 return 0;
             }
         }
-
-        //public List<RMShiftDetailsBLL> RollingMillDetails()
-        //{
-        //    try
-        //    {
-        //        var lst = new List<RMShiftDetailsBLL>();
-
-        //        SqlParameter[] p = new SqlParameter[0];
-
-        //        _dt = (new DBHelper().GetTableFromSP)("sp_GetRMShiftDetails", p);
-        //        if (_dt != null)
-        //        {
-        //            if (_dt.Rows.Count > 0)
-        //            {
-        //                lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<RMShiftDetailsBLL>>();
-        //            }
-        //        }
-
-        //        return lst;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return null;
-        //    }
-        //}
 
         public List<RMShiftDetailsBLL> RollingMillDetails()
         {
@@ -374,6 +353,205 @@ namespace BAL.Repositories
             catch (Exception ex)
             {
                 return null;
+            }
+        }
+
+        public int DeleteShiftDetails(int? id, string createdBy)
+        {
+            SqlParameter[] p = {
+            new SqlParameter("@StatusID", 3),
+            new SqlParameter("@UpdatedDate", DateTime.Now),
+            new SqlParameter("@UpdatedBy", createdBy),
+            new SqlParameter("@ID", id),
+        };
+
+            return (new DBHelper().ExecuteNonQueryReturn)("sp_DeleteRMShiftDetails", p);
+        }
+        public int DeleteCharging(int? id, string createdBy)
+        {
+            SqlParameter[] p = {
+            new SqlParameter("@StatusID", 3),
+            new SqlParameter("@UpdatedDate", DateTime.Now),
+            new SqlParameter("@UpdatedBy", createdBy),
+            new SqlParameter("@ID", id),
+        };
+
+            return (new DBHelper().ExecuteNonQueryReturn)("sp_DeleteRMCharging", p);
+        }
+        public int DeleteDischarging(int? id, string createdBy)
+        {
+            SqlParameter[] p = {
+            new SqlParameter("@StatusID", 3),
+            new SqlParameter("@UpdatedDate", DateTime.Now),
+            new SqlParameter("@UpdatedBy", createdBy),
+            new SqlParameter("@ID", id),
+        };
+
+            return (new DBHelper().ExecuteNonQueryReturn)("sp_DeleteRMDischarging", p);
+        }
+
+        public int DeleteBundle(int? id, string createdBy)
+        {
+            SqlParameter[] p = {
+            new SqlParameter("@StatusID", 3),
+            new SqlParameter("@UpdatedDate", DateTime.Now),
+            new SqlParameter("@UpdatedBy", createdBy),
+            new SqlParameter("@ID", id),
+        };
+
+            return (new DBHelper().ExecuteNonQueryReturn)("sp_DeleteRMBundle", p);
+        }
+
+        public bool IsRMHourlyDischargeExist(DateTime date, string shift)
+        {
+            try
+            {
+                SqlParameter[] p = new SqlParameter[2];
+
+                p[0] = new SqlParameter("@Date", date.Date);
+                p[1] = new SqlParameter("@Shift", shift ?? "");
+
+                DataTable dt = new DBHelper().GetTableFromSP("sp_IsRMHourlyDischargeExist", p);
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    int count = Convert.ToInt32(dt.Rows[0][0]);
+                    return count > 0;
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public int InsertRMHourlyDischarge(RMHourlyDischargeBLL model)
+        {
+            try
+            {
+                SqlParameter[] p = new SqlParameter[19];
+
+                p[0] = new SqlParameter("@Date", model.Date);
+                p[1] = new SqlParameter("@Shift", model.Shift ?? "");
+
+                p[2] = new SqlParameter("@TimeFrom", model.TimeFrom ?? "");
+                p[3] = new SqlParameter("@TimeTo", model.TimeTo ?? "");
+
+                p[4] = new SqlParameter("@NoofBillets", model.NoofBillets ?? "");
+                p[5] = new SqlParameter("@NoofCobble", model.NoofCobble ?? 0);
+                p[6] = new SqlParameter("@Reject", model.Reject ?? 0);
+                p[7] = new SqlParameter("@BilletHeatNo", model.BilletHeatNo ?? "");
+
+                p[8] = new SqlParameter("@SafetyIssueShift", model.SafetyIssueShift ?? "");
+                p[9] = new SqlParameter("@MessageShift", model.MessageShift ?? "");
+
+                p[10] = new SqlParameter("@FuelConsumptionStart", model.FuelConsumptionStart ?? "");
+                p[11] = new SqlParameter("@FuelConsumptionEnd", model.FuelConsumptionEnd ?? "");
+                p[12] = new SqlParameter("@TotalConsumption", model.TotalConsumption ?? "");
+                p[13] = new SqlParameter("@ElectricityConsumption", model.ElectricityConsumption ?? "");
+
+                p[14] = new SqlParameter("@StatusID", model.StatusID);
+                p[15] = new SqlParameter("@CreatedBy", model.CreatedBy ?? "");
+                p[16] = new SqlParameter("@CreatedDate", model.CreatedDate);
+
+                p[17] = new SqlParameter("@UpdatedBy", DBNull.Value);
+                p[18] = new SqlParameter("@UpdatedDate", DBNull.Value);
+
+                return (new DBHelper().ExecuteNonQueryReturn)("sp_InsertRMHourlyDischarge", p);
+            }
+            catch (Exception ex)
+            {
+                return 0;
+            }
+        }
+
+        public int UpdateBundlingSection(BundlingSectionBLL model)
+        {
+            try
+            {
+                SqlParameter[] p = new SqlParameter[12];
+
+                p[0] = new SqlParameter("@ID", model.ID);
+                p[1] = new SqlParameter("@Date", model.Date);
+                p[2] = new SqlParameter("@Shift", model.Shift ?? "");
+                p[3] = new SqlParameter("@HeatNo", model.HeatNo ?? "");
+                p[4] = new SqlParameter("@BilletBoardingNo", model.BilletBoardingNo ?? "");
+                p[5] = new SqlParameter("@SteelGrade", model.SteelGrade ?? "");
+                p[6] = new SqlParameter("@PONumber", model.PONumber ?? "");
+                p[7] = new SqlParameter("@TotalBundleProduced", model.TotalBundleProduced);
+                p[8] = new SqlParameter("@PerCoilWeight", model.PerCoilWeight);
+                p[9] = new SqlParameter("@TheoriticalWeight", model.TheoriticalWeight);
+                p[10] = new SqlParameter("@Remarks", model.Remarks ?? "");
+                p[11] = new SqlParameter("@UpdatedBy", model.UpdatedBy ?? "");
+
+                return (new DBHelper().ExecuteNonQueryReturn)("sp_UpdateBundlingSection", p);
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        public int UpdateBilletCharging(BilletChargingBLL model)
+        {
+            try
+            {
+                SqlParameter[] p = new SqlParameter[13];
+
+                p[0] = new SqlParameter("@ID", model.ID);
+                p[1] = new SqlParameter("@Date", model.Date);
+                p[2] = new SqlParameter("@Shift", model.Shift ?? "");
+                p[3] = new SqlParameter("@HeatNo", model.HeatNo ?? "");
+                p[4] = new SqlParameter("@BoardingNo", model.BoardingNo ?? "");
+                p[5] = new SqlParameter("@SteelGrade", model.SteelGrade ?? "");
+                p[6] = new SqlParameter("@BilletSize", model.BilletSize ?? "");
+                p[7] = new SqlParameter("@BilletLength", model.BilletLength ?? "");
+                p[8] = new SqlParameter("@TotalBillet", model.TotalBillet);
+                p[9] = new SqlParameter("@Weight", model.Weight);
+                p[10] = new SqlParameter("@TotalWeight", model.TotalWeight);
+                p[11] = new SqlParameter("@HeatSequence", model.HeatSequence);
+                p[12] = new SqlParameter("@UpdatedBy", model.UpdatedBy ?? "");
+
+                return (new DBHelper().ExecuteNonQueryReturn)("sp_UpdateBilletCharging", p);
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        public int UpdateDischarging(BilletDischargingBLL model)
+        {
+            try
+            {
+                SqlParameter[] p = new SqlParameter[18];
+
+                p[0] = new SqlParameter("@ID", model.ID);
+                p[1] = new SqlParameter("@Date", model.Date);
+                p[2] = new SqlParameter("@Shift", model.Shift ?? "");
+                p[3] = new SqlParameter("@Plant", model.Plant ?? "");
+                p[4] = new SqlParameter("@HeatNo", model.HeatNo ?? "");
+                p[5] = new SqlParameter("@BoardingNo", model.BoardingNo ?? "");
+                p[6] = new SqlParameter("@SteelGrade", model.SteelGrade ?? "");
+                p[7] = new SqlParameter("@NewSteelGrade", model.NewSteelGrade ?? "");
+                p[8] = new SqlParameter("@PONumber", model.PONumber ?? "");
+                p[9] = new SqlParameter("@Cobble", model.Cobble);
+                p[10] = new SqlParameter("@HotOut", model.HotOut);
+                p[11] = new SqlParameter("@TotalBillet", model.TotalBillet);
+                p[12] = new SqlParameter("@TotalWeight", model.TotalWeight);
+                p[13] = new SqlParameter("@DischargingSequence", model.DischargingSequence);
+                p[14] = new SqlParameter("@StatusID", model.StatusID);
+                p[15] = new SqlParameter("@UpdatedBy", model.UpdatedBy ?? "");
+                p[16] = new SqlParameter("@UpdatedDate", model.UpdatedDate ?? DateTime.Now);
+                p[17] = new SqlParameter("@HeatStatus", 103);
+
+                return (new DBHelper().ExecuteNonQueryReturn)("sp_UpdateDischarging", p);
+            }
+            catch
+            {
+                return 0;
             }
         }
     }

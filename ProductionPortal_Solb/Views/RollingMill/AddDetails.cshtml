@@ -2,6 +2,14 @@
 @{
     ViewBag.Title = "add";
 }
+
+<style>
+    .selected-row {
+        background-color: #d9edf7 !important;
+        font-weight: bold;
+    }
+</style>
+
 <!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
     <div class="row">
@@ -22,14 +30,39 @@
 <!-- End XP Breadcrumbbar -->
 
 <div class="xp-contentbar">
+
+    <div class="card mb-3 shadow-sm">
+        <div class="card-header">
+            <b>Currently Loaded Shift</b>
+        </div>
+
+        <div class="card-body">
+            <div class="form-row">
+                <div class="col-md-2"><b>Date:</b> @ViewBag.LoadedDate</div>
+                <div class="col-md-3"><b>Plant:</b> @ViewBag.LoadedPlant</div>
+                <div class="col-md-2"><b>Shift:</b> @ViewBag.LoadedShift</div>
+                <div class="col-md-2"><b>Team:</b> @ViewBag.LoadedTeam</div>
+                <div class="col-md-3"><b>Incharge:</b> @ViewBag.LoadedIncharge</div>
+            </div>
+        </div>
+    </div>
+
     <form action="/RollingMill/AddDetails" id="addprofileform" method="post">
         <input type="hidden" id="ID" name="ID" />
 
         <div class="card m-b-30">
             <div class="card-header bg-white text-right">
 
-                <button type="button" class="btn btn-secondary" id="btnNew">New</button>
-                <button type="submit" class="btn btn-primary" id="btnSave">Save Details</button>
+                @*<button type="button" class="btn btn-secondary" id="btnNew">New</button>
+                    <button type="submit" class="btn btn-primary" id="btnSave">Save Details</button>*@
+
+                @*<button type="button" class="btn btn-success" id="btnLoad" disabled>
+                        Load Selected
+                    </button>*@
+
+                <button type="submit" class="btn btn-primary" id="btnSave">
+                    Save Details
+                </button>
 
             </div>
 
@@ -91,70 +124,165 @@
     <div class="card">
         <div class="card-body">
 
-            <table class="table table-bordered table-hover">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Plant</th>
-                        <th>Team</th>
-                        <th>Shift</th>
-                        <th>Shift Incharge</th>
-                    </tr>
-                </thead>
+            <form method="get" action="@Url.Action("AddDetails", "RollingMill")" class="mb-3">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label>Select Date</label>
+                        <input type="date"
+                               name="date"
+                               class="form-control"
+                               value="@ViewBag.SelectedDate" />
+                    </div>
 
-                <tbody>
-                    @foreach (var item in Model.List)
-                    {
-                        <tr class="record-row"
-                            style="cursor:pointer"
-                            data-id="@item.ID"
-                            data-date="@item.Date.ToString("yyyy-MM-dd")"
-                            data-plant="@item.Plant"
-                            data-team="@item.Team"
-                            data-shift="@item.Shift"
-                            data-incharge="@item.ShiftIncharge">
+                    <div class="form-group col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Load Date</button>
+                    </div>
+                </div>
+            </form>
 
-                            <td>@item.Date.ToString("dd-MMM-yyyy")</td>
-                            <td>@item.Plant</td>
-                            <td>@item.Team</td>
-                            <td>@item.Shift</td>
-                            <td>@item.ShiftIncharge</td>
+            <div class="table-responsive">
+                <table id="xp-default-datatable" class="display table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Plant</th>
+                            <th>Team</th>
+                            <th>Shift</th>
+                            <th>Shift Incharge</th>
+                            <th>Action</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
 
+                    <tbody>
+                        @foreach (var item in Model.List)
+                        {
+                            <tr class="record-row"
+                                style="cursor:pointer"
+                                data-id="@item.ID"
+                                data-date="@item.Date.ToString("yyyy-MM-dd")"
+                                data-plant="@item.Plant"
+                                data-team="@item.Team"
+                                data-shift="@item.Shift"
+                                data-incharge="@item.ShiftIncharge">
+
+                                <td>@item.Date.ToString("dd-MMM-yyyy")</td>
+                                <td>@item.Plant</td>
+                                <td>@item.Team</td>
+                                <td>@item.Shift</td>
+                                <td>@item.ShiftIncharge</td>
+                                <td>
+                                    <a href="javascript:void(0);"
+                                       class="btn btn-sm btn-danger btn-delete"
+                                       data-id="@item.ID">
+                                        <i class="mdi mdi-trash-can"></i>
+                                    </a>
+                                    <a href="javascript:void(0);"
+                                       class="btn btn-sm btn-success btn-load"
+                                       data-date="@item.Date.ToString("yyyy-MM-dd")"
+                                       data-plant="@item.Plant"
+                                       data-team="@item.Team"
+                                       data-shift="@item.Shift"
+                                       data-incharge="@item.ShiftIncharge">
+                                        Load
+                                    </a>
+
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+            </div>
         </div>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 
-$(document).on("click", ".record-row", function () {
+    var selectedShiftData = null;
 
-    var date = $(this).data("date");
-    var shift = $(this).data("shift");
-    var plant = $(this).data("plant");
-    var team = $(this).data("team");
-    var shiftincharge = $(this).data("incharge"); // 🔥 FIX
+    // ==============================
+    // ROW CLICK - SELECT DETAILS ONLY
+    // ==============================
+    $(document).on("click", ".record-row", function (e) {
 
-    console.log("Clicked:", date, shift, plant, team, shiftincharge);
+        // Agar Load ya Delete button click hua ho to row click na chale
+        if ($(e.target).closest(".btn-load, .btn-delete").length > 0) {
+            return;
+        }
 
-    // ✅ MATCH HTML IDs (small letters)
-    $("#date").val(date);
-    $("#shift").val(shift).trigger("change");
-    $("#Plant").val(plant).trigger("change");
-    $("#team").val(team).trigger("change");
-    $("#shiftincharge").val(shiftincharge).trigger("change");
+        $(".record-row").removeClass("selected-row");
+        $(this).addClass("selected-row");
 
-    // AJAX (same)
+        var id = $(this).data("id");
+        var date = $(this).data("date");
+        var shift = $(this).data("shift");
+        var plant = $(this).data("plant");
+        var team = $(this).data("team");
+        var shiftincharge = $(this).data("incharge");
+
+        selectedShiftData = {
+            id: id,
+            date: date,
+            shift: shift,
+            plant: plant,
+            team: team,
+            shiftincharge: shiftincharge
+        };
+
+        $("#ID").val(id);
+        $("#date").val(date);
+        $("#Plant").val(plant).trigger("change");
+        $("#team").val(team).trigger("change");
+        $("#shift").val(shift).trigger("change");
+        $("#shiftincharge").val(shiftincharge).trigger("change");
+
+        $("#btnSave").prop("disabled", true).text("Selected Row Loaded");
+
+        Swal.fire({
+            icon: "info",
+            title: "Shift Selected",
+            text: "This row is selected. To continue, click Load button from Action column.",
+            timer: 1500,
+            showConfirmButton: false
+        });
+    });
+
+
+    // ==============================
+    // LOAD SHIFT FROM ACTION BUTTON
+    // ==============================
+
+    $(document).on("click", ".btn-load", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var row = $(this).closest("tr");
+
+    var id = row.attr("data-id");
+    var date = row.attr("data-date");
+    var shift = row.attr("data-shift");
+    var plant = row.attr("data-plant");
+    var team = row.attr("data-team");
+    var shiftincharge = row.attr("data-incharge");
+
+    if (!id || !date || !shift || !plant || !team || !shiftincharge) {
+        Swal.fire({
+            icon: "error",
+            title: "Missing Data",
+            text: "ID, Date, Plant, Team, Shift or Shift Incharge is missing for this row."
+        });
+        return;
+    }
+
     $.ajax({
-        url: '@Url.Action("SetSelectedShift","RollingMill")',
+        url: '@Url.Action("SetSelectedShift", "RollingMill")',
         type: 'POST',
         data: {
+            id: id,
             date: date,
             shift: shift,
             plant: plant,
@@ -162,19 +290,109 @@ $(document).on("click", ".record-row", function () {
             shiftincharge: shiftincharge
         },
         success: function (res) {
-            console.log("Session Set:", res);
 
             if (res.success) {
 
-                // 🔥 SAVE BEFORE RELOAD
+                localStorage.setItem("rm_shift_detail_id", id);
                 localStorage.setItem("rm_date", date);
                 localStorage.setItem("rm_shift", shift);
                 localStorage.setItem("rm_plant", plant);
+                localStorage.setItem("rm_team", team);
+                localStorage.setItem("rm_shiftincharge", shiftincharge);
 
+                Swal.fire({
+                    icon: "success",
+                    title: "Shift Loaded",
+                    text: "Selected shift has been loaded successfully.",
+                    timer: 1200,
+                    showConfirmButton: false
+                }).then(function () {
+                    window.location.href = '@Url.Action("AddCharge", "RollingMill")';
+                });
+
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Load Failed",
+                    text: res.message || "Selected shift could not be loaded."
+                });
             }
+        },
+        error: function () {
+            Swal.fire({
+                icon: "error",
+                title: "Server Error",
+                text: "Unable to load selected shift."
+            });
         }
     });
-
 });
 
+    // ==============================
+    // SAVE NEW DETAILS ONLY
+    // ==============================
+    $("#addprofileform").on("submit", function (e) {
+
+        var id = $("#ID").val();
+
+        if (id && parseInt(id) > 0) {
+            e.preventDefault();
+
+            Swal.fire({
+                icon: "warning",
+                title: "Existing Row Selected",
+                text: "This shift already exists. Please click Load button from Action column instead of Save Details."
+            });
+
+            return false;
+        }
+
+        var date = $("#date").val();
+        var plant = $("#Plant").val();
+        var team = $("#team").val();
+        var shift = $("#shift").val();
+        var shiftincharge = $("#shiftincharge").val();
+
+        if (!date || !plant || !team || !shift || !shiftincharge) {
+            e.preventDefault();
+
+            Swal.fire({
+                icon: "error",
+                title: "Required Fields",
+                text: "Please fill Date, Plant, Team, Shift and Shift Incharge."
+            });
+
+            return false;
+        }
+
+        return true;
+    });
+
+
+    // ==============================
+    // DELETE
+    // ==============================
+    $(document).on("click", ".btn-delete", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var id = $(this).data("id");
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This record will be permanently deleted.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+                window.location.href = '/RollingMill/delete?ID=' + id;
+            }
+        });
+    });
+
 </script>
+```

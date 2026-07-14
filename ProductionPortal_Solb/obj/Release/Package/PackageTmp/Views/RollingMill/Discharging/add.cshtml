@@ -3,6 +3,18 @@
 @model DAL.Models.ViewModel.RMDischargingVM
 @{
     ViewBag.Title = "add";
+
+    int nextSequence = 1;
+
+    if (Model.SubmittedHeat != null && Model.SubmittedHeat.Any())
+    {
+        nextSequence = Model.SubmittedHeat
+            .Where(x => x.Shift == Model.Shift)
+            .Select(x => x.DischargingSequence)
+            .Where(x => x > 0)
+            .DefaultIfEmpty(0)
+            .Max() + 1;
+    }
 }
 <style>
     .dropdown-container {
@@ -72,6 +84,43 @@
             border-bottom: none;
         }
     /* ... (Keep existing hover styles) ... */
+
+    /* Select2 ko Bootstrap form-control jesa banane ke liye */
+    .select2-container {
+        width: 100% !important;
+    }
+
+        .select2-container .select2-selection--single {
+            height: 36px !important;
+            border: 1px solid #e8edf3 !important;
+            border-radius: 5px !important;
+            background-color: #f3f5f8 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #8798ad !important;
+        font-size: 16px !important;
+        line-height: 45px !important;
+        padding-left: 15px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 8px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+        color: #8798ad !important;
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #80bdff !important;
+        outline: 0 !important;
+        box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, .25) !important;
+    }
 </style>
 
 <!-- Start XP Breadcrumbbar -->
@@ -95,6 +144,10 @@
 <div class="xp-contentbar">
     @using (Html.BeginForm("AddDischarge", "RollingMill", FormMethod.Post, new { id = "addprofileform" }))
     {
+
+        @Html.AntiForgeryToken()
+        <input type="hidden" id="hdnID" name="ID" value="0" />
+
         @*<form action="/RollingMill/AddDischarge" id="addprofileform" method="post">*@
         <div class="row">
             <div class="col-lg-12">
@@ -123,26 +176,21 @@
 
                 <div class="card m-b-30">
                     <div class="card-header bg-white text-right">
-                        <button type="submit" class="btn btn-primary">Discharged</button>
+                        <button type="submit" id="btnSubmit" class="btn btn-primary">Discharged</button>
                     </div>
                     <div class="card-body">
                         <div class="form-row">
-                            <div class="form-group col-md-2">
-                                <label>Date</label>
-                                <input type="date" class="form-control" id="date" name="Date" />
-                            </div>
                             @*<div class="form-group col-md-2">
-            <label>Shift</label>
-            @Html.TextBoxFor(m => m.Shift, new { @class = "form-control", @readonly = "readonly" })
-            @Html.HiddenFor(m => m.Shift)
-        </div>*@
+                                    <label>Date</label>
+                                    <input type="date" class="form-control" id="date" name="Date" />
+                                </div>*@
+
                             <div class="form-group col-md-2">
                                 <label>Heat #</label>
-                                @Html.DropDownListFor(model => model.HeatNo,
-                                     ViewBag.HeatNo as SelectList,
-                                     "-- Select Heat # --",
-                                     new { @class = "form-control", id = "ddlgrade" })
-                                @Html.ValidationMessageFor(model => model.HeatNo, "", new { @class = "text-danger" })
+                                @Html.DropDownListFor(m => m.HeatNo,
+                                    (IEnumerable<SelectListItem>)ViewBag.HeatNo,
+                                    "-- Select Heat --",
+                                    new { @class = "form-control select2-heat", id = "ddlHeat" })
                             </div>
                             <div class="form-group col-md-2">
                                 <label>Boarding #</label>
@@ -158,13 +206,13 @@
                             </div>
                             <div class="form-group col-md-2">
                                 <label for="productSpec">Product Code</label>
-                                <input type="text" class="form-control" id="txtProductSpecs" name="ProductSpecs" readonly>
+                                <input type="text" class="form-control" id="txtProductSpecs" name="ProductCode" readonly>
                             </div>
                         </div>
-                        <div class="form-row">                            
+                        <div class="form-row">
                             <div class="form-group col-md-2">
                                 <label>Finished Product Grade</label>
-                                <select class="form-control" name="NewSteelGrade">
+                                <select class="form-control" id="ddlNewSteelGrade" name="NewSteelGrade">
                                     <option selected disabled>-- please select --</option>
                                     <option value="ASTM A615 G40">ASTM A615 G40</option>
                                     <option value="ASTM A615 G60">ASTM A615 G60</option>
@@ -179,23 +227,36 @@
                             </div>
                             <div class="form-group col-md-1">
                                 <label>Cobble</label>
-                                <input type="number" step="0.001" class="form-control" name="Cobble" placeholder="0">
+                                <input type="number" step="0.001" class="form-control" id="txtCobble" name="Cobble" placeholder="0">
                             </div>
                             <div class="form-group col-md-1">
                                 <label>Hot Out</label>
-                                <input type="number" step="0.001" class="form-control" name="HotOut" placeholder="0">
+                                <input type="number" step="0.001" class="form-control" id="txtHotOut" name="HotOut" placeholder="0">
                             </div>
                             <div class="form-group col-md-2">
                                 <label>Total Billet</label>
-                                <input type="text" class="form-control" id="txtTotalBillet" name="TotalBillet" readonly>
+                                <input type="number"
+                                       class="form-control"
+                                       id="txtTotalBillet"
+                                       name="TotalBillet"
+                                       min="1"
+                                       step="1">
+
+                                <small class="text-danger" id="remainingBilletText"></small>
+                                @*<input type="text" class="form-control" id="txtTotalBillet" name="TotalBillet" readonly>*@
                             </div>
                             <div class="form-group col-md-2">
                                 <label>Total Weight (MT)</label>
                                 <input type="number" class="form-control" id="txtTotalWeight" name="TotalWeight" readonly>
                             </div>
-                            <div class="form-group col-md-1">
+                            <div class="form-group col-md-2">
                                 <label>Discharge Seq.</label>
-                                <input type="number" class="form-control" value="0" name="DischargingSequence">
+                                <input type="number"
+                                       class="form-control"
+                                       id="txtDischargingSequence"
+                                       value="@nextSequence"
+                                       name="DischargingSequence" />
+                                @*<input type="number" class="form-control" value="0" name="DischargingSequence" readonly>*@
                             </div>
                         </div>
                     </div>
@@ -215,11 +276,12 @@
                             <label><b>Filter by Shift</b></label>
                             <select id="shiftFilter" class="form-control">
                                 <option value="">All</option>
-                                <option value="Morning">Morning</option>
-                                <option value="Afternoon">Afternoon</option>
-                                <option value="Night">Night</option>
-                                <option value="Long Morning">Long Morning</option>
-                                <option value="Long Night">Long Night</option>
+                                <option value="Morning" @(Model.Shift == "Morning" ? "selected" : "")>Morning</option>
+                                <option value="Afternoon" @(Model.Shift == "Afternoon" ? "selected" : "")>Afternoon</option>
+                                <option value="Evening" @(Model.Shift == "Evening" ? "selected" : "")>Evening</option>
+                                <option value="Night" @(Model.Shift == "Night" ? "selected" : "")>Night</option>
+                                <option value="Long Morning" @(Model.Shift == "Long Morning" ? "selected" : "")>Long Morning</option>
+                                <option value="Long Night" @(Model.Shift == "Long Night" ? "selected" : "")>Long Night</option>
                             </select>
                         </div>
 
@@ -252,21 +314,21 @@
                                     <th>Total Billet</th>
                                     <th>Total Weight (MT)</th>
                                     <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @if (Model.SubmittedHeat != null)
+                            <tbody id="dischargeTableBody">
+                                @if (Model.SubmittedHeat != null && Model.SubmittedHeat.Any())
                                 {
                                     foreach (var item in Model.SubmittedHeat)
                                     {
                                         var gregorian = new CultureInfo("en-US");
                                         gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
-                                        <tr>
+
+                                        <tr data-shift="@item.Shift">
                                             <td>@item.DischargingSequence</td>
-                                            @*<td>@(item.Date.ToString("dd-MM-yyyy", gregorian))</td>*@
                                             <td>@item.Shift</td>
                                             <td>@item.HeatNo</td>
-                                            @*<td>@item.BoardingNo</td>*@
                                             <td>@item.SteelGrade</td>
                                             <td>@item.TotalBillet</td>
                                             <td>@item.TotalWeight</td>
@@ -286,8 +348,41 @@
                                                         break;
                                                 }
                                             </td>
+                                            <td>
+                                                <a href="javascript:void(0);"
+                                                   class="btn btn-sm btn-info btn-edit"
+                                                   data-id="@item.ID"
+                                                   data-shift="@item.Shift"
+                                                   data-heat="@item.HeatNo"
+                                                   data-boarding="@item.BoardingNo"
+                                                   data-grade="@item.SteelGrade"
+                                                   data-newgrade="@item.NewSteelGrade"
+                                                   data-ponumber="@item.PONumber"
+                                                   data-productspecs="@item.ProductSpecs"
+                                                   data-cobble="@item.Cobble"
+                                                   data-hotout="@item.HotOut"
+                                                   data-billet="@item.TotalBillet"
+                                                   data-totalweight="@item.TotalWeight"
+                                                   data-sequence="@item.DischargingSequence">
+                                                    Edit
+                                                </a>
+
+                                                <a href="javascript:void(0);"
+                                                   class="btn btn-sm btn-danger btn-delete"
+                                                   data-id="@item.ID">
+                                                    <i class="mdi mdi-trash-can"></i>
+                                                </a>
+                                            </td>
                                         </tr>
                                     }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">
+                                            No submitted heats found for selected shift.
+                                        </td>
+                                    </tr>
                                 }
                             </tbody>
                         </table>
@@ -298,258 +393,470 @@
     </div>
 </div>
 
-<!-- SCRIPTS -->
+<!-- ================= SCRIPTS ================= -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-<script>
-    // JAVASCRIPT FOR MULTI-COLUMN DROPDOWN
-    $(document).ready(function () {
-
-        // 🔥 Recalculate after filter
-        calculateKPI();
-
-        const gradeDataJson = '@Html.Raw(ViewBag.GradeDataJson)';
-        let gradeData = [];
-
-        try {
-            gradeData = JSON.parse(gradeDataJson);
-        } catch (e) {
-            console.error("Error parsing Grade Data JSON:", e);
-            return;
-        }
-
-        const $specGradeBody = $('#specGradeBody');
-        const $inputField = $('#productSpec');
-        const $dropdownTable = $('#multiColumnDropdown');
-        const $toggleBtn = $('#toggleDropdownBtn');
-        const $hiddenIdField = $('#hiddenProductID');
-        const $billetLengthField = $('#billetLength');
-        const $crossSectionField = $('#crosssection');
-        const $steelGradeField = $('#steelGrade');   // ✅ add this input in HTML
-
-        // ----------------------------
-        // POPULATE DROPDOWN TABLE
-        // ----------------------------
-        gradeData.forEach(item => {
-            const row = `
-                <tr
-                    data-id="${item.ProductID}"
-                    data-spec="${item.SpecGrade}"
-                    data-grade="${item.SteelGrade}"
-                    data-l="${item.Length}"
-                    data-w="${item.Width}"
-                    data-billet="${item.BilletLength}">
-                    <td>${item.SpecGrade}</td>
-                    <td>${item.SteelGrade}</td>
-                    <td>${item.Length}</td>
-                    <td>${item.Width}</td>
-                    <td>${item.BilletLength}</td>
-                </tr>`;
-            $specGradeBody.append(row);
-        });
-
-        // ----------------------------
-        // TOGGLE DROPDOWN
-        // ----------------------------
-        $toggleBtn.on('click', function () {
-            $dropdownTable.toggle();
-        });
-
-        // ----------------------------
-        // ROW CLICK EVENT
-        // ----------------------------
-        $specGradeBody.on('click', 'tr', function () {
-
-            const $row = $(this);
-
-            const selectedId = $row.data('id');
-            const selectedSpec = $row.data('spec');
-            const selectedGrade = $row.data('grade');
-            const billetLength = $row.data('billet');
-
-            const length = $row.data('l');
-            const width = $row.data('w');
-            const crossSectionValue = length + 'x' + width;
-
-            // ✅ SET VALUES
-            debugger
-            $inputField.val(selectedSpec);
-            $hiddenIdField.val(selectedId);
-            $billetLengthField.val(billetLength);
-            $crossSectionField.val(crossSectionValue);
-            $steelGradeField.val(selectedGrade);     // ✅ Fixed variable
-
-            $dropdownTable.hide();
-        });
-
-        // ----------------------------
-        // HIDE DROPDOWN IF CLICK OUTSIDE
-        // ----------------------------
-        $(document).on('click', function (e) {
-            if (!$dropdownTable.is(e.target) &&
-                $dropdownTable.has(e.target).length === 0 &&
-                !$toggleBtn.is(e.target) &&
-                !$inputField.is(e.target)) {
-                $dropdownTable.hide();
-            }
-        });
-    });
-
-    function calculateKPI() {
-
-        var totalBillet = 0;
-        var totalProduced = 0;
-
-        var rows = document.querySelectorAll("tbody tr");
-
-        rows.forEach(function (row) {
-
-            if (row.style.display === "none") return; // skip hidden rows
-
-            var cols = row.querySelectorAll("td");
-
-            var billet = parseFloat(cols[4].innerText) || 0;
-            var weight = parseFloat(cols[5].innerText) || 0;
-
-            totalBillet += billet;
-            totalProduced += weight;
-
-        });
-
-        document.getElementById("totalBilletBadge").innerText = totalBillet;
-        document.getElementById("totalProducedBadge").innerText = totalProduced.toFixed(2);
-    }
-</script>
-
-<script>
-    $(document).ready(function () {
-
-        $("input[type='number']").attr("step", "any");
-
-        $("#date").val(new Date().toISOString().split('T')[0]);
-
-        $("#ddlgrade").on("change", function () {
-
-            debugger
-
-            var heatNo = $(this).val();
-
-            if (heatNo === "") {
-                clearFields();
-                return;
-            }
-
-            $.ajax({
-                url: '/RollingMill/GetChargingByHeat',
-                type: 'GET',
-                data: { heatNo: heatNo },
-                success: function (res) {
-
-                    if (res) {
-                        debugger
-                        $("#txtBoarding").val(res.BoardingNo);
-                        $("#txtGrade").val(res.SteelGrade);
-                        $("#txtprofile").val(res.Profile);
-                        $("#txtTotalBillet").val(res.TotalBillet);
-                        $("#txtTotalWeight").val(res.TotalWeight);
-                        $("#txtBilletLength").val(res.BilletLength);
-                        $("#txtProductSpecs").val(res.ProductSpecs);
-                    }
-                    else {
-                        clearFields();
-                    }
-                }
-            });
-        });
-
-        function clearFields() {
-            $("#txtBoarding").val('');
-            $("#txtGrade").val('');
-            $("#txtSize").val('');
-            $("#txtWeight").val('');
-            $("#txtTotalBillet").val('');
-            $("#txtTotalWeight").val('');
-            $("#txtProductSpecs").val('');
-        }
-    });
-</script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     $(document).ready(function () {
 
-        let isSubmitting = false;   // 🔐 double-submit lock
+        let chargingWeightPerBillet = 0;
+        let originalBilletQty = 0;
+        let originalTotalWeight = 0;
 
-        $("#addprofileform").on("submit", function (e) {
-            e.preventDefault(); // ❗ pehle submit roko
+        function calculateTotalWeight() {
+            var currentBillet = toNum($("#txtTotalBillet").val());
 
-            if (isSubmitting) return; // already submitting
+            if (currentBillet <= 0) {
+                $("#txtTotalWeight").val("0.000");
+                return;
+            }
+
+            // Agar billet quantity same hai, old/backend total weight same rahega
+            if (currentBillet === originalBilletQty && originalTotalWeight > 0) {
+                $("#txtTotalWeight").val(originalTotalWeight.toFixed(3));
+                return;
+            }
+
+            // Agar billet quantity change hui hai, charging weight per billet se calculate hoga
+            if (chargingWeightPerBillet > 0) {
+                var calculatedWeight = currentBillet * chargingWeightPerBillet;
+                $("#txtTotalWeight").val(calculatedWeight.toFixed(3));
+            } else {
+                $("#txtTotalWeight").val("0.000");
+            }
+        }
+
+        let isSubmitting = false;
+        let isEditMode = false;
+
+        // ==============================
+        // SELECT2 INIT
+        // ==============================
+        $('#ddlHeat').select2({
+            placeholder: '-- Select Heat --',
+            allowClear: true,
+            width: '100%'
+        });
+
+        // ==============================
+        // COMMON FUNCTIONS
+        // ==============================
+        function toNum(val) {
+            return parseFloat($.trim(val)) || 0;
+        }
+
+        function normalizeShift(val) {
+            return (val || "").toString().trim().toLowerCase();
+        }
+
+        function clearFields() {
+            $("#txtBoarding").val('');
+            $("#txtGrade").val('');
+            $("#txtProductSpecs").val('');
+            $("#txtPONumber").val('');
+            $("#ddlNewSteelGrade").val('');
+            $("#txtCobble").val('');
+            $("#txtHotOut").val('');
+
+            $("#txtTotalBillet")
+                .val('')
+                .removeAttr("max")
+                .removeAttr("data-remaining");
+
+            $("#txtTotalWeight").val('');
+            $("#remainingBilletText").text('');
+        }
+
+        function calculateKPI() {
+            var totalBillet = 0;
+            var totalProduced = 0;
+
+            $("#dischargeTableBody tr:visible").each(function () {
+                totalBillet += toNum($(this).find("td:eq(4)").text());
+                totalProduced += toNum($(this).find("td:eq(5)").text());
+            });
+
+            $("#totalBilletBadge").text(totalBillet);
+            $("#totalProducedBadge").text(totalProduced.toFixed(2));
+        }
+
+        function applyShiftFilter() {
+            var selectedShift = normalizeShift($("#shiftFilter").val());
+
+            $("#dischargeTableBody tr").each(function () {
+                var rowShift = normalizeShift($(this).attr("data-shift"));
+
+                if (selectedShift === "" || rowShift === selectedShift) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            calculateKPI();
+        }
+
+        // ==============================
+        // DEFAULT DATE + NUMBER STEP
+        // ==============================
+        $("#date").val('@(Model.Date != null ? Model.Date.Value.ToString("yyyy-MM-dd") : DateTime.Today.ToString("yyyy-MM-dd"))');
+
+        $("input[type='number']").attr("step", "any");
+
+        // ==============================
+        // HEAT CHANGE - INSERT MODE ONLY
+        // ==============================
+        $("#ddlHeat").on("change", function () {
+
+            if (isEditMode) {
+                return;
+            }
+
+            var heatNo = $(this).val();
+
+            clearFields();
+
+            if (!heatNo) {
+                return;
+            }
+
+            $("#txtPONumber").val(heatNo);
+
+$.ajax({
+    url: '@Url.Action("GetChargingByHeat", "RollingMill")',
+    type: 'GET',
+    data: { heatNo: heatNo },
+    success: function (res) {
+
+        if (!res) {
+            clearFields();
 
             Swal.fire({
-                title: 'Confirm Submission',
-                text: 'Are you sure you want to submit this Heat Record?',
+                icon: 'warning',
+                title: 'No Data Found',
+                text: 'No charging data found against this Heat No.'
+            });
+
+            return;
+        }
+
+        var chargedBillet = toNum(res.ChargedBillet);
+        var alreadyDischargedBillet = toNum(res.AlreadyDischargedBillet);
+        var remainingBillet = toNum(res.RemainingBillet);
+        var remainingWeight = toNum(res.TotalWeight);
+
+        if (remainingBillet <= 0) {
+            clearFields();
+
+            $("#ddlHeat").val(null).trigger("change.select2");
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Heat Fully Discharged',
+                text: 'This Heat No is already fully discharged.'
+            });
+
+            return;
+        }
+
+        // Store original charging values
+        originalBilletQty = remainingBillet;
+        originalTotalWeight = remainingWeight;
+
+        // Weight per billet from charging
+        chargingWeightPerBillet = remainingBillet > 0
+            ? (remainingWeight / remainingBillet)
+            : 0;
+
+        $("#txtBoarding").val(res.BoardingNo || '');
+        $("#txtGrade").val(res.SteelGrade || '');
+        $("#txtProductSpecs").val(res.ProductSpecs || '');
+        $("#txtPONumber").val(res.HeatNo || heatNo);
+
+        $("#txtTotalBillet")
+            .val(remainingBillet)
+            .attr("max", remainingBillet)
+            .attr("data-remaining", remainingBillet);
+
+        // Pehle jo charging/backend se total weight aa raha hai woh same set hoga
+        $("#txtTotalWeight").val(remainingWeight.toFixed(3));
+
+        $("#remainingBilletText").text(
+            "Charged: " + chargedBillet +
+            " | Discharged: " + alreadyDischargedBillet +
+            " | Remaining: " + remainingBillet +
+            " | Wt/Billet: " + chargingWeightPerBillet.toFixed(3)
+        );
+    },
+    error: function () {
+        clearFields();
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Server Error',
+            text: 'Unable to fetch charging details.'
+        });
+    }
+});
+        });
+
+        // ==============================
+        // EDIT BUTTON
+        // ==============================
+ $(document).on("click", ".btn-edit", function () {
+
+    isEditMode = true;
+
+    var id = $(this).data("id");
+    var heat = ($(this).data("heat") || "").toString().trim();
+    var boarding = $(this).data("boarding");
+    var grade = $(this).data("grade");
+    var newGrade = $(this).data("newgrade");
+    var poNumber = $(this).data("ponumber");
+    var productSpecs = $(this).data("productspecs");
+    var cobble = $(this).data("cobble");
+    var hotOut = $(this).data("hotout");
+    var billet = toNum($(this).data("billet"));
+    var totalWeight = toNum($(this).data("totalweight"));
+    var sequence = $(this).data("sequence");
+
+    $("#hdnID").val(id);
+
+    var option = $("#ddlHeat option").filter(function () {
+        return ($(this).val() || "").toString().trim().toLowerCase() === heat.toLowerCase();
+    });
+
+    if (option.length > 0) {
+        option.prop("disabled", false);
+        $("#ddlHeat").val(option.val()).trigger("change.select2");
+    } else {
+        var newOption = new Option(heat, heat, true, true);
+        $("#ddlHeat").append(newOption).trigger("change.select2");
+    }
+
+    $("#txtBoarding").val(boarding || "");
+    $("#txtGrade").val(grade || "");
+    $("#ddlNewSteelGrade").val(newGrade || "");
+    $("#txtPONumber").val(poNumber || heat);
+    $("#txtProductSpecs").val(productSpecs || "");
+
+    $("#txtCobble").val(cobble || 0);
+    $("#txtHotOut").val(hotOut || 0);
+
+    $("#txtTotalBillet")
+        .val(billet)
+        .removeAttr("max")
+        .removeAttr("data-remaining");
+
+    $("#txtTotalWeight").val(totalWeight.toFixed(3));
+    $("#txtDischargingSequence").val(sequence || "");
+
+    // ✅ Important: edit mode formula ke liye original values set karo
+    originalBilletQty = billet;
+    originalTotalWeight = totalWeight;
+
+    // ✅ Fallback: old total weight / old billet se per billet weight
+    chargingWeightPerBillet = billet > 0 ? (totalWeight / billet) : 0;
+
+    // ✅ Better: charging se actual weight per billet fetch karo
+    $.ajax({
+        url: '@Url.Action("GetChargingByHeat", "RollingMill")',
+        type: 'GET',
+        data: { heatNo: heat },
+        success: function (res) {
+
+            if (res) {
+                var remainingBillet = toNum(res.RemainingBillet);
+                var remainingWeight = toNum(res.TotalWeight);
+
+                if (remainingBillet > 0 && remainingWeight > 0) {
+                    chargingWeightPerBillet = remainingWeight / remainingBillet;
+                }
+            }
+
+            $("#remainingBilletText").text(
+                "Edit mode: update existing discharge record. Wt/Billet: " + chargingWeightPerBillet.toFixed(3)
+            );
+        }
+    });
+
+    $("#btnSubmit")
+        .removeClass("btn-primary")
+        .addClass("btn-warning")
+        .text("Update Discharge");
+
+    $("html, body").animate({
+        scrollTop: $("#addprofileform").offset().top - 80
+    }, 400);
+});
+
+        // ==============================
+        // TOTAL BILLET VALIDATION - INSERT MODE ONLY
+        // ==============================
+        $("#txtTotalBillet").on("keyup change input", function () {
+
+            var enteredBillet = toNum($("#txtTotalBillet").val());
+            var remainingBillet = toNum($("#txtTotalBillet").attr("data-remaining"));
+
+            if (!isEditMode) {
+                if (remainingBillet > 0 && enteredBillet > remainingBillet) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Billet Quantity',
+                        text: 'You cannot discharge more than remaining billet. Remaining billet is ' + remainingBillet + '.'
+                    });
+
+                    $("#txtTotalBillet").val(remainingBillet);
+                }
+            }
+
+            calculateTotalWeight();
+        });
+        // ==============================
+        // SUBMIT / UPDATE CONFIRMATION
+        // ==============================
+        $("#addprofileform").off("submit").on("submit", function (e) {
+            e.preventDefault();
+
+            if (isSubmitting) {
+                return;
+            }
+
+            var id = parseInt($("#hdnID").val()) || 0;
+            var isUpdate = id > 0;
+
+            var heatNo = $("#ddlHeat").val();
+            var totalBillet = toNum($("#txtTotalBillet").val());
+            var remainingBillet = toNum($("#txtTotalBillet").attr("data-remaining"));
+
+            if (!heatNo) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Heat Required',
+                    text: 'Please select Heat No.'
+                });
+                return;
+            }
+
+            if (totalBillet <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Total Billet Required',
+                    text: 'Please enter valid Total Billet.'
+                });
+                return;
+            }
+
+            if (!isUpdate) {
+                if (remainingBillet <= 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Heat',
+                        text: 'Please select a valid Heat No with remaining billet.'
+                    });
+                    return;
+                }
+
+                if (totalBillet > remainingBillet) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Billet Quantity',
+                        text: 'You cannot discharge more than remaining billet. Remaining billet is ' + remainingBillet + '.'
+                    });
+                    return;
+                }
+            }
+
+            Swal.fire({
+                title: isUpdate ? 'Confirm Update' : 'Confirm Discharge',
+                text: isUpdate
+                    ? 'Are you sure you want to update this discharge record?'
+                    : 'Are you sure you want to discharge this heat?',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, Submit',
+                confirmButtonText: isUpdate ? 'Yes, Update' : 'Yes, Discharge',
                 cancelButtonText: 'Cancel',
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
                 allowOutsideClick: false,
                 allowEscapeKey: false
             }).then((result) => {
 
                 if (result.isConfirmed) {
+                    isSubmitting = true;
 
-                    isSubmitting = true; // 🔒 lock
-
-                    // Disable submit button
-                    $("#addprofileform")
-                        .find("button[type='submit']")
+                    $("#btnSubmit")
                         .prop("disabled", true)
-                        .text("Submitting...");
+                        .text(isUpdate ? "Updating..." : "Submitting...");
 
-                    // Finally submit form
                     $("#addprofileform")[0].submit();
                 }
             });
         });
 
-        var msg = '@TempData["SuccessMessage"]';
-        if (msg) {
+        // ==============================
+        // DELETE CONFIRMATION
+        // ==============================
+        $(document).on("click", ".btn-delete", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var id = $(this).data("id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "This record will be permanently deleted.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    window.location.href = '/RollingMill/deleteDischarging?ID=' + id;
+                }
+            });
+        });
+
+        // ==============================
+        // TEMP DATA ALERTS
+        // ==============================
+        var successMsg = '@TempData["SuccessMessage"]';
+        var errorMsg = '@TempData["ErrorMessage"]';
+
+        if (successMsg) {
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
-                text: msg,
+                text: successMsg,
                 confirmButtonColor: '#3085d6'
             });
         }
 
-    });
-</script>
-<script>
-    document.getElementById("ddlgrade").addEventListener("change", function () {
-        let heatNo = this.value;
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMsg,
+                confirmButtonColor: '#d33'
+            });
+        }
 
-        // set PO number same as Heat #
-        document.getElementById("txtPONumber").value = heatNo;
-    });
-
-    document.getElementById("shiftFilter").addEventListener("change", function () {
-
-        var selectedShift = this.value.toLowerCase();
-        var rows = document.querySelectorAll("tbody tr");
-
-        rows.forEach(function (row) {
-
-            var rowShift = row.getAttribute("data-shift").toLowerCase();
-
-            if (selectedShift === "" || rowShift === selectedShift) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-            }
-
+        // ==============================
+        // SHIFT FILTER
+        // ==============================
+        $("#shiftFilter").off("change").on("change", function () {
+            applyShiftFilter();
         });
 
-        // 🔥 Recalculate after filter
+        // ==============================
+        // INITIAL LOAD
+        // ==============================
+        applyShiftFilter();
         calculateKPI();
     });
 </script>

@@ -247,6 +247,32 @@ namespace BAL.Repositories
             }
         }
 
+        public List<BilletBoardBLL> GetAllBoarding_RMCharging()
+        {
+            try
+            {
+                var lst = new List<BilletBoardBLL>();
+
+                SqlParameter[] p = new SqlParameter[0];
+
+                _dt = (new DBHelper().GetTableFromSP)("sp_GetAllBoarding_RMCharging", p);
+                if (_dt != null)
+                {
+                    if (_dt.Rows.Count > 0)
+                    {
+                        lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<BilletBoardBLL>>();
+                    }
+                }
+
+                return lst;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
         public List<BilletChargingBLL> GetAllCharging()
         {
             try
@@ -272,28 +298,28 @@ namespace BAL.Repositories
             }
         }
 
-        //public BilletBoardBLL GetBilletDetails(int id)
-        //{
-        //    try
-        //    {
-        //        var _obj = new BilletBoardBLL();
-        //        SqlParameter[] p = new SqlParameter[1];
-        //        p[0] = new SqlParameter("@id", id);
-        //        _dt = (new DBHelper().GetTableFromSP)("sp_GetBilletDetailByID", p);
-        //        if (_dt != null)
-        //        {
-        //            if (_dt.Rows.Count > 0)
-        //            {
-        //                _obj = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<BilletBoardBLL>>().FirstOrDefault();
-        //            }
-        //        }
-        //        return _obj;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return null;
-        //    }
-        //}
+        public BilletBoardBLL GetBilletDetails(string heatno)
+        {
+            try
+            {
+                var _obj = new BilletBoardBLL();
+                SqlParameter[] p = new SqlParameter[1];
+                p[0] = new SqlParameter("@id", heatno);
+                _dt = (new DBHelper().GetTableFromSP)("sp_GetBilletDetailByHeatno", p);
+                if (_dt != null)
+                {
+                    if (_dt.Rows.Count > 0)
+                    {
+                        _obj = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<BilletBoardBLL>>().FirstOrDefault();
+                    }
+                }
+                return _obj;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
 
         public bool IsBilletBoardingExists(string billetBoarding)
         {

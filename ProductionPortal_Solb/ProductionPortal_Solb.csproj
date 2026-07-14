@@ -535,9 +535,12 @@
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\BoardingController.cs" />
     <Compile Include="Controllers\CCMController.cs" />
+    <Compile Include="Controllers\ConsumptionController.cs" />
     <Compile Include="Controllers\DelayController.cs" />
+    <Compile Include="Controllers\ExecutiveController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
+    <Compile Include="Controllers\MaintenanceController.cs" />
     <Compile Include="Controllers\MeltshopController.cs" />
     <Compile Include="Controllers\RMReportsController.cs" />
     <Compile Include="Controllers\RMTargetController.cs" />
@@ -548,6 +551,8 @@
     <Compile Include="Controllers\ScrapyardController.cs" />
     <Compile Include="Controllers\SecurityController.cs" />
     <Compile Include="Controllers\SMPTargetController.cs" />
+    <Compile Include="Controllers\StockController.cs" />
+    <Compile Include="Controllers\SupplyChainController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Controllers\UserRoleController.cs" />
     <Compile Include="Global.asax.cs">
@@ -1727,6 +1732,26 @@
     <Content Include="assets\images\flags\ar.svg" />
     <Content Include="assets\images\flags\en.svg" />
     <Content Include="assets\images\logo.png" />
+    <Content Include="assets\images\supply\billet.png" />
+    <Content Include="assets\images\supply\dri.png" />
+    <Content Include="assets\images\supply\dust.png" />
+    <Content Include="assets\images\supply\epoxy-rebar.png" />
+    <Content Include="assets\images\supply\Fuel-oil.png" />
+    <Content Include="assets\images\supply\hbi.png" />
+    <Content Include="assets\images\supply\mill-scale.png" />
+    <Content Include="assets\images\supply\other.png" />
+    <Content Include="assets\images\supply\raw-material.png" />
+    <Content Include="assets\images\supply\rebar-coil.png" />
+    <Content Include="assets\images\supply\rebar.png" />
+    <Content Include="assets\images\supply\refractory-material.png" />
+    <Content Include="assets\images\supply\scrap.png" />
+    <Content Include="assets\images\supply\short-bar.png" />
+    <Content Include="assets\images\supply\Shortbar.png" />
+    <Content Include="assets\images\supply\slag.png" />
+    <Content Include="assets\images\supply\sludge.png" />
+    <Content Include="assets\images\supply\sub-raw-material.png" />
+    <Content Include="assets\images\supply\truck.png" />
+    <Content Include="assets\images\supply\wire-rod-coil.png" />
     <Content Include="assets\images\topbar\user-message-1.jpg" />
     <Content Include="assets\images\topbar\user-message-2.jpg" />
     <Content Include="assets\images\topbar\user-message-3.jpg" />
@@ -2527,7 +2552,7 @@
     <Content Include="Views\Reporting\ShiftProductionReport.cshtml" />
     <Content Include="Views\Quality\QCInspectionRM\AddInspectionRM.cshtml" />
     <Content Include="Views\Quality\QCInspectionRM\InspectionRMlist.cshtml" />
-    <Content Include="Views\Reporting\DailyProductionRM.cshtml" />
+    <Content Include="Views\Reporting\ShiftProductionDashboard.cshtml" />
     <Content Include="Views\Reporting\RMMonthlyPerformanceReport.cshtml" />
     <Content Include="Views\RollingMill\RMConsumption\RMConsumptionlist.cshtml" />
     <Content Include="Views\Reporting\ReportingSection.cshtml" />
@@ -2562,12 +2587,29 @@
     <Content Include="Views\RollingMill\AddDetails.cshtml" />
     <Content Include="Views\Quality\BilletBoard\BilletBoardingPDF.cshtml" />
     <Content Include="Views\Quality\CastMillCertificate\castmillCertificate.cshtml" />
+    <Content Include="Views\Consumption\add.cshtml" />
+    <Content Include="Views\RollingMill\RMHourlyDischarge\add.cshtml" />
+    <Content Include="Views\Meltshop\Delay\detail.cshtml" />
+    <Content Include="Views\Maintenance\list.cshtml" />
+    <Content Include="Views\Reporting\DailyProductionRM - Copy.cshtml" />
+    <Content Include="Views\Reporting\RMMonthlyPerformanceReport - Copy.cshtml" />
+    <Content Include="Views\Stock\add.cshtml" />
+    <Content Include="Views\Stock\stockadd.cshtml" />
+    <Content Include="Views\Stock\Stocklist.cshtml" />
+    <Content Include="Views\Reporting\UtilityDailyReport.cshtml" />
+    <Content Include="Views\Reporting\CMDDailyReport.cshtml" />
+    <Content Include="Views\Reporting\SupplyChainReport.cshtml" />
+    <Content Include="Views\Maintenance\detail.cshtml" />
+    <Content Include="Views\SupplyChain\add.cshtml" />
+    <Content Include="Views\SupplyChain\list.cshtml" />
+    <Content Include="Views\CCM\CCMDailyHeatSummary.cshtml" />
+    <Content Include="Views\SMPReports\SMPDailyDashboard.cshtml" />
+    <Content Include="Views\Executive\list.cshtml" />
+    <Content Include="Views\SMPReports\SMPDailyDashboard - Copy.cshtml" />
+    <Content Include="Views\Executive\dashboard.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Temp\" />
     <Folder Include="Views\Base\" />
-    <Folder Include="Views\RMTarget\" />
-    <Folder Include="Views\SMPTarget\" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />

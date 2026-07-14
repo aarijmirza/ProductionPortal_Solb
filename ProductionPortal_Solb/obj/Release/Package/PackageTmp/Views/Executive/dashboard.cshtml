@@ -1,0 +1,2304 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Executive Operations Dashboard";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    :root {
+        --solb-maroon: #a81435;
+        --solb-maroon-dark: #76001d;
+        --solb-red: #c8102e;
+        --solb-green: #168b5b;
+        --solb-orange: #f59e0b;
+        --solb-blue: #1769aa;
+        --solb-navy: #183346;
+        --page-bg: #edf1f5;
+        --card-bg: #ffffff;
+        --border: #dce2e9;
+        --line: #e9edf2;
+        --text: #17202d;
+        --muted: #6c7687;
+        --radius: 13px;
+        --shadow: 0 5px 18px rgba(21, 32, 48, .07);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--page-bg);
+    
+        color: var(--text);
+    }
+
+    .xp-contentbar {
+/*        padding: 18px !important;
+*/        background: var(--page-bg) !important;
+    }
+
+    .executive-dashboard {
+        width: 100%;
+        max-width: 1580px;
+        margin: 0 auto;
+    }
+
+    /* =========================================================
+       PAGE HEADER
+    ========================================================= */
+
+    .executive-header {
+        position: relative;
+        overflow: hidden;
+        min-height: 120px;
+        padding: 23px 25px;
+        border-radius: 15px;
+        background: linear-gradient( 120deg, var(--solb-maroon-dark) 0%, var(--solb-maroon) 55%, #bd2144 100% );
+        color: #ffffff;
+        box-shadow: var(--shadow);
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 20px;
+    }
+
+        .executive-header::after {
+            content: "";
+            position: absolute;
+            width: 310px;
+            height: 310px;
+            right: -115px;
+            top: -155px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.07);
+        }
+
+    .header-main {
+        position: relative;
+        z-index: 2;
+    }
+
+    .header-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 10px;
+        margin-bottom: 9px;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,.25);
+        background: rgba(255,255,255,.11);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .header-main h2 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 29px;
+        line-height: 1.1;
+        font-weight: 900;
+        letter-spacing: -.3px;
+    }
+
+    .header-main p {
+        margin: 8px 0 0;
+        color: rgba(255,255,255,.9);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .header-side {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-meta {
+        min-width: 190px;
+        padding: 10px 13px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.2);
+        background: rgba(255,255,255,.1);
+        text-align: right;
+    }
+
+        .header-meta small {
+            display: block;
+            color: rgba(255,255,255,.72);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .header-meta strong {
+            display: block;
+            margin-top: 3px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+    .print-btn {
+        height: 42px;
+        padding: 0 15px;
+        border: 1px solid rgba(255,255,255,.55);
+        border-radius: 9px;
+        background: #ffffff;
+        color: var(--solb-maroon);
+        font-size: 11px;
+        font-weight: 900;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+        .print-btn i {
+            margin-right: 6px;
+        }
+
+        .print-btn:hover {
+            background: #f8e8ed;
+        }
+
+    /* =========================================================
+       COMMON CARD
+    ========================================================= */
+
+    .dashboard-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .card-header {
+        min-height: 48px;
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .card-title {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--text);
+        font-size: 15px;
+        font-weight: 900;
+    }
+
+        .card-title i {
+            color: var(--solb-maroon);
+            font-size: 14px;
+        }
+
+    .card-note {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+
+    /* =========================================================
+       EXECUTIVE KPI CARDS
+    ========================================================= */
+
+    .executive-kpis {
+        display: grid;
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        gap: 11px;
+        margin-top: 14px;
+    }
+
+    .executive-kpi {
+        position: relative;
+        min-height: 125px;
+        padding: 15px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+    }
+
+        .executive-kpi::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: var(--solb-orange);
+        }
+
+        .executive-kpi.good::before {
+            background: var(--solb-green);
+        }
+
+        .executive-kpi.bad::before {
+            background: var(--solb-maroon);
+        }
+
+        .executive-kpi.info::before {
+            background: var(--solb-blue);
+        }
+
+    .kpi-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .kpi-label {
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.3;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .35px;
+    }
+
+    .kpi-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        background: #f6e8ec;
+        color: var(--solb-maroon);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        font-size: 12px;
+    }
+
+    .executive-kpi.good .kpi-icon {
+        background: #e4f3ec;
+        color: var(--solb-green);
+    }
+
+    .executive-kpi.info .kpi-icon {
+        background: #e6f0f9;
+        color: var(--solb-blue);
+    }
+
+    .kpi-value {
+        margin-top: 12px;
+        color: var(--text);
+        font-size: 24px;
+        line-height: 1;
+        font-weight: 900;
+    }
+
+    .kpi-subtitle {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.35;
+        font-weight: 650;
+    }
+
+    .kpi-status {
+        display: inline-flex;
+        margin-top: 9px;
+        padding: 3px 7px;
+        border-radius: 12px;
+        background: #eef1f5;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 900;
+    }
+
+        .kpi-status.good {
+            background: #e3f3ea;
+            color: var(--solb-green);
+        }
+
+        .kpi-status.warn {
+            background: #fff2d9;
+            color: #a66500;
+        }
+
+        .kpi-status.bad {
+            background: #f8e5e9;
+            color: var(--solb-maroon);
+        }
+
+    /* =========================================================
+       TOP ANALYTICS
+    ========================================================= */
+
+    /*    .top-analytics {
+        display: grid;
+        grid-template-columns: 1.35fr 1fr .82fr;
+        gap: 13px;
+        margin-top: 14px;
+    }*/
+
+    .top-analytics {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 14px;
+        margin-top: 14px;
+        align-items: start;
+    }
+
+    .trend-health-column {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+        .trend-health-column .dashboard-card {
+            width: 100%;
+        }
+
+        .trend-health-column .chart-box {
+            height: 260px;
+        }
+
+        .trend-health-column .health-score-layout {
+            min-height: 220px;
+        }
+
+    .chart-box {
+        height: 255px;
+        position: relative;
+    }
+
+    .production-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-bottom: 12px;
+    }
+
+    .production-mini {
+        padding: 10px;
+        border: 1px solid #e4e8ee;
+        border-radius: 9px;
+        background: #fafbfc;
+    }
+
+        .production-mini small {
+            color: var(--muted);
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .production-mini strong {
+            display: block;
+            margin-top: 4px;
+            color: var(--text);
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .production-mini span {
+            display: block;
+            margin-top: 3px;
+            color: var(--solb-green);
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+    /* =========================================================
+       HEALTH SCORE
+    ========================================================= */
+
+    .health-score-layout {
+        display: grid;
+        grid-template-columns: 145px 1fr;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .health-donut-wrap {
+        width: 140px;
+        height: 140px;
+        position: relative;
+        margin: auto;
+    }
+
+    .donut-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+    }
+
+        .donut-center strong {
+            color: var(--text);
+            font-size: 25px;
+            font-weight: 900;
+        }
+
+        .donut-center span {
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+    .health-list {
+        display: grid;
+        gap: 9px;
+    }
+
+    .health-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .health-name {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 750;
+    }
+
+    .health-value {
+        color: var(--text);
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .health-track {
+        grid-column: 1 / -1;
+        height: 5px;
+        border-radius: 10px;
+        background: #edf0f4;
+        overflow: hidden;
+    }
+
+        .health-track span {
+            display: block;
+            height: 100%;
+            border-radius: 10px;
+            background: var(--solb-green);
+        }
+
+        .health-track.warn span {
+            background: var(--solb-orange);
+        }
+
+        .health-track.bad span {
+            background: var(--solb-maroon);
+        }
+
+    /* =========================================================
+       DEPARTMENT PERFORMANCE
+    ========================================================= */
+
+    .department-section {
+        margin-top: 14px;
+    }
+
+    .department-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 11px;
+    }
+
+    .department-card {
+        padding: 13px;
+        border: 1px solid #e1e6ed;
+        border-radius: 10px;
+        background: #fbfcfd;
+    }
+
+    .department-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .department-name {
+        color: var(--text);
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .department-score {
+        font-size: 14px;
+        font-weight: 900;
+        color: var(--solb-green);
+    }
+
+        .department-score.warn {
+            color: var(--solb-orange);
+        }
+
+        .department-score.bad {
+            color: var(--solb-maroon);
+        }
+
+    .department-progress {
+        height: 7px;
+        margin-top: 10px;
+        background: #e9edf2;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+        .department-progress span {
+            display: block;
+            height: 100%;
+            border-radius: 10px;
+            background: var(--solb-green);
+        }
+
+        .department-progress.warn span {
+            background: var(--solb-orange);
+        }
+
+        .department-progress.bad span {
+            background: var(--solb-maroon);
+        }
+
+    .department-meta {
+        margin-top: 8px;
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 8px;
+        font-weight: 700;
+    }
+
+    /* =========================================================
+       MIDDLE GRID
+    ========================================================= */
+
+    .middle-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 13px;
+        margin-top: 14px;
+    }
+
+    /* =========================================================
+       TOP RISKS
+    ========================================================= */
+
+    .risk-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    .risk-item {
+        display: grid;
+        grid-template-columns: 28px 1fr auto;
+        gap: 9px;
+        align-items: center;
+        padding: 9px;
+        border: 1px solid #e9edf2;
+        border-radius: 9px;
+        background: #fbfcfd;
+    }
+
+    .risk-rank {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 7px;
+        background: var(--solb-maroon);
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 900;
+    }
+
+        .risk-rank.warn {
+            background: var(--solb-orange);
+        }
+
+    .risk-title {
+        color: var(--text);
+        font-size: 10px;
+        font-weight: 850;
+    }
+
+    .risk-detail {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 8px;
+        line-height: 1.25;
+        font-weight: 650;
+    }
+
+    .risk-value {
+        text-align: right;
+        color: var(--text);
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    /* =========================================================
+       SUPPLY CHAIN SNAPSHOT
+    ========================================================= */
+
+    .supply-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 9px;
+    }
+
+    .supply-item {
+        padding: 10px;
+        border-radius: 9px;
+        border: 1px solid #e6eaf0;
+        background: #fafbfc;
+    }
+
+    .supply-icon {
+        width: 29px;
+        height: 29px;
+        border-radius: 8px;
+        background: #f5e7eb;
+        color: var(--solb-maroon);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 12px;
+    }
+
+    .supply-label {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .supply-value {
+        margin-top: 4px;
+        color: var(--text);
+        font-size: 18px;
+        font-weight: 900;
+    }
+
+    .supply-sub {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 8px;
+        font-weight: 650;
+    }
+
+    /* =========================================================
+       UTILITY COMPLIANCE
+    ========================================================= */
+
+    .utility-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .utility-table th {
+            padding: 9px 7px;
+            background: #f0f3f6;
+            color: var(--muted);
+            font-size: 8px;
+            text-align: center;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+            .utility-table th:first-child {
+                text-align: left;
+            }
+
+        .utility-table td {
+            padding: 9px 7px;
+            border-bottom: 1px solid #edf0f4;
+            color: var(--text);
+            font-size: 9px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+            .utility-table td:first-child {
+                text-align: left;
+                font-weight: 850;
+            }
+
+        .utility-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+    .status-pill {
+        display: inline-flex;
+        justify-content: center;
+        min-width: 54px;
+        padding: 3px 7px;
+        border-radius: 12px;
+        background: #e4f2eb;
+        color: var(--solb-green);
+        font-size: 8px;
+        font-weight: 900;
+    }
+
+        .status-pill.warn {
+            background: #fff1d4;
+            color: #a76700;
+        }
+
+        .status-pill.bad {
+            background: #f7e3e8;
+            color: var(--solb-maroon);
+        }
+
+    /* =========================================================
+       BOTTOM TREND
+    ========================================================= */
+
+    .bottom-grid {
+        display: grid;
+        grid-template-columns: 1.65fr 1fr;
+        gap: 13px;
+        margin-top: 14px;
+    }
+
+    .trend-chart {
+        height: 275px;
+        position: relative;
+    }
+
+    /* =========================================================
+       MANAGEMENT ACTIONS TABLE
+    ========================================================= */
+
+    .action-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .action-table th {
+            padding: 9px 7px;
+            background: var(--solb-maroon);
+            color: #ffffff;
+            font-size: 8px;
+            text-align: left;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .action-table td {
+            padding: 10px 7px;
+            border-bottom: 1px solid #ebeff3;
+            color: var(--text);
+            font-size: 8px;
+            line-height: 1.3;
+            vertical-align: top;
+        }
+
+        .action-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+    .priority {
+        display: inline-flex;
+        justify-content: center;
+        min-width: 44px;
+        padding: 3px 6px;
+        border-radius: 10px;
+        background: #f7e2e7;
+        color: var(--solb-maroon);
+        font-size: 7px;
+        font-weight: 900;
+    }
+
+        .priority.medium {
+            background: #fff1d5;
+            color: #a76700;
+        }
+
+        .priority.low {
+            background: #e2f1e9;
+            color: var(--solb-green);
+        }
+
+    /* =========================================================
+       FOOTER
+    ========================================================= */
+
+    .dashboard-footer {
+        margin-top: 14px;
+        padding: 13px 4px 3px;
+        border-top: 1px solid #ccd3dc;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 700;
+        text-align: right;
+    }
+
+        .dashboard-footer strong {
+            color: var(--solb-maroon);
+        }
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @@media (max-width: 1450px) {
+        .executive-kpis {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .department-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 1150px) {
+        .top-analytics,
+        .middle-grid,
+        .bottom-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .department-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .xp-contentbar {
+            padding: 9px !important;
+        }
+
+        .executive-header {
+            grid-template-columns: 1fr;
+        }
+
+        .header-side {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .header-meta {
+            text-align: left;
+        }
+
+        .executive-kpis {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .health-score-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .department-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .executive-kpis {
+            grid-template-columns: 1fr;
+        }
+
+        .production-summary-grid,
+        .supply-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* =========================================================
+       PRINT
+    ========================================================= */
+
+    @@media print {
+        @@page {
+            size: A4 landscape;
+            margin: 5mm;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        .no-print,
+        .xp-breadcrumbbar,
+        .navbar,
+        .sidebar,
+        .footer,
+        .xp-leftbar,
+        .xp-rightbar,
+        .xp-topbar {
+            display: none !important;
+        }
+
+        html,
+        body,
+        .xp-contentbar {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+        }
+
+        .executive-dashboard {
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        .executive-header {
+            min-height: 76px !important;
+            padding: 12px 15px !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+        }
+
+        .header-main h2 {
+            font-size: 21px !important;
+        }
+
+        .executive-kpis {
+            grid-template-columns: repeat(8, 1fr) !important;
+            gap: 5px !important;
+            margin-top: 7px !important;
+        }
+
+        .executive-kpi {
+            min-height: 75px !important;
+            padding: 7px 7px 6px 10px !important;
+            border-radius: 7px !important;
+            box-shadow: none !important;
+        }
+
+        .kpi-label {
+            font-size: 7px !important;
+        }
+
+        .kpi-icon {
+            width: 21px !important;
+            height: 21px !important;
+        }
+
+        .kpi-value {
+            margin-top: 5px !important;
+            font-size: 16px !important;
+        }
+
+        .kpi-subtitle,
+        .kpi-status {
+            font-size: 6px !important;
+            margin-top: 4px !important;
+        }
+
+        .top-analytics {
+            grid-template-columns: 1.35fr 1fr .82fr !important;
+            gap: 6px !important;
+            margin-top: 7px !important;
+        }
+
+        .department-section,
+        .middle-grid,
+        .bottom-grid {
+            margin-top: 7px !important;
+        }
+
+        .middle-grid {
+            grid-template-columns: 1fr 1fr 1fr !important;
+            gap: 6px !important;
+        }
+
+        .bottom-grid {
+            grid-template-columns: 1.65fr 1fr !important;
+            gap: 6px !important;
+        }
+
+        .department-grid {
+            grid-template-columns: repeat(5, 1fr) !important;
+            gap: 5px !important;
+        }
+
+        .dashboard-card,
+        .department-card {
+            page-break-inside: avoid !important;
+            box-shadow: none !important;
+        }
+
+        .card-header {
+            min-height: 31px !important;
+            padding: 6px 8px !important;
+        }
+
+        .card-title {
+            font-size: 9px !important;
+        }
+
+        .card-note {
+            font-size: 6px !important;
+        }
+
+        .card-body {
+            padding: 7px !important;
+        }
+
+        .chart-box,
+        .trend-chart {
+            height: 145px !important;
+        }
+
+        .health-donut-wrap {
+            width: 95px !important;
+            height: 95px !important;
+        }
+
+        .department-card {
+            padding: 7px !important;
+        }
+
+        .department-name {
+            font-size: 7px !important;
+        }
+
+        .department-score {
+            font-size: 10px !important;
+        }
+
+        .utility-table th,
+        .utility-table td,
+        .action-table th,
+        .action-table td {
+            padding: 4px !important;
+            font-size: 6px !important;
+        }
+
+        .dashboard-footer {
+            margin-top: 6px !important;
+            padding-top: 5px !important;
+            font-size: 6px !important;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row">
+        <div class="col-md-9">
+            <h4 class="xp-page-title">Executive Dashboard</h4>
+        </div>
+        <div class="col-md-3 text-right">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">Executive</li>
+                <li class="breadcrumb-item active">Dashboard</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="executive-dashboard">
+
+        <!-- EXECUTIVE HEADER -->
+        <section class="executive-header">
+            <div class="header-main">
+                <div class="header-tag">
+                    <i class="fa-solid fa-building"></i>
+                    SOLB Steel Executive Management
+                </div>
+
+                <h2>Executive Operations Dashboard</h2>
+
+                <p>
+                    Consolidated performance overview of Steel Making Plant,
+                    Rolling Mills, Supply Chain, Utilities and Maintenance.
+                </p>
+            </div>
+
+            <div class="header-side">
+                <div class="header-meta">
+                    <small>Report Date</small>
+                    <strong>13-Jul-2026</strong>
+                    <small style="margin-top:5px;">Last Updated</small>
+                    <strong>12:45 PM</strong>
+                </div>
+
+                <button type="button"
+                        class="print-btn no-print"
+                        onclick="printExecutiveDashboard()">
+                    <i class="fa-solid fa-print"></i>
+                    Print / Save PDF
+                </button>
+            </div>
+        </section>
+
+        <!-- EXECUTIVE KPI CARDS -->
+        <section class="executive-kpis">
+
+            <div class="executive-kpi good">
+                <div class="kpi-top">
+                    <div class="kpi-label">Total Daily Production</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-industry"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">3,900 MT</div>
+                <div class="kpi-subtitle">SMP + RM1 + RM2 consolidated output</div>
+                <div class="kpi-status good">▲ 4.8% vs plan</div>
+            </div>
+
+            <div class="executive-kpi good">
+                <div class="kpi-top">
+                    <div class="kpi-label">Overall Yield</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-percent"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">89.4%</div>
+                <div class="kpi-subtitle">Weighted plant production yield</div>
+                <div class="kpi-status good">Target 88.0%</div>
+            </div>
+
+            <div class="executive-kpi info">
+                <div class="kpi-top">
+                    <div class="kpi-label">Plant Availability</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">92.6%</div>
+                <div class="kpi-subtitle">Operational availability across plants</div>
+                <div class="kpi-status good">Stable</div>
+            </div>
+
+            <div class="executive-kpi good">
+                <div class="kpi-top">
+                    <div class="kpi-label">Dispatch MTD</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-truck"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">5,795 MT</div>
+                <div class="kpi-subtitle">Customer dispatch month to date</div>
+                <div class="kpi-status warn">8% of target</div>
+            </div>
+
+            <div class="executive-kpi">
+                <div class="kpi-top">
+                    <div class="kpi-label">Power Consumption</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">608</div>
+                <div class="kpi-subtitle">SMP power consumption kWh/t</div>
+                <div class="kpi-status warn">Target 602</div>
+            </div>
+
+            <div class="executive-kpi bad">
+                <div class="kpi-top">
+                    <div class="kpi-label">Total Downtime</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">590 Min</div>
+                <div class="kpi-subtitle">Planned and unplanned downtime</div>
+                <div class="kpi-status bad">Action required</div>
+            </div>
+
+            <div class="executive-kpi good">
+                <div class="kpi-top">
+                    <div class="kpi-label">Maintenance Closure</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">87%</div>
+                <div class="kpi-subtitle">Countermeasures closed on time</div>
+                <div class="kpi-status good">▲ 3%</div>
+            </div>
+
+            <div class="executive-kpi info">
+                <div class="kpi-top">
+                    <div class="kpi-label">Executive Health Score</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-chart-simple"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">88%</div>
+                <div class="kpi-subtitle">Combined weighted performance score</div>
+                <div class="kpi-status good">Good</div>
+            </div>
+
+        </section>
+
+        <!-- TOP ANALYTICS -->
+        <section class="top-analytics">
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa-solid fa-chart-column"></i>
+                        Production Performance
+                    </h3>
+                    <span class="card-note">Daily / MTD / YTD</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="production-summary-grid">
+                        <div class="production-mini">
+                            <small>Daily Output</small>
+                            <strong>3,900 MT</strong>
+                            <span>▲ 4.8%</span>
+                        </div>
+
+                        <div class="production-mini">
+                            <small>MTD Output</small>
+                            <strong>99,130 MT</strong>
+                            <span>▲ 2.9%</span>
+                        </div>
+
+                        <div class="production-mini">
+                            <small>YTD Output</small>
+                            <strong>493,650 MT</strong>
+                            <span>▲ 3.7%</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-box">
+                        <canvas id="productionComparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="trend-health-column">
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-line"></i>
+                            Production Trend
+                        </h3>
+                        <span class="card-note">Last 12 months</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="chart-box">
+                            <canvas id="productionTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                            Operational Health
+                        </h3>
+                        <span class="card-note">Weighted score</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="health-score-layout">
+
+                            <div class="health-donut-wrap">
+                                <canvas id="healthScoreChart"></canvas>
+
+                                <div class="donut-center">
+                                    <strong>88%</strong>
+                                    <span>Overall</span>
+                                </div>
+                            </div>
+
+                            <div class="health-list">
+                                <div class="health-item">
+                                    <div class="health-name">Production</div>
+                                    <div class="health-value">94%</div>
+                                    <div class="health-track">
+                                        <span style="width:94%;"></span>
+                                    </div>
+                                </div>
+
+                                <div class="health-item">
+                                    <div class="health-name">Maintenance</div>
+                                    <div class="health-value">87%</div>
+                                    <div class="health-track">
+                                        <span style="width:87%;"></span>
+                                    </div>
+                                </div>
+
+                                <div class="health-item">
+                                    <div class="health-name">Supply Chain</div>
+                                    <div class="health-value">81%</div>
+                                    <div class="health-track warn">
+                                        <span style="width:81%;"></span>
+                                    </div>
+                                </div>
+
+                                <div class="health-item">
+                                    <div class="health-name">Utilities</div>
+                                    <div class="health-value">76%</div>
+                                    <div class="health-track bad">
+                                        <span style="width:76%;"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            @*<div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-line"></i>
+                            Production Trend
+                        </h3>
+                        <span class="card-note">Last 12 months</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="chart-box">
+                            <canvas id="productionTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                            Operational Health
+                        </h3>
+                        <span class="card-note">Weighted score</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="health-score-layout">
+
+                            <div class="health-donut-wrap">
+                                <canvas id="healthScoreChart"></canvas>
+
+                                <div class="donut-center">
+                                    <strong>88%</strong>
+                                    <span>Overall</span>
+                                </div>
+                            </div>
+
+                            <div class="health-list">
+                                <div class="health-item">
+                                    <div class="health-name">Production</div>
+                                    <div class="health-value">94%</div>
+                                    <div class="health-track">
+                                        <span style="width:94%;"></span>
+                                    </div>
+                                </div>
+
+                                <div class="health-item">
+                                    <div class="health-name">Maintenance</div>
+                                    <div class="health-value">87%</div>
+                                    <div class="health-track">
+                                        <span style="width:87%;"></span>
+                                    </div>
+                                </div>
+
+                                <div class="health-item">
+                                    <div class="health-name">Supply Chain</div>
+                                    <div class="health-value">81%</div>
+                                    <div class="health-track warn">
+                                        <span style="width:81%;"></span>
+                                    </div>
+                                </div>
+
+                                <div class="health-item">
+                                    <div class="health-name">Utilities</div>
+                                    <div class="health-value">76%</div>
+                                    <div class="health-track bad">
+                                        <span style="width:76%;"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>*@
+
+        </section>
+
+        <!-- DEPARTMENT PERFORMANCE -->
+        <section class="dashboard-card department-section">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fa-solid fa-layer-group"></i>
+                    Department Performance Overview
+                </h3>
+
+                <span class="card-note">Current reporting period</span>
+            </div>
+
+            <div class="card-body">
+                <div class="department-grid">
+
+                    <div class="department-card">
+                        <div class="department-head">
+                            <div class="department-name">Steel Making Plant</div>
+                            <div class="department-score">94%</div>
+                        </div>
+
+                        <div class="department-progress">
+                            <span style="width:94%;"></span>
+                        </div>
+
+                        <div class="department-meta">
+                            <span>Output 1,245 MT</span>
+                            <span>Yield 86.9%</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card">
+                        <div class="department-head">
+                            <div class="department-name">Rolling Mill 1</div>
+                            <div class="department-score">91%</div>
+                        </div>
+
+                        <div class="department-progress">
+                            <span style="width:91%;"></span>
+                        </div>
+
+                        <div class="department-meta">
+                            <span>Output 1,310 MT</span>
+                            <span>RRR 94%</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card">
+                        <div class="department-head">
+                            <div class="department-name">Rolling Mill 2</div>
+                            <div class="department-score">90%</div>
+                        </div>
+
+                        <div class="department-progress">
+                            <span style="width:90%;"></span>
+                        </div>
+
+                        <div class="department-meta">
+                            <span>Output 1,345 MT</span>
+                            <span>RRR 92%</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card">
+                        <div class="department-head">
+                            <div class="department-name">Supply Chain</div>
+                            <div class="department-score warn">81%</div>
+                        </div>
+
+                        <div class="department-progress warn">
+                            <span style="width:81%;"></span>
+                        </div>
+
+                        <div class="department-meta">
+                            <span>Dispatch 389 MT</span>
+                            <span>Gap -2,011 MT</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card">
+                        <div class="department-head">
+                            <div class="department-name">CMD Maintenance</div>
+                            <div class="department-score warn">84%</div>
+                        </div>
+
+                        <div class="department-progress warn">
+                            <span style="width:84%;"></span>
+                        </div>
+
+                        <div class="department-meta">
+                            <span>Closure 87%</span>
+                            <span>Delay 590 Min</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- MIDDLE GRID -->
+        <section class="middle-grid">
+
+            <!-- TOP RISKS -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Top Operational Risks
+                    </h3>
+                    <span class="card-note">Priority issues</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="risk-list">
+
+                        <div class="risk-item">
+                            <div class="risk-rank warn">1</div>
+                            <div>
+                                <div class="risk-title">Planned Downtime</div>
+                                <div class="risk-detail">
+                                    Preventive maintenance and planned production stoppage.
+                                </div>
+                            </div>
+                            <div class="risk-value">480 Min</div>
+                        </div>
+
+                        <div class="risk-item">
+                            <div class="risk-rank">2</div>
+                            <div>
+                                <div class="risk-title">Dispatch Performance Gap</div>
+                                <div class="risk-detail">
+                                    Monthly dispatch remains below planned target.
+                                </div>
+                            </div>
+                            <div class="risk-value">-2,011 MT</div>
+                        </div>
+
+                        <div class="risk-item">
+                            <div class="risk-rank">3</div>
+                            <div>
+                                <div class="risk-title">Power Consumption</div>
+                                <div class="risk-detail">
+                                    SMP consumption is above configured target.
+                                </div>
+                            </div>
+                            <div class="risk-value">+6 kWh/t</div>
+                        </div>
+
+                        <div class="risk-item">
+                            <div class="risk-rank">4</div>
+                            <div>
+                                <div class="risk-title">CCM Downtime</div>
+                                <div class="risk-detail">
+                                    Casting equipment interruptions affecting output.
+                                </div>
+                            </div>
+                            <div class="risk-value">45 Min</div>
+                        </div>
+
+                        <div class="risk-item">
+                            <div class="risk-rank warn">5</div>
+                            <div>
+                                <div class="risk-title">Nitrogen Consumption</div>
+                                <div class="risk-detail">
+                                    Consumption variance requires leakage and purge review.
+                                </div>
+                            </div>
+                            <div class="risk-value">High</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUPPLY CHAIN -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa-solid fa-truck-fast"></i>
+                        Supply Chain Snapshot
+                    </h3>
+                    <span class="card-note">Inventory and dispatch</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="supply-grid">
+
+                        <div class="supply-item">
+                            <div class="supply-icon">
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                            </div>
+                            <div class="supply-label">Raw Material Stock</div>
+                            <div class="supply-value">1,490 MT</div>
+                            <div class="supply-sub">Scrap + DRI + HBI</div>
+                        </div>
+
+                        <div class="supply-item">
+                            <div class="supply-icon">
+                                <i class="fa-solid fa-cubes"></i>
+                            </div>
+                            <div class="supply-label">Finished Goods</div>
+                            <div class="supply-value">7,319 MT</div>
+                            <div class="supply-sub">Billet, rebar and coils</div>
+                        </div>
+
+                        <div class="supply-item">
+                            <div class="supply-icon">
+                                <i class="fa-solid fa-truck"></i>
+                            </div>
+                            <div class="supply-label">Daily Dispatch</div>
+                            <div class="supply-value">389 MT</div>
+                            <div class="supply-sub">13 trucks dispatched</div>
+                        </div>
+
+                        <div class="supply-item">
+                            <div class="supply-icon">
+                                <i class="fa-solid fa-calendar-check"></i>
+                            </div>
+                            <div class="supply-label">MTD Dispatch</div>
+                            <div class="supply-value">5,795 MT</div>
+                            <div class="supply-sub">Target 74,400 MT</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- UTILITY -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa-solid fa-bolt"></i>
+                        Utility Compliance
+                    </h3>
+                    <span class="card-note">Actual vs target</span>
+                </div>
+
+                <div class="card-body" style="padding:0;">
+                    <table class="utility-table">
+                        <thead>
+                            <tr>
+                                <th>Utility</th>
+                                <th>Actual</th>
+                                <th>Target</th>
+                                <th>Variance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>Power</td>
+                                <td>608</td>
+                                <td>602</td>
+                                <td>+1.0%</td>
+                                <td>
+                                    <span class="status-pill warn">Review</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Oxygen</td>
+                                <td>89</td>
+                                <td>100</td>
+                                <td>-11%</td>
+                                <td>
+                                    <span class="status-pill">Good</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Nitrogen</td>
+                                <td>315</td>
+                                <td>100</td>
+                                <td>+215%</td>
+                                <td>
+                                    <span class="status-pill bad">High</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Argon</td>
+                                <td>13</td>
+                                <td>100</td>
+                                <td>-87%</td>
+                                <td>
+                                    <span class="status-pill">Good</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>LPG</td>
+                                <td>159</td>
+                                <td>100</td>
+                                <td>+59%</td>
+                                <td>
+                                    <span class="status-pill bad">High</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Water</td>
+                                <td>0.85</td>
+                                <td>0.90</td>
+                                <td>-5.6%</td>
+                                <td>
+                                    <span class="status-pill">Good</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- BOTTOM SECTION -->
+        <section class="bottom-grid">
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa-solid fa-chart-area"></i>
+                        Executive Performance Trend
+                    </h3>
+                    <span class="card-note">
+                        Production, availability and maintenance
+                    </span>
+                </div>
+
+                <div class="card-body">
+                    <div class="trend-chart">
+                        <canvas id="executiveTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        Management Actions
+                    </h3>
+                    <span class="card-note">Open actions</span>
+                </div>
+
+                <div class="card-body" style="padding:0;">
+                    <table class="action-table">
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>Action</th>
+                                <th>Owner</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <span class="priority">High</span>
+                                </td>
+                                <td>
+                                    Review nitrogen leakage and purge-cycle controls.
+                                </td>
+                                <td>Utility / SMP</td>
+                                <td>15-Jul-2026</td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <span class="priority">High</span>
+                                </td>
+                                <td>
+                                    Recover monthly dispatch gap and prioritize customer orders.
+                                </td>
+                                <td>Supply Chain</td>
+                                <td>17-Jul-2026</td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <span class="priority medium">Medium</span>
+                                </td>
+                                <td>
+                                    Analyse CCM downtime and implement equipment countermeasure.
+                                </td>
+                                <td>CMD / SMP</td>
+                                <td>18-Jul-2026</td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <span class="priority medium">Medium</span>
+                                </td>
+                                <td>
+                                    Review EAF and LF power consumption cycle.
+                                </td>
+                                <td>SMP Production</td>
+                                <td>20-Jul-2026</td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <span class="priority low">Low</span>
+                                </td>
+                                <td>
+                                    Continue monitoring RM1 and RM2 rolling performance.
+                                </td>
+                                <td>Rolling Mill</td>
+                                <td>Ongoing</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <div class="dashboard-footer">
+            <strong>© 2026 SOLB Steel</strong>
+            &nbsp;•&nbsp; Executive Operations Dashboard
+            &nbsp;•&nbsp; Management Confidential
+        </div>
+
+    </div>
+</div>
+
+<script>
+    Chart.defaults.font.family = "Segoe UI, Arial, sans-serif";
+    Chart.defaults.color = "#344054";
+
+    const maroon = "#a81435";
+    const red = "#c8102e";
+    const green = "#168b5b";
+    const orange = "#f59e0b";
+    const blue = "#1769aa";
+    const navy = "#183346";
+    const grey = "#9ca3af";
+    const gridColor = "#e9edf2";
+
+    const valueLabelPlugin = {
+        id: "executiveValueLabels",
+
+        afterDatasetsDraw(chart) {
+            const ctx = chart.ctx;
+
+            ctx.save();
+            ctx.fillStyle = "#263142";
+            ctx.font = "700 9px Segoe UI";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+
+            chart.data.datasets.forEach(function (dataset, datasetIndex) {
+                if (dataset.type === "line") {
+                    return;
+                }
+
+                const meta = chart.getDatasetMeta(datasetIndex);
+
+                if (meta.hidden) {
+                    return;
+                }
+
+                meta.data.forEach(function (element, index) {
+                    const value = dataset.data[index];
+
+                    if (value === null || value === undefined) {
+                        return;
+                    }
+
+                    ctx.fillText(
+                        Number(value).toLocaleString(),
+                        element.x,
+                        element.y - 5
+                    );
+                });
+            });
+
+            ctx.restore();
+        }
+    };
+
+    /* PRODUCTION COMPARISON */
+
+    new Chart(
+        document.getElementById("productionComparisonChart"),
+        {
+            type: "bar",
+
+            data: {
+                labels: ["SMP", "RM1", "RM2"],
+
+                datasets: [
+                    {
+                        label: "Daily",
+                        data: [1245, 1310, 1345],
+                        backgroundColor: maroon,
+                        borderRadius: 5,
+                        barThickness: 25
+                    },
+                    {
+                        label: "MTD",
+                        data: [35150, 32450, 31530],
+                        backgroundColor: blue,
+                        borderRadius: 5,
+                        barThickness: 25
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+
+                plugins: {
+                    legend: {
+                        position: "bottom",
+
+                        labels: {
+                            boxWidth: 12,
+                            font: {
+                                size: 9,
+                                weight: "bold"
+                            }
+                        }
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+
+                        ticks: {
+                            font: {
+                                size: 8
+                            },
+
+                            callback: function (value) {
+                                if (value >= 1000) {
+                                    return (value / 1000) + "k";
+                                }
+
+                                return value;
+                            }
+                        },
+
+                        grid: {
+                            color: gridColor
+                        },
+
+                        border: {
+                            display: false
+                        }
+                    },
+
+                    x: {
+                        grid: {
+                            display: false
+                        },
+
+                        ticks: {
+                            font: {
+                                size: 9,
+                                weight: "bold"
+                            }
+                        },
+
+                        border: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    /* PRODUCTION TREND */
+
+    new Chart(
+        document.getElementById("productionTrendChart"),
+        {
+            type: "line",
+
+            data: {
+                labels: [
+                    "Aug", "Sep", "Oct", "Nov",
+                    "Dec", "Jan", "Feb", "Mar",
+                    "Apr", "May", "Jun", "Jul"
+                ],
+
+                datasets: [
+                    {
+                        label: "Actual",
+                        data: [
+                            86, 88, 87, 90,
+                            91, 89, 92, 93,
+                            91, 94, 95, 96
+                        ],
+                        borderColor: maroon,
+                        backgroundColor: "rgba(168,20,53,.08)",
+                        fill: true,
+                        borderWidth: 3,
+                        pointRadius: 3,
+                        tension: .32
+                    },
+                    {
+                        label: "Plan",
+                        data: [
+                            88, 88, 89, 89,
+                            90, 90, 91, 91,
+                            92, 92, 93, 93
+                        ],
+                        borderColor: blue,
+                        backgroundColor: blue,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        borderDash: [6, 4],
+                        tension: .25
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+
+                plugins: {
+                    legend: {
+                        position: "bottom",
+
+                        labels: {
+                            boxWidth: 12,
+                            font: {
+                                size: 9,
+                                weight: "bold"
+                            }
+                        }
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 75,
+                        max: 100,
+
+                        ticks: {
+                            callback: function (value) {
+                                return value + "%";
+                            },
+
+                            font: {
+                                size: 8
+                            }
+                        },
+
+                        grid: {
+                            color: gridColor
+                        },
+
+                        border: {
+                            display: false
+                        }
+                    },
+
+                    x: {
+                        grid: {
+                            display: false
+                        },
+
+                        ticks: {
+                            font: {
+                                size: 8
+                            }
+                        },
+
+                        border: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    /* HEALTH SCORE */
+
+    new Chart(
+        document.getElementById("healthScoreChart"),
+        {
+            type: "doughnut",
+
+            data: {
+                labels: ["Achieved", "Gap"],
+
+                datasets: [
+                    {
+                        data: [88, 12],
+                        backgroundColor: [maroon, "#dfe3e8"],
+                        borderWidth: 0
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "64%",
+                animation: false,
+
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+                        enabled: false
+                    }
+                }
+            }
+        }
+    );
+
+    /* EXECUTIVE TREND */
+
+    new Chart(
+        document.getElementById("executiveTrendChart"),
+        {
+            type: "line",
+
+            data: {
+                labels: [
+                    "Jan", "Feb", "Mar", "Apr",
+                    "May", "Jun", "Jul"
+                ],
+
+                datasets: [
+                    {
+                        label: "Production",
+                        data: [82, 85, 87, 86, 90, 92, 94],
+                        borderColor: maroon,
+                        backgroundColor: maroon,
+                        borderWidth: 3,
+                        pointRadius: 3,
+                        tension: .25
+                    },
+                    {
+                        label: "Availability",
+                        data: [88, 89, 90, 91, 91, 92, 93],
+                        borderColor: blue,
+                        backgroundColor: blue,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        tension: .25
+                    },
+                    {
+                        label: "Maintenance Closure",
+                        data: [72, 75, 78, 81, 82, 85, 87],
+                        borderColor: green,
+                        backgroundColor: green,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        tension: .25
+                    },
+                    {
+                        label: "Supply Chain",
+                        data: [76, 78, 79, 77, 80, 79, 81],
+                        borderColor: orange,
+                        backgroundColor: orange,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        tension: .25
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+
+                plugins: {
+                    legend: {
+                        position: "bottom",
+
+                        labels: {
+                            boxWidth: 12,
+                            font: {
+                                size: 9,
+                                weight: "bold"
+                            }
+                        }
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 60,
+                        max: 100,
+
+                        ticks: {
+                            callback: function (value) {
+                                return value + "%";
+                            },
+
+                            font: {
+                                size: 8
+                            }
+                        },
+
+                        grid: {
+                            color: gridColor
+                        },
+
+                        border: {
+                            display: false
+                        }
+                    },
+
+                    x: {
+                        grid: {
+                            display: false
+                        },
+
+                        ticks: {
+                            font: {
+                                size: 8
+                            }
+                        },
+
+                        border: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    function printExecutiveDashboard() {
+        window.print();
+    }
+</script>

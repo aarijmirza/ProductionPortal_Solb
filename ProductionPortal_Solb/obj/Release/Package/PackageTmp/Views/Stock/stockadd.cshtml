@@ -1,0 +1,358 @@
+﻿@{
+    ViewBag.Title = "Supply Chain Stock Entry";
+}
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Supply Chain Stock Entry</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Supply Chain</a></li>
+                    <li class="breadcrumb-item active">Stock Entry</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <form action="/SupplyChainStock/Add" method="post" id="stockForm">
+
+        <div class="card m-b-30">
+            <div class="card-header bg-white">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-0">Supply Chain Department Stock Details</h5>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" class="form-control" id="date" name="ReportDate" />
+                    </div>
+                    <div class="col-md-2 text-right">
+                        <button type="submit" class="btn btn-primary">Save Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+
+                <!-- ================= DISPATCH DETAILS ================= -->
+                <h5 class="mb-2">Dispatch Details</h5>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Material</th>
+                                <th>Trucks</th>
+                                <th>Tons</th>
+                                @*<th>MTD</th>*@
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                string[] dispatchMaterials = { "Rebar", "Plain Rebar", "Rebar Epoxy", "Wire Rod", "Rebar In Coil", "Billet" };
+                            }
+
+                            @for (int i = 0; i < dispatchMaterials.Length; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="text" class="form-control" name="DispatchDetails[@i].Material" value="@dispatchMaterials[i]" readonly />
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control" name="DispatchDetails[@i].Trucks" value="0" />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" class="form-control" name="DispatchDetails[@i].Tons" value="0" />
+                                    </td>
+                                    @*<td>
+                                        <input type="number" step="0.001" class="form-control" name="DispatchDetails[@i].MTD" value="0" />
+                                    </td>*@
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ================= REBAR STOCK ================= -->
+                <h5 class="mb-2">Rebar Stock</h5>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Size</th>
+                                <th>Prime</th>
+                                <th>Discolored</th>
+                                <th>Epoxy</th>
+                                <th>Short Bars</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                string[] rebarSizes = { "8mm", "10mm", "12mm", "14mm", "16mm", "18mm", "20mm", "25mm", "28mm", "32mm", "36mm", "P32mm", "P40mm" };
+                            }
+
+                            @for (int i = 0; i < rebarSizes.Length; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="text" class="form-control" name="RebarStocks[@i].Size" value="@rebarSizes[i]" readonly />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" class="form-control" name="RebarStocks[@i].Prime" value="0" />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" class="form-control" name="RebarStocks[@i].Discolored" value="0" />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" class="form-control" name="RebarStocks[@i].Epoxy" value="0" />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" class="form-control" name="RebarStocks[@i].ShortBars" value="0" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ================= WIRE ROD & REBAR COIL STOCK ================= -->
+                <h5 class="mb-2">Wire Rod & Rebar Coil Stock</h5>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Size</th>
+                                <th>Grade</th>
+                                <th>Prime</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var wireRows = new[]
+                                {
+                                    new { Size = "5.5mm", Grade = "SAE 1008" },
+                                    new { Size = "5.5mm", Grade = "SAE 1006" },
+                                    new { Size = "6.5mm", Grade = "SAE 1008" },
+                                    new { Size = "6.5mm", Grade = "SAE 1012" },
+                                    new { Size = "7mm", Grade = "SAE 1008" },
+                                    new { Size = "7.5mm", Grade = "SAE 1008" },
+                                    new { Size = "8mm", Grade = "SAE 1008" },
+                                    new { Size = "9mm", Grade = "SAE 1012" },
+                                    new { Size = "9mm", Grade = "SAE 1008" },
+                                    new { Size = "10mm", Grade = "SAE 1008" },
+                                    new { Size = "11mm", Grade = "SAE 1006" },
+                                    new { Size = "11mm", Grade = "SAE 1008" },
+                                    new { Size = "11mm", Grade = "SAE 1080" },
+                                    new { Size = "12mm", Grade = "SAE 1012" },
+                                    new { Size = "14mm", Grade = "SAE 1008" },
+                                    new { Size = "RC8mm", Grade = "GR60" },
+                                    new { Size = "RC10mm", Grade = "GR60" },
+                                    new { Size = "RC12mm", Grade = "GR60" },
+                                    new { Size = "RC16mm", Grade = "GR60" },
+                                    new { Size = "RC16mm", Grade = "GR80" }
+                                };
+                            }
+
+                            @for (int i = 0; i < wireRows.Length; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="text" class="form-control" name="WireRodStocks[@i].Size" value="@wireRows[i].Size" readonly />
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control" name="WireRodStocks[@i].Grade" value="@wireRows[i].Grade" readonly />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" class="form-control" name="WireRodStocks[@i].Prime" value="0" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ================= BILLET STOCK ================= -->
+                <h5 class="mb-2">Billet Stock</h5>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Grade</th>
+                                <th>Qty Ton</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                string[] billetGrades =
+                                {
+                                    "ASTM615 G60",
+                                    "ASTM15 G60 - High Rh %",
+                                    "BS4449",
+                                    "BS4449: 005 B500B",
+                                    "ASTM A706 G80",
+                                    "ASTM 706 G60",
+                                    "ASTM615 G40 - Qaryan",
+                                    "AISI SAE 1008",
+                                    "AISI SAE 1080",
+                                    "AISI SAE 1012",
+                                    "AISI SAE 1042",
+                                    "Short Billet (1008)",
+                                    "ASTM 615 for RIC"
+                                };
+                            }
+
+                            @for (int i = 0; i < billetGrades.Length; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="text" class="form-control" name="BilletStocks[@i].Grade" value="@billetGrades[i]" readonly />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" class="form-control" name="BilletStocks[@i].QtyTon" value="0" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ================= RAW MATERIAL STOCK ================= -->
+                <h5 class="mb-2">Raw Material Stock</h5>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Material Description</th>
+                                <th>Qty Ton</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                string[] rawMaterials = { "HBI", "DRI", "Pig Iron", "Scrap" };
+                            }
+
+                            @for (int i = 0; i < rawMaterials.Length; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="text" class="form-control" name="RawMaterialStocks[@i].MaterialDescription" value="@rawMaterials[i]" readonly />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" class="form-control" name="RawMaterialStocks[@i].QtyTon" value="0" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ================= SUB RAW MATERIAL STOCK ================= -->
+                <h5 class="mb-2">Sub Raw Material Stock</h5>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Material Description</th>
+                                <th>Qty Ton</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                string[] subRawMaterials =
+                                {
+                                    "Graphite Electrodes for EAF",
+                                    "Graphite Electrodes for LF",
+                                    "Rice Husk",
+                                    "Charge Coal",
+                                    "Calcined Carbon",
+                                    "Aluminum Sticks",
+                                    "Aluminum Wire",
+                                    "RECARBURIZER BB",
+                                    "Ferro Silicon75%",
+                                    "Ferro silicon Manganese",
+                                    "Ferro Manganese HC",
+                                    "Ferro Vanadium",
+                                    "Flourspar (CaF2)",
+                                    "Lime (5-50 mm)",
+                                    "Lime (3-12 mm)",
+                                    "Dolime (8-50 mm)",
+                                    "Dolime (3-12 mm)",
+                                    "MAGNESITE (MgO C93 CR)",
+                                    "CaSi wire",
+                                    "CALCIUM-FERRUM (Ca-Fe)",
+                                    "Tundish Cover Powder",
+                                    "Aluminum Lump"
+                                };
+                            }
+
+                            @for (int i = 0; i < subRawMaterials.Length; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="text" class="form-control" name="SubRawMaterialStocks[@i].MaterialDescription" value="@subRawMaterials[i]" readonly />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" class="form-control" name="SubRawMaterialStocks[@i].QtyTon" value="0" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+
+        $("#date").val(new Date().toISOString().split("T")[0]);
+
+        $("#stockForm").on("submit", function (e) {
+            e.preventDefault();
+
+            if (!$("#date").val()) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Date Required",
+                    text: "Please select report date."
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: "Confirm Submission",
+                text: "Are you sure you want to save stock details?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, Save",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $("#stockForm")[0].submit();
+                }
+            });
+        });
+
+    });
+</script>

@@ -1,0 +1,1294 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    :root {
+        --brand: #8b1029;
+        --brand-dark: #52000f;
+        --brand-soft: #f8e8ed;
+        --bg: #f2f4f7;
+        --panel: #ffffff;
+        --panel-dark: #151923;
+        --border: #dde3eb;
+        --text: #1f2937;
+        --muted: #667085;
+        --green: #13895a;
+        --amber: #d89000;
+        --blue: #1d65a6;
+        --red: #c1121f;
+        --gray: #98a2b3;
+        --shadow: 0 10px 26px rgba(15, 23, 42, .07);
+        --radius: 16px;
+    }
+
+    body {
+        background: var(--bg);
+        font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .xp-contentbar {
+        background: var(--bg) !important;
+        padding: 22px !important;
+    }
+
+    .smp-board {
+        max-width: 1500px;
+        margin: 0 auto;
+        color: var(--text);
+    }
+
+    /* ================= HEADER ================= */
+
+    .board-header {
+        background: linear-gradient(135deg, #151923 0%, #2b1119 55%, #8b1029 100%);
+        border-radius: 18px;
+        padding: 22px 24px;
+        color: #fff;
+        box-shadow: var(--shadow);
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 20px;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .board-header:after {
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.07);
+            right: -90px;
+            top: -120px;
+        }
+
+    .header-left {
+        position: relative;
+        z-index: 2;
+    }
+
+    .plant-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.18);
+        padding: 6px 11px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 11px;
+    }
+
+    .board-header h2 {
+        margin: 0;
+        font-size: 30px;
+        font-weight: 900;
+        letter-spacing: .2px;
+    }
+
+    .board-header p {
+        margin: 7px 0 0;
+        font-size: 13px;
+        color: rgba(255,255,255,.86);
+        font-weight: 600;
+    }
+
+    .header-meta {
+        position: relative;
+        z-index: 2;
+        text-align: right;
+        display: grid;
+        gap: 8px;
+    }
+
+    .meta-card {
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 14px;
+        padding: 10px 14px;
+        min-width: 185px;
+    }
+
+    .meta-label {
+        font-size: 11px;
+        color: rgba(255,255,255,.72);
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .meta-value {
+        margin-top: 3px;
+        font-size: 16px;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    /* ================= EXEC SUMMARY ================= */
+
+    .exec-strip {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+        margin-top: 14px;
+    }
+
+    .exec-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 15px;
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .exec-title {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .45px;
+    }
+
+    .exec-value {
+        color: var(--text);
+        font-size: 23px;
+        font-weight: 900;
+        margin-top: 4px;
+        line-height: 1;
+    }
+
+    .exec-sub {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 5px;
+    }
+
+    .exec-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 14px;
+        background: var(--brand-soft);
+        color: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .exec-card.good .exec-icon {
+        background: #e8f5ef;
+        color: var(--green);
+    }
+
+    .exec-card.warn .exec-icon {
+        background: #fff4dc;
+        color: var(--amber);
+    }
+
+    /* ================= KPI ================= */
+
+    .kpi-grid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 12px;
+    }
+
+    .kpi-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px;
+        min-height: 128px;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .kpi-card:before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 4px;
+            width: 100%;
+            background: var(--gray);
+        }
+
+        .kpi-card.good:before {
+            background: var(--green);
+        }
+
+        .kpi-card.warn:before {
+            background: var(--amber);
+        }
+
+        .kpi-card.bad:before {
+            background: var(--brand);
+        }
+
+    .kpi-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .kpi-name {
+        font-size: 11px;
+        font-weight: 900;
+        color: var(--muted);
+        text-transform: uppercase;
+        line-height: 1.25;
+    }
+
+    .kpi-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 10px;
+        background: #f4f6f8;
+        color: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    .kpi-value {
+        margin-top: 12px;
+        font-size: 24px;
+        line-height: 1;
+        font-weight: 900;
+        color: var(--text);
+    }
+
+    .kpi-target {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .kpi-track {
+        margin-top: 11px;
+        height: 6px;
+        border-radius: 999px;
+        background: #edf0f4;
+        overflow: hidden;
+    }
+
+    .kpi-fill {
+        height: 100%;
+        background: var(--brand);
+        border-radius: 999px;
+        display: block;
+    }
+
+    .kpi-card.good .kpi-fill {
+        background: var(--green);
+    }
+
+    .kpi-card.warn .kpi-fill {
+        background: var(--amber);
+    }
+
+    /* ================= MAIN GRID ================= */
+
+    .main-grid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: 1.05fr 1.05fr 360px;
+        gap: 14px;
+        align-items: start;
+    }
+
+    .column {
+        display: grid;
+        gap: 14px;
+    }
+
+    .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 16px;
+        overflow: hidden;
+    }
+
+    .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+        padding-bottom: 11px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 900;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+        .panel-title i {
+            color: var(--brand);
+            font-size: 15px;
+        }
+
+    .panel-note {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .chart-box {
+        height: 260px;
+        position: relative;
+    }
+
+        .chart-box.small {
+            height: 235px;
+        }
+
+    /* ================= VARIANCE TABLE ================= */
+
+    .variance-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        overflow: hidden;
+    }
+
+        .variance-table th {
+            background: #f0f3f7;
+            color: var(--text);
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .variance-table td {
+            padding: 13px 12px;
+            border-top: 1px solid #edf0f4;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+            color: var(--text);
+        }
+
+            .variance-table td:first-child {
+                text-align: left;
+                color: var(--muted);
+                font-weight: 900;
+            }
+
+    .positive {
+        color: var(--green) !important;
+    }
+
+    .negative {
+        color: var(--red) !important;
+    }
+
+    /* ================= DELAYS ================= */
+
+    .delay-list {
+        display: grid;
+        gap: 9px;
+    }
+
+    .delay-row {
+        display: grid;
+        grid-template-columns: 34px 1fr 92px 48px;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        border-radius: 12px;
+        background: #fbfcfd;
+        border: 1px solid #edf0f4;
+    }
+
+    .delay-rank {
+        width: 26px;
+        height: 26px;
+        border-radius: 9px;
+        background: var(--brand);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .delay-rank.top {
+            background: var(--amber);
+        }
+
+    .delay-name {
+        font-size: 12px;
+        font-weight: 900;
+        color: var(--text);
+    }
+
+    .delay-area {
+        font-size: 10px;
+        color: var(--muted);
+        font-weight: 700;
+        margin-top: 2px;
+    }
+
+    .delay-bar {
+        height: 7px;
+        border-radius: 999px;
+        background: #edf0f4;
+        overflow: hidden;
+    }
+
+        .delay-bar span {
+            display: block;
+            height: 100%;
+            border-radius: 999px;
+            background: var(--brand);
+        }
+
+        .delay-bar.top span {
+            background: var(--amber);
+        }
+
+    .delay-min {
+        text-align: right;
+        font-size: 13px;
+        font-weight: 900;
+        color: var(--text);
+    }
+
+    /* ================= RIGHT PANEL ================= */
+
+    .right-column {
+        display: grid;
+        gap: 14px;
+    }
+
+    .health-panel {
+        text-align: center;
+    }
+
+    .health-title {
+        font-size: 14px;
+        font-weight: 900;
+        color: var(--text);
+        margin-bottom: 13px;
+    }
+
+    .donut-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+    }
+
+    .donut {
+        width: 132px;
+        height: 132px;
+        border-radius: 50%;
+        background: conic-gradient(var(--brand) 0 70%, #d8d8d8 70% 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+        .donut.charge {
+            background: conic-gradient(var(--brand) 0 42%, var(--blue) 42% 74%, #c9c9c9 74% 100%);
+        }
+
+        .donut.availability {
+            background: conic-gradient(var(--brand) 0 38%, var(--blue) 38% 64%, #c9c9c9 64% 100%);
+        }
+
+    .donut-inner {
+        width: 76px;
+        height: 76px;
+        background: var(--bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text);
+        font-size: 24px;
+        font-weight: 900;
+    }
+
+    .legend-list {
+        display: grid;
+        gap: 7px;
+        text-align: left;
+        font-size: 11px;
+        color: var(--text);
+        font-weight: 800;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        white-space: nowrap;
+    }
+
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        display: inline-block;
+    }
+
+    /* ================= PRODUCTION CHART ================= */
+
+    .production-panel {
+        margin-top: 14px;
+    }
+
+    .production-chart {
+        height: 285px;
+        position: relative;
+    }
+
+    .footer-line {
+        margin-top: 14px;
+        padding: 14px;
+        border-top: 1px solid var(--border);
+        text-align: right;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    .print-btn {
+        background: #ffffff;
+        color: #8b1029;
+        border: 1px solid rgba(255,255,255,.45);
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    }
+
+        .print-btn i {
+            margin-right: 6px;
+        }
+
+        .print-btn:hover {
+            background: #f8e8ed;
+            color: #52000f;
+        }
+
+    /* ================= RESPONSIVE ================= */
+
+    @@media (max-width: 1400px) {
+        .exec-strip {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .main-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .right-column {
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @@media (max-width: 992px) {
+        .board-header {
+            grid-template-columns: 1fr;
+        }
+
+        .header-meta {
+            text-align: left;
+        }
+
+        .exec-strip {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .main-grid,
+        .right-column {
+            grid-template-columns: 1fr;
+        }
+
+        .donut-wrap {
+            flex-direction: column;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .xp-contentbar {
+            padding: 10px !important;
+        }
+
+        .board-header h2 {
+            font-size: 23px;
+        }
+
+        .exec-strip,
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .delay-row {
+            grid-template-columns: 34px 1fr 48px;
+        }
+
+        .delay-bar {
+            display: none;
+        }
+    }
+
+    @@media print {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .xp-breadcrumbbar,
+        .no-print {
+            display: none !important;
+        }
+
+        body,
+        .xp-contentbar {
+            background: #fff !important;
+        }
+
+        .panel,
+        .kpi-card,
+        .exec-card,
+        .board-header {
+            box-shadow: none !important;
+        }
+    }
+
+/*    @@media print {
+        @@page {
+            size: A4 landscape;
+            margin: 5mm;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        body,
+        .xp-contentbar {
+            background: #ffffff !important;
+        }
+
+        .no-print,
+        .xp-breadcrumbbar,
+        .navbar,
+        .sidebar,
+        .footer,
+        .xp-leftbar,
+        .xp-rightbar,
+        .xp-topbar {
+            display: none !important;
+        }
+
+        .xp-contentbar {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .smp-board {
+            max-width: none !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+
+        .board-header,
+        .exec-card,
+        .kpi-card,
+        .panel {
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+        }
+
+        .main-grid,
+        .exec-strip,
+        .kpi-grid {
+            page-break-inside: avoid !important;
+        }
+    }*/
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row">
+        <div class="col-md-9">
+            <h4 class="xp-page-title">SMP Daily Dashboard</h4>
+        </div>
+        <div class="col-md-3 text-right">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">Steel Melting Plant</li>
+                <li class="breadcrumb-item active">Dashboard</li>
+            </ol>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10">
+        </div>
+        <div class="col-md-2">
+            <div class="no-print" style="position:relative; z-index:2; text-align:right; margin-top:8px;">
+                <button type="button" class="print-btn" onclick="printSMPDashboard()">
+                    <i class="fa-solid fa-print"></i> Print / Save PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <div class="smp-board">
+
+
+        <!-- HEADER -->
+        <div class="board-header">
+            <div class="header-left">
+                <div class="plant-tag">
+                    <i class="fa-solid fa-industry"></i>
+                    Steel Melting Plant
+                </div>
+                <h2>SMP Operations Performance Dashboard</h2>
+                <p>Executive overview of production, delays, utilities, charge mix and operational reliability.</p>
+            </div>
+
+            <div class="header-meta">
+                <div class="meta-card">
+                    <div class="meta-label">Report Date</div>
+                    <div class="meta-value">10-Jun-2026</div>
+                </div>
+                <div class="meta-card">
+                    <div class="meta-label">Report Type</div>
+                    <div class="meta-value">Daily Management View</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXECUTIVE SUMMARY -->
+        <div class="exec-strip">
+            <div class="exec-card good">
+                <div>
+                    <div class="exec-title">Daily Output</div>
+                    <div class="exec-value">2,980 MT</div>
+                    <div class="exec-sub">Target: 3,000 MT</div>
+                </div>
+                <div class="exec-icon"><i class="fa-solid fa-cubes"></i></div>
+            </div>
+
+            <div class="exec-card">
+                <div>
+                    <div class="exec-title">Yield</div>
+                    <div class="exec-value">86.9%</div>
+                    <div class="exec-sub">Target: 87%</div>
+                </div>
+                <div class="exec-icon"><i class="fa-solid fa-percent"></i></div>
+            </div>
+
+            <div class="exec-card warn">
+                <div>
+                    <div class="exec-title">Total Delay</div>
+                    <div class="exec-value">590 Min</div>
+                    <div class="exec-sub">Top delay: Planned DT</div>
+                </div>
+                <div class="exec-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+
+            <div class="exec-card good">
+                <div>
+                    <div class="exec-title">Availability</div>
+                    <div class="exec-value">90%</div>
+                    <div class="exec-sub">Stable operation</div>
+                </div>
+                <div class="exec-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+
+            <div class="exec-card">
+                <div>
+                    <div class="exec-title">Year Achievement</div>
+                    <div class="exec-value">70%</div>
+                    <div class="exec-sub">YTD progress</div>
+                </div>
+                <div class="exec-icon"><i class="fa-solid fa-chart-pie"></i></div>
+            </div>
+        </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-name">Heat Count</div>
+                    <div class="kpi-badge"><i class="fa-solid fa-fire"></i></div>
+                </div>
+                <div class="kpi-value">22</div>
+                <div class="kpi-target">Target: 24 heats</div>
+                <div class="kpi-track"><span class="kpi-fill" style="width:92%;"></span></div>
+            </div>
+
+            <div class="kpi-card good">
+                <div class="kpi-top">
+                    <div class="kpi-name">Billet Output</div>
+                    <div class="kpi-badge"><i class="fa-solid fa-cubes"></i></div>
+                </div>
+                <div class="kpi-value">2,980</div>
+                <div class="kpi-target">Target: 3,000 MT</div>
+                <div class="kpi-track"><span class="kpi-fill" style="width:99%;"></span></div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-name">Yield</div>
+                    <div class="kpi-badge"><i class="fa-solid fa-percent"></i></div>
+                </div>
+                <div class="kpi-value">86.9%</div>
+                <div class="kpi-target">Target: 87%</div>
+                <div class="kpi-track"><span class="kpi-fill" style="width:99%;"></span></div>
+            </div>
+
+            <div class="kpi-card good">
+                <div class="kpi-top">
+                    <div class="kpi-name">Productivity</div>
+                    <div class="kpi-badge"><i class="fa-solid fa-gauge-high"></i></div>
+                </div>
+                <div class="kpi-value">141</div>
+                <div class="kpi-target">Target: 140 t/hr</div>
+                <div class="kpi-track"><span class="kpi-fill" style="width:100%;"></span></div>
+            </div>
+
+            <div class="kpi-card warn">
+                <div class="kpi-top">
+                    <div class="kpi-name">Power Consumption</div>
+                    <div class="kpi-badge"><i class="fa-solid fa-bolt"></i></div>
+                </div>
+                <div class="kpi-value">608</div>
+                <div class="kpi-target">Target: 602 kWh/t</div>
+                <div class="kpi-track"><span class="kpi-fill" style="width:100%;"></span></div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-name">TTT Time</div>
+                    <div class="kpi-badge"><i class="fa-regular fa-clock"></i></div>
+                </div>
+                <div class="kpi-value">60.2</div>
+                <div class="kpi-target">Target: 60 min</div>
+                <div class="kpi-track"><span class="kpi-fill" style="width:100%;"></span></div>
+            </div>
+
+            <div class="kpi-card warn">
+                <div class="kpi-top">
+                    <div class="kpi-name">Power-on Time</div>
+                    <div class="kpi-badge"><i class="fa-solid fa-plug-circle-bolt"></i></div>
+                </div>
+                <div class="kpi-value">60.2</div>
+                <div class="kpi-target">Target: 48 min</div>
+                <div class="kpi-track"><span class="kpi-fill" style="width:100%;"></span></div>
+            </div>
+
+            <div class="kpi-card warn">
+                <div class="kpi-top">
+                    <div class="kpi-name">Heat Weight</div>
+                    <div class="kpi-badge"><i class="fa-solid fa-weight-hanging"></i></div>
+                </div>
+                <div class="kpi-value">136</div>
+                <div class="kpi-target">Target: 140 t</div>
+                <div class="kpi-track"><span class="kpi-fill" style="width:97%;"></span></div>
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="main-grid">
+
+            <!-- LEFT -->
+            <div class="column">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fa-solid fa-table"></i> Production Variance</h3>
+                        <div class="panel-note">Daily / MTD / YTD</div>
+                    </div>
+
+                    <table class="variance-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Daily</th>
+                                <th>MTD</th>
+                                <th>YTD</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Actual</td>
+                                <td>2,500</td>
+                                <td>20,000</td>
+                                <td>50,000</td>
+                            </tr>
+                            <tr>
+                                <td>Target</td>
+                                <td>2,510</td>
+                                <td>21,000</td>
+                                <td>60,000</td>
+                            </tr>
+                            <tr>
+                                <td>Variance</td>
+                                <td class="positive">+10</td>
+                                <td class="positive">+1,000</td>
+                                <td class="negative">-10,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fa-solid fa-chart-column"></i> Performance KPIs</h3>
+                        <div class="panel-note">Target vs Actual</div>
+                    </div>
+
+                    <div class="chart-box small">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIDDLE -->
+            <div class="column">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Top 5 Delays</h3>
+                        <div class="panel-note">Minutes</div>
+                    </div>
+
+                    <div class="delay-list">
+                        <div class="delay-row">
+                            <div class="delay-rank top">1</div>
+                            <div>
+                                <div class="delay-name">Planned DT</div>
+                                <div class="delay-area">PM / planned stop</div>
+                            </div>
+                            <div class="delay-bar top"><span style="width:100%;"></span></div>
+                            <div class="delay-min">480</div>
+                        </div>
+
+                        <div class="delay-row">
+                            <div class="delay-rank">2</div>
+                            <div>
+                                <div class="delay-name">CCM Downtime</div>
+                                <div class="delay-area">Casting area</div>
+                            </div>
+                            <div class="delay-bar"><span style="width:20%;"></span></div>
+                            <div class="delay-min">45</div>
+                        </div>
+
+                        <div class="delay-row">
+                            <div class="delay-rank">3</div>
+                            <div>
+                                <div class="delay-name">Other Unplanned</div>
+                                <div class="delay-area">Balance of DT</div>
+                            </div>
+                            <div class="delay-bar"><span style="width:12%;"></span></div>
+                            <div class="delay-min">30</div>
+                        </div>
+
+                        <div class="delay-row">
+                            <div class="delay-rank">4</div>
+                            <div>
+                                <div class="delay-name">EAF Downtime</div>
+                                <div class="delay-area">Furnace area</div>
+                            </div>
+                            <div class="delay-bar"><span style="width:8%;"></span></div>
+                            <div class="delay-min">20</div>
+                        </div>
+
+                        <div class="delay-row">
+                            <div class="delay-rank top">5</div>
+                            <div>
+                                <div class="delay-name">LRF Downtime</div>
+                                <div class="delay-area">Refining area</div>
+                            </div>
+                            <div class="delay-bar top"><span style="width:5%;"></span></div>
+                            <div class="delay-min">15</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fa-solid fa-flask"></i> Raw Material Consumption</h3>
+                        <div class="panel-note">Kg/t</div>
+                    </div>
+
+                    <div class="chart-box">
+                        <canvas id="rawMaterialChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="right-column">
+                <div class="panel health-panel">
+                    <div class="health-title">Yearly Production Achievement</div>
+                    <div class="donut">
+                        <div class="donut-inner">70%</div>
+                    </div>
+                </div>
+
+                <div class="panel health-panel">
+                    <div class="health-title">Charge Mix</div>
+                    <div class="donut-wrap">
+                        <div class="donut charge">
+                            <div class="donut-inner"></div>
+                        </div>
+
+                        <div class="legend-list">
+                            <div class="legend-item"><span class="legend-color" style="background:#8b1029;"></span>DRI 1,250</div>
+                            <div class="legend-item"><span class="legend-color" style="background:#1d65a6;"></span>HBI 950</div>
+                            <div class="legend-item"><span class="legend-color" style="background:#c9c9c9;"></span>Scrap 780</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel health-panel">
+                    <div class="health-title">Availability Breakdown</div>
+                    <div class="donut-wrap">
+                        <div class="donut availability">
+                            <div class="donut-inner">90%</div>
+                        </div>
+
+                        <div class="legend-list">
+                            <div class="legend-item"><span class="legend-color" style="background:#8b1029;"></span>Operation 2%</div>
+                            <div class="legend-item"><span class="legend-color" style="background:#1d65a6;"></span>Mechanical 3%</div>
+                            <div class="legend-item"><span class="legend-color" style="background:#c9c9c9;"></span>Electrical 1%</div>
+                            <div class="legend-item"><span class="legend-color" style="background:#13895a;"></span>Refractory 4%</div>
+                            <div class="legend-item"><span class="legend-color" style="background:#c1121f;"></span>Utility 4%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- PRODUCTION TREND -->
+        <div class="panel production-panel">
+            <div class="panel-header">
+                <h3 class="panel-title"><i class="fa-solid fa-chart-line"></i> Daily Production Actual Vs Plan</h3>
+                <div class="panel-note">Current month trend</div>
+            </div>
+
+            <div class="production-chart">
+                <canvas id="dailyProductionChart"></canvas>
+            </div>
+        </div>
+
+        <div class="footer-line">
+            Solb Steel • SMP Operations Performance Dashboard
+        </div>
+
+    </div>
+</div>
+
+<script>
+    Chart.defaults.font.family = "Segoe UI, Arial, sans-serif";
+    Chart.defaults.color = "#1f2937";
+
+    new Chart(document.getElementById("performanceChart"), {
+        type: "bar",
+        data: {
+            labels: ["Performance", "Availability", "Quality"],
+            datasets: [
+                {
+                    label: "Target",
+                    data: [85, 87, 99],
+                    backgroundColor: "#98a2b3",
+                    borderRadius: 6,
+                    barThickness: 26
+                },
+                {
+                    label: "Actual",
+                    data: [75, 61, 100],
+                    backgroundColor: "#8b1029",
+                    borderRadius: 6,
+                    barThickness: 26
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 12,
+                        font: { weight: "bold" }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 110,
+                    grid: { color: "#edf0f4" }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { weight: "bold" } }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("rawMaterialChart"), {
+        type: "bar",
+        data: {
+            labels: ["FeSi", "SiMn", "Flourspar", "Calcined C", "Charge Coal", "Rice Husk", "Lime", "Dolo Lime"],
+            datasets: [
+                {
+                    label: "Actual",
+                    data: [2.1, 10.4, 0.65, 11, 9.4, 0.26, 22, 31],
+                    backgroundColor: "#8b1029",
+                    borderRadius: 6,
+                    barThickness: 20
+                },
+                {
+                    label: "Target",
+                    data: [2, 11, 0.8, 13, 10, 0.25, 20, 30],
+                    type: "line",
+                    borderColor: "#1d65a6",
+                    backgroundColor: "#1d65a6",
+                    borderWidth: 3,
+                    pointRadius: 3,
+                    tension: .25
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 12,
+                        font: { weight: "bold" }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: "#edf0f4" }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 10, weight: "bold" },
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("dailyProductionChart"), {
+        type: "bar",
+        data: {
+            labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"],
+            datasets: [
+                {
+                    label: "Actual",
+                    data: [1800, 1500, 2000, 2100, 2200, 1500, 1000, 500, 2400, 1800, 1500, 2000, 2100, 2200, 1500, 1000, 500, 2400, 1800, 1500, 2000],
+                    backgroundColor: "#8b1029",
+                    borderRadius: 4,
+                    barThickness: 16
+                },
+                {
+                    label: "Plan",
+                    data: [2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000],
+                    type: "line",
+                    borderColor: "#1d65a6",
+                    backgroundColor: "#1d65a6",
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    tension: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 12,
+                        font: { weight: "bold" }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: "#edf0f4" }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+</script>
+<script>
+    function printSMPDashboard() {
+        window.print();
+    }
+</script>

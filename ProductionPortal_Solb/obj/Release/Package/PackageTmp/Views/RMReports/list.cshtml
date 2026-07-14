@@ -3,23 +3,24 @@
 }
 
 <!-- ================= BREADCRUMB ================= -->
+<!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-6 col-lg-6">
             <h4 class="xp-page-title">Rolling Mill</h4>
         </div>
-        <div class="col-md-6">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a>
-                </li>
-                <li class="breadcrumb-item">Rolling Mill Plant</li>
-                <li class="breadcrumb-item active">Reports</li>
-            </ol>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">Rolling Mill</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Reports</li>
+                </ol>
+            </div>
         </div>
     </div>
 </div>
-
+<!-- End XP Breadcrumbbar -->
 <!-- ================= FILTER SECTION ================= -->
 <div class="xp-contentbar">
     <div class="card mb-3">
@@ -27,14 +28,30 @@
 
             <div class="row align-items-end">
 
-                <div class="col-md-3">
-                    <label>From Date</label>
-                    <input type="date" id="fromDate" class="form-control" />
+                <div class="col-md-2">
+                    <label>Select Date</label>
+                    <input type="date" id="selectedDate" class="form-control" />
                 </div>
 
-                <div class="col-md-3">
-                    <label>To Date</label>
-                    <input type="date" id="toDate" class="form-control" />
+                <div class="col-md-2">
+                    <label>Plant</label>
+                    <select id="plantFilter" class="form-control">
+                        <option value="">All</option>
+                        <option value="Rolling Mill 1">RM1</option>
+                        <option value="Rolling Mill 2">RM2</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label>Shift</label>
+                    <select id="shiftFilter" class="form-control">
+                        <option value="">All</option>
+                        <option value="Morning">Morning</option>
+                        <option value="Evening">Evening</option>
+                        <option value="Night">Night</option>
+                        <option value="Long Morning">Long Morning</option>
+                        <option value="Long Night">Long Night</option>
+                    </select>
                 </div>
 
                 <div class="col-md-3">
@@ -51,44 +68,67 @@
     <!-- ================= REPORT CARDS ================= -->
     <div class="row">
 
-        <!-- Shift Production -->
-        <div class="col-md-3">
+        <!-- Shift Production Report -->
+        <div class="col-md-4">
             <div class="card border-danger mb-3">
                 <div class="card-body text-center">
                     <h5>Shift Production Report</h5>
-                    <button class="btn btn-primary openReport"
+
+                    <button class="btn btn-primary openReport mb-2"
                             data-url="@Url.Action("ShiftProductionReport", "Reporting")">
                         View Report
                     </button>
+
+                    <button class="btn btn-success downloadReport mb-2"
+                            data-url="@Url.Action("ShiftProductionReport", "Reporting")">
+                        Download Report
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Monthly -->
-        <div class="col-md-3">
+        <!-- Monthly Performance -->
+        <div class="col-md-4">
             <div class="card border-danger mb-3">
                 <div class="card-body text-center">
                     <h5>Monthly Performance</h5>
-                    <button class="btn btn-primary openReport"
+
+                    <button class="btn btn-primary openReport mb-2"
                             data-url="@Url.Action("RMMonthlyPerformanceReport", "Reporting")">
                         View Report
+                    </button>
+
+                    <button class="btn btn-success downloadReport mb-2"
+                            data-url="@Url.Action("RMMonthlyPerformanceReport", "Reporting")">
+                        Download Report
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Daily -->
-        <div class="col-md-3">
+        <!-- Daily Production -->
+        <!--<div class="col-md-4">
             <div class="card border-danger mb-3">
                 <div class="card-body text-center">
-                    <h5>Daily Production</h5>
-                    <button class="btn btn-primary openReport"
-                            data-url="@Url.Action("DailyProductionRM", "Reporting")">
+                    <h5>Daily Production</h5>-->
+
+                    @*<button class="btn btn-primary openReport mb-2"
+                                data-url="@Url.Action("DailyProductionRM", "Reporting")">
+                            View Report
+                        </button>*@
+
+                    <!--<button class="btn btn-primary openReport mb-2"
+                            data-url="@Url.Action("ShiftProductionDashboard", "Reporting")">
                         View Report
+                    </button>
+
+                    <button class="btn btn-success downloadReport mb-2"
+                            data-url="@Url.Action("DailyProductionRM", "Reporting")">
+                        Download Report
                     </button>
                 </div>
             </div>
-        </div>
+        </div>-->
 
     </div>
 </div>
@@ -99,38 +139,63 @@
 <script>
     $(document).ready(function () {
 
-        // ✅ Default = Today
         var today = new Date().toISOString().split('T')[0];
-        $("#fromDate").val(today);
-        $("#toDate").val(today);
+        $("#selectedDate").val(today);
 
-        // 🔥 Apply filter button (optional)
+        function validateFilters() {
+            if (!$("#selectedDate").val()) {
+                alert("Please select date");
+                return false;
+            }
+
+            return true;
+        }
+
+        function buildReportUrl(baseUrl, isDownload) {
+
+            var selectedDate = $("#selectedDate").val();
+            var plant = $("#plantFilter").val();
+            var shift = $("#shiftFilter").val();
+
+            var finalUrl = baseUrl
+                + "?date=" + encodeURIComponent(selectedDate)
+                + "&plant=" + encodeURIComponent(plant)
+                + "&shift=" + encodeURIComponent(shift)
+                + "&download=" + encodeURIComponent(isDownload);
+
+            return finalUrl;
+        }
+
         $("#applyFilter").click(function () {
 
-            if (!$("#fromDate").val() || !$("#toDate").val()) {
-                alert("Please select dates");
+            if (!validateFilters()) {
                 return;
             }
 
-            alert("Filter applied. Now click any report.");
+            // Alert removed
+            // Filter values are already selected and will be applied on View/Download click
         });
 
-        // 🔥 Open report with filters
         $(document).on("click", ".openReport", function () {
 
-            var from = $("#fromDate").val();
-            var to = $("#toDate").val();
-
-            if (!from || !to) {
-                alert("Please select From & To dates");
+            if (!validateFilters()) {
                 return;
             }
 
             var baseUrl = $(this).data("url");
+            var finalUrl = buildReportUrl(baseUrl, false);
 
-            var finalUrl = baseUrl
-                + "?from=" + encodeURIComponent(from)
-                + "&to=" + encodeURIComponent(to);
+            window.open(finalUrl, "_blank");
+        });
+
+        $(document).on("click", ".downloadReport", function () {
+
+            if (!validateFilters()) {
+                return;
+            }
+
+            var baseUrl = $(this).data("url");
+            var finalUrl = buildReportUrl(baseUrl, true);
 
             window.open(finalUrl, "_blank");
         });

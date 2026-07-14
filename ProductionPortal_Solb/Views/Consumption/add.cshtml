@@ -1,0 +1,260 @@
+﻿@model DAL.Models.PlantConsumptionBLL
+
+@{
+    ViewBag.Title = "Plant Consumption";
+
+    bool isEditMode = Model != null && Model.ID > 0;
+}
+
+<style>
+    input[readonly] {
+        background-color: #f3f3f3 !important;
+        cursor: not-allowed;
+    }
+
+    .plant-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .plant-card-header {
+        background: #7f1010;
+        color: #fff;
+        padding: 14px 18px;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .plant-card-body {
+        padding: 18px;
+        background: #fff;
+    }
+</style>
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Utility Consumption</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">
+                        Plant Wise Consumption
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <form action="@Url.Action("add", "Consumption")"
+          id="addprofileform"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <!-- COMMON DATE -->
+        <div class="plant-card">
+            <div class="plant-card-header">
+                Consumption Date
+            </div>
+
+            <div class="plant-card-body">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label>Date</label>
+                        <input type="date"
+                               name="ConsumptionDate"
+                               class="form-control"
+                               value="@DateTime.Today.ToString("yyyy-MM-dd")"
+                               required />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SMP -->
+        <div class="plant-card">
+            <div class="plant-card-header">
+                STEEL MAKING PLANT (SMP) DAILY CONSUMPTION
+            </div>
+
+            <div class="plant-card-body">
+                <input type="hidden" name="SMP_Plant" value="SMP" />
+
+                <div class="form-row">
+
+                    <div class="form-group col-md-3">
+                        <label>Total Product Billet (Ton)</label>
+                        <input type="number" step="0.001" name="SMP_TotalProductBillet" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>LPG (Nm3)</label>
+                        <input type="number" step="0.001" name="SMP_LPG" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Oxygen (Nm3)</label>
+                        <input type="number" step="0.001" name="SMP_Oxygen" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Nitrogen (Nm3)</label>
+                        <input type="number" step="0.001" name="SMP_Nitrogen" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Argon (Nm3)</label>
+                        <input type="number" step="0.001" name="SMP_Argon" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Water Consumption (M3)</label>
+                        <input type="number" step="0.001" name="SMP_WaterConsumption" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Power Consumption (KWH)</label>
+                        <input type="number" step="0.001" name="SMP_PowerConsumption" class="form-control" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- RM1 -->
+        <div class="plant-card">
+            <div class="plant-card-header">
+                ROLLING MILL 1 (RM1) DAILY CONSUMPTION
+            </div>
+
+            <div class="plant-card-body">
+                <input type="hidden" name="RM1_Plant" value="RM1" />
+
+                <div class="form-row">
+
+                    <div class="form-group col-md-3">
+                        <label>Total Product Billet (Ton)</label>
+                        <input type="number" step="0.001" name="RM1_TotalProductBillet" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Water Consumption (M3)</label>
+                        <input type="number" step="0.001" name="RM1_WaterConsumption" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Fuel Consumption (Liter)</label>
+                        <input type="number" step="0.001" name="RM1_FuelConsumption" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Power Consumption (KWH)</label>
+                        <input type="number" step="0.001" name="RM1_PowerConsumption" class="form-control" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- RM2 -->
+        <div class="plant-card">
+            <div class="plant-card-header">
+                ROLLING MILL 2 (RM2) DAILY CONSUMPTION
+            </div>
+
+            <div class="plant-card-body">
+                <input type="hidden" name="RM2_Plant" value="RM2" />
+
+                <div class="form-row">
+
+                    <div class="form-group col-md-3">
+                        <label>Total Product Billet (Ton)</label>
+                        <input type="number" step="0.001" name="RM2_TotalProductBillet" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Water Consumption (M3)</label>
+                        <input type="number" step="0.001" name="RM2_WaterConsumption" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Fuel Consumption (Liter)</label>
+                        <input type="number" step="0.001" name="RM2_FuelConsumption" class="form-control" />
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label>Power Consumption (KWH)</label>
+                        <input type="number" step="0.001" name="RM2_PowerConsumption" class="form-control" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="text-right">
+            <a href="@Url.Action("DailyConsumptionList", "RollingMill")" class="btn btn-secondary">
+                Back
+            </a>
+
+            <button type="submit" class="btn btn-primary">
+                Save
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+
+        let isSubmitting = false;
+
+        $("#addprofileform").on("submit", function (e) {
+            e.preventDefault();
+
+            if (isSubmitting) {
+                return;
+            }
+
+            Swal.fire({
+                title: 'Confirm Submission',
+                text: 'Are you sure you want to submit plant wise consumption?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Submit',
+                cancelButtonText: 'Cancel',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    isSubmitting = true;
+
+                    $("#addprofileform")
+                        .find("button[type='submit']")
+                        .prop("disabled", true)
+                        .text("Submitting...");
+
+                    $("#addprofileform")[0].submit();
+                }
+            });
+        });
+
+    });
+</script>

@@ -2,20 +2,443 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<style>
+    .dashboard-filter-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+
+        .dashboard-filter-card .card-header {
+            background: #991b1b;
+            color: #fff;
+            font-weight: 700;
+            border-radius: 14px 14px 0 0;
+            padding: 12px 18px;
+        }
+
+    .report-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        transition: all .2s ease;
+        min-height: 160px;
+    }
+
+        .report-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .report-card .card-body {
+            padding: 24px 18px;
+        }
+
+    .report-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #222;
+        min-height: 45px;
+        margin-bottom: 16px;
+    }
+
+    .report-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: #991b1b;
+        color: #fff;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px auto;
+    }
+
+    .btn-report {
+        min-width: 120px;
+        border-radius: 8px;
+    }
+
+    .filter-note {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 8px;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+
+    .filter-toast {
+        display: none;
+        position: fixed;
+        top: 80px;
+        right: 25px;
+        background: #198754;
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        z-index: 9999;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    }
+</style>
+
 <!-- Start XP Breadcrumbbar -->
-<div class="xp-breadcrumbbar">
+<div class="xp-breadcrumbbar no-print">
     <div class="row">
         <div class="col-md-6 col-lg-6">
-            <h4 class="xp-page-title">Reports</h4>
+            <h4 class="xp-page-title">Dashboard</h4>
         </div>
         <div class="col-md-6 col-lg-6">
             <div class="xp-breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
-                    <li class="breadcrumb-item"><a href="#">Reports Section</a></li>
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">Dashboard Section</li>
                 </ol>
             </div>
         </div>
     </div>
 </div>
 <!-- End XP Breadcrumbbar -->
+
+<div class="xp-contentbar">
+
+    <div id="filterToast" class="filter-toast">
+        Filter applied successfully.
+    </div>
+
+    <!-- ================= FILTER SECTION ================= -->
+    <div class="card dashboard-filter-card no-print">
+        <div class="card-header">
+            Report Filters
+        </div>
+
+        <div class="card-body">
+            <form id="filterForm">
+
+                <div class="row align-items-end">
+
+                    <div class="col-sm-1 col-md-1 col-lg-2 col-xl-2">
+                        <div class="form-group">
+                            <label for="fromDate">From Date</label>
+                            <input type="date" id="fromDate" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-sm-1 col-md-1 col-lg-2 col-xl-2">
+                        <div class="form-group">
+                            <label for="toDate">To Date</label>
+                            <input type="date" id="toDate" class="form-control" />
+                        </div>
+                    </div>
+
+                    @if (User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User"))
+                    {
+                        <div class="col-sm-1 col-md-1 col-lg-2 col-xl-2">
+                            <div class="form-group">
+                                <label for="plantFilter">Plant</label>
+                                <select id="plantFilter" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Rolling Mill 1">RM1</option>
+                                    <option value="Rolling Mill 2">RM2</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-1 col-md-1 col-lg-2 col-xl-2">
+                            <div class="form-group">
+                                <label for="shiftFilter">Shift</label>
+                                <select id="shiftFilter" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Morning">Morning</option>
+                                    <option value="Evening">Evening</option>
+                                    <option value="Night">Night</option>
+                                    <option value="Long Morning">Long Morning</option>
+                                    <option value="Long Night">Long Night</option>
+                                </select>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="col-sm-1 col-md-2 col-lg-2 col-xl-4">
+                        <div class="form-group">
+                            <button type="button" id="todayBtn" class="btn btn-info">
+                                Today
+                            </button>
+
+                            <button type="button" id="filterBtn" class="btn btn-primary">
+                                <i class="fa fa-filter"></i> Apply Filter
+                            </button>
+
+                            <button type="button" id="clearBtn" class="btn btn-secondary">
+                                <i class="fa fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="filter-note">
+                    Select filters and click any report's <b>View Report</b>. Filters will be applied automatically.
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= REPORT CARDS ================= -->
+    <div class="row">
+
+        <!-- SMP Daily Report -->
+        <div class="col-md-4">
+            <div class="card report-card">
+                <div class="card-body text-center">
+                    <div class="report-icon">SMP</div>
+                    <div class="report-title">Steel Making Plant Daily Dashboard</div>
+
+                    <button type="button"
+                            class="btn btn-primary btn-report openReport"
+                            data-report-type="SMP"
+                            data-url="@Url.Action("SMPDailyDashboard", "SMPReports")">
+                        View Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rolling Mill Daily Report -->
+        <div class="col-md-4">
+            <div class="card report-card">
+                <div class="card-body text-center">
+                    <div class="report-icon">RM</div>
+                    <div class="report-title">Rolling Mill Daily Dashboard</div>
+
+                    <button type="button"
+                            class="btn btn-primary btn-report openReport"
+                            data-report-type="RollingMill"
+                            data-url="@Url.Action("ShiftProductionDashboard", "Reporting")">
+                        View Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Utility Daily Report -->
+        <div class="col-md-4">
+            <div class="card report-card">
+                <div class="card-body text-center">
+                    <div class="report-icon">UTL</div>
+                    <div class="report-title">Utility Daily Dashboard</div>
+                    <button type="button"
+                            class="btn btn-primary btn-report openReport"
+                            data-report-type="Utility"
+                            data-url="@Url.Action("UtilityDailyReport", "Reporting")">
+                        View Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CMD Daily Performance Report -->
+        <div class="col-md-4">
+            <div class="card report-card">
+                <div class="card-body text-center">
+                    <div class="report-icon">CMD</div>
+                    <div class="report-title">CMD Daily Performance Dashboard</div>
+
+                    <button type="button"
+                            class="btn btn-primary btn-report openReport"
+                            data-report-type="CMD"
+                            data-url="@Url.Action("CMDDailyReport", "Reporting")">
+                        View Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User") || User.IsInRole("Supply Chain"))
+        {
+            <!-- Supply Chain Department Report -->
+            <div class="col-md-4">
+                <div class="card report-card">
+                    <div class="card-body text-center">
+                        <div class="report-icon">SC</div>
+                        <div class="report-title">Supply Chain Daily Dashboard</div>
+
+                        <button type="button"
+                                class="btn btn-primary btn-report openReport"
+                                data-report-type="SupplyChain"
+                                data-url="@Url.Action("SupplyChainReport", "Reporting")">
+                            View Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        setTodayDefault();
+
+        function setTodayDefault() {
+            var today = new Date();
+            var yyyy = today.getFullYear();
+            var mm = String(today.getMonth() + 1).padStart(2, "0");
+            var dd = String(today.getDate()).padStart(2, "0");
+            var todayText = yyyy + "-" + mm + "-" + dd;
+
+            if (!$("#fromDate").val()) {
+                $("#fromDate").val(todayText);
+            }
+
+            if (!$("#toDate").val()) {
+                $("#toDate").val(todayText);
+            }
+        }
+
+        function buildReportUrl(baseUrl, isDownload, reportType) {
+
+            var fromDate = $("#fromDate").val();
+            var toDate = $("#toDate").val();
+
+            var plant = $("#plantFilter").length ? $("#plantFilter").val() : "";
+            var shift = $("#shiftFilter").length ? $("#shiftFilter").val() : "";
+
+            var params = [];
+
+            if (fromDate) {
+                params.push("from=" + encodeURIComponent(fromDate));
+            }
+
+            if (toDate) {
+                params.push("to=" + encodeURIComponent(toDate));
+            }
+
+            // Plant aur Shift sirf Rolling Mill report ke liye apply honge
+            if (reportType === "RollingMill") {
+                if (plant) {
+                    params.push("plant=" + encodeURIComponent(plant));
+                }
+
+                if (shift) {
+                    params.push("shift=" + encodeURIComponent(shift));
+                }
+            }
+
+            params.push("download=" + encodeURIComponent(isDownload));
+
+            if (params.length > 0) {
+                return baseUrl + "?" + params.join("&");
+            }
+
+            return baseUrl;
+        }
+
+        $("#todayBtn").click(function () {
+            var today = new Date();
+            var yyyy = today.getFullYear();
+            var mm = String(today.getMonth() + 1).padStart(2, "0");
+            var dd = String(today.getDate()).padStart(2, "0");
+            var todayText = yyyy + "-" + mm + "-" + dd;
+
+            $("#fromDate").val(todayText);
+            $("#toDate").val(todayText);
+        });
+
+        $("#filterBtn").click(function () {
+
+            var fromDate = $("#fromDate").val();
+            var toDate = $("#toDate").val();
+
+            if (fromDate && toDate && fromDate > toDate) {
+                showFilterToast("From Date cannot be greater than To Date.", false);
+                return;
+            }
+
+            showFilterToast("Filter applied successfully.", true);
+        });
+
+        $("#clearBtn").click(function () {
+            $("#fromDate").val("");
+            $("#toDate").val("");
+
+            if ($("#plantFilter").length) {
+                $("#plantFilter").val("");
+            }
+
+            if ($("#shiftFilter").length) {
+                $("#shiftFilter").val("");
+            }
+        });
+
+        $(document).on("click", ".openReport", function () {
+
+            var fromDate = $("#fromDate").val();
+            var toDate = $("#toDate").val();
+
+            if (fromDate && toDate && fromDate > toDate) {
+                alert("From Date cannot be greater than To Date.");
+                return;
+            }
+
+            var baseUrl = $(this).data("url");
+            var finalUrl = buildReportUrl(baseUrl, false);
+
+            window.open(finalUrl, "_blank");
+        });
+
+        $(document).on("click", ".downloadReport", function () {
+
+            var fromDate = $("#fromDate").val();
+            var toDate = $("#toDate").val();
+
+            if (fromDate && toDate && fromDate > toDate) {
+                alert("From Date cannot be greater than To Date.");
+                return;
+            }
+
+            var baseUrl = $(this).data("url");
+            var finalUrl = buildReportUrl(baseUrl, true);
+
+            window.open(finalUrl, "_blank");
+        });
+
+        function showFilterToast(message, isSuccess) {
+            var toast = $("#filterToast");
+
+            toast.text(message);
+
+            if (isSuccess) {
+                toast.css("background", "#198754");
+            } else {
+                toast.css("background", "#dc3545");
+            }
+
+            toast.stop(true, true).fadeIn(200);
+
+            setTimeout(function () {
+                toast.fadeOut(300);
+            }, 1800);
+        }
+
+    });
+</script>

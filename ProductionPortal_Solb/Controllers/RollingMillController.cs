@@ -12,6 +12,7 @@ using System.Web;
 using System.Web.Mvc;
 using WebAPICode.Helpers;
 using static DAL.Models.ViewModel;
+using static iTextSharp.text.pdf.AcroFields;
 
 namespace ProductionPortal_Solb.Controllers
 {
@@ -35,25 +36,47 @@ namespace ProductionPortal_Solb.Controllers
             return View("~/Views/RollingMill/Charging/list.cshtml", data);
         }
 
-
         [HttpGet]
         public JsonResult GetBilletBoardingByHeat(string heatNo)
         {
-            var data = repo.GetAllBoarding()
-                           .Where(x => x.HeatNo == heatNo)
-                           .Select(x => new
-                           {
-                               BoardingNo = x.BilletBoarding,
-                               SteelGrade = x.Grade,
-                               BilletSize = x.CrossSection,
-                               NoOfBillet = x.NoOfBillets,
-                               BilletWeight = x.BilletWeight,
-                               BilletLength = x.BilletLength
-                               //Weight = x.Weight,
-                               //TotalBillet = x.TotalBillet,
-                               //TotalWeight = x.TotalWeight
-                           })
-                           .FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(heatNo))
+            {
+                return Json(null, JsonRequestBehavior.AllowGet);
+            }
+
+            heatNo = heatNo.Trim();
+
+            var x = repo.GetBilletDetails(heatNo);
+
+            if (x == null)
+            {
+                return Json(null, JsonRequestBehavior.AllowGet);
+            }
+
+            decimal requiredBillet = Convert.ToDecimal(x.NoOfBillets);
+
+            decimal alreadyChargedBillet = repo.GetAllCharging()
+                .Where(c => !string.IsNullOrWhiteSpace(c.HeatNo)
+                         && c.HeatNo.Trim().Equals(heatNo, StringComparison.OrdinalIgnoreCase)
+                         && c.StatusID == 1)
+                .Sum(c => Convert.ToDecimal(c.TotalBillet));
+
+            decimal remainingBillet = requiredBillet - alreadyChargedBillet;
+
+            if (remainingBillet < 0)
+                remainingBillet = 0;
+
+            var data = new
+            {
+                BoardingNo = x.BilletBoarding,
+                SteelGrade = x.Grade,
+                BilletSize = x.CrossSection,
+                NoOfBillet = requiredBillet,
+                AlreadyChargedBillet = alreadyChargedBillet,
+                RemainingBillet = remainingBillet,
+                BilletWeight = x.BilletWeight,
+                BilletLength = x.BilletLength
+            };
 
             return Json(data, JsonRequestBehavior.AllowGet);
         }
@@ -74,75 +97,121 @@ namespace ProductionPortal_Solb.Controllers
 
         public ActionResult AddCharge()
         {
-            var heats = repo.GetAllBoarding();
+            var heats = repo.GetAllBoarding_RMCharging();
             var submittedAll = repo.GetAllCharging();
 
-            // 🔥 SESSION VALUES
-            if (Session["RM_Date"] == null || Session["RM_Shift"] == null)
+
+
+            if (Session["RM_Date"] == null || Session["RM_Shift"] == null || Session["RM_Plant"] == null)
             {
                 TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
                 return RedirectToAction("AddDetails", "RollingMill");
             }
 
             DateTime selectedDate = Convert.ToDateTime(Session["RM_Date"]);
-            string selectedShift = Session["RM_Shift"].ToString().Trim();
+            string selectedShift = Convert.ToString(Session["RM_Shift"]).Trim();
+            string selectedPlant = Convert.ToString(Session["RM_Plant"]).Trim();
 
-            var start = selectedDate.Date;
-            var end = start.AddDays(1);
+            DateTime start = selectedDate.Date;
+            DateTime end = start.AddDays(1);
 
-            // 🔥 DEBUG (REMOVE AFTER TEST)
-            Console.WriteLine("SESSION DATE: " + selectedDate);
-            Console.WriteLine("SESSION SHIFT: " + selectedShift);
+            int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
 
-            foreach (var x in rm.RollingMillDetails())
-            {
-                Console.WriteLine($"DB => {x.Date} | '{x.Shift}'");
-            }
-
-            // 🔥 FINAL MATCH (SAFE VERSION)
             var shiftDetails = rm.RollingMillDetails()
-                .Where(x =>
-                    x.Date >= start &&
-                    x.Date < end &&
-                    !string.IsNullOrEmpty(x.Shift) &&
-                    x.Shift.Trim().ToLower().Contains(selectedShift.ToLower())
-                )
-                .OrderByDescending(x => x.ID)
+                .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
                 .FirstOrDefault();
+
+            //var shiftDetails = rm.RollingMillDetails()
+            //    .Where(x =>
+            //        x.Date >= start &&
+            //        x.Date < end &&
+            //        !string.IsNullOrEmpty(x.Shift) &&
+            //        !string.IsNullOrEmpty(x.Plant) &&
+            //        x.Shift.Trim().Equals(selectedShift, StringComparison.OrdinalIgnoreCase) &&
+            //        x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase)
+            //    )
+            //    .OrderByDescending(x => x.ID)
+            //    .FirstOrDefault();
 
             if (shiftDetails == null)
             {
-                TempData["ErrorMessage"] = "Shift not found. Debug mismatch.";
+                TempData["ErrorMessage"] = "Selected shift details not found. Please select shift again.";
                 return RedirectToAction("AddDetails", "RollingMill");
             }
 
-            // 🔥 FILTER SUBMITTED HEATS
+            // ✅ Table ke liye selected date ki all shifts ka data lao
+            // Taake table filter se Morning / Afternoon / Night show ho sake
+            //var submittedToday = submittedAll
+            //    .Where(x =>
+            //        x.Date >= start &&
+            //        x.Date < end &&
+            //        x.StatusID == 1
+            //    )
+            //    .OrderBy(x => x.Shift)
+            //    .ThenBy(x => x.HeatSequence)
+            //    .ThenBy(x => x.CreatedDate)
+            //    .ToList();
+
             var submittedToday = submittedAll
-                .Where(x =>
-                    x.Date >= start &&
-                    x.Date < end &&
+              .Where(x =>
+                    x.Date >= selectedDate &&
+                    x.Date < selectedDate.AddDays(1) &&
+                    x.StatusID == 1 &&
+                    !string.IsNullOrEmpty(x.Plant) &&
+                    x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase) &&
                     !string.IsNullOrEmpty(x.Shift) &&
-                    x.Shift.Trim().ToLower().Contains(selectedShift.ToLower())
+                    x.Shift.Trim().Equals(selectedShift, StringComparison.OrdinalIgnoreCase)
                 )
-                .OrderBy(x => x.CreatedDate)
+                .OrderBy(x => x.HeatSequence)
+                .ThenBy(x => x.CreatedDate)
                 .ToList();
 
-            // 🔥 DISABLE USED HEATS
-            var submittedHeatSet = new HashSet<string>(
-                submittedAll
-                    .Where(s => !string.IsNullOrWhiteSpace(s.HeatNo))
-                    .Select(s => s.HeatNo.Trim()),
-                StringComparer.OrdinalIgnoreCase
-            );
+            // ✅ Total charged billet against each Heat No
+            // Ye global rahega taake heat fully charged hone par disable ho
+            var chargedBilletByHeat = submittedAll
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x.HeatNo) &&
+                    x.StatusID == 1
+                )
+                .GroupBy(x => x.HeatNo.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(x => Convert.ToDecimal(x.TotalBillet)),
+                    StringComparer.OrdinalIgnoreCase
+                );
 
-            ViewBag.HeatNo = heats.Select(h => new SelectListItem
+            ViewBag.HeatNo = heats.Select(h =>
             {
-                Text = h.HeatNo,
-                Value = h.HeatNo,
-                Disabled = submittedHeatSet.Contains(h.HeatNo.Trim())
+                string heatNo = h.HeatNo == null ? "" : h.HeatNo.Trim();
+
+                decimal requiredBillet = 0;
+
+                if (h.NoOfBillets != null)
+                {
+                    requiredBillet = Convert.ToDecimal(h.NoOfBillets);
+                }
+
+                decimal alreadyCharged = chargedBilletByHeat.ContainsKey(heatNo)
+                    ? chargedBilletByHeat[heatNo]
+                    : 0;
+
+                decimal remainingBillet = requiredBillet - alreadyCharged;
+
+                if (remainingBillet < 0)
+                    remainingBillet = 0;
+
+                bool isFullyUsed = requiredBillet > 0 && alreadyCharged >= requiredBillet;
+
+                return new SelectListItem
+                {
+                    Value = heatNo,
+                    Text = isFullyUsed
+                        ? heatNo + " - Used"
+                        : heatNo + " - Remaining: " + remainingBillet,
+                    Disabled = isFullyUsed
+                };
             }).ToList();
 
-            // 🔥 VIEW MODEL
             var vm = new RMChargingVM
             {
                 Date = shiftDetails.Date,
@@ -156,139 +225,424 @@ namespace ProductionPortal_Solb.Controllers
             return View("~/Views/RollingMill/Charging/Add.cshtml", vm);
         }
 
+
         [HttpPost]
         public ActionResult AddCharge(BilletChargingBLL model)
         {
-            // 🔥 Get selected shift from SESSION
-            DateTime selectedDate = Session["RM_Date"] != null
-                ? Convert.ToDateTime(Session["RM_Date"])
-                : DateTime.Today;
-
-            string selectedShift = Session["RM_Shift"]?.ToString();
-
-            if (string.IsNullOrEmpty(selectedShift))
+            try
             {
-                TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
-                return RedirectToAction("AddDetails", "RollingMill");
+                if (Session["RM_Date"] == null ||
+                    Session["RM_Shift"] == null ||
+                    Session["RM_ShiftDetailID"] == null)
+                {
+                    TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
+                    return RedirectToAction("AddDetails", "RollingMill");
+                }
+
+                int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
+
+                var shiftDetails = rm.RollingMillDetails()
+                    .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
+                    .FirstOrDefault();
+
+                if (shiftDetails == null)
+                {
+                    TempData["ErrorMessage"] = "Selected shift details not found. Please select shift again.";
+                    return RedirectToAction("AddDetails", "RollingMill");
+                }
+
+                if (model == null)
+                {
+                    TempData["ErrorMessage"] = "Invalid data.";
+                    return RedirectToAction("AddCharge");
+                }
+
+                if (string.IsNullOrWhiteSpace(model.HeatNo))
+                {
+                    TempData["ErrorMessage"] = "Please select Heat No.";
+                    return RedirectToAction("AddCharge");
+                }
+
+                if (model.TotalBillet <= 0)
+                {
+                    TempData["ErrorMessage"] = "Please enter valid Total Billet.";
+                    return RedirectToAction("AddCharge");
+                }
+
+                if (model.Weight <= 0)
+                {
+                    TempData["ErrorMessage"] = "Please enter valid Weight.";
+                    return RedirectToAction("AddCharge");
+                }
+
+                model.HeatNo = model.HeatNo.Trim();
+
+                var heatInfo = repo.GetBilletDetails(model.HeatNo);
+
+                if (heatInfo == null)
+                {
+                    TempData["ErrorMessage"] = "Heat details not found.";
+                    return RedirectToAction("AddCharge");
+                }
+
+                decimal requiredBillet = Convert.ToDecimal(heatInfo.NoOfBillets);
+                decimal currentBillet = Convert.ToDecimal(model.TotalBillet);
+
+                bool isUpdate = model.ID > 0;
+
+                decimal alreadyChargedBillet = repo.GetAllCharging()
+                    .Where(x =>
+                        x.StatusID == 1 &&
+                        x.ID != model.ID &&
+                        !string.IsNullOrWhiteSpace(x.HeatNo) &&
+                        x.HeatNo.Trim().Equals(model.HeatNo, StringComparison.OrdinalIgnoreCase)
+                    )
+                    .Sum(x => Convert.ToDecimal(x.TotalBillet));
+
+                decimal remainingBillet = requiredBillet - alreadyChargedBillet;
+
+                if (remainingBillet < 0)
+                    remainingBillet = 0;
+
+                if (remainingBillet <= 0)
+                {
+                    TempData["ErrorMessage"] = "This Heat No is already fully charged.";
+                    return RedirectToAction("AddCharge");
+                }
+
+                if (currentBillet > remainingBillet)
+                {
+                    TempData["ErrorMessage"] =
+                        "Only " + remainingBillet + " billet remaining for this Heat No. You cannot charge " + currentBillet + ".";
+
+                    return RedirectToAction("AddCharge");
+                }
+
+                // Selected Rolling Mill Details se Date / Shift / Plant assign hogi
+                model.Date = shiftDetails.Date;
+                model.Shift = shiftDetails.Shift;
+                model.Plant = shiftDetails.Plant;
+                model.StatusID = 1;
+
+                // Server side total weight calculation
+                model.TotalWeight = model.TotalBillet * model.Weight;
+
+                // ==========================
+                // UPDATE MODE
+                // ==========================
+                if (isUpdate)
+                {
+                    /*
+                     * Update mode:
+                     * Agar form se HeatSequence aa rahi hai to wohi save hogi.
+                     * Agar form se 0 ya null/default value aaye to existing sequence preserve karni chahiye.
+                     */
+
+                    if (model.HeatSequence <= 0)
+                    {
+                        var existingRecord = repo.GetAllCharging()
+                            .Where(x => x.ID == model.ID && x.StatusID == 1)
+                            .FirstOrDefault();
+
+                        if (existingRecord != null)
+                        {
+                            model.HeatSequence = existingRecord.HeatSequence;
+                        }
+                    }
+
+                    model.UpdatedBy = User.Identity.Name;
+                    // model.UpdatedDate = DateTime.Now;
+
+                    int update = rm.UpdateBilletCharging(model);
+
+                    if (update < 0)
+                    {
+                        TempData["SuccessMessage"] = "Charged heat updated successfully.";
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = "Charged heat not updated.";
+                    }
+
+                    return RedirectToAction("AddCharge");
+                }
+
+                // ==========================
+                // INSERT MODE
+                // ==========================
+
+                /*
+                 * Insert mode:
+                 * Agar form se HeatSequence > 0 aa rahi hai, to wohi submit hogi.
+                 * Agar form se nahi aa rahi ya 0 hai, to system next sequence generate karega.
+                 */
+
+                if (model.HeatSequence <= 0)
+                {
+                    var existingHeats = repo.GetAllCharging()
+                        .Where(x =>
+                            x.Date >= shiftDetails.Date.Date &&
+                            x.Date < shiftDetails.Date.Date.AddDays(1) &&
+                            x.StatusID == 1 &&
+                            !string.IsNullOrWhiteSpace(x.Shift) &&
+                            x.Shift.Trim().Equals(shiftDetails.Shift.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                            !string.IsNullOrWhiteSpace(x.Plant) &&
+                            x.Plant.Trim().Equals(shiftDetails.Plant.Trim(), StringComparison.OrdinalIgnoreCase)
+                        )
+                        .ToList();
+
+                    int nextSequence = existingHeats
+                        .Select(x => x.HeatSequence)
+                        .Where(x => x > 0)
+                        .DefaultIfEmpty(0)
+                        .Max() + 1;
+
+                    model.HeatSequence = nextSequence;
+                }
+
+                model.CreatedDate = DateTime.Now;
+                model.CreatedBy = User.Identity.Name;
+
+                int rtn = rm.InsertBilletCharging(model);
+
+                if (rtn < 0)
+                {
+                    TempData["SuccessMessage"] = "Heat charged successfully.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Data not saved.";
+                }
+
+                return RedirectToAction("AddCharge");
             }
-
-            // 🔥 Fetch correct shift record
-            var shiftDetails = rm.RollingMillDetails()
-                .Where(x => x.Date == selectedDate && x.Shift == selectedShift)
-                .OrderByDescending(x => x.ID)
-                .FirstOrDefault();
-
-            if (shiftDetails == null)
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Please add Rolling Mill Details for selected date & shift.";
-                return RedirectToAction("AddDetails", "RollingMill");
-            }
-
-            // 🔥 Assign values
-            model.Date = shiftDetails.Date;
-            model.Shift = shiftDetails.Shift;
-
-            model.CreatedDate = DateTime.Now;
-            model.CreatedBy = User.Identity.Name;
-            model.StatusID = 1;
-
-            int rtn = rm.InsertBilletCharging(model);
-
-            if (rtn < 0)
-            {
-                TempData["SuccessMessage"] = "Heat charged successfully.";
-                return View("~/Views/RollingMill/Charging/list.cshtml", TempData);
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Data not saved.";
-                return View("~/Views/RollingMill/Charging/list.cshtml", TempData);
+                TempData["ErrorMessage"] = "Error: " + ex.Message;
+                return RedirectToAction("AddCharge");
             }
         }
 
-        [Route("Discharging")]
-        public ActionResult Discharging(DateTime? from, DateTime? to)
+        public ActionResult Discharging(DateTime? from, DateTime? to, string shift)
         {
             // 🔑 Default = TODAY
             DateTime startDate = from ?? DateTime.Today;
             DateTime endDate = to ?? DateTime.Today;
 
-            var data = rm.GetDichargedHeat(startDate, endDate);
+            var data = rm.GetDichargedHeat(startDate, endDate, shift);
 
             return View("~/Views/RollingMill/Discharging/list.cshtml", data);
         }
+
         [HttpGet]
         public JsonResult GetChargingByHeat(string heatNo)
         {
-            var data = repo.GetAllCharging()
-                           .Where(x => x.HeatNo == heatNo)
-                           .Select(x => new
-                           {
-                               HeatNo = x.HeatNo,
-                               BoardingNo = x.BoardingNo,
-                               SteelGrade = x.SteelGrade,
-                               Profile = x.Profile,
-                               TotalWeight = x.TotalWeight,
-                               TotalBillet = x.TotalBillet,
-                               ProductSpecs = x.ProductSpecs,
-                               //NoOfBillet = x.NoOfBillets,
-                               //BilletWeight = x.BilletWeight,
-                               //BilletLength = x.BilletLength
+            if (string.IsNullOrWhiteSpace(heatNo))
+            {
+                return Json(null, JsonRequestBehavior.AllowGet);
+            }
 
-                           })
-                           .FirstOrDefault();
+            heatNo = heatNo.Trim();
+
+            var chargingRows = repo.GetAllCharging()
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x.HeatNo) &&
+                    x.HeatNo.Trim().Equals(heatNo, StringComparison.OrdinalIgnoreCase) &&
+                    x.StatusID == 1
+                )
+                .ToList();
+
+            if (!chargingRows.Any())
+            {
+                return Json(null, JsonRequestBehavior.AllowGet);
+            }
+
+            var first = chargingRows.OrderByDescending(x => x.ID).FirstOrDefault();
+
+            decimal chargedBillet = chargingRows.Sum(x => Convert.ToDecimal(x.TotalBillet));
+            decimal chargedWeight = chargingRows.Sum(x => Convert.ToDecimal(x.TotalWeight));
+
+            decimal alreadyDischargedBillet = rm.GetDichargedHeat2()
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x.HeatNo) &&
+                    x.HeatNo.Trim().Equals(heatNo, StringComparison.OrdinalIgnoreCase) &&
+                    x.StatusID == 1
+                )
+                .Sum(x => Convert.ToDecimal(x.TotalBillet));
+
+            decimal remainingBillet = chargedBillet - alreadyDischargedBillet;
+
+            if (remainingBillet < 0)
+                remainingBillet = 0;
+
+            decimal weightPerBillet = chargedBillet > 0
+                ? chargedWeight / chargedBillet
+                : 0;
+
+            decimal remainingWeight = remainingBillet * weightPerBillet;
+
+            var data = new
+            {
+                HeatNo = first.HeatNo,
+                BoardingNo = first.BoardingNo,
+                SteelGrade = first.SteelGrade,
+                Profile = first.Profile,
+                ProductSpecs = first.ProductSpecs,
+
+                ChargedBillet = chargedBillet,
+                AlreadyDischargedBillet = alreadyDischargedBillet,
+                RemainingBillet = remainingBillet,
+
+                TotalBillet = remainingBillet,
+                TotalWeight = remainingWeight
+            };
 
             return Json(data, JsonRequestBehavior.AllowGet);
         }
 
         public ActionResult AddDischarge()
         {
-            var heats = repo.GetAllCharging();
-            var submittedAll = rm.GetDichargedHeat2();
+            var chargedHeatsAll = repo.GetAllCharging();
+            var dischargedAll = rm.GetDichargedHeat2();
 
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
-
-            // ✅ Get today's shift details from RM Shift Details table
-            var todayShiftDetails = rm.RollingMillDetails()
-                .Where(x => x.Date >= today && x.Date < tomorrow)
-                .OrderByDescending(x => x.ID)
-                .FirstOrDefault();
-
-            if (todayShiftDetails == null)
+            if (Session["RM_Date"] == null || Session["RM_Plant"] == null || Session["RM_Shift"] == null)
             {
-                TempData["ErrorMessage"] = "Please add Rolling Mill Details for today first.";
+                TempData["ErrorMessage"] = "Please select Rolling Mill Details first.";
                 return RedirectToAction("AddDetails", "RollingMill");
             }
 
-            var submittedToday = submittedAll
-                .Where(x => x.CreatedOn >= today && x.CreatedOn < tomorrow)
-                .OrderBy(x => x.CreatedOn)
+            DateTime selectedDate = Convert.ToDateTime(Session["RM_Date"]);
+            DateTime start = selectedDate.Date;
+            DateTime end = start.AddDays(1);
+
+            string selectedPlant = Convert.ToString(Session["RM_Plant"]);
+            string selectedShift = Convert.ToString(Session["RM_Shift"]);
+
+            int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
+
+            var selectedShiftDetails = rm.RollingMillDetails()
+             .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
+             .FirstOrDefault();
+
+            if (selectedShiftDetails == null)
+            {
+                TempData["ErrorMessage"] = "Selected Rolling Mill Details not found. Please select again.";
+                return RedirectToAction("AddDetails", "RollingMill");
+            }
+
+            // ✅ Table ke liye selected date ki all shifts ka data lao
+            // Taake table filter se Morning / Afternoon / Night show ho sake
+            //var submittedSelected = dischargedAll
+            //    .Where(x =>
+            //        x.Date >= start &&
+            //        x.Date < end &&
+            //        x.StatusID == 1
+            //    )
+            //    .OrderBy(x => x.Shift)
+            //    .ThenBy(x => x.DischargingSequence)
+            //    .ThenBy(x => x.CreatedOn)
+            //    .ToList();
+
+            var submittedSelected = dischargedAll
+                .Where(x =>
+                    x.Date >= start &&
+                    x.Date < end &&
+                    x.StatusID == 1 &&
+                    !string.IsNullOrEmpty(x.Plant) &&
+                    x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase)
+                )
+                .OrderBy(x => x.Shift)
+                .ThenBy(x => x.DischargingSequence)
+                .ThenBy(x => x.CreatedOn)
                 .ToList();
 
-            // 🔹 Disable already discharged heats
-            var submittedHeatSet = new HashSet<string>(
-                submittedAll
-                    .Where(s => !string.IsNullOrWhiteSpace(s.HeatNo))
-                    .Select(s => s.HeatNo.Trim()),
-                StringComparer.OrdinalIgnoreCase
-            );
+            // ✅ Dropdown ke liye selected shift ke charged heats
+            // Form selected shift par hi discharge karega
+            //var chargedHeats = chargedHeatsAll
+            //    .Where(x =>
+            //        x.StatusID == 1 &&
+            //        x.Date >= start &&
+            //        x.Date < end &&
+            //        !string.IsNullOrWhiteSpace(x.Shift) &&
+            //        x.Shift.Trim().Equals(selectedShift.Trim(), StringComparison.OrdinalIgnoreCase)
+            //    )
+            //    .ToList();
+            var chargedHeats = chargedHeatsAll
+    .Where(x =>
+        x.StatusID == 1 &&
+        !string.IsNullOrWhiteSpace(x.HeatNo)
+    )
+    .ToList();
 
-            ViewBag.HeatNo = heats.Select(h => new SelectListItem
-            {
-                Text = h.HeatNo,
-                Value = h.HeatNo,
-                Disabled = submittedHeatSet.Contains(h.HeatNo.Trim())
-            }).ToList();
+            // ✅ Total charged billet against each Heat No
+            var chargedBilletByHeat = chargedHeatsAll
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x.HeatNo) &&
+                    x.StatusID == 1
+                )
+                .GroupBy(x => x.HeatNo.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(x => Convert.ToDecimal(x.TotalBillet)),
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+            // ✅ Total discharged billet against each Heat No
+            var dischargedBilletByHeat = dischargedAll
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x.HeatNo) &&
+                    x.StatusID == 1
+                )
+                .GroupBy(x => x.HeatNo.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(x => Convert.ToDecimal(x.TotalBillet)),
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+            // ✅ Heat disable only when charged billet fully discharged
+            ViewBag.HeatNo = chargedHeats
+                .Where(h => !string.IsNullOrWhiteSpace(h.HeatNo))
+                .GroupBy(h => h.HeatNo.Trim(), StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
+                .Select(h =>
+                {
+                    string heatNo = h.HeatNo.Trim();
+
+                    decimal chargedBillet = chargedBilletByHeat.ContainsKey(heatNo)
+                        ? chargedBilletByHeat[heatNo]
+                        : 0;
+
+                    decimal dischargedBillet = dischargedBilletByHeat.ContainsKey(heatNo)
+                        ? dischargedBilletByHeat[heatNo]
+                        : 0;
+
+                    decimal remainingBillet = chargedBillet - dischargedBillet;
+
+                    if (remainingBillet < 0)
+                        remainingBillet = 0;
+
+                    bool isFullyDischarged = chargedBillet > 0 && dischargedBillet >= chargedBillet;
+
+                    return new SelectListItem
+                    {
+                        Text = isFullyDischarged
+                            ? heatNo + " - Discharged"
+                            : heatNo + " - Remaining: " + remainingBillet,
+                        Value = heatNo,
+                        Disabled = isFullyDischarged
+                    };
+                })
+                .ToList();
 
             var vm = new RMDischargingVM
             {
-                Date = todayShiftDetails.Date,
-                Shift = todayShiftDetails.Shift,
-                Plant = todayShiftDetails.Plant,
-                Team = todayShiftDetails?.Team,
-                ShiftIncharge = todayShiftDetails?.ShiftIncharge,
-                SubmittedHeat = submittedToday
+                Date = selectedShiftDetails.Date,
+                Shift = selectedShiftDetails.Shift,
+                Plant = selectedShiftDetails.Plant,
+                Team = selectedShiftDetails.Team,
+                ShiftIncharge = selectedShiftDetails.ShiftIncharge,
+                SubmittedHeat = submittedSelected
             };
 
             var BilletGradeList = repo.GetBilletGrade();
@@ -298,92 +652,178 @@ namespace ProductionPortal_Solb.Controllers
             return View("~/Views/RollingMill/Discharging/Add.cshtml", vm);
         }
 
+
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult AddDischarge(BilletDischargingBLL data)
         {
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
-
-            // ✅ Get today's shift details from RM Shift Details table
-            var todayShiftDetails = rm.RollingMillDetails()
-                .Where(x => x.Date >= today && x.Date < tomorrow)
-                .OrderByDescending(x => x.ID)
-                .FirstOrDefault();
-
-            if (todayShiftDetails == null)
+            try
             {
-                TempData["ErrorMessage"] = "Please add Rolling Mill Details for today first.";
-                return RedirectToAction("AddDetails", "RollingMill");
-            }
+                if (Session["RM_Date"] == null || Session["RM_Plant"] == null || Session["RM_Shift"] == null)
+                {
+                    TempData["ErrorMessage"] = "Please select Rolling Mill Details first.";
+                    return RedirectToAction("AddDetails", "RollingMill");
+                }
 
-            // dropdown reload
-            var heatList = repo.GetAllCharging();
-            ViewBag.HeatNo = new SelectList(heatList, "HeatNo", "HeatNo", data.HeatNo);
+                DateTime selectedDate = Convert.ToDateTime(Session["RM_Date"]).Date;
+                DateTime start = selectedDate.Date;
+                DateTime end = start.AddDays(1);
 
-            var BilletGradeList = repo.GetBilletGrade();
-            ViewBag.BilletGrade = new SelectList(BilletGradeList, "ProductID", "SpecGrade");
-            ViewBag.GradeDataJson = JsonConvert.SerializeObject(BilletGradeList);
+                string selectedPlant = Convert.ToString(Session["RM_Plant"]);
+                string selectedShift = Convert.ToString(Session["RM_Shift"]);
 
-            var model = rm.GetDichargedByHeatNo(data.HeatNo);
+                if (data == null)
+                {
+                    TempData["ErrorMessage"] = "Invalid data.";
+                    return RedirectToAction("AddDischarge");
+                }
 
-            if (model != null && !string.IsNullOrWhiteSpace(model.HeatNo))
-            {
-                ModelState.AddModelError("HeatNo", "Heat is already discharged");
-                return View("~/Views/RollingMill/Discharging/Add.cshtml", data);
-            }
+                if (string.IsNullOrWhiteSpace(data.HeatNo))
+                {
+                    TempData["ErrorMessage"] = "Please select Heat No.";
+                    return RedirectToAction("AddDischarge");
+                }
 
-            // ✅ force Date and Shift from today's RM Shift Details
-            data.Date = todayShiftDetails.Date;
-            data.Shift = todayShiftDetails.Shift;
+                if (data.TotalBillet <= 0)
+                {
+                    TempData["ErrorMessage"] = "Please enter valid Total Billet.";
+                    return RedirectToAction("AddDischarge");
+                }
 
-            data.StatusID = 1;
-            data.CreatedOn = DateTime.Now;
-            data.CreatedBy = User.Identity.Name;
+                int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
 
-            int rtn = rm.InsertDischarging(data);
+                var shiftDetails = rm.RollingMillDetails()
+                 .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
+                 .FirstOrDefault();
 
-            if (rtn < 0)
-            {
-                TempData["SuccessMessage"] = "Data saved successfully";
+                if (shiftDetails == null)
+                {
+                    TempData["ErrorMessage"] = "Selected shift details not found.";
+                    return RedirectToAction("AddDetails", "RollingMill");
+                }
+
+                data.HeatNo = data.HeatNo.Trim();
+
+                bool isUpdate = data.ID > 0;
+
+                var chargingRows = repo.GetAllCharging()
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.HeatNo) &&
+                        x.HeatNo.Trim().Equals(data.HeatNo, StringComparison.OrdinalIgnoreCase) &&
+                        x.StatusID == 1
+                    )
+                    .ToList();
+
+                if (!chargingRows.Any())
+                {
+                    TempData["ErrorMessage"] = "Charging record not found against this Heat No.";
+                    return RedirectToAction("AddDischarge");
+                }
+
+                decimal chargedBillet = chargingRows.Sum(x => Convert.ToDecimal(x.TotalBillet));
+
+                decimal alreadyDischargedBillet = rm.GetDichargedHeat2()
+                    .Where(x =>
+                        x.StatusID == 1 &&
+                        x.ID != data.ID &&
+                        !string.IsNullOrWhiteSpace(x.HeatNo) &&
+                        x.HeatNo.Trim().Equals(data.HeatNo, StringComparison.OrdinalIgnoreCase)
+                    )
+                    .Sum(x => Convert.ToDecimal(x.TotalBillet));
+
+                decimal currentBillet = Convert.ToDecimal(data.TotalBillet);
+                decimal remainingBillet = chargedBillet - alreadyDischargedBillet;
+
+                if (remainingBillet < 0)
+                    remainingBillet = 0;
+
+                if (remainingBillet <= 0)
+                {
+                    TempData["ErrorMessage"] = "This Heat No is already fully discharged.";
+                    return RedirectToAction("AddDischarge");
+                }
+
+                if (currentBillet > remainingBillet)
+                {
+                    TempData["ErrorMessage"] = "Only " + remainingBillet + " billet remaining for discharge. You cannot discharge " + currentBillet + ".";
+                    return RedirectToAction("AddDischarge");
+                }
+
+                data.Date = shiftDetails.Date;
+                data.Shift = shiftDetails.Shift;
+                data.Plant = shiftDetails.Plant;
+                data.StatusID = 1;
+
+                if (isUpdate)
+                {
+                    data.UpdatedBy = User.Identity.Name;
+                    data.UpdatedDate = DateTime.Now;
+
+                    int update = rm.UpdateDischarging(data);
+
+                    if (update < 0)
+                        TempData["SuccessMessage"] = "Discharge record updated successfully.";
+                    else
+                        TempData["ErrorMessage"] = "Discharge record not updated.";
+
+                    return RedirectToAction("AddDischarge");
+                }
+
+                //var existingDischarge = rm.GetDichargedHeat2()
+                //    .Where(x =>
+                //        x.Date >= start &&
+                //        x.Date < end &&
+                //        !string.IsNullOrWhiteSpace(x.Shift) &&
+                //        x.Shift.Trim().Equals(selectedShift.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                //        !string.IsNullOrWhiteSpace(x.PlantName) &&
+                //        x.PlantName.Trim().Equals(selectedPlant.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                //        x.StatusID == 1
+                //    )
+                //    .ToList();
+
+                //int nextSequence = existingDischarge
+                //    .Select(x => x.DischargingSequence)
+                //    .Where(x => x > 0)
+                //    .DefaultIfEmpty(0)
+                //    .Max() + 1;
+
+                // Insert mode: sequence next generate hogi
+                var existingHeats = rm.GetDichargedHeat2()
+                    .Where(x =>
+                        x.Date >= shiftDetails.Date.Date &&
+                        x.Date < shiftDetails.Date.Date.AddDays(1) &&
+                        !string.IsNullOrEmpty(x.Shift) &&
+                        x.Shift.Trim().Equals(shiftDetails.Shift.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                        x.StatusID == 1
+                    )
+                    .ToList();
+
+                int nextSequence = existingHeats
+                    .Select(x => x.DischargingSequence)
+                    .Where(x => x > 0)
+                    .DefaultIfEmpty(0)
+                    .Max() + 1;
+
+
+                data.DischargingSequence = nextSequence;
+                data.CreatedOn = DateTime.Now;
+                data.CreatedBy = User.Identity.Name;
+
+                int rtn = rm.InsertDischarging(data);
+
+                if (rtn < 0)
+                    TempData["SuccessMessage"] = "Heat discharged successfully.";
+                else
+                    TempData["ErrorMessage"] = "Data not saved.";
+
                 return RedirectToAction("AddDischarge");
             }
-
-            TempData["ErrorMessage"] = "Data not saved";
-            return View("~/Views/RollingMill/Discharging/Add.cshtml", data);
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error: " + ex.Message;
+                return RedirectToAction("AddDischarge");
+            }
         }
-
-        //[Route("HeatDischarge")]
-        //[HttpPost]
-        //public ActionResult AddDischarge(BilletDischargingBLL data)
-        //{
-        //    // dropdown reload
-        //    var heatList = repo.GetAllCharging();
-        //    ViewBag.HeatNo = new SelectList(heatList, "HeatNo", "HeatNo", data.HeatNo);
-
-        //    var model = rm.GetDichargedByHeatNo(data.HeatNo);
-
-        //    if (model.HeatNo != null)
-        //    {
-        //        ModelState.AddModelError("HeatNo", "Heat is already discharged");
-        //        return View("~/Views/RollingMill/Discharging/Add.cshtml", data);
-        //    }
-
-        //    // ✅ insert
-        //    data.StatusID = 1;   // discharged
-        //    data.CreatedOn = DateTime.Now;
-        //    data.CreatedBy = User.Identity.Name;
-
-        //    int rtn = rm.InsertDischarging(data);
-
-        //    if (rtn < 0)
-        //    {
-        //        TempData["SuccessMessage"] = "Data saved successfully";
-        //        return RedirectToAction("AddDischarge");
-        //    }
-
-        //    TempData["ErrorMessage"] = "Data not saved";
-        //    return View("~/Views/RollingMill/Discharging/Add.cshtml", data);
-        //}
 
 
         public ActionResult ShiftProduction()
@@ -406,52 +846,6 @@ namespace ProductionPortal_Solb.Controllers
             return View("~/Views/RollingMill/RMConsumption/RMConsumptionAdd");
         }
 
-        //public ActionResult GenerateDelayReportPDF(DateTime? startdate, DateTime? enddate, string shift)
-        //{
-        //    // Force Gregorian
-        //    var greg = new CultureInfo("en-US");
-        //    greg.DateTimeFormat.Calendar = new GregorianCalendar();
-
-        //    DateTime? sDate = null;
-        //    DateTime? eDate = null;
-
-        //    if (startdate.HasValue)
-        //        sDate = startdate.Value.Date;
-
-        //    if (enddate.HasValue)
-        //        eDate = enddate.Value.Date.AddDays(1).AddTicks(-1); // inclusive
-
-        //    //var data = delay.GetAllRMDelay(sDate, eDate).AsQueryable();
-
-        //    // ✅ Rolling Mill (case + space safe)
-        //    data = data.Where(x => x.Area != null &&
-        //                           x.Area.Trim().ToLower() == "rolling mill");
-
-        //    // ✅ Date filters
-        //    if (sDate.HasValue)
-        //        data = data.Where(x => x.Date >= sDate.Value);
-
-        //    if (eDate.HasValue)
-        //        data = data.Where(x => x.Date <= eDate.Value);
-
-        //    // ✅ NEW: Shift filter
-        //    if (!string.IsNullOrEmpty(shift))
-        //    {
-        //        data = data.Where(x => x.Shift != null &&
-        //                               x.Shift.Trim().ToLower() == shift.Trim().ToLower());
-        //    }
-
-        //    var result = data.ToList();
-
-        //    // 🔎 DEBUG CHECK (remove later)
-        //    if (!result.Any())
-        //    {
-        //        ViewBag.Debug = "No data after filter";
-        //    }
-
-        //    return View("GenerateDelayReportPDF", result);
-        //}
-
         [Route("BundleSection")]
         public ActionResult BundleSection()
         {
@@ -462,154 +856,380 @@ namespace ProductionPortal_Solb.Controllers
         [Route("AddBundleSection")]
         public ActionResult AddBundleSection()
         {
-            var heats = repo.GetAllCharging();
-            var submitted = rm.GetBundlesHeats();
-
-            var items = heats.Select(h => new SelectListItem
+            if (Session["RM_Date"] == null || Session["RM_Shift"] == null)
             {
-                Text = h.HeatNo,
-                Value = h.HeatNo,
-                Disabled = submitted.Any(s => s.HeatNo == h.HeatNo)
-            }).ToList();
+                TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
+                return RedirectToAction("AddDetails", "RollingMill");
+            }
 
-            ViewBag.HeatNo = items;
+            DateTime selectedDate = Convert.ToDateTime(Session["RM_Date"]).Date;
+            DateTime start = selectedDate.Date;
+            DateTime end = start.AddDays(1);
 
-            //ViewBag.HeatNo = new SelectList(availableHeats, "HeatNo", "HeatNo");
+            string selectedShift = Convert.ToString(Session["RM_Shift"]);
+            string selectedPlant = Convert.ToString(Session["RM_Plant"]);
 
-            // table ke liye
-            var vm = new RollingMillChargeVM();
-            vm.SubmittedHeat = rm.GetBundlesHeats(); // grid data
+            int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
+
+            var shiftDetails = rm.RollingMillDetails()
+             .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
+             .FirstOrDefault();
+
+            if (shiftDetails == null)
+            {
+                TempData["ErrorMessage"] = "Selected shift details not found. Please select shift again.";
+                return RedirectToAction("AddDetails", "RollingMill");
+            }
+
+            // ✅ Only selected Date + Shift charged heats
+            var heats = rm.GetDichargedHeat2()
+                .Where(h =>
+                    h.StatusID == 1 &&
+                    h.Date >= start &&
+                    h.Date < end &&
+                    !string.IsNullOrWhiteSpace(h.HeatNo) &&
+                    !string.IsNullOrWhiteSpace(h.Shift) &&
+                    h.Shift.Trim().Equals(selectedShift.Trim(), StringComparison.OrdinalIgnoreCase)
+                )
+                .ToList();
+
+            ViewBag.HeatNo = heats
+                .GroupBy(h => h.HeatNo.Trim(), StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
+                .Select(h => new SelectListItem
+                {
+                    Text = h.HeatNo,
+                    Value = h.HeatNo,
+                    Disabled = false
+                })
+                .ToList();
+
+            // ✅ Only selected Date + Shift bundle records
+
+            var submittedHeat = rm.GetBundlesHeats()
+                .Where(x =>
+                    x.Date >= start &&
+                    x.Date < end &&
+                    x.StatusID == 1 &&
+                    !string.IsNullOrEmpty(x.Plant) &&
+                    x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase)
+                )
+                .OrderBy(x => x.Shift)
+                .ThenBy(x => x.CreatedDate)
+                .ToList();
+
+            //var submittedHeat = rm.GetBundlesHeats()
+            //    .Where(x =>
+            //        x.Date.HasValue &&
+            //        x.Date.Value >= start &&
+            //        x.Date.Value < end
+            //    )
+            //    .OrderBy(x => x.Shift)
+            //    .ThenByDescending(x => x.ID)
+            //    .ToList();
+
+            var vm = new RollingMillChargeVM
+            {
+                Date = shiftDetails.Date,
+                Plant = shiftDetails.Plant,
+                Team = shiftDetails.Team,
+                Shift = shiftDetails.Shift,
+                ShiftIncharge = shiftDetails.ShiftIncharge,
+                SubmittedHeat = submittedHeat
+            };
 
             return View("~/Views/RollingMill/BundleSection/AddBundleSection.cshtml", vm);
         }
-        //public ActionResult AddBundleSection()
-        //{
-        //    var data = repo.GetAllCharging();
-        //    ViewBag.HeatNo = new SelectList(data, "HeatNo", "HeatNo");
-        //    return View("~/Views/RollingMill/BundleSection/AddBundleSection.cshtml");
-        //}
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult InsertBundleSection(BundlingSectionBLL data)
         {
-
-            data.StatusID = 1;   // discharged
-            data.CreatedDate = DateTime.Now;
-            data.CreatedBy = User.Identity.Name;
-
-            int rtn = rm.AddBundlingSection(data);
-
-            if (rtn == -1)
+            try
             {
-                TempData["SuccessMessage"] = "Data saved successfully";
+                if (Session["RM_Date"] == null || Session["RM_Shift"] == null)
+                {
+                    TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
+                    return RedirectToAction("AddDetails", "RollingMill");
+                }
+
+                DateTime selectedDate = Convert.ToDateTime(Session["RM_Date"]).Date;
+                string selectedShift = Convert.ToString(Session["RM_Shift"]);
+                string selectedPlant = Convert.ToString(Session["RM_Plant"]);
+
+                DateTime start = selectedDate.Date;
+                DateTime end = start.AddDays(1);
+
+                int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
+
+                var shiftDetails = rm.RollingMillDetails()
+                 .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
+                 .FirstOrDefault();
+
+                if (shiftDetails == null)
+                {
+                    TempData["ErrorMessage"] = "Selected shift details not found. Please select shift again.";
+                    return RedirectToAction("AddDetails", "RollingMill");
+                }
+
+                // ✅ Insert/Update dono main selected details ki Date & Shift use hogi
+                data.Date = shiftDetails.Date;
+                data.Shift = shiftDetails.Shift;
+                data.Plant = shiftDetails.Plant;
+                data.StatusID = 1;
+
+                if (data.ID > 0)
+                {
+                    data.UpdatedBy = User.Identity.Name;
+                    data.UpdatedDate = DateTime.Now;
+
+                    int update = rm.UpdateBundlingSection(data);
+
+                    if (update < 0)
+                        TempData["SuccessMessage"] = "Bundle record updated successfully.";
+                    else
+                        TempData["ErrorMessage"] = "Bundle record not updated.";
+                }
+                else
+                {
+                    data.CreatedDate = DateTime.Now;
+                    data.CreatedBy = User.Identity.Name;
+
+                    int insert = rm.AddBundlingSection(data);
+
+                    if (insert < 0)
+                        TempData["SuccessMessage"] = "Bundle record saved successfully.";
+                    else
+                        TempData["ErrorMessage"] = "Bundle record not saved.";
+                }
+
                 return RedirectToAction("AddBundleSection");
             }
-
-            TempData["ErrorMessage"] = "Data not saved";
-            return RedirectToAction("AddBundleSection");
-            //return View("~/Views/RollingMill/BundleSection/AddBundleSection.cshtml");
-        }
-        public ActionResult ShiftSummaryReportPDF(DateTime? from, DateTime? to)
-        {
-            // 1️⃣ Default dates = Today
-            DateTime startDate = from?.Date ?? DateTime.Today;
-            DateTime endDate = (to?.Date ?? DateTime.Today).AddDays(1); // next day 00:00
-
-            // 2️⃣ Fetch raw data
-            var delays = delay.GetAllRMDelay(startDate, endDate);            // IQueryable or List
-            var heats = rm.GetDichargedHeat(startDate, endDate);          // IQueryable or List
-
-            // 3️⃣ Apply date filters SAFELY
-            delays = delays
-                        .Where(x => x.Date >= startDate && x.Date < endDate)
-                        .ToList();
-
-            heats = heats
-                        .Where(x => x.Date >= startDate && x.Date < endDate)
-                        .ToList();
-
-            // 4️⃣ Build ViewModel
-            var vm = new ShiftProductionReportVM
+            catch (Exception ex)
             {
-                Delays = delays ?? new List<PlantDelayBLL>(),
-                DischargedHeats = heats ?? new List<BilletDischargingBLL>()
+                TempData["ErrorMessage"] = "Error: " + ex.Message;
+                return RedirectToAction("AddBundleSection");
+            }
+        }
+
+        public ActionResult AddDetails(DateTime? date)
+        {
+            DateTime selectedDate = date ?? DateTime.Today;
+            DateTime start = selectedDate.Date;
+            DateTime end = start.AddDays(1);
+
+            var allDetails = rm.RollingMillDetails()
+                .Where(x =>
+                    x.Date >= start &&
+                    x.Date < end &&
+                    x.StatusID == 1
+                )
+                .OrderByDescending(x => x.ID)
+                .ToList();
+
+            // ✅ Agar session empty hai aur current selected date par entry hai,
+            // to latest entry auto load kar do
+            if ((Session["RM_Date"] == null || Session["RM_Shift"] == null) && allDetails.Any())
+            {
+                var latest = allDetails.FirstOrDefault();
+
+                Session["RM_Date"] = latest.Date;
+                Session["RM_Shift"] = latest.Shift;
+                Session["RM_Plant"] = latest.Plant;
+                Session["RM_Team"] = latest.Team;
+                Session["RM_ShiftIncharge"] = latest.ShiftIncharge;
+            }
+
+            var vm = new RMShiftDetailsVM
+            {
+                List = allDetails
             };
+
+            ViewBag.SelectedDate = selectedDate.ToString("yyyy-MM-dd");
+
+            ViewBag.LoadedDate = Session["RM_Date"] != null
+                ? Convert.ToDateTime(Session["RM_Date"]).ToString("dd-MM-yyyy")
+                : "-";
+
+            ViewBag.LoadedPlant = Session["RM_Plant"] ?? "-";
+            ViewBag.LoadedShift = Session["RM_Shift"] ?? "-";
+            ViewBag.LoadedTeam = Session["RM_Team"] ?? "-";
+            ViewBag.LoadedIncharge = Session["RM_ShiftIncharge"] ?? "-";
 
             return View(vm);
         }
 
-        [Route("ProductionDetails")]
-        public ActionResult AddDetails()
-        {
-            var vm = new RollingMillPageVM
-            {
-                Form = new RMShiftDetailsBLL(),
-                List = rm.RMShiftDetailAll()
-            };
-
-            return View(vm);
-        }
         [HttpPost]
         public ActionResult AddDetails(RMShiftDetailsBLL data)
         {
-
-            data.StatusID = 1;
-            data.CreatedDate = DateTime.Now;
-            data.CreatedBy = User.Identity.Name;
-
-            int rtn;
-
-            if (data.ID > 0)
+            try
             {
-                // 🔥 UPDATE
-                rtn = rm.UpdateRMShiftDetails(data);
-                TempData["SuccessMessage"] = "Record updated successfully";
-            }
-            else
-            {
-                // 🔥 DUPLICATE CHECK
-                bool exists = rm.IsShiftExist(data.Date, data.Plant, data.Shift);
-
-                if (exists)
+                if (data == null)
                 {
-                    TempData["ErrorMessage"] = "Record already exists!";
+                    TempData["ErrorMessage"] = "Invalid data.";
                     return RedirectToAction("AddDetails");
                 }
 
-                // 🔥 INSERT
-                rtn = rm.AddRMShiftDetails(data);
-                TempData["SuccessMessage"] = "Data saved successfully";
+                if (data.Date == null)
+                {
+                    TempData["ErrorMessage"] = "Date is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                if (string.IsNullOrWhiteSpace(data.Plant))
+                {
+                    TempData["ErrorMessage"] = "Plant is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                if (string.IsNullOrWhiteSpace(data.Team))
+                {
+                    TempData["ErrorMessage"] = "Team is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                if (string.IsNullOrWhiteSpace(data.Shift))
+                {
+                    TempData["ErrorMessage"] = "Shift is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                if (string.IsNullOrWhiteSpace(data.ShiftIncharge))
+                {
+                    TempData["ErrorMessage"] = "Shift Incharge is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                data.Plant = data.Plant.Trim();
+                data.Team = data.Team.Trim();
+                data.Shift = data.Shift.Trim();
+                data.ShiftIncharge = data.ShiftIncharge.Trim();
+
+                data.StatusID = 1;
+                data.CreatedBy = User.Identity.Name;
+                data.CreatedDate = DateTime.Now;
+
+                int result = rm.AddRMShiftDetails(data);
+
+                if (result > 0 || result < 0)
+                {
+                    // ✅ Save ke baad selected shift session main load
+                    Session["RM_Date"] = data.Date;
+                    Session["RM_Shift"] = data.Shift;
+                    Session["RM_Plant"] = data.Plant;
+                    Session["RM_Team"] = data.Team;
+                    Session["RM_ShiftIncharge"] = data.ShiftIncharge;
+
+                    TempData["SuccessMessage"] = "Shift details saved and loaded successfully.";
+
+                    return RedirectToAction("AddDetails", new
+                    {
+                        date = Convert.ToDateTime(data.Date).ToString("yyyy-MM-dd")
+                    });
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Shift details could not be saved.";
+                    return RedirectToAction("AddDetails");
+                }
             }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error: " + ex.Message;
+                return RedirectToAction("AddDetails");
+            }
+        }
+        public ActionResult delete(int? id)
+        {
+
+            //vardStatusID = 3;
+            //data.CreatedDate = DateTime.Now;
+            var CreatedBy = User.Identity.Name;
+
+            int rtn;
+
+            // 🔥 INSERT
+            rtn = rm.DeleteShiftDetails(id, CreatedBy);
+            TempData["SuccessMessage"] = "Data saved successfully";
 
             return RedirectToAction("AddDetails");
         }
+        public ActionResult deleteCharging(int? id)
+        {
+
+            //vardStatusID = 3;
+            //data.CreatedDate = DateTime.Now;
+            var CreatedBy = User.Identity.Name;
+
+            int rtn;
+
+            // 🔥 INSERT
+            rtn = rm.DeleteCharging(id, CreatedBy);
+            TempData["SuccessMessage"] = "Data saved successfully";
+
+            return RedirectToAction("AddCharge");
+        }
+
+        public ActionResult deleteDischarging(int? id)
+        {
+
+            //vardStatusID = 3;
+            //data.CreatedDate = DateTime.Now;
+            var CreatedBy = User.Identity.Name;
+
+            int rtn;
+
+            // 🔥 INSERT
+            rtn = rm.DeleteDischarging(id, CreatedBy);
+            TempData["SuccessMessage"] = "Data saved successfully";
+
+            return RedirectToAction("AddDischarge");
+        }
+
+        public ActionResult deleteBundle(int? id)
+        {
+
+            //vardStatusID = 3;
+            //data.CreatedDate = DateTime.Now;
+            var CreatedBy = User.Identity.Name;
+
+            int rtn;
+
+            // 🔥 INSERT
+            rtn = rm.DeleteBundle(id, CreatedBy);
+            TempData["SuccessMessage"] = "Data saved successfully";
+
+            return RedirectToAction("AddBundleSection");
+        }
+
+        //[HttpPost]
+        //public JsonResult SetSelectedShift(string date, string shift, string plant)
+        //{
+        //    Session["RM_Date"] = Convert.ToDateTime(date);
+        //    Session["RM_Shift"] = shift;
+        //    Session["RM_Plant"] = plant;
+
+        //    return Json(new { success = true });
+        //}
 
         [HttpPost]
-        public JsonResult SetSelectedShift(string date, string shift, string plant)
+        public JsonResult SetSelectedShift(int id, DateTime date, string shift, string plant, string team, string shiftincharge)
         {
-            Session["RM_Date"] = Convert.ToDateTime(date);
+            if (id <= 0)
+            {
+                return Json(new { success = false, message = "Invalid shift detail ID." });
+            }
+
+            Session["RM_ShiftDetailID"] = id;
+            Session["RM_Date"] = date;
             Session["RM_Shift"] = shift;
             Session["RM_Plant"] = plant;
+            Session["RM_Team"] = team;
+            Session["RM_ShiftIncharge"] = shiftincharge;
 
             return Json(new { success = true });
         }
-        //public ActionResult AddDetails(RMShiftDetailsBLL data)
-        //{
-        //    data.StatusID = 1;
-        //    data.CreatedDate = DateTime.Now;
-        //    data.CreatedBy = User.Identity.Name;
 
-        //    int rtn = rm.AddRMShiftDetails(data);
-
-        //    if (rtn == -1)
-        //    {
-        //        TempData["SuccessMessage"] = "Data saved successfully";
-        //        return RedirectToAction("Index", "Home");
-        //    }
-
-        //    TempData["ErrorMessage"] = "Data not saved";
-        //    return RedirectToAction("AddDetails");
-        //}
 
         [HttpPost]
         public JsonResult SetSelectedDateAjax(DateTime date)
@@ -622,6 +1242,129 @@ namespace ProductionPortal_Solb.Controllers
             });
         }
 
+        public ActionResult RMHourlyDischarge()
+        {
+            if (Session["RM_Date"] == null || Session["RM_Shift"] == null)
+            {
+                TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
+                return RedirectToAction("AddDetails", "RollingMill");
+            }
 
+            DateTime selectedDate = Convert.ToDateTime(Session["RM_Date"]);
+            string selectedShift = Convert.ToString(Session["RM_Shift"]);
+            string selectedPlant = Convert.ToString(Session["RM_Plant"]);
+
+            DateTime start = selectedDate.Date;
+            DateTime end = start.AddDays(1);
+
+            var shiftDetails = rm.RollingMillDetails()
+                .Where(x =>
+                    x.Date >= start &&
+                    x.Date < end &&
+                    !string.IsNullOrEmpty(x.Shift) &&
+                    x.Shift.Trim().Equals(selectedShift.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                    (
+                        string.IsNullOrEmpty(selectedPlant) ||
+                        string.IsNullOrEmpty(x.Plant) ||
+                        x.Plant.Trim().Equals(selectedPlant.Trim(), StringComparison.OrdinalIgnoreCase)
+                    )
+                )
+                .OrderByDescending(x => x.ID)
+                .FirstOrDefault();
+
+            if (shiftDetails == null)
+            {
+                TempData["ErrorMessage"] = "Selected shift details not found. Please select shift again.";
+                return RedirectToAction("AddDetails", "RollingMill");
+            }
+
+            var vm = new RMHourlyDischargeVM
+            {
+                Date = shiftDetails.Date,
+                Plant = shiftDetails.Plant,
+                Shift = shiftDetails.Shift,
+                Team = shiftDetails.Team,
+                ShiftIncharge = shiftDetails.ShiftIncharge,
+                //HourlyDischarge = new List<RMHourlyDischargeBLL>()
+            };
+
+            return View("~/Views/RollingMill/RMHourlyDischarge/add.cshtml", vm);
+        }
+
+
+        [HttpPost]
+        public ActionResult RMHourlyDischarge(RMHourlyDischargeVM model)
+        {
+            try
+            {
+                if (Session["RM_Date"] == null || Session["RM_Shift"] == null)
+                {
+                    TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
+                    return RedirectToAction("AddDetails", "RollingMill");
+                }
+
+                DateTime selectedDate = Convert.ToDateTime(Session["RM_Date"]).Date;
+                string selectedShift = Convert.ToString(Session["RM_Shift"]);
+
+                if (string.IsNullOrWhiteSpace(selectedShift))
+                {
+                    TempData["ErrorMessage"] = "Selected shift is missing. Please select shift again.";
+                    return RedirectToAction("AddDetails", "RollingMill");
+                }
+
+                if (model == null || model.RMHourlyDischarge == null || !model.RMHourlyDischarge.Any())
+                {
+                    TempData["ErrorMessage"] = "No hourly discharge data found.";
+                    return RedirectToAction("RMHourlyDischarge");
+                }
+
+                bool isAlreadyExist = rm.IsRMHourlyDischargeExist(selectedDate, selectedShift);
+
+                if (isAlreadyExist)
+                {
+                    TempData["ErrorMessage"] = "Hourly discharge data already exists for this date and shift.";
+                    return RedirectToAction("RMHourlyDischarge");
+                }
+
+                foreach (var item in model.RMHourlyDischarge)
+                {
+                    bool hasData =
+                        !string.IsNullOrWhiteSpace(item.NoofBillets) ||
+                        item.NoofCobble.HasValue ||
+                        item.Reject.HasValue ||
+                        !string.IsNullOrWhiteSpace(item.BilletHeatNo);
+
+                    if (!hasData)
+                    {
+                        continue;
+                    }
+
+                    item.Date = selectedDate;
+                    item.Shift = selectedShift;
+
+                    item.SafetyIssueShift = model.Form != null ? model.SafetyIssueShift : "";
+                    item.MessageShift = model.Form != null ? model.MessageShift : "";
+
+                    item.FuelConsumptionStart = model.Form != null ? model.FuelConsumptionStart : "";
+                    item.FuelConsumptionEnd = model.Form != null ? model.FuelConsumptionEnd : "";
+                    item.TotalConsumption = model.Form != null ? model.TotalConsumption : "";
+                    item.ElectricityConsumption = model.Form != null ? model.ElectricityConsumption : "";
+
+                    item.StatusID = 1;
+                    item.CreatedDate = DateTime.Now;
+                    item.CreatedBy = User.Identity.Name;
+
+                    rm.InsertRMHourlyDischarge(item);
+                }
+
+                TempData["SuccessMessage"] = "Hourly discharge saved successfully.";
+                return RedirectToAction("RMHourlyDischarge");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error: " + ex.Message;
+                return RedirectToAction("RMHourlyDischarge");
+            }
+        }
     }
 }

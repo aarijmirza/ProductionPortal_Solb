@@ -731,6 +731,11 @@ namespace ProductionPortal_Solb.Controllers
             return View();
         }
 
+        public ActionResult CCMDailyHeatSummary()
+        {
+            return View();
+        }
+
         [HttpPost]
         public ActionResult AddYieldRecord(CCMYeildBLL data)
         {

@@ -3,14 +3,12 @@
 }
 
 <!DOCTYPE html>
-
 <html>
 <head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Monthly Performance Report</title>
-    <!-- Chart.js CDN -->
+    <meta charset="utf-8" />
+    <title>RM2 Daily Production Report</title>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
     <style>
         * {
@@ -22,28 +20,66 @@
             font-size: 11px;
             margin: 0;
             padding: 0;
+            background: #fff;
+            color: #000;
         }
 
         .sheet {
-            margin: 10px auto;
-            border: 1px solid #000;
-            padding: 4px;
+            width: 100%;
+            padding: 8px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
         }
 
         th, td {
-            border: 1px solid #000;
-            padding: 2px 3px;
+            border: 1px solid #444;
+            padding: 3px 4px;
             vertical-align: middle;
+            word-wrap: break-word;
         }
 
-        .no-border td,
-        .no-border th {
-            border: none !important;
+        th {
+            background: #5f5f5f;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .title-table td {
+            border: 1px solid #444;
+        }
+
+        .logo-cell {
+            width: 160px;
+            text-align: center;
+        }
+
+            .logo-cell img {
+                max-height: 55px;
+            }
+
+        .main-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .date-box {
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .section-title {
+            background: #5f5f5f;
+            color: #fff;
+            font-weight: bold;
+            text-align: left;
+            padding: 4px;
         }
 
         .center {
@@ -56,26 +92,6 @@
 
         .bold {
             font-weight: bold;
-            font-size: 28px;
-        }
-
-        .header-title {
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .sub-header {
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .small {
-            font-size: 9px;
-        }
-
-        .section-title {
-            font-weight: bold;
-            background-color: #f2f2f2;
         }
 
         .red {
@@ -83,21 +99,56 @@
             font-weight: bold;
         }
 
-        .text-top {
-            vertical-align: top;
+        .gray {
+            background: #e7e7e7;
         }
 
-        .logo-cell img {
-            max-height: 90px;
+        .light-gray {
+            background: #f2f2f2;
         }
 
-        .total-row {
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 50% 50%;
+            gap: 4px;
+        }
+
+        .chart-box {
+            border: 1px solid #444;
+            height: 215px;
+            padding: 5px;
+            position: relative;
+        }
+
+        .chart-title {
+            text-align: center;
             font-weight: bold;
-            background-color: #f9f9f9;
+            margin-bottom: 3px;
         }
 
-        .legend-cell {
+        canvas {
+            width: 100% !important;
+            height: 180px !important;
+        }
+
+        .small {
+            font-size: 10px;
+        }
+
+        .very-small {
             font-size: 9px;
+        }
+
+        .no-border {
+            border: none !important;
+        }
+
+            .no-border td {
+                border: none !important;
+            }
+
+        .page-break {
+            page-break-before: always;
         }
 
         @@media print {
@@ -106,286 +157,703 @@
             }
 
             .sheet {
-                margin: 0;
-                border: none;
+                padding: 4px;
+            }
+
+            @@page {
+                size: A4 landscape;
+                margin: 5mm;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="sheet">
-        <table class="no-border">
+
+        <!-- ================= HEADER ================= -->
+        <table class="title-table">
             <tr>
-                <td class="logo-cell" style="width: 180px;">
+                <td class="logo-cell">
                     <img src="~/assets/images/logo.png" />
                 </td>
-                <td class="center">
-                    <div class="bold">Monthly Performance Report</div>
-                </td>
-                <td class="right" style="width:210px; font-size:22px;">
-                    <b>Date:</b> September 2025
-                </td>
-            </tr>
-        </table>
-        <table style="margin-top:10px;">
-            <tr class="center" style="font-weight:bold; font-size:15px">
-                <td>Month</td>
-                <td>Size</td>
-                <td>Plan</td>
-                <td>Rolled Billet</td>
-                <td>Finished Product <br /> Thoer Wt.</td>
-                <td>Final Product <br /> Monthly Total</td>
-            </tr>
-            <tr class="center" style="font-size:13px">
-                <td>September</td>
-                <td>12mm</td>
-                <td>150.000</td>
-                <td>150.000</td>
-                <td>150.000</td>
-                <td>150.000</td>
-            </tr>
-        </table>
-        <!-- ================= CHARTS LAYOUT ================= -->
-        <table style="margin-top:8px;">
-            <tr>
-                <!-- LEFT COLUMN -->
-                <td style="padding-right:5px;">
 
-                    <!-- CUMULATIVE -->
+                <td class="main-title">
+                    RM2 Daily Production Report
+                </td>
+
+                <td class="date-box" style="width:220px;">
+                    Date<br />
+                    05 Jun 2026
+                </td>
+            </tr>
+        </table>
+
+        <!-- ================= PRODUCTION SUMMARY ================= -->
+        <table style="margin-top:4px;">
+            <tr>
+                <td colspan="14" class="section-title">Production Summary RM2</td>
+            </tr>
+
+            <tr>
+                <th>Dept.</th>
+                <th>Size</th>
+                <th>Balance Plan of Month (MT)</th>
+                <th>Actual Production (MT)</th>
+                <th>Diff</th>
+                <th>Fuel Consumption (Lit/Ton)</th>
+                <th>Power Cons. (KWh/Ton)</th>
+                <th>Water Cons. (m3/Ton)</th>
+                <th>Misroll (T)</th>
+                <th>Actual Yield (%) Day</th>
+                <th>Theoretical Yield (%) Day</th>
+                <th>Theoretical Yield (%) YTD</th>
+                <th>RRR (%) Day</th>
+                <th>Productivity (T/hr.)</th>
+            </tr>
+
+            <tr class="center">
+                <td>RM2</td>
+                <td>WR11</td>
+                <td>-18</td>
+                <td>177.700</td>
+                <td>18</td>
+                <td>41.34</td>
+                <td>248.96</td>
+                <td>0.00</td>
+                <td>0.000</td>
+                <td>98.30</td>
+                <td>98.30</td>
+                <td>99.62</td>
+                <td>50.00</td>
+                <td>88.85</td>
+            </tr>
+        </table>
+
+        <!-- ================= PLAN VS ACTUAL ================= -->
+        <table style="margin-top:4px;">
+            <tr>
+                <td colspan="4" class="section-title">Accumulated Monthly Production vs Plan</td>
+                <td colspan="4" class="section-title">Accumulated Annual Production vs Plan</td>
+            </tr>
+
+            <tr>
+                <th>Plant</th>
+                <th>Plan</th>
+                <th>Actual</th>
+                <th>Difference</th>
+
+                <th>Plant</th>
+                <th>Plan</th>
+                <th>Actual</th>
+                <th>Difference</th>
+            </tr>
+
+            <tr class="center">
+                <td>RM2</td>
+                <td>5,784</td>
+                <td>5,802</td>
+                <td class="red">18</td>
+
+                <td>RM2</td>
+                <td>49,602</td>
+                <td>74,686</td>
+                <td class="red">25,084</td>
+            </tr>
+        </table>
+
+        <!-- ================= MAIN CONTENT GRID ================= -->
+        <table style="margin-top:4px;">
+            <tr>
+                <!-- LEFT SIZE TABLE -->
+                <td style="width:50%; vertical-align:top; padding:0; border:none;">
+
+                    <table>
+                        <tr>
+                            <td colspan="9" class="section-title">
+                                MONTHLY ACCUMULATED SIZE WISE PRODUCTION - Actual / Balance with respect of Roll Plan
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th>Size</th>
+                            <th>Monthly Roll PLAN</th>
+                            <th>Accumulate Actual</th>
+                            <th>Diff</th>
+                            <th>Roll Plan Size Mix %</th>
+                            <th>Actual Size Mix %</th>
+                            <th>Yield %</th>
+                            <th>RRR %</th>
+                            <th>Productivity (t/h)</th>
+                        </tr>
+
+                        <tr class="center">
+                            <td>D08</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>D10</td>
+                            <td>1850</td>
+                            <td>1860</td>
+                            <td>10</td>
+                            <td>31.98%</td>
+                            <td>32.06%</td>
+                            <td>100.5%</td>
+                            <td>58.7%</td>
+                            <td>75.1</td>
+                        </tr>
+                        <tr class="center">
+                            <td>D12</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>D14</td>
+                            <td>3764</td>
+                            <td>3764</td>
+                            <td>-</td>
+                            <td>65.08%</td>
+                            <td>64.88%</td>
+                            <td>102.2%</td>
+                            <td>84.7%</td>
+                            <td>91.1</td>
+                        </tr>
+                        <tr class="center">
+                            <td>D16</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>D18</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>D20</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>D25</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>D28</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>D32</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>D36</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>D40</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>WR11 (1008)</td>
+                            <td>170</td>
+                            <td>177.7</td>
+                            <td>8</td>
+                            <td>2.94%</td>
+                            <td>3.06%</td>
+                            <td>98.3%</td>
+                            <td>50.0%</td>
+                            <td>88.8</td>
+                        </tr>
+                        <tr class="center">
+                            <td>WR11 (1012)</td>
+                            <td>0</td>
+                            <td>0.0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="center">
+                            <td>RC10 (Gr 60)</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>0.00%</td>
+                            <td>0.00%</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+                        <tr class="center bold gray">
+                            <td>Total</td>
+                            <td>5,784</td>
+                            <td>5,802</td>
+                            <td>18</td>
+                            <td colspan="5"></td>
+                        </tr>
+                    </table>
+
+                </td>
+
+                <!-- RIGHT CHART AREA -->
+                <td style="width:50%; vertical-align:top; padding:0 0 0 4px; border:none;">
+
+                    <div class="chart-grid">
+
+                        <div class="chart-box">
+                            <div class="chart-title">Monthly Roll PLAN Accumulate Actual Size Wise Production</div>
+                            <canvas id="sizePlanActualChart"></canvas>
+                        </div>
+
+                        <div class="chart-box">
+                            <div class="chart-title">Plan Vs Actual</div>
+                            <canvas id="planVsActualChart"></canvas>
+                        </div>
+
+                        <div class="chart-box">
+                            <div class="chart-title">Size Wise Yield %</div>
+                            <canvas id="yieldChart"></canvas>
+                        </div>
+
+                        <div class="chart-box">
+                            <div class="chart-title">Size Wise RRR %</div>
+                            <canvas id="rrrChart"></canvas>
+                        </div>
+
+                        <div class="chart-box">
+                            <div class="chart-title">Size Wise Productivity (T / Hr.)</div>
+                            <canvas id="productivityChart"></canvas>
+                        </div>
+
+                        <div class="chart-box">
+                            <div class="chart-title">Delay Minutes</div>
+                            <canvas id="delayMinutesChart"></canvas>
+                        </div>
+
+                    </div>
+
+                </td>
+            </tr>
+        </table>
+
+        <!-- ================= DOWNTIME AGENCY WISE ================= -->
+        <table style="margin-top:4px;">
+            <tr>
+                <td colspan="16" class="section-title">Down-Time Agency Wise</td>
+            </tr>
+
+            <tr>
+                <th>RM2</th>
+                <th>Total Time</th>
+                <th>Op</th>
+                <th>RS</th>
+                <th>MM</th>
+                <th>ELEC.</th>
+                <th>S/C</th>
+                <th>QC</th>
+                <th>Un Availability of Billet</th>
+                <th>Guide / Pass</th>
+                <th>Utilities</th>
+                <th>Others</th>
+                <th>Planned Delay</th>
+                <th>Available Time</th>
+                <th>Total Delay</th>
+                <th>Mill Run Time</th>
+            </tr>
+
+            <tr class="center">
+                <td>ACTUAL</td>
+                <td>1440</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>120</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>1200</td>
+                <td>240</td>
+                <td>120</td>
+                <td>120</td>
+            </tr>
+
+            <tr class="center">
+                <td>Permissible</td>
+                <td></td>
+                <td>12</td>
+                <td>4.8</td>
+                <td>9.36</td>
+                <td>9.36</td>
+                <td>0</td>
+                <td>50.0%</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td></td>
+                <td></td>
+                <td>15%</td>
+                <td>85%</td>
+            </tr>
+
+            <tr class="center">
+                <td>Actual Delay %</td>
+                <td></td>
+                <td>0%</td>
+                <td>0%</td>
+                <td>0%</td>
+                <td>0%</td>
+                <td>0%</td>
+                <td>50.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+
+        <!-- ================= DOWNTIME CHARTS ================= -->
+        <table style="margin-top:4px;">
+            <tr>
+                <td style="width:50%; border:none; vertical-align:top;">
                     <div class="chart-box">
-                        <div class="chart-title center" style="font-size:24px; font-weight:bold">Cumulative Plan vs Actual (MTD)</div>
-                        <div style="display:flex; justify-content:center; align-items:center;">
-                            <canvas id="cumulativeChart" width="250" height="250"></canvas>
-                        </div>
+                        <div class="chart-title">Down Time Distribution Agency Wise</div>
+                        <canvas id="downtimePieChart"></canvas>
                     </div>
-
                 </td>
 
-                <!-- RIGHT COLUMN -->
-                <td style="padding-left:5px;">
-                    <div class="chart-box"  style="width:90%; margin:0 auto;">
-                        <div class="chart-title center" style="font-size:24px; font-weight:bold">Monthly Tonnage</div>
-                        <canvas id="monthlyTonnage" height="70"></canvas>
+                <td style="width:50%; border:none; vertical-align:top;">
+                    <div class="chart-box">
+                        <div class="chart-title">Delay Budget vs Actual</div>
+                        <canvas id="delayBudgetChart"></canvas>
                     </div>
                 </td>
             </tr>
         </table>
-        <!-- ================= CHARTS LAYOUT ================= -->
-        <table style="margin-top:8px;">
+
+        <!-- ================= DOWNTIME DESCRIPTION ================= -->
+        <table style="margin-top:4px;">
             <tr>
-                <td>
-                    <!-- YTD SIZE MIX -->
-                    <div class="chart-box" style="width:90%; margin:0 auto;">
-                        <div class="chart-title center" style="font-size:24px; font-weight:bold;">
-                            Year-To-Date Size Mix (Tonnage)
-                        </div>
-                        <canvas id="ytdSizeMix" height="50"></canvas>
-                    </div>
-                </td>
+                <td colspan="11" class="section-title red">Down Time Description</td>
             </tr>
+
+            <tr>
+                <th>Sr.No.</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Total Delay</th>
+                <th>Cobble</th>
+                <th>Hot Out</th>
+                <th>Agency Code</th>
+                <th>Equipment</th>
+                <th>Delay Description</th>
+                <th>Reasons of Delay</th>
+                <th>Action Taken</th>
+            </tr>
+
+            <tr>
+                <td class="center">1</td>
+                <td>7:05</td>
+                <td>7:40</td>
+                <td class="center">35</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">Q</td>
+                <td>Tensile</td>
+                <td>Verification of mechanical properties.</td>
+                <td>Size change</td>
+                <td></td>
+            </tr>
+
+            <tr>
+                <td class="center">2</td>
+                <td>10:50</td>
+                <td>11:25</td>
+                <td class="center">35</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">Q</td>
+                <td></td>
+                <td>REG#18 change.</td>
+                <td>Chips accumulation in finishing block guides.</td>
+                <td>Chips removed from stand#17 delivery and stand#20 and stand#9 guides</td>
+            </tr>
+
+            <tr>
+                <td class="center">3</td>
+                <td>11:10</td>
+                <td>12:00</td>
+                <td class="center">50</td>
+                <td class="center">0</td>
+                <td class="center">0</td>
+                <td class="center">Q</td>
+                <td></td>
+                <td>Cumulative delay due to manual discharging (short billets)</td>
+                <td></td>
+                <td></td>
+            </tr>
+
+            @for (int i = 4; i <= 20; i++)
+            {
+                <tr style="height:28px;">
+                    <td class="center">@i</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            }
         </table>
+
     </div>
 
-    <!-- ================= JS CHARTS ================= -->
+    <!-- ================= CHART SCRIPTS ================= -->
     <script>
-        /* ================= YTD SIZE MIX ================= */
-        new Chart(document.getElementById('ytdSizeMix'), {
-            type: 'bar',
-            data: {
-                labels: ['10mm', '12mm', '14mm', '16mm', '18mm', '20mm', '25mm', '32mm'],
-                datasets: [{
-                    data: [18000, 76000, 92000, 112000, 9000, 68000, 70000, 80000],
-                    backgroundColor: 'darkgray',
-                    barThickness: 70,        // fixed bar width (px)
-                    maxBarThickness: 75,     // safety limit
-                }]
-            },
-            options: {
+        Chart.defaults.font.family = "Calibri, Arial, sans-serif";
+        Chart.defaults.color = "#000";
+
+        function commonOptions(yTitle, showLegend) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
                     tooltip: { enabled: false },
-
-                    datalabels: {
-                        formatter: (v, ctx) => {
-                            return ctx.chart.data.labels[ctx.dataIndex] + '\n' + v.toLocaleString();
-                        },
-
-                        color: '#fff',
-                        backgroundColor: '#333',
-                        borderRadius: 4,
-                        padding: 6,
-
-                        font: {
-                            size: 9,
-                            weight: 'bold'
-                        },
-
-                        anchor: 'end',
-                        align: 'top',
-                        offset: -15,
-                        clamp: true
-                    }
+                    legend: { display: showLegend }
                 },
                 scales: {
-                    x: {
-                        display: false,
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            display: false    // 👈 SIDE NUMBERS HIDE
-                        },
-                    },
                     y: {
-                        display: false,
                         beginAtZero: true,
-                        grid: {
-                            display: false
+                        title: {
+                            display: false,
+                            text: yTitle
                         },
                         ticks: {
-                            display: false    // 👈 SIDE NUMBERS HIDE
-                        },
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-
-        /* ================= CUMULATIVE ================= */
-        new Chart(document.getElementById('cumulativeChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Cumulative Plan', 'Actual Month-To-Date'],
-                datasets: [{
-                    data: [46980, 44778],
-                    backgroundColor: ['#c00000', 'darkgray'],
-                    borderColor: '#fff',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: false,           // 👈 auto stretch band
-                maintainAspectRatio: false,  // 👈 size fix allow
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        align: 'center',
-                        labels: {
-                            font: { size: 10 },
-                            boxWidth: 12
+                            font: { size: 9 }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: { size: 8 },
+                            maxRotation: 70,
+                            minRotation: 45
                         }
                     }
                 }
-            }
-        });
+            };
+        }
 
-
-        /* ================= MONTHLY TONNAGE ================= */
-        const lineOnTopPlugin = {
-            id: 'lineOnTop',
-            afterDatasetsDraw(chart, args, pluginOptions) {
-                const lineDatasetIndex = pluginOptions.lineIndex ?? 1; // 👈 line dataset index
-                const meta = chart.getDatasetMeta(lineDatasetIndex);
-                if (meta && meta.controller) {
-                    meta.controller.draw(); // 👈 redraw line on top
-                }
-            }
-        };
-
-        new Chart(document.getElementById('monthlyTonnage'), {
+        new Chart(document.getElementById("sizePlanActualChart"), {
+            type: "bar",
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                labels: ["D10", "D14", "WR11"],
                 datasets: [
                     {
-                        type: 'bar',
-                        label: 'Actual',
-                        data: [52000, 46000, 53000, 50000, 49000, 54000, 47000, 52000, 28000, 48000, 47000, 50000],
-                        backgroundColor: 'darkgray',
-                        order: 1
+                        label: "Plan",
+                        data: [1850, 3764, 170],
+                        backgroundColor: "#b30000"
                     },
                     {
-                        type: 'line',
-                        label: 'Plan',
-                        data: [50000, 47000, 51000, 49000, 50500, 48000, 50000, 26000, 48000, 47000, 49000, 49500],
-                        borderColor: '#c00000',
-                        backgroundColor: '#c00000',
-                        borderWidth: 2,
-                        fill: false,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#a5173e',
-                        tension: 0.3,
-                        order: 999
-                    },
+                        label: "Actual",
+                        data: [1860, 3764, 177.7],
+                        backgroundColor: "#666666"
+                    }
                 ]
             },
+            options: commonOptions("MT", true)
+        });
+
+        new Chart(document.getElementById("planVsActualChart"), {
+            type: "bar",
+            data: {
+                labels: ["Plan", "Actual", "Difference"],
+                datasets: [{
+                    label: "MT",
+                    data: [5784, 5802, 18],
+                    backgroundColor: ["#666666", "#b30000", "#999999"]
+                }]
+            },
+            options: commonOptions("MT", false)
+        });
+
+        new Chart(document.getElementById("yieldChart"), {
+            type: "bar",
+            data: {
+                labels: ["D10", "D14", "WR11"],
+                datasets: [{
+                    label: "Yield %",
+                    data: [100.5, 102.2, 98.3],
+                    backgroundColor: "#b30000"
+                }]
+            },
+            options: commonOptions("%", false)
+        });
+
+        new Chart(document.getElementById("rrrChart"), {
+            type: "bar",
+            data: {
+                labels: ["D10", "D14", "WR11"],
+                datasets: [{
+                    label: "RRR %",
+                    data: [58.7, 84.7, 50.0],
+                    backgroundColor: "#b30000"
+                }]
+            },
+            options: commonOptions("%", false)
+        });
+
+        new Chart(document.getElementById("productivityChart"), {
+            type: "bar",
+            data: {
+                labels: ["D10", "D14", "WR11"],
+                datasets: [{
+                    label: "Productivity",
+                    data: [75.1, 91.1, 88.8],
+                    backgroundColor: "#b30000"
+                }]
+            },
+            options: commonOptions("T/hr", false)
+        });
+
+        new Chart(document.getElementById("delayMinutesChart"), {
+            type: "bar",
+            data: {
+                labels: ["Op", "RS", "MM", "ELEC.", "QC"],
+                datasets: [{
+                    label: "Delay Minutes",
+                    data: [0, 0, 0, 0, 120],
+                    backgroundColor: "#b30000"
+                }]
+            },
+            options: commonOptions("Minutes", false)
+        });
+
+        new Chart(document.getElementById("downtimePieChart"), {
+            type: "pie",
+            data: {
+                labels: ["QC", "Available / Other"],
+                datasets: [{
+                    data: [120, 1320],
+                    backgroundColor: ["#4472c4", "#d9d9d9"]
+                }]
+            },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
+                    tooltip: { enabled: false },
                     legend: {
-                        position: 'top',   // top / bottom / left / right
-                        align: 'end',
+                        display: true,
+                        position: "bottom",
                         labels: {
-                            font: {
-                                size: 10       // 👈 legend text small
-                            },
-                            boxWidth: 12,      // 👈 color box width
-                            boxHeight: 10,     // 👈 color box height
-                            padding: 8         // 👈 space between legend items
-                        }
-                    },
-                    tooltip: { enabled: false }, // 👈 hover bilkul band
-
-                    datalabels: {
-                        formatter: (v) => v.toLocaleString(),
-
-                        font: {
-                            size: 9,
-                            weight: 'bold'
-                        },
-
-                        color: (ctx) =>
-                            ctx.dataset.type === 'line' ? '#c00000' : '#000',
-
-                        // =========================
-                        // POSITIONING
-                        // =========================
-                        anchor: (ctx) =>
-                            ctx.dataset.type === 'line' ? 'end' : 'center',
-
-                        align: (ctx) =>
-                            ctx.dataset.type === 'line' ? 'top' : 'end',
-
-                        // 👇 Negative offset = bar ke andar
-                        offset: (ctx) =>
-                            ctx.dataset.type === 'line' ? 10 : 40,
-
-                        clamp: true,
-                        clip: false
-                    },
-
-                    lineOnTop: { lineIndex: 1 } // 👈 line dataset index
-                },
-                scales: {
-                    x: {
-                        display: false,
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        display: false,
-                        beginAtZero: true,
-                        ticks: {
-                            display: false    // 👈 SIDE NUMBERS HIDE
-                        },
-                        grid: {
-                            display: false,
-                            drawTicks: false
+                            font: { size: 9 }
                         }
                     }
                 }
+            }
+        });
+
+        new Chart(document.getElementById("delayBudgetChart"), {
+            type: "bar",
+            data: {
+                labels: ["Op", "RS", "MM", "ELEC.", "QC"],
+                datasets: [
+                    {
+                        label: "Permissible %",
+                        data: [5, 2, 3.9, 3.9, 0.1],
+                        backgroundColor: "#b30000"
+                    },
+                    {
+                        label: "Actual Delay %",
+                        data: [0, 0, 0, 0, 50],
+                        backgroundColor: "#666666"
+                    }
+                ]
             },
-            plugins: [ChartDataLabels, lineOnTopPlugin]
+            options: commonOptions("%", true)
         });
     </script>
+
 </body>
 </html>

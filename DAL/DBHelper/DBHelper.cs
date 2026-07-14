@@ -11,7 +11,7 @@ namespace WebAPICode.Helpers
 {
     public class DBHelper
     {
-        //private static readonly string connectionString = "data source=10.1.14.66;initial catalog=Production_Solb;persist security info=True;user id=Postgres;password=Solb@2030;";
+        //private static readonly string connectionString = "data source=sql8002.site4now.net;initial catalog=db_ac68e9_productionportal;persist security info=True;user id=db_ac68e9_productionportal_admin;password=P@solb2192929;";
         private static readonly string connectionString = "data source=10.1.10.115\\PROD01;initial catalog=Production_Solb;persist security info=True;user id=WebReportViewer;password=WebReportViewer;";
 
         public DataTable GetTableFromSP(string sp, Dictionary<string, object> parametersCollection)
@@ -454,5 +454,63 @@ namespace WebAPICode.Helpers
             }
         }
 
+        private string GetString(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName))
+                return "";
+
+            if (row[columnName] == DBNull.Value || row[columnName] == null)
+                return "";
+
+            return Convert.ToString(row[columnName]);
+        }
+
+        private int GetInt(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName))
+                return 0;
+
+            if (row[columnName] == DBNull.Value || row[columnName] == null)
+                return 0;
+
+            int result;
+            return int.TryParse(row[columnName].ToString(), out result) ? result : 0;
+        }
+
+        private int? GetNullableInt(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName))
+                return null;
+
+            if (row[columnName] == DBNull.Value || row[columnName] == null)
+                return null;
+
+            int result;
+            return int.TryParse(row[columnName].ToString(), out result) ? result : (int?)null;
+        }
+
+        private decimal? GetNullableDecimal(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName))
+                return null;
+
+            if (row[columnName] == DBNull.Value || row[columnName] == null)
+                return null;
+
+            decimal result;
+            return decimal.TryParse(row[columnName].ToString(), out result) ? result : (decimal?)null;
+        }
+
+        private DateTime? GetDate(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName))
+                return null;
+
+            if (row[columnName] == DBNull.Value || row[columnName] == null)
+                return null;
+
+            DateTime result;
+            return DateTime.TryParse(row[columnName].ToString(), out result) ? result : (DateTime?)null;
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace ProductionPortal_Solb.Controllers
 {
     public class HomeController : BaseController
     {
-        [Authorize(Roles = "Administrator, Rolling Mill User, User, QC User")]
+        [Authorize(Roles = "Administrator, Rolling Mill User, User, QC User, Sher, Supply Chain")]
 
         [Route("dashboard")]
         //public ActionResult Index()

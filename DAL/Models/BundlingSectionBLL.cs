@@ -12,7 +12,9 @@ namespace DAL.Models
 
         public DateTime? Date { get; set; }
 
-        public string Shift { get; set; }    
+        public string Shift { get; set; }   
+        
+        public string Plant { get; set; }    
 
         public string HeatNo { get; set; }
 
@@ -59,6 +61,10 @@ namespace DAL.Models
         public DateTime? CreatedDate { get; set; }
 
         public string CreatedBy { get; set; }
+
+        public DateTime? UpdatedDate { get; set; }
+
+        public string UpdatedBy { get; set; }
 
     }
 }

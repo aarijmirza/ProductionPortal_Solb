@@ -1,0 +1,107 @@
+﻿@model DAL.Models.SupplyChainStockVM
+@using System.Globalization
+
+@{
+    ViewBag.Title = "Supply Chain Stock List";
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+}
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Supply Chain Stock List</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Supply Chain</a></li>
+                    <li class="breadcrumb-item active">Stock List</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" action="@Url.Action("List", "Stock")" class="form-inline">
+
+                <div class="form-group mr-3">
+                    <label class="mr-2">From</label>
+                    <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate" />
+                </div>
+
+                <div class="form-group mr-3">
+                    <label class="mr-2">To</label>
+                    <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate" />
+                </div>
+
+                <button type="submit" class="btn btn-primary mr-2">Filter</button>
+                <a href="@Url.Action("List", "SupplyChainStock")" class="btn btn-secondary mr-2">Clear</a>
+                <a href="@Url.Action("stockadd", "Stock")" class="btn btn-success">Add New</a>
+
+            </form>
+        </div>
+    </div>
+
+    <div class="card m-b-30">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Saved Stock Reports</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Sr.</th>
+                            <th>Report Date</th>
+                            <th>Created By</th>
+                            <th>Created Date</th>
+                            <th style="width:160px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.HeaderList != null && Model.HeaderList.Any())
+                        {
+                            int sr = 1;
+
+                            foreach (var item in Model.HeaderList)
+                            {
+                                <tr>
+                                    <td>@sr</td>
+                                    <td>@(item.ReportDate.HasValue ? item.ReportDate.Value.ToString("dd-MMM-yyyy", gregorian) : "-")</td>
+                                    <td>@item.CreatedBy</td>
+                                    <td>@(item.CreatedDate.HasValue ? item.CreatedDate.Value.ToString("dd-MMM-yyyy hh:mm tt", gregorian) : "-")</td>
+                                    <td>
+                                        <a href="@Url.Action("Details", "SupplyChainStock", new { id = item.ID })"
+                                           class="btn btn-sm btn-info">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+
+                                sr++;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    No record found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
