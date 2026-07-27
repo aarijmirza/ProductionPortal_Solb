@@ -1,0 +1,599 @@
+﻿@model List<DAL.Models.CCMDailyProductionReportBLL>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "CCM Daily Production Reports";
+}
+
+<style>
+    :root {
+        --ccm-maroon: #98153a;
+        --ccm-maroon-dark: #72102c;
+        --ccm-maroon-soft: #faedf1;
+        --ccm-bg: #f3f5f7;
+        --ccm-border: #dfe3e8;
+        --ccm-text: #202936;
+        --ccm-muted: #6b7280;
+        --ccm-white: #ffffff;
+    }
+
+    body {
+        background: var(--ccm-bg);
+    }
+
+    .ccm-list-container {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .ccm-page-header {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 22px 25px;
+        margin-bottom: 18px;
+        border-radius: 16px;
+        color: #fff;
+        background: linear-gradient( 135deg, var(--ccm-maroon-dark), var(--ccm-maroon) );
+        box-shadow: 0 10px 25px rgba(114, 16, 44, .18);
+    }
+
+        .ccm-page-header::after {
+            content: "";
+            position: absolute;
+            top: -110px;
+            right: -75px;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .06);
+        }
+
+        .ccm-page-header h3 {
+            margin: 0;
+            color: #fff;
+            font-size: 21px;
+            font-weight: 800;
+        }
+
+        .ccm-page-header p {
+            margin: 5px 0 0;
+            color: rgba(255, 255, 255, .90);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .ccm-page-header .btn {
+            position: relative;
+            z-index: 2;
+        }
+
+    .ccm-card {
+        overflow: hidden;
+        border: 1px solid var(--ccm-border);
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, .06);
+    }
+
+    .filter-section {
+        padding: 17px;
+        border-bottom: 1px solid var(--ccm-border);
+        background: #fafbfc;
+    }
+
+        .filter-section label {
+            margin-bottom: 6px;
+            color: #4b5563;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+    .form-control {
+        height: 40px;
+        border: 1px solid #cfd5dc;
+        border-radius: 8px;
+        box-shadow: none;
+        font-size: 13px;
+    }
+
+        .form-control:focus {
+            border-color: var(--ccm-maroon);
+            box-shadow: 0 0 0 3px rgba(152, 21, 58, .10);
+        }
+
+    .btn-ccm {
+        border-color: var(--ccm-maroon);
+        border-radius: 8px;
+        background: var(--ccm-maroon);
+        color: #fff;
+        font-weight: 700;
+    }
+
+        .btn-ccm:hover,
+        .btn-ccm:focus {
+            border-color: var(--ccm-maroon-dark);
+            background: var(--ccm-maroon-dark);
+            color: #fff;
+        }
+
+    .ccm-table {
+        min-width: 1150px;
+        margin: 0;
+    }
+
+        .ccm-table thead th {
+            padding: 11px 8px;
+            border-color: rgba(255, 255, 255, .14);
+            background: var(--ccm-maroon-dark);
+            color: #fff;
+            font-size: 10.5px;
+            font-weight: 800;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .ccm-table tbody td {
+            padding: 10px 8px;
+            border-color: #e5e7eb;
+            color: var(--ccm-text);
+            font-size: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .ccm-table tbody tr:nth-child(even) {
+            background: #fbfbfc;
+        }
+
+        .ccm-table tbody tr:hover {
+            background: #fff7fa;
+        }
+
+    .report-number {
+        color: var(--ccm-maroon-dark);
+        font-weight: 800;
+    }
+
+    .shift-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        background: var(--ccm-maroon-soft);
+        color: var(--ccm-maroon-dark);
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .value-badge {
+        display: inline-block;
+        min-width: 55px;
+        padding: 5px 9px;
+        border-radius: 20px;
+        background: #eef1f4;
+        color: var(--ccm-text);
+        font-weight: 800;
+    }
+
+    .prime-badge {
+        background: #dff3e7;
+        color: #146c43;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+        .action-buttons .btn {
+            width: 34px;
+            height: 32px;
+            padding: 6px;
+            border-radius: 7px;
+        }
+
+    .empty-message {
+        padding: 45px 15px !important;
+        color: var(--ccm-muted) !important;
+        font-weight: 600;
+    }
+
+    @@media(max-width:767px) {
+        .ccm-page-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .filter-section .btn {
+            margin-top: 10px;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar">
+    <div class="row align-items-center">
+
+        <div class="col-md-8">
+            <h4 class="xp-page-title">
+                CCM Daily Production Reports
+            </h4>
+        </div>
+
+        @*<div class="col-md-4 text-right">
+            <a href="@Url.Action(
+                "Add",
+                "CCMProduction"
+            )"
+               class="btn btn-ccm">
+
+                <i class="fa fa-plus"></i>
+                Add New Report
+
+            </a>
+        </div>*@
+
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <div class="ccm-list-container">
+
+        <div class="ccm-page-header">
+
+            <div>
+                <h3>
+                    CCM Daily Production Reports
+                </h3>
+
+                <p>
+                    SOLB Steel Company ·
+                    Meltshop / CCM Section ·
+                    QMF-SM-969
+                </p>
+            </div>
+
+            <a href="@Url.Action(
+                "Add",
+                "CCMProduction"
+            )"
+               class="btn btn-light">
+
+                <i class="fa fa-plus"></i>
+                New Entry
+
+            </a>
+
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="ccm-card">
+
+            @using (
+                Html.BeginForm(
+                    "List",
+                    "CCMProduction",
+                    FormMethod.Get
+                )
+            )
+            {
+                <div class="filter-section">
+
+                    <div class="row align-items-end">
+
+                        <div class="col-lg-3 col-md-6">
+
+                            <div class="form-group mb-0">
+
+                                <label>
+                                    From Date
+                                </label>
+
+                                <input type="date"
+                                       name="fromDate"
+                                       value="@ViewBag.FromDate"
+                                       class="form-control" />
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-3 col-md-6">
+
+                            <div class="form-group mb-0">
+
+                                <label>
+                                    To Date
+                                </label>
+
+                                <input type="date"
+                                       name="toDate"
+                                       value="@ViewBag.ToDate"
+                                       class="form-control" />
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-3 col-md-6">
+
+                            <div class="form-group mb-0">
+
+                                <label>
+                                    Shift
+                                </label>
+
+                                <select name="shift"
+                                        class="form-control">
+
+                                    <option value="">
+                                        All Shifts
+                                    </option>
+
+                                    <option value="Morning"
+                                            @(Convert.ToString( ViewBag.Shift ) == "Morning" ? "selected" : "")>
+                                        Morning
+                                    </option>
+
+                                    <option value="Evening"
+                                            @(Convert.ToString( ViewBag.Shift ) == "Evening" ? "selected" : "")>
+                                        Evening
+                                    </option>
+
+                                    <option value="Night"
+                                            @(Convert.ToString( ViewBag.Shift ) == "Night" ? "selected" : "")>
+                                        Night
+                                    </option>
+
+                                    <option value="Long Morning"
+                                            @(Convert.ToString( ViewBag.Shift ) == "Long Morning" ? "selected" : "")>
+                                        Long Morning
+                                    </option>
+
+                                    <option value="Long Night"
+                                            @(Convert.ToString( ViewBag.Shift ) == "Long Night" ? "selected" : "")>
+                                        Long Night
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-3 col-md-6">
+
+                            <button type="submit"
+                                    class="btn btn-ccm btn-block">
+
+                                <i class="fa fa-search"></i>
+                                Search
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered ccm-table">
+
+                    <thead>
+                        <tr>
+                            <th>Report No.</th>
+                            <th>Date</th>
+                            <th>Shift</th>
+                            <th>Team</th>
+                            <th>CCM Foreman</th>
+                            <th>Billet Yard Operator</th>
+                            <th>Total Billets</th>
+                            <th>Prime Billets</th>
+                            <th>Created By</th>
+                            <th width="190">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @if (
+                            Model != null &&
+                            Model.Count > 0
+                        )
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+
+                                    <td class="report-number">
+                                        @item.ReportNo
+                                    </td>
+
+                                    <td>
+                                        @item.ReportDate.ToString(
+                                            "dd-MMM-yyyy"
+                                        )
+                                    </td>
+
+                                    <td>
+                                        <span class="shift-badge">
+                                            @item.Shift
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @item.Team
+                                    </td>
+
+                                    <td>
+                                        @item.CCMForeman
+                                    </td>
+
+                                    <td>
+                                        @item.BilletYardOperator
+                                    </td>
+
+                                    <td>
+                                        <span class="value-badge">
+                                            @item.TotalBillets
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="value-badge prime-badge">
+                                            @item.PrimeBillets
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @item.CreatedBy
+                                    </td>
+
+                                    <td>
+
+                                        <div class="action-buttons">
+
+                                            @*<a href="@Url.Action(
+                                                "Details",
+                                                "CCMProduction",
+                                                new
+                                                {
+                                                    id = item.ID
+                                                }
+                                            )"
+                                               class="btn btn-info btn-sm"
+                                               title="View">
+
+                                                <i class="fa fa-eye"></i>
+
+                                            </a>
+
+                                            <a href="@Url.Action(
+                                                "Add",
+                                                "CCMProduction",
+                                                new
+                                                {
+                                                    id = item.ID
+                                                }
+                                            )"
+                                               class="btn btn-warning btn-sm"
+                                               title="Edit">
+
+                                                <i class="fa fa-edit"></i>
+
+                                            </a>
+
+                                            <a href="@Url.Action(
+                                                "PdfView",
+                                                "CCMProduction",
+                                                new
+                                                {
+                                                    id = item.ID
+                                                }
+                                            )"
+                                               target="_blank"
+                                               class="btn btn-secondary btn-sm"
+                                               title="Preview PDF">
+
+                                                <i class="fa fa-print"></i>
+
+                                            </a>*@
+
+                                            <a href="@Url.Action(
+                                                "DownloadPdf",
+                                                "CCMProduction",
+                                                new
+                                                {
+                                                    id = item.ID
+                                                }
+                                            )"
+                                               class="btn btn-danger btn-sm"
+                                               title="Download PDF">
+
+                                                <i class="fa fa-file-pdf-o"></i>
+
+                                            </a>
+
+                                            @using (
+                                                Html.BeginForm(
+                                                    "Delete",
+                                                    "CCMProduction",
+                                                    new
+                                                    {
+                                                        id = item.ID
+                                                    },
+                                                    FormMethod.Post,
+                                                    new
+                                                    {
+                                                        style =
+                                                            "display:inline;"
+                                                    }
+                                                )
+                                            )
+                                            {
+                                                @Html.AntiForgeryToken()
+
+                                                <button type="submit"
+                                                        class="btn btn-outline-danger btn-sm"
+                                                        title="Delete"
+                                                        onclick="return confirm('Are you sure you want to delete this report?');">
+
+                                                    <i class="fa fa-trash"></i>
+
+                                                </button>
+                                            }
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="10"
+                                    class="text-center empty-message">
+
+                                    No CCM production reports found.
+
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

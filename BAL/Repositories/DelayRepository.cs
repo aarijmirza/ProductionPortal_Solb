@@ -51,47 +51,285 @@ namespace BAL.Repositories
             }
         }
 
-        public List<PlantDelayBLL> GetMaintenanceRecords(DateTime fromDate, DateTime toDate, string plant)
+        public List<PlantDelayBLL> GetMaintenanceRecords(
+            DateTime fromDate,
+            DateTime toDate,
+            string plant,
+            string delayType,
+            string agency,
+            bool failureAnalysisOnly)
         {
             try
             {
-                SqlParameter[] p = new SqlParameter[3];
+                var parameters =
+                    new SqlParameter[]
+                    {
+                new SqlParameter(
+                    "@FromDate",
+                    SqlDbType.Date
+                )
+                {
+                    Value = fromDate.Date
+                },
 
-                p[0] = new SqlParameter("@FromDate", fromDate.Date);
-                p[1] = new SqlParameter("@ToDate", toDate.Date);
-                p[2] = new SqlParameter("@Plant", plant);
+                new SqlParameter(
+                    "@ToDate",
+                    SqlDbType.Date
+                )
+                {
+                    Value = toDate.Date
+                },
 
-                DataTable dt = new DBHelper().GetTableFromSP("sp_GetMaintenanceRecords", p);
+                new SqlParameter(
+                    "@Plant",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(plant)
+                            ? (object)DBNull.Value
+                            : plant.Trim()
+                },
 
-                List<PlantDelayBLL> list = new List<PlantDelayBLL>();
+                new SqlParameter(
+                    "@DelayType",
+                    SqlDbType.NVarChar,
+                    50
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(delayType)
+                            ? "Unscheduled"
+                            : delayType.Trim()
+                },
+
+                new SqlParameter(
+                    "@Agency",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(agency)
+                            ? (object)DBNull.Value
+                            : agency.Trim()
+                },
+
+                new SqlParameter(
+                    "@FailureAnalysisOnly",
+                    SqlDbType.Bit
+                )
+                {
+                    Value = failureAnalysisOnly
+                }
+                    };
+
+                DataTable dt =
+                    new DBHelper().GetTableFromSP(
+                        "sp_GetMaintenanceRecords",
+                        parameters
+                    );
+
+                var list =
+                    new List<PlantDelayBLL>();
+
+                if (dt == null)
+                {
+                    throw new Exception(
+                        "Stored procedure returned null DataTable."
+                    );
+                }
 
                 foreach (DataRow row in dt.Rows)
                 {
-                    list.Add(new PlantDelayBLL
-                    {
-                        ID = row["ID"] == DBNull.Value ? 0 : Convert.ToInt32(row["ID"]),
-                        Date = row["Date"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(row["Date"]),
-                        Area = row["Area"] == DBNull.Value ? "" : Convert.ToString(row["Area"]),
-                        Plant = row["Plant"] == DBNull.Value ? "" : Convert.ToString(row["Plant"]),
-                        DelayType = row["DelayType"] == DBNull.Value ? "" : Convert.ToString(row["DelayType"]),
-                        Shift = row["Shift"] == DBNull.Value ? "" : Convert.ToString(row["Shift"]),
-                        StartTime = row["StartTime"] == DBNull.Value ? (TimeSpan?)null : (TimeSpan)row["StartTime"],
-                        EndTime = row["EndTime"] == DBNull.Value ? (TimeSpan?)null : (TimeSpan)row["EndTime"],
-                        TotalDuration = row["TotalDuration"] == DBNull.Value ? 0 : Convert.ToInt32(row["TotalDuration"]),
-                        AgencyName = row["AgencyName"] == DBNull.Value ? "" : Convert.ToString(row["AgencyName"]),
-                        Equipments = row["Equipments"] == DBNull.Value ? "" : Convert.ToString(row["Equipments"]),
-                        Reason = row["Reason"] == DBNull.Value ? "" : Convert.ToString(row["Reason"])
-                    });
+                    list.Add(
+                        new PlantDelayBLL
+                        {
+                            ID = GetInt(row, "ID"),
+
+                            AnalysisCode =
+                                GetString(
+                                    row,
+                                    "FailureAnalysisID"
+                                ),
+
+                            Delaycode =
+                                GetString(
+                                    row,
+                                    "Delaycode"
+                                ),
+
+                            Date =
+                                GetNullableDateTime(
+                                    row,
+                                    "Date"
+                                ),
+
+                            Plant =
+                                GetString(
+                                    row,
+                                    "Plant"
+                                ),
+
+                            ProductSize =
+                                GetString(
+                                    row,
+                                    "ProductSize"
+                                ),
+
+                            Area =
+                                GetString(
+                                    row,
+                                    "Area"
+                                ),
+
+                            Shift =
+                                GetString(
+                                    row,
+                                    "Shift"
+                                ),
+
+                            Team =
+                                GetString(
+                                    row,
+                                    "Team"
+                                ),
+
+                            ShiftIncharge =
+                                GetString(
+                                    row,
+                                    "ShiftIncharge"
+                                ),
+
+                            DelayType =
+                                GetString(
+                                    row,
+                                    "DelayType"
+                                ),
+
+                            StartTime =
+                                GetNullableTimeSpan(
+                                    row,
+                                    "StartTime"
+                                ),
+
+                            EndTime =
+                                GetNullableTimeSpan(
+                                    row,
+                                    "EndTime"
+                                ),
+
+                            TotalDuration =
+                                GetInt(
+                                    row,
+                                    "TotalDuration"
+                                ),
+
+                            AgencyName =
+                                GetString(
+                                    row,
+                                    "AgencyName"
+                                ),
+
+                            AgencyCode =
+                                GetString(
+                                    row,
+                                    "AgencyCode"
+                                ),
+
+                            Equipments =
+                                GetString(
+                                    row,
+                                    "Equipments"
+                                ),
+
+                            Component =
+                                GetString(
+                                    row,
+                                    "Component"
+                                ),
+
+                            Reason =
+                                GetString(
+                                    row,
+                                    "Reason"
+                                ),
+
+                            DelayDescription =
+                                GetString(
+                                    row,
+                                    "DelayDescription"
+                                ),
+
+                            ReasonForOccurence =
+                                GetString(
+                                    row,
+                                    "ReasonForOccurence"
+                                ),
+
+                            ActionTaken =
+                                GetString(
+                                    row,
+                                    "ActionTaken"
+                                ),
+
+                            LastPMDate =
+                                GetNullableDateTime(
+                                    row,
+                                    "LastPMDate"
+                                ),
+
+                            FailureReportStatus =
+                                GetString(
+                                    row,
+                                    "FailureReportStatus"
+                                ),
+
+                            IncreaseMTBF =
+                                GetString(
+                                    row,
+                                    "IncreaseMTBF"
+                                ),
+
+                            DecreaseMTTR =
+                                GetString(
+                                    row,
+                                    "DecreaseMTTR"
+                                ),
+
+                            SAPBreakdownOrder =
+                                GetString(
+                                    row,
+                                    "SAPBreakdownOrder"
+                                ),
+
+                            FailureCategory1Component =
+                                GetString(
+                                    row,
+                                    "FailureCategory1Component"
+                                ),
+
+                            FailureCategory2RootCause =
+                                GetString(
+                                    row,
+                                    "FailureCategory2RootCause"
+                                )
+                        }
+                    );
                 }
 
                 return list;
             }
-            catch
+            catch (Exception ex)
             {
-                return new List<PlantDelayBLL>();
+                throw new Exception(
+                    "GetMaintenanceRecords Error: " +
+                    ex.Message,
+                    ex
+                );
             }
         }
-
 
         public List<PlantDelayBLL> GetAllDelay()
         {
@@ -477,6 +715,8 @@ namespace BAL.Repositories
         {
             try
             {
+                model.AnalysisCode = GenerateAnalysisCode();
+
                 SqlParameter[] p = new SqlParameter[14];
 
                 p[0] = new SqlParameter("@DelayID", model.DelayID);
@@ -890,6 +1130,94 @@ namespace BAL.Repositories
                     ex
                 );
             }
+        }
+        private string GetString(
+    DataRow row,
+    string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName))
+            {
+                return string.Empty;
+            }
+
+            if (row[columnName] == DBNull.Value)
+            {
+                return string.Empty;
+            }
+
+            return Convert.ToString(
+                row[columnName]
+            ).Trim();
+        }
+
+        private int GetInt(
+            DataRow row,
+            string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) ||
+                row[columnName] == DBNull.Value)
+            {
+                return 0;
+            }
+
+            return Convert.ToInt32(
+                row[columnName]
+            );
+        }
+
+        private int? GetNullableInt(
+            DataRow row,
+            string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) ||
+                row[columnName] == DBNull.Value)
+            {
+                return null;
+            }
+
+            return Convert.ToInt32(
+                row[columnName]
+            );
+        }
+
+        private DateTime? GetNullableDateTime(
+            DataRow row,
+            string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) ||
+                row[columnName] == DBNull.Value)
+            {
+                return null;
+            }
+
+            return Convert.ToDateTime(
+                row[columnName]
+            );
+        }
+
+        private TimeSpan? GetNullableTimeSpan(
+            DataRow row,
+            string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) ||
+                row[columnName] == DBNull.Value)
+            {
+                return null;
+            }
+
+            if (row[columnName] is TimeSpan time)
+            {
+                return time;
+            }
+
+            TimeSpan parsedTime;
+
+            return TimeSpan.TryParse(
+                Convert.ToString(row[columnName]),
+                out parsedTime
+            )
+                ? parsedTime
+                : (TimeSpan?)null;
         }
     }
 }

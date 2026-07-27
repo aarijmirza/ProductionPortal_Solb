@@ -14,6 +14,7 @@ namespace DAL.Models
         public string Delaycode { get; set; }
         public string Area { get; set; }
         public string Plant { get; set; }
+        public string ProductSize { get; set; }
         public string Shift { get; set; }
         public string Team { get; set; }
         public string ShiftIncharge { get; set; }
@@ -35,6 +36,31 @@ namespace DAL.Models
         public string ReasonForOccurence1 { get; set; }
         public string ActionTaken { get; set; }
         public string ActionTaken1 { get; set; }
+
+        public DateTime? LastPMDate { get; set; }
+
+        public string AnalysisCode { get; set; }
+
+        public string FailureReportStatus { get; set; }
+
+        public string IncreaseMTBF { get; set; }
+
+        public string IncreaseMTBF1 { get; set; }
+
+        public string DecreaseMTTR { get; set; }
+
+        public string DecreaseMTTR1 { get; set; }
+
+        public string ActionType { get; set; }
+
+        public string ActionRemarks { get; set; }
+
+        public string SAPBreakdownOrder { get; set; }
+
+        public string FailureCategory1Component { get; set; }
+
+        public string FailureCategory2RootCause { get; set; }
+
         public int StatusID { get; set; }
         public DateTime? CreatedDate { get; set; }
         public string CreatedBy { get; set; }

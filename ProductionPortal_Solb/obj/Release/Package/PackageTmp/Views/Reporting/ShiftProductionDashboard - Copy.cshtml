@@ -1,0 +1,1266 @@
+﻿@model DAL.Models.ViewModel.ShiftProductionReportVM
+@using System.Globalization
+@using Newtonsoft.Json
+@using System.Linq
+@using System.Collections.Generic
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var monthlyData =
+    Model != null && Model.MonthlyProductionData != null
+        ? Model.MonthlyProductionData
+        : new List<DAL.Models.BilletDischargingBLL>();
+
+    var data = Model != null && Model.DischargedHeats != null
+? Model.DischargedHeats
+: new List<DAL.Models.BilletDischargingBLL>();
+
+    var delays = Model != null && Model.Delays != null
+        ? Model.Delays
+        : new List<DAL.Models.PlantDelayBLL>();
+
+    decimal totalDischarge = data.Sum(x => x.TotalBillet ?? 0);
+    decimal totalRolled = data.Sum(x => x.TotalBillet ?? 0);
+
+    decimal totalCobble = data.Sum(x => Convert.ToDecimal(x.Cobble));
+    decimal totalHotOut = data.Sum(x => Convert.ToDecimal(x.HotOut));
+
+    decimal totalWeight = data.Sum(x => x.TotalWeight ?? 0);
+    decimal totalBundles = data.Sum(x => x.TotalBundleProduced ?? 0);
+    decimal theoriticalWeight = data.Sum(x => x.TheoriticalWeight ?? 0);
+
+    decimal totalOnHold = data.Sum(x => x.TotalBundleOnHold ?? 0);
+    decimal totalRejected = data.Sum(x => x.TotalRejectedBundle ?? 0);
+    decimal totalShortWeight = data.Sum(x => x.ShortBundleActualWeight ?? 0);
+
+    int totalDelayDuration = delays.Sum(x => x.TotalDuration ?? 0);
+    int totalDelayCobble = delays.Sum(x => x.Cobble ?? 0);
+    int totalDelayHotOut = delays.Sum(x => x.HotOut ?? 0);
+
+    decimal yieldValue = totalWeight > 0
+        ? (theoriticalWeight / totalWeight) * 100
+        : 0;
+
+    string sizes = data.Any()
+        ? string.Join(", ", data
+            .Where(x => !string.IsNullOrWhiteSpace(x.Size))
+            .Select(x => x.Size.Trim())
+            .Distinct())
+        : "-";
+
+    var heatLabels = data.Select(x => x.HeatNo ?? "").ToList();
+    var billetRolledData = data.Select(x => x.TotalBillet ?? 0).ToList();
+    var billetWeightData = data.Select(x => x.TotalWeight ?? 0).ToList();
+    var finishedWeightData = data.Select(x => x.TheoriticalWeight ?? 0).ToList();
+    var bundleData = data.Select(x => x.TotalBundleProduced ?? 0).ToList();
+
+    var downtimeAgency = delays
+        .GroupBy(x => string.IsNullOrWhiteSpace(x.AgencyName) ? "Unknown" : x.AgencyName.Trim())
+        .Select(g => new
+        {
+            Agency = g.Key,
+            Minutes = g.Sum(x => x.TotalDuration ?? 0)
+        })
+        .ToList();
+
+    var downtimeAgencyLabels = downtimeAgency.Select(x => x.Agency).ToList();
+    var downtimeAgencyData = downtimeAgency.Select(x => x.Minutes).ToList();
+
+    var gregorian = new CultureInfo("en-US");
+    gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+
+    // ================= FORMULA CALCULATIONS =================
+
+    decimal totalFinishedProd = theoriticalWeight;
+    // Agar Finished Product = TotalWeight chahiye to above line ko replace karo:
+    // decimal totalFinishedProd = totalWeight;
+
+    // Plan Vs Actual chart values
+    decimal productionPlan = ViewBag.ProductionPlan != null
+        ? Convert.ToDecimal(ViewBag.ProductionPlan)
+        : 5800;
+
+    decimal productionActual = totalFinishedProd;
+    decimal productionDifference = Math.Abs(productionActual - productionPlan);
+
+    string selectedShift = Convert.ToString(ViewBag.ReportShift ?? "").Trim();
+
+    Func<string, decimal> GetShiftHours = shiftName =>
+    {
+        if (string.IsNullOrWhiteSpace(shiftName))
+            return 0;
+
+        shiftName = shiftName.Trim();
+
+        if (shiftName.Equals("Morning", StringComparison.OrdinalIgnoreCase) ||
+            shiftName.Equals("Evening", StringComparison.OrdinalIgnoreCase) ||
+            shiftName.Equals("Night", StringComparison.OrdinalIgnoreCase))
+        {
+            return 8;
+        }
+
+        if (shiftName.Equals("Long Morning", StringComparison.OrdinalIgnoreCase) ||
+            shiftName.Equals("Long Night", StringComparison.OrdinalIgnoreCase))
+        {
+            return 12;
+        }
+
+        return 0;
+    };
+
+    // ================= ACCUMULATED DAY-WISE PRODUCTION =================
+    // Har date ka finished product weight niklega, phir cumulative total banega.
+    // Is calculation mein hours aur downtime use nahi hote.
+    // ================= DAILY PRODUCTION BY DATE =================
+
+    var dailyProductionByDay = monthlyData
+        .Where(x => x.Date != DateTime.MinValue)
+        .GroupBy(x => x.Date.Date)
+        .OrderBy(g => g.Key)
+        .Select(g => new
+        {
+            Date = g.Key.ToString("dd-MMM-yyyy"),
+
+            DailyProduction = Math.Round(
+                g.Sum(x => x.TheoriticalWeight ?? 0),
+                2
+            )
+        })
+        .ToList();
+
+    var productivityDateLabels = dailyProductionByDay
+        .Select(x => x.Date)
+        .ToList();
+
+    var productivityDayData = dailyProductionByDay
+        .Select(x => x.DailyProduction)
+        .ToList();
+
+
+    // Production list se shifts uthao
+    var productionShifts = data
+        .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
+        .Select(x => x.Shift.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    // Delay list se shifts uthao
+    var delayShifts = delays
+        .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
+        .Select(x => x.Shift.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    // Dono lists combine karo
+    var allShifts = productionShifts
+        .Union(delayShifts, StringComparer.OrdinalIgnoreCase)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    decimal totalHrsInShift = 0;
+
+    if (allShifts.Any())
+    {
+        // Example:
+        // Long Morning + Morning + Evening + Night
+        // 12 + 8 + 8 + 8 = 36 hrs
+        totalHrsInShift = allShifts.Sum(x => GetShiftHours(x));
+    }
+    else if (!string.IsNullOrWhiteSpace(selectedShift) &&
+             !selectedShift.Equals("All", StringComparison.OrdinalIgnoreCase))
+    {
+        // Agar data list main shift na mile to selected shift se calculate karo
+        totalHrsInShift = GetShiftHours(selectedShift);
+    }
+    else
+    {
+        // Default full day normal shifts
+        totalHrsInShift = 8 + 8 + 8;
+    }
+
+    // Safety fallback
+    if (totalHrsInShift <= 0)
+    {
+        totalHrsInShift = 8;
+    }
+
+    decimal totalTimeMins = totalHrsInShift * 60;
+
+    // Header / display ke liye report shift text
+    string reportShift = allShifts.Any()
+        ? string.Join(", ", allShifts)
+        : selectedShift;
+
+    if (string.IsNullOrWhiteSpace(reportShift))
+    {
+        reportShift = "All";
+    }
+
+    // Planned Downtime = Scheduled Delay
+    decimal plannedDowntime = delays
+        .Where(x =>
+            !string.IsNullOrWhiteSpace(x.DelayType) &&
+            (
+                x.DelayType.Trim().Equals("ScheduledDelay", StringComparison.OrdinalIgnoreCase) ||
+                x.DelayType.Trim().Equals("Scheduled Delay", StringComparison.OrdinalIgnoreCase) ||
+                x.DelayType.Trim().Equals("Scheduled", StringComparison.OrdinalIgnoreCase) ||
+                x.DelayType.Trim().Equals("Planned Downtime", StringComparison.OrdinalIgnoreCase) ||
+                x.DelayType.Trim().Equals("PlannedDownTime", StringComparison.OrdinalIgnoreCase)
+            )
+        )
+        .Sum(x => Convert.ToDecimal(x.TotalDuration ?? 0));
+
+    // ActualRollingTime = TotalTime(mins) - TotalDelayDuration
+    decimal actualRollingTime = totalTimeMins - Convert.ToDecimal(totalDelayDuration);
+
+    if (actualRollingTime < 0)
+    {
+        actualRollingTime = 0;
+    }
+
+    // PlannedRollingTime = TotalTime(mins) - PlannedDowntime
+    decimal plannedRollingTime = totalTimeMins - plannedDowntime;
+
+    if (plannedRollingTime < 0)
+    {
+        plannedRollingTime = 0;
+    }
+
+    // Convert minutes to hours
+    decimal actualRollingHours = actualRollingTime > 0
+        ? actualRollingTime / 60
+        : 0;
+
+    // Productivity tons/hr = TotalFinishedProd / ActualRollingHours
+    decimal productivityTonsHr = actualRollingHours > 0
+        ? totalFinishedProd / actualRollingHours
+        : 0;
+
+    // RRR = ActualRollingTime / PlannedRollingTime * 100
+    decimal rrrValue = plannedRollingTime > 0
+        ? (actualRollingTime / plannedRollingTime) * 100
+        : 0;
+
+    // Bundles / Coils Produced
+    decimal bundlesCoilsProduced = totalBundles;
+
+
+    System.Diagnostics.Debug.WriteLine("===== RM DASHBOARD DEBUG =====");
+    System.Diagnostics.Debug.WriteLine("Report Shift: " + reportShift);
+    System.Diagnostics.Debug.WriteLine("Total Hours In Shift: " + totalHrsInShift);
+    System.Diagnostics.Debug.WriteLine("Total Time Mins: " + totalTimeMins);
+    System.Diagnostics.Debug.WriteLine("Total Delay Duration: " + totalDelayDuration);
+    System.Diagnostics.Debug.WriteLine("Planned Downtime: " + plannedDowntime);
+    System.Diagnostics.Debug.WriteLine("Actual Rolling Time: " + actualRollingTime);
+    System.Diagnostics.Debug.WriteLine("Actual Rolling Hours: " + actualRollingHours);
+    System.Diagnostics.Debug.WriteLine("Total Finished Product: " + totalFinishedProd);
+    System.Diagnostics.Debug.WriteLine("Productivity Tons/Hr: " + productivityTonsHr);
+    System.Diagnostics.Debug.WriteLine("RRR: " + rrrValue);
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    body {
+        background: #eef2f6;
+    }
+
+    .dashboard-header {
+        background: #a6173f;
+        color: #fff;
+        border-radius: 14px;
+        padding: 22px 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+        .dashboard-header h3 {
+            margin: 0;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .dashboard-header small {
+            color: rgba(255,255,255,0.92);
+        }
+
+    .kpi-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        min-height: 125px;
+        margin-bottom: 15px;
+        background: #fff;
+    }
+
+    .kpi-title {
+        font-size: 12px;
+        color: #6c757d;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .kpi-value {
+        font-size: 26px;
+        font-weight: 800;
+        color: #222;
+        margin-top: 8px;
+        line-height: 1.2;
+    }
+
+    .kpi-sub {
+        font-size: 12px;
+        color: #888;
+        margin-top: 5px;
+    }
+
+    .kpi-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: #fff;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .bg-red {
+        background: #c1121f;
+    }
+
+    .bg-green {
+        background: #198754;
+    }
+
+    .bg-blue {
+        background: #0d6efd;
+    }
+
+    .bg-orange {
+        background: #fd7e14;
+    }
+
+    .bg-purple {
+        background: #6f42c1;
+    }
+
+    .bg-teal {
+        background: #0f766e;
+    }
+
+    .section-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        background: #fff;
+    }
+
+        .section-card .card-header {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            font-weight: 700;
+            border-radius: 14px 14px 0 0;
+        }
+
+    .chart-box {
+        height: 310px;
+    }
+
+    .table thead th {
+        background: #991b1b;
+        color: #fff;
+        font-size: 12px;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .table td {
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    .badge-soft-success {
+        background: #d1e7dd;
+        color: #0f5132;
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+
+    .badge-soft-danger {
+        background: #f8d7da;
+        color: #842029;
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+
+    .summary-box {
+        background: #fff;
+        border-radius: 14px;
+        padding: 15px;
+        border-left: 5px solid #c1121f;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            background: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .xp-contentbar {
+            padding: 0 !important;
+            margin: 0 !important;
+            background: #fff !important;
+        }
+
+        .section-card,
+        .kpi-card,
+        .summary-box {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .dashboard-header {
+            background: #a6173f !important;
+            color: #fff !important;
+            box-shadow: none !important;
+        }
+
+            .dashboard-header h3,
+            .dashboard-header small,
+            .dashboard-header b {
+                color: #fff !important;
+            }
+
+        @@page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row">
+        <div class="col-md-10">
+            <h4 class="xp-page-title">Rolling Mill Dashboard</h4>
+        </div>
+        <div class="col-md-2">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">Rolling Mill</li>
+                <li class="breadcrumb-item active">Dashboard</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h3>SOLB Steel - Rolling Mill Production Dashboard</h3>
+                <small>
+                    <b>
+                        QFM-RM2-1007 |
+                        Date: @ViewBag.ReportDate |
+                        Plant: @(ViewBag.ReportPlant ?? ViewBag.Plant) |
+                        Shift: @ViewBag.ReportShift |
+                        Team: @ViewBag.ReportTeam |
+                        Shift Incharge: @ViewBag.ReportShiftIncharge
+                    </b>
+                </small>
+            </div>
+            <div class="col-md-4 text-right no-print">
+                <button class="btn btn-light btn-sm" onclick="window.print()">Print / Save PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="row">
+
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-title">BILLET WEIGHT</div>
+                        <div class="kpi-value">@totalWeight.ToString("0")</div>
+                        <div class="kpi-sub">Metric tons</div>
+                    </div>
+                    <div class="kpi-icon bg-blue">MT</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-title">FINISHED PRODUCT</div>
+                        <div class="kpi-value">@totalFinishedProd.ToString("0.###")</div>
+                        <div class="kpi-sub">Metric tons</div>
+                    </div>
+                    <div class="kpi-icon bg-green">MT</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-title">YIELD</div>
+                        <div class="kpi-value">@yieldValue.ToString("0.00")%</div>
+                        <div class="kpi-sub">Shift performance</div>
+                    </div>
+                    <div class="kpi-icon bg-purple">Y%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-title">SIZE</div>
+                        <div class="kpi-value">@sizes</div>
+                        <div class="kpi-sub">Product size</div>
+                    </div>
+                    <div class="kpi-icon bg-orange">SZ</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-title">PRODUCTIVITY TONS/HR</div>
+                        <div class="kpi-value">@productivityTonsHr.ToString("0.00")</div>
+                        <div class="kpi-sub">
+                            @totalFinishedProd.ToString("0.###") MT / @actualRollingHours.ToString("0.00") hrs
+                        </div>
+                    </div>
+                    <div class="kpi-icon bg-red">PH</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card kpi-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="kpi-title">RRR</div>
+                        <div class="kpi-value">@rrrValue.ToString("0.00")%</div>
+                        <div class="kpi-sub">
+                            Actual @actualRollingTime.ToString("0") / Planned @plannedRollingTime.ToString("0") mins
+                        </div>
+                    </div>
+                    <div class="kpi-icon bg-teal">RR</div>
+                </div>
+            </div>
+        </div>
+
+        @*<div class="col-md-3">
+                <div class="card kpi-card">
+                    <div class="card-body d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-title">BUNDLES / COILS PRODUCED</div>
+                            <div class="kpi-value">@bundlesCoilsProduced.ToString("0")</div>
+                            <div class="kpi-sub">Prime bundles / coils</div>
+                        </div>
+                        <div class="kpi-icon bg-green">BC</div>
+                    </div>
+                </div>
+            </div>*@
+
+        @*<div class="col-md-3">
+                <div class="card kpi-card">
+                    <div class="card-body d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-title">COBBLE / MISS ROLLS</div>
+                            <div class="kpi-value">@totalCobble.ToString("0")</div>
+                            <div class="kpi-sub">Nos.</div>
+                        </div>
+                        <div class="kpi-icon bg-red">CM</div>
+                    </div>
+                </div>
+            </div>*@
+
+    </div>
+
+    @*<div class="summary-box">
+            <b>Shift Summary:</b>
+            <br />
+            Size <b>@sizes</b> production achieved <b>@totalRolled.ToString("0") billets rolled</b>
+            with <b>@totalFinishedProd.ToString("0.###") MT finished product</b>.
+            Yield is <b>@yieldValue.ToString("0.00")%</b>.
+            Total downtime recorded is <b>@totalDelayDuration minutes</b>.
+            Actual rolling time is <b>@actualRollingTime.ToString("0") minutes</b>.
+            Planned rolling time is <b>@plannedRollingTime.ToString("0") minutes</b>.
+            Productivity is <b>@productivityTonsHr.ToString("0.00") tons/hr</b>
+            and RRR is <b>@rrrValue.ToString("0.00")%</b>.
+        </div>*@
+
+    <div class="row">
+
+        <div class="col-md-6">
+            <div class="card section-card">
+                <div class="card-header">Downtime by Agency</div>
+                <div class="card-body">
+                    <div class="chart-box">
+                        <canvas id="downtimeAgencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card section-card">
+                <div class="card-header">Plan Vs Actual</div>
+                <div class="card-body">
+                    <div class="chart-box">
+                        <canvas id="planVsActualChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-6">
+            <div class="card section-card">
+                <div class="card-header">Accumulated Day-wise Production</div>
+                <div class="card-body">
+                    <div class="chart-box">
+                        <canvas id="daywiseProductivityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card section-card">
+                <div class="card-header">Billet Weight vs Finished Product</div>
+                <div class="card-body">
+                    <div class="chart-box">
+                        <canvas id="weightCompareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="card section-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Downtime Details</span>
+
+            <button type="button"
+                    class="btn btn-sm btn-outline-secondary no-print"
+                    id="btnToggleDowntime">
+                <i class="fa fa-chevron-down"
+                   id="downtimeToggleIcon"></i>
+            </button>
+        </div>
+
+        <div id="downtimeDetailsBody" style="display:none;">
+            <div class="card-body table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Start</th>
+                            <th>Finish</th>
+                            <th>Total Min</th>
+                            <th>Delay Type</th>
+                            <th>Agency</th>
+                            <th>Equipment</th>
+                            <th>Reason</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (delays.Any())
+                        {
+                            foreach (var item in delays)
+                            {
+                                <tr>
+                                    <td>
+                                        @(item.Date.HasValue
+                                        ? item.Date.Value.ToString("dd/MM/yyyy", gregorian)
+                                        : "-")
+                                    </td>
+
+                                    <td>@item.StartTime</td>
+                                    <td>@item.EndTime</td>
+
+                                    <td>
+                                        <span class="badge-soft-danger">
+                                            @item.TotalDuration
+                                        </span>
+                                    </td>
+
+                                    <td>@item.DelayType</td>
+                                    <td>@item.AgencyName</td>
+                                    <td>@item.Equipments</td>
+                                    <td>@item.Reason</td>
+                                    <td>@item.DelayDescription</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9"
+                                    class="text-center text-muted">
+                                    No downtime found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+
+                    <tfoot>
+                        <tr class="font-weight-bold">
+                            <td colspan="3" class="text-right">
+                                Total
+                            </td>
+
+                            <td>@totalDelayDuration</td>
+                            <td colspan="5"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card section-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Production Details</span>
+
+            <button type="button"
+                    class="btn btn-sm btn-outline-secondary no-print"
+                    id="btnToggleProduction">
+                <i class="fa fa-chevron-down" id="productionToggleIcon"></i>
+            </button>
+        </div>
+
+        <div id="productionDetailsBody" style="display:none;">
+            <div class="card-body table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Seq.</th>
+                            <th>Heat No</th>
+                            <th>Grade</th>
+                            <th>Size</th>
+                            <th>Billet Discharge</th>
+                            <th>Billet Rolled</th>
+                            <th>Cobble</th>
+                            <th>Hot Out</th>
+                            <th>Discharge Wt.</th>
+                            <th>Bundles</th>
+                            <th>On-Hold</th>
+                            <th>Reject</th>
+                            <th>Short Wt.</th>
+                            <th>Finished Product Wt.</th>
+                            <th>Yield %</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (data != null && data.Any())
+                        {
+                            foreach (var item in data)
+                            {
+                                decimal itemTotalWeight = item.TotalWeight ?? 0;
+                                decimal itemTheoriticalWeight =
+                                    item.TheoriticalWeight ?? 0;
+
+                                decimal itemYield = itemTotalWeight > 0
+                                    ? (itemTheoriticalWeight / itemTotalWeight) * 100
+                                    : 0;
+
+                                <tr>
+                                    <td>@item.DischargingSequence</td>
+                                    <td>@item.HeatNo</td>
+                                    <td>@item.SteelGrade</td>
+                                    <td>@item.Size</td>
+                                    <td>@item.TotalBillet</td>
+                                    <td>@item.TotalBillet</td>
+                                    <td>@item.Cobble</td>
+                                    <td>@item.HotOut</td>
+                                    <td>@itemTotalWeight.ToString("0.###")</td>
+                                    <td>@item.TotalBundleProduced</td>
+
+                                    <td>
+                                        @(item.TotalBundleOnHold.HasValue
+                                        ? item.TotalBundleOnHold.Value.ToString("0.00")
+                                        : "0.00")
+                                    </td>
+
+                                    <td>
+                                        @(item.TotalRejectedBundle.HasValue
+                                        ? item.TotalRejectedBundle.Value.ToString("0.00")
+                                        : "0.00")
+                                    </td>
+
+                                    <td>
+                                        @(item.ShortBundleActualWeight.HasValue
+                                        ? item.ShortBundleActualWeight.Value.ToString("0.00")
+                                        : "0.00")
+                                    </td>
+
+                                    <td>@itemTheoriticalWeight.ToString("0.###")</td>
+
+                                    <td>
+                                        <span class="badge-soft-success">
+                                            @itemYield.ToString("0.00")%
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="15" class="text-center text-muted">
+                                    No production data found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+
+                    <tfoot>
+                        <tr class="font-weight-bold">
+                            <td colspan="4" class="text-right">Total</td>
+                            <td>@totalDischarge</td>
+                            <td>@totalRolled</td>
+                            <td>@totalCobble</td>
+                            <td>@totalHotOut</td>
+                            <td>@totalWeight.ToString("0.###")</td>
+                            <td>@totalBundles</td>
+                            <td>@totalOnHold</td>
+                            <td>@totalRejected</td>
+                            <td>@totalShortWeight.ToString("0.00")</td>
+                            <td>@theoriticalWeight.ToString("0.###")</td>
+                            <td>@yieldValue.ToString("0.00")%</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @*<div class="card section-card">
+            <div class="card-header">Production Details</div>
+            <div class="card-body table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Seq.</th>
+                            <th>Heat No</th>
+                            <th>Grade</th>
+                            <th>Size</th>
+                            <th>Billet Discharge</th>
+                            <th>Billet Rolled</th>
+                            <th>Cobble</th>
+                            <th>Hot Out</th>
+                            <th>Discharge Wt.</th>
+                            <th>Bundles</th>
+                            <th>On-Hold</th>
+                            <th>Reject</th>
+                            <th>Short Wt.</th>
+                            <th>Finished Product Wt.</th>
+                            <th>Yield %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (data != null && data.Any())
+                        {
+                            foreach (var item in data)
+                            {
+                                decimal itemTotalWeight = item.TotalWeight ?? 0;
+                                decimal itemTheoriticalWeight = item.TheoriticalWeight ?? 0;
+
+                                decimal itemYield = itemTotalWeight > 0
+                                    ? (itemTheoriticalWeight / itemTotalWeight) * 100
+                                    : 0;
+
+                                <tr>
+                                    <td>@item.DischargingSequence</td>
+                                    <td>@item.HeatNo</td>
+                                    <td>@item.SteelGrade</td>
+                                    <td>@item.Size</td>
+                                    <td>@item.TotalBillet</td>
+                                    <td>@item.TotalBillet</td>
+                                    <td>@item.Cobble</td>
+                                    <td>@item.HotOut</td>
+                                    <td>@itemTotalWeight.ToString("0.###")</td>
+                                    <td>@item.TotalBundleProduced</td>
+                                    <td>@(item.TotalBundleOnHold.HasValue ? item.TotalBundleOnHold.Value.ToString("0.00") : "0.00")</td>
+                                    <td>@(item.TotalRejectedBundle.HasValue ? item.TotalRejectedBundle.Value.ToString("0.00") : "0.00")</td>
+                                    <td>@(item.ShortBundleActualWeight.HasValue ? item.ShortBundleActualWeight.Value.ToString("0.00") : "0.00")</td>
+                                    <td>@itemTheoriticalWeight.ToString("0.###")</td>
+                                    <td>
+                                        <span class="badge-soft-success">@itemYield.ToString("0.00")%</span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="15" class="text-center text-muted">
+                                    No production data found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold">
+                            <td colspan="4" class="text-right">Total</td>
+                            <td>@totalDischarge</td>
+                            <td>@totalRolled</td>
+                            <td>@totalCobble</td>
+                            <td>@totalHotOut</td>
+                            <td>@totalWeight.ToString("0.###")</td>
+                            <td>@totalBundles</td>
+                            <td>@totalOnHold</td>
+                            <td>@totalRejected</td>
+                            <td>@totalShortWeight.ToString("0.00")</td>
+                            <td>@theoriticalWeight.ToString("0.###")</td>
+                            <td>@yieldValue.ToString("0.00")%</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>*@
+
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#btnToggleDowntime").on("click", function () {
+            $("#downtimeDetailsBody").slideToggle(200);
+            $("#downtimeToggleIcon")
+                .toggleClass("fa-chevron-down fa-chevron-up");
+        });
+
+        $("#btnToggleProduction").on("click", function () {
+            $("#productionDetailsBody").slideToggle(200);
+            $("#productionToggleIcon")
+                .toggleClass("fa-chevron-down fa-chevron-up");
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof Chart === "undefined") {
+            console.error("Chart.js library is not loaded.");
+            return;
+        }
+
+        Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+        Chart.defaults.color = "#444";
+
+        var heatLabels = @Html.Raw(JsonConvert.SerializeObject(heatLabels));
+        var billetRolledData = @Html.Raw(JsonConvert.SerializeObject(billetRolledData));
+        var billetWeightData = @Html.Raw(JsonConvert.SerializeObject(billetWeightData));
+        var finishedWeightData = @Html.Raw(JsonConvert.SerializeObject(finishedWeightData));
+        var downtimeAgencyLabels = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyLabels));
+        var downtimeAgencyData = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyData));
+        var productivityDateLabels = @Html.Raw(JsonConvert.SerializeObject(productivityDateLabels));
+        var productivityDayData = @Html.Raw(JsonConvert.SerializeObject(productivityDayData));
+
+        var productionPlan = @Html.Raw(JsonConvert.SerializeObject(productionPlan));
+        var productionActual = @Html.Raw(JsonConvert.SerializeObject(productionActual));
+        var productionDifference = @Html.Raw(JsonConvert.SerializeObject(productionDifference));
+
+        function numberLabel(value) {
+            return Number(value || 0).toLocaleString();
+        }
+
+        function createDowntimeChart() {
+            var canvas = document.getElementById("downtimeAgencyChart");
+            if (!canvas) return;
+
+            new Chart(canvas, {
+                type: "bar",
+                data: {
+                    labels: downtimeAgencyLabels,
+                    datasets: [{
+                        label: "Downtime Minutes",
+                        data: downtimeAgencyData,
+                        backgroundColor: "#c1121f",
+                        borderColor: "#991b1b",
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return "Downtime: " + numberLabel(context.raw) + " min";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: "Minutes" },
+                            ticks: {
+                                callback: function (value) {
+                                    return numberLabel(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createPlanVsActualChart() {
+            var canvas = document.getElementById("planVsActualChart");
+            if (!canvas) return;
+
+            new Chart(canvas, {
+                type: "bar",
+                data: {
+                    labels: ["Plan", "Actual", "Difference"],
+                    datasets: [{
+                        label: "Production Weight (MT)",
+                        data: [productionPlan, productionActual, productionDifference],
+                        backgroundColor: ["#6c6c6c", "#c00000", "#a6a6a6"],
+                        borderColor: ["#595959", "#990000", "#808080"],
+                        borderWidth: 1,
+                        borderRadius: 0,
+                        barPercentage: 0.72,
+                        categoryPercentage: 0.72
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: "Plan Vs Actual",
+                            color: "#222",
+                            font: { size: 13, weight: "bold" }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return numberLabel(context.raw) + " MT";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: "rgba(0,0,0,0.10)" },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "rgba(0,0,0,0.10)" },
+                            title: { display: true, text: "Metric Tons" },
+                            ticks: {
+                                callback: function (value) {
+                                    return numberLabel(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createAccumulatedProductionChart() {
+            var canvas = document.getElementById("daywiseProductivityChart");
+            if (!canvas) return;
+
+            new Chart(canvas, {
+                type: "line",
+                data: {
+                    labels: productivityDateLabels,
+                    datasets: [{
+                        label: "Accumulated Production (MT)",
+                        data: productivityDayData,
+                        borderColor: "#a6173f",
+                        backgroundColor: "rgba(166,23,63,0.12)",
+                        borderWidth: 3,
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: "#a6173f",
+                        pointBorderColor: "#ffffff",
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: "index",
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: "top"
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return "Accumulated Production: " +
+                                        numberLabel(context.raw) +
+                                        " MT";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: "Production Date"
+                            },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "rgba(0,0,0,0.08)" },
+                            title: {
+                                display: true,
+                                text: "Accumulated Production (MT)"
+                            },
+                            ticks: {
+                                callback: function (value) {
+                                    return numberLabel(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createWeightCompareChart() {
+            var canvas = document.getElementById("weightCompareChart");
+            if (!canvas) return;
+
+            new Chart(canvas, {
+                type: "bar",
+                data: {
+                    labels: heatLabels,
+                    datasets: [
+                        {
+                            label: "Billet Wt. (MT)",
+                            data: billetWeightData,
+                            backgroundColor: "#0d6efd",
+                            borderColor: "#0a58ca",
+                            borderWidth: 1,
+                            borderRadius: 6
+                        },
+                        {
+                            label: "Finished Product Wt. (MT)",
+                            data: finishedWeightData,
+                            backgroundColor: "#198754",
+                            borderColor: "#146c43",
+                            borderWidth: 1,
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: "top" },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ": " +
+                                        numberLabel(context.raw) + " MT";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: "Metric Tons" },
+                            ticks: {
+                                callback: function (value) {
+                                    return numberLabel(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        createDowntimeChart();
+        createPlanVsActualChart();
+        createAccumulatedProductionChart();
+        createWeightCompareChart();
+    });
+</script>

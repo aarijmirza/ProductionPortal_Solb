@@ -23,35 +23,133 @@ namespace BAL.Repositories
             _ds = new DataSet();
         }
 
-        public List<BilletDischargingBLL> GetDichargedHeat(DateTime startDate, DateTime endDate, string shift)
+        //public List<BilletDischargingBLL> GetDichargedHeat(DateTime startDate, DateTime endDate, string shift)
+        //{
+        //    try
+        //    {
+        //        var lst = new List<BilletDischargingBLL>();
+
+        //        SqlParameter[] p = new SqlParameter[]
+        //        {
+        //    new SqlParameter("@StartDate", startDate),
+        //    new SqlParameter("@EndDate", endDate),
+        //    new SqlParameter("@Shift", shift)
+        //        };
+
+        //        _dt = (new DBHelper().GetTableFromSP)("sp_GetDichargedHeat", p);
+
+        //        if (_dt != null && _dt.Rows.Count > 0)
+        //        {
+        //            lst = JArray.Parse(JsonConvert.SerializeObject(_dt))
+        //                        .ToObject<List<BilletDischargingBLL>>();
+        //        }
+
+        //        return lst;
+        //    }
+        //    catch
+        //    {
+        //        return new List<BilletDischargingBLL>();
+        //    }
+        //}
+
+        public List<BilletDischargingBLL> GetDichargedHeats(
+        DateTime startDate,
+        DateTime endDate,
+        string plant,
+        string shift)
         {
             try
             {
-                var lst = new List<BilletDischargingBLL>();
-
-                SqlParameter[] p = new SqlParameter[]
+                SqlParameter[] parameters =
                 {
-            new SqlParameter("@StartDate", startDate),
-            new SqlParameter("@EndDate", endDate),
-            new SqlParameter("@Shift", shift)
-                };
-
-                _dt = (new DBHelper().GetTableFromSP)("sp_GetDichargedHeat", p);
-
-                if (_dt != null && _dt.Rows.Count > 0)
-                {
-                    lst = JArray.Parse(JsonConvert.SerializeObject(_dt))
-                                .ToObject<List<BilletDischargingBLL>>();
-                }
-
-                return lst;
-            }
-            catch
+            new SqlParameter("@StartDate", SqlDbType.DateTime)
             {
-                return new List<BilletDischargingBLL>();
+                Value = startDate.Date
+            },
+            new SqlParameter("@EndDate", SqlDbType.DateTime)
+            {
+                Value = endDate.Date
+            },
+            new SqlParameter("@Plant", SqlDbType.NVarChar, 50)
+            {
+                Value = string.IsNullOrWhiteSpace(plant)
+                    ? (object)DBNull.Value
+                    : plant.Trim()
+            },
+            new SqlParameter("@Shift", SqlDbType.NVarChar, 50)
+            {
+                Value = string.IsNullOrWhiteSpace(shift)
+                    ? (object)DBNull.Value
+                    : shift.Trim()
+            }
+        };
+
+                DataTable dt = new DBHelper()
+                    .GetTableFromSP("sp_GetDichargedHeat", parameters);
+
+                if (dt == null || dt.Rows.Count == 0)
+                    return new List<BilletDischargingBLL>();
+
+                return JArray
+                    .Parse(JsonConvert.SerializeObject(dt))
+                    .ToObject<List<BilletDischargingBLL>>()
+                    ?? new List<BilletDischargingBLL>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    "GetDichargedHeats Error: " + ex.Message,
+                    ex
+                );
             }
         }
+        public List<BilletDischargingBLL> GetDichargedHeat(
+    DateTime startDate,
+    DateTime endDate,
+    string shift)
+        {
+            try
+            {
+                var list = new List<BilletDischargingBLL>();
 
+                SqlParameter[] parameters =
+                {
+            new SqlParameter("@StartDate", startDate.Date),
+
+            new SqlParameter("@EndDate", endDate.Date),
+
+            new SqlParameter(
+                "@Shift",
+                string.IsNullOrWhiteSpace(shift)
+                    ? (object)DBNull.Value
+                    : shift.Trim()
+            )
+        };
+
+                DataTable dt = new DBHelper()
+                    .GetTableFromSP(
+                        "sp_GetDichargedHeat",
+                        parameters
+                    );
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    list = JArray
+                        .Parse(JsonConvert.SerializeObject(dt))
+                        .ToObject<List<BilletDischargingBLL>>();
+                }
+
+                return list ?? new List<BilletDischargingBLL>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    "GetDichargedHeat Error: " + ex
+                );
+
+                throw;
+            }
+        }
 
         public List<BilletDischargingBLL> GetDichargedHeat2()
         {
@@ -284,7 +382,7 @@ namespace BAL.Repositories
         {
             try
             {
-                SqlParameter[] p = new SqlParameter[16];
+                SqlParameter[] p = new SqlParameter[18];
 
                 p[0] = new SqlParameter("@HeatNo", model.HeatNo);
                 p[1] = new SqlParameter("@BoardingNo", model.BilletBoardingNo);
@@ -315,6 +413,8 @@ namespace BAL.Repositories
                 p[13] = new SqlParameter("@Date", model.Date);
                 p[14] = new SqlParameter("@Shift", model.Shift);
                 p[15] = new SqlParameter("@Plant", model.Plant);
+                p[16] = new SqlParameter("@Profile", model.Profile);
+                p[17] = new SqlParameter("@Size", model.Size);
 
                 return (new DBHelper().ExecuteNonQueryReturn)("sp_InsertBundleSection", p);
             }
@@ -471,7 +571,7 @@ namespace BAL.Repositories
         {
             try
             {
-                SqlParameter[] p = new SqlParameter[12];
+                SqlParameter[] p = new SqlParameter[14];
 
                 p[0] = new SqlParameter("@ID", model.ID);
                 p[1] = new SqlParameter("@Date", model.Date);
@@ -485,6 +585,8 @@ namespace BAL.Repositories
                 p[9] = new SqlParameter("@TheoriticalWeight", model.TheoriticalWeight);
                 p[10] = new SqlParameter("@Remarks", model.Remarks ?? "");
                 p[11] = new SqlParameter("@UpdatedBy", model.UpdatedBy ?? "");
+                p[12] = new SqlParameter("@Profile", model.Profile ?? "");
+                p[13] = new SqlParameter("@Size", model.Size ?? "");
 
                 return (new DBHelper().ExecuteNonQueryReturn)("sp_UpdateBundlingSection", p);
             }

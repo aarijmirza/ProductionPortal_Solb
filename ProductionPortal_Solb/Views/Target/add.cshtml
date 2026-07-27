@@ -1,0 +1,858 @@
+﻿@model DAL.Models.RollingMillTargetsBLL
+
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using DAL.Models
+
+@{
+    ViewBag.Title = "Rolling Mill Targets";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var targetList =
+        ViewBag.TargetList as List<RollingMillTargetsBLL>
+        ?? new List<RollingMillTargetsBLL>();
+
+    string[] months =
+    {
+        "January", "February", "March", "April",
+        "May", "June", "July", "August",
+        "September", "October", "November", "December"
+    };
+
+    int currentYear = DateTime.Today.Year;
+
+    string[] sizes =
+{
+    "5.5 MM",
+    "6 MM",
+    "6.5 MM",
+    "7 MM",
+    "8 MM",
+    "9 MM",
+    "10 MM",
+    "11 MM",
+    "12 MM",
+    "14 MM",
+    "16 MM",
+    "18 MM",
+    "20 MM",
+    "22 MM",
+    "25 MM",
+    "28 MM",
+    "32 MM",
+    "36 MM",
+    "40 MM"
+};
+
+    string[] profiles =
+    {
+    "RB",
+    "WR",
+    "PB",
+    "RIC"
+};
+}
+
+<style>
+    .target-wrapper {
+        padding: 20px;
+    }
+
+    .target-header {
+        padding: 20px 24px;
+        margin-bottom: 20px;
+        border-radius: 14px;
+        color: #fff;
+        background: linear-gradient(135deg, #76132f, #a6173f);
+        box-shadow: 0 8px 24px rgba(0,0,0,.10);
+    }
+
+        .target-header h3 {
+            margin: 0 0 5px;
+            font-weight: 700;
+        }
+
+        .target-header p {
+            margin: 0;
+            opacity: .9;
+        }
+
+    .target-card {
+        margin-bottom: 20px;
+        border: 0;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(25,35,45,.08);
+        overflow: hidden;
+    }
+
+    .target-card-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eceff3;
+        color: #76132f;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .target-card-body {
+        padding: 20px;
+    }
+
+    .section-title {
+        margin: 10px 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #eceff3;
+        color: #76132f;
+        font-weight: 700;
+    }
+
+    .form-group label {
+        color: #414956;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .form-control {
+        height: 40px;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        box-shadow: none;
+    }
+
+        .form-control:focus {
+            border-color: #a6173f;
+            box-shadow: 0 0 0 3px rgba(166,23,63,.08);
+        }
+
+    .btn-save {
+        min-width: 130px;
+        color: #fff;
+        background: #8d1638;
+        border: 0;
+        border-radius: 8px;
+    }
+
+        .btn-save:hover {
+            color: #fff;
+            background: #74132f;
+        }
+
+    .table-scroll {
+        overflow-x: auto;
+    }
+
+    .target-table th {
+        background: #f4f5f7;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .target-table td {
+        font-size: 12px;
+        white-space: nowrap;
+        vertical-align: middle !important;
+    }
+
+    .action-form {
+        display: inline-block;
+    }
+
+    .target-mode-switch {
+        display: inline-flex;
+        gap: 8px;
+        padding: 5px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        background: #f1f3f5;
+    }
+
+    .target-mode-btn {
+        min-width: 130px;
+        padding: 9px 18px;
+        border: 0;
+        border-radius: 8px;
+        color: #596273;
+        background: transparent;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .target-mode-btn.active {
+            color: #fff;
+            background: #8d1638;
+            box-shadow: 0 4px 12px rgba(141,22,56,.22);
+        }
+
+    .daily-target-note {
+        padding: 12px 15px;
+        margin-bottom: 18px;
+        border-left: 4px solid #a6173f;
+        border-radius: 8px;
+        color: #5c6470;
+        background: #f8f9fa;
+        font-size: 13px;
+    }
+</style>
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Rolling Mill</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("add" ,"Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">Rolling Mill</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Targets</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+
+
+<div class="target-wrapper">
+
+    <div class="target-header">
+        <h3>Rolling Mill Target Setup</h3>
+        <p>
+            Configure monthly targets or save daily production and fuel consumption targets.
+        </p>
+    </div>
+
+    @*@if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @Html.ValidationSummary(
+            false,
+            "",
+            new { @class = "alert alert-danger" }
+        )*@
+
+    <div class="target-mode-switch no-print">
+        <button type="button" id="btnMonthlyTarget" class="target-mode-btn active">Monthly Target</button>
+        <button type="button" id="btnDailyTarget" class="target-mode-btn">Daily Target</button>
+    </div>
+
+    <div id="dailyTargetPanel" style="display:none;">
+        <div class="target-card">
+            <div class="target-card-header">Add Daily Rolling Mill Target</div>
+            <div class="target-card-body">
+                @*<div class="daily-target-note">Daily mode mein sirf Date, Daily Production Target aur Fuel Consumption save honge.</div>*@
+                @using (Html.BeginForm("SaveDaily", "Target", FormMethod.Post, new { id = "dailyTargetForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <div class="section-title">Daily Target</div>
+                    <div class="row">
+                        <div class="col-md-4"><div class="form-group"><label>Date</label><input type="date" name="date" id="DailyTargetDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Daily Production Target (MT)</label><input type="number" name="dailyProductionTarget" id="dailyProductionTarget" class="form-control" step="0.01" min="0" required /></div></div>
+                        <div class="col-md-4"><div class="form-group"><label>Fuel Consumption</label><input type="number" name="fuelConsumption" id="FuelConsumption" class="form-control" step="0.01" min="0" required /></div></div>
+                    </div>
+                    <div class="text-right"><button type="reset" class="btn btn-warning">Clear</button> <button type="submit" class="btn btn-save"><i class="fa fa-save"></i> Save Daily Target</button></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div id="monthlyTargetPanel">
+
+        <div class="target-card">
+            <div class="target-card-header">
+                @(Model.ID > 0
+                ? "Edit Rolling Mill Target"
+                : "Add Rolling Mill Target")
+            </div>
+
+            <div class="target-card-body">
+
+                @using (Html.BeginForm(
+                    "Save",
+                    "Target",
+                    FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(x => x.ID)
+
+                    <div class="section-title">
+                        Target Period
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Month</label>
+
+                                @Html.DropDownListFor(
+                                              x => x.Month,
+                                              new SelectList(
+                                                  months,
+                                                  Model.Month
+                                              ),
+                                              "-- Select Month --",
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  required = "required"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Year</label>
+
+                                @Html.DropDownListFor(
+                                              x => x.Year,
+                                              Enumerable.Range(
+                                                  currentYear - 2,
+                                                  8
+                                              )
+                                              .Select(y =>
+                                                  new SelectListItem
+                                                  {
+                                                      Text = y.ToString(),
+                                                      Value = y.ToString(),
+                                                      Selected =
+                                                          Model.Year ==
+                                                          y.ToString()
+                                                  }),
+                                              "-- Select Year --",
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  required = "required"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Size</label>
+
+                                @Html.DropDownListFor(
+                                              x => x.Size,
+                                              new SelectList(
+                                                  sizes,
+                                                  Model.Size
+                                              ),
+                                              "-- Select Size --",
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  required = "required"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Profile</label>
+
+                                @Html.DropDownListFor(
+                                              x => x.Profile,
+                                              new SelectList(
+                                                  profiles,
+                                                  Model.Profile
+                                              ),
+                                              "-- Select Profile --",
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  required = "required"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="section-title">
+                        Yield Targets
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>RB Yield Target (%)</label>
+
+                                @Html.TextBoxFor(
+                                              x => x.YeildPercentageRBTarget,
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  type = "number",
+                                                  step = "0.01",
+                                                  min = "0"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>WR Yield Target (%)</label>
+
+                                @Html.TextBoxFor(
+                                              x => x.YeildPercentageWRTarget,
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  type = "number",
+                                                  step = "0.01",
+                                                  min = "0"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>PB Yield Target (%)</label>
+
+                                @Html.TextBoxFor(
+                                              x => x.YeildPercentagePBTarget,
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  type = "number",
+                                                  step = "0.01",
+                                                  min = "0"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>RIC Yield Target (%)</label>
+
+                                @Html.TextBoxFor(
+                                              x => x.YeildPercentageRICTarget,
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  type = "number",
+                                                  step = "0.01",
+                                                  min = "0"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="section-title">
+                        Production Performance Targets
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>RRR Target (%)</label>
+
+                                @Html.TextBoxFor(
+                                              x => x.RRRPercentageTarget,
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  type = "number",
+                                                  step = "0.01",
+                                                  min = "0"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Ton Per Hour Target</label>
+
+                                @Html.TextBoxFor(
+                                              x => x.TonperhourTarget,
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  type = "number",
+                                                  step = "0.01",
+                                                  min = "0"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        @*<div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Production Target (MT)</label>
+
+                                    @Html.TextBoxFor(
+                                        x => x.ProductionTarget,
+                                        new
+                                        {
+                                            @class = "form-control",
+                                            type = "number",
+                                            step = "0.01",
+                                            min = "0"
+                                        }
+                                    )
+                                </div>
+                            </div>*@
+
+                    </div>
+
+                    <div class="section-title">
+                        Utility Targets
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Fuel Oil Target</label>
+
+                                @Html.TextBoxFor(
+                                              x => x.FuelOilTarget,
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  type = "number",
+                                                  step = "0.01",
+                                                  min = "0"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Electricity Target</label>
+
+                                @Html.TextBoxFor(
+                                              x => x.ElectricityTarget,
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  type = "number",
+                                                  step = "0.01",
+                                                  min = "0"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Water Target</label>
+
+                                @Html.TextBoxFor(
+                                              x => x.WaterTarget,
+                                              new
+                                              {
+                                                  @class = "form-control",
+                                                  type = "number",
+                                                  step = "0.01",
+                                                  min = "0"
+                                              }
+                                          )
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="section-title">
+                        Downtime and Department Targets
+                    </div>
+
+                    <div class="row">
+
+                        @{
+                            var fields = new[]
+                            {
+                            new
+                            {
+                                Name = "ProductionTarget",
+                                Label = "Production"
+                            },
+                            new
+                            {
+                                Name = "GuidePassTarget",
+                                Label = "Guide Pass Target"
+                            },
+                            new
+                            {
+                                Name = "RollShopTarget",
+                                Label = "Roll Shop Target"
+                            },
+                            new
+                            {
+                                Name = "ElectricalTarget",
+                                Label = "Electrical Target"
+                            },
+                            new
+                            {
+                                Name = "MechanicalTarget",
+                                Label = "Mechanical Target"
+                            },
+                            new
+                            {
+                                Name = "CraneTarget",
+                                Label = "Crane Target"
+                            },
+                            new
+                            {
+                                Name = "DispatchTarget",
+                                Label = "Dispatch Target"
+                            },
+                            new
+                            {
+                                Name = "QualityTarget",
+                                Label = "Quality Target"
+                            },
+                            new
+                            {
+                                Name = "UtilityTarget",
+                                Label = "Utility Target"
+                            },
+                            new
+                            {
+                                Name = "OthersTarget",
+                                Label = "Others Target"
+                            },
+                            new
+                            {
+                                Name = "SizeChangeTarget",
+                                Label = "Size Change Target"
+                            },
+                            new
+                            {
+                                Name = "DownDayTarget",
+                                Label = "Down Day Target"
+                            },
+                            new
+                            {
+                                Name = "PowerFailureTarget",
+                                Label = "Power Failure Target"
+                            },
+                            new
+                            {
+                                Name = "NoBilletTarget",
+                                Label = "No Billet Target"
+                            },
+                            new
+                            {
+                                Name = "AnnualShutdownTarget",
+                                Label = "Annual Shutdown Target"
+                            }
+                        };
+                        }
+
+                        @foreach (var field in fields)
+                        {
+                            decimal fieldValue = 0;
+
+                            var property =
+                                Model.GetType()
+                                .GetProperty(field.Name);
+
+                            if (property != null)
+                            {
+                                fieldValue = Convert.ToDecimal(
+                                    property.GetValue(Model, null)
+                                );
+                            }
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>@field.Label</label>
+
+                                    <input type="number"
+                                           name="@field.Name"
+                                           value="@fieldValue.ToString("0.##")"
+                                           class="form-control"
+                                           step="0.01"
+                                           min="0" />
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="text-right">
+                        <a href="@Url.Action(
+                        "add",
+                        "Target"
+                    )"
+                           class="btn btn-warning">
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                                class="btn btn-save">
+                            <i class="fa fa-save"></i>
+                            @(Model.ID > 0 ? "Update" : "Save")
+                        </button>
+                    </div>
+                }
+
+            </div>
+        </div>
+
+    </div>
+
+    <div id="monthlyTargetListPanel">
+        <div class="target-card">
+            <div class="target-card-header">
+                Rolling Mill Target List
+            </div>
+
+            <div class="target-card-body">
+                <div class="table-scroll">
+
+                    <table class="table table-bordered table-hover target-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Year</th>
+                                <th>Size</th>
+                                <th>Profile</th>
+                                <th>RB Yield</th>
+                                <th>WR Yield</th>
+                                <th>PB Yield</th>
+                                <th>RIC Yield</th>
+                                <th>RRR</th>
+                                <th>Ton/Hr</th>
+                                <th>Production</th>
+                                <th>Fuel Oil</th>
+                                <th>Electricity</th>
+                                <th>Water</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @if (targetList.Any())
+                            {
+                                foreach (var item in targetList)
+                                {
+                                    <tr>
+                                        <td>@item.Month</td>
+                                        <td>@item.Year</td>
+                                        <td>@item.Size</td>
+                                        <td>@item.Profile</td>
+
+                                        <td>
+                                            @item.YeildPercentageRBTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            @item.YeildPercentageWRTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            @item.YeildPercentagePBTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            @item.YeildPercentageRICTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            @item.RRRPercentageTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            @item.TonperhourTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            @item.ProductionTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            @item.FuelOilTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            @item.ElectricityTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            @item.WaterTarget.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            <a href="@Url.Action(
+                                            "add",
+                                            "Target",
+                                            new { id = item.ID }
+                                        )"
+                                               class="btn btn-primary btn-sm">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+
+                                            @using (Html.BeginForm(
+                                                "Delete",
+                                                "Target",
+                                                FormMethod.Post,
+                                                new
+                                                {
+                                                    @class = "action-form"
+                                                }))
+                                            {
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden"
+                                                       name="id"
+                                                       value="@item.ID" />
+
+                                                <button type="submit"
+                                                        class="btn btn-danger btn-sm"
+                                                        onclick="return confirm('Delete this target?');">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="13"
+                                        class="text-center text-muted">
+                                        No target records found.
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+<script>
+    (function () {
+        function showMonthlyTarget() { $("#monthlyTargetPanel,#monthlyTargetListPanel").show(); $("#dailyTargetPanel").hide(); $("#btnMonthlyTarget").addClass("active"); $("#btnDailyTarget").removeClass("active"); sessionStorage.setItem("rollingMillTargetMode", "monthly"); }
+        function showDailyTarget() { $("#monthlyTargetPanel,#monthlyTargetListPanel").hide(); $("#dailyTargetPanel").show(); $("#btnDailyTarget").addClass("active"); $("#btnMonthlyTarget").removeClass("active"); sessionStorage.setItem("rollingMillTargetMode", "daily"); }
+        $(document).ready(function () { $("#btnMonthlyTarget").on("click", showMonthlyTarget); $("#btnDailyTarget").on("click", showDailyTarget); if (sessionStorage.getItem("rollingMillTargetMode") === "daily") showDailyTarget(); else showMonthlyTarget(); });
+    })();
+</script>

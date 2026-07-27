@@ -320,37 +320,59 @@
             var fromDate = $("#fromDate").val();
             var toDate = $("#toDate").val();
 
-            var plant = $("#plantFilter").length ? $("#plantFilter").val() : "";
-            var shift = $("#shiftFilter").length ? $("#shiftFilter").val() : "";
+            var plant = $("#plantFilter").length
+                ? $("#plantFilter").val()
+                : "";
+
+            var shift = $("#shiftFilter").length
+                ? $("#shiftFilter").val()
+                : "";
 
             var params = [];
 
+            /*
+             * Names controller parameters ke exactly same hone chahiye:
+             * fromdate and todate
+             */
             if (fromDate) {
-                params.push("from=" + encodeURIComponent(fromDate));
+                params.push(
+                    "fromdate=" + encodeURIComponent(fromDate)
+                );
             }
 
             if (toDate) {
-                params.push("to=" + encodeURIComponent(toDate));
+                params.push(
+                    "todate=" + encodeURIComponent(toDate)
+                );
             }
 
-            // Plant aur Shift sirf Rolling Mill report ke liye apply honge
+            /*
+             * Plant aur Shift sirf Rolling Mill report ke liye
+             */
             if (reportType === "RollingMill") {
+
                 if (plant) {
-                    params.push("plant=" + encodeURIComponent(plant));
+                    params.push(
+                        "plant=" + encodeURIComponent(plant)
+                    );
                 }
 
                 if (shift) {
-                    params.push("shift=" + encodeURIComponent(shift));
+                    params.push(
+                        "shift=" + encodeURIComponent(shift)
+                    );
                 }
             }
 
-            params.push("download=" + encodeURIComponent(isDownload));
-
-            if (params.length > 0) {
-                return baseUrl + "?" + params.join("&");
+            if (isDownload !== undefined && isDownload !== null) {
+                params.push(
+                    "download=" + encodeURIComponent(isDownload)
+                );
             }
 
-            return baseUrl;
+            return params.length > 0
+                ? baseUrl + "?" + params.join("&")
+                : baseUrl;
         }
 
         $("#todayBtn").click(function () {
@@ -395,13 +417,31 @@
             var fromDate = $("#fromDate").val();
             var toDate = $("#toDate").val();
 
-            if (fromDate && toDate && fromDate > toDate) {
+            if (!fromDate) {
+                alert("Please select From Date.");
+                return;
+            }
+
+            if (!toDate) {
+                alert("Please select To Date.");
+                return;
+            }
+
+            if (fromDate > toDate) {
                 alert("From Date cannot be greater than To Date.");
                 return;
             }
 
             var baseUrl = $(this).data("url");
-            var finalUrl = buildReportUrl(baseUrl, false);
+            var reportType = $(this).data("report-type");
+
+            var finalUrl = buildReportUrl(
+                baseUrl,
+                false,
+                reportType
+            );
+
+            console.log("Report URL:", finalUrl);
 
             window.open(finalUrl, "_blank");
         });
@@ -411,13 +451,29 @@
             var fromDate = $("#fromDate").val();
             var toDate = $("#toDate").val();
 
-            if (fromDate && toDate && fromDate > toDate) {
+            if (!fromDate) {
+                alert("Please select From Date.");
+                return;
+            }
+
+            if (!toDate) {
+                alert("Please select To Date.");
+                return;
+            }
+
+            if (fromDate > toDate) {
                 alert("From Date cannot be greater than To Date.");
                 return;
             }
 
             var baseUrl = $(this).data("url");
-            var finalUrl = buildReportUrl(baseUrl, true);
+            var reportType = $(this).data("report-type");
+
+            var finalUrl = buildReportUrl(
+                baseUrl,
+                true,
+                reportType
+            );
 
             window.open(finalUrl, "_blank");
         });

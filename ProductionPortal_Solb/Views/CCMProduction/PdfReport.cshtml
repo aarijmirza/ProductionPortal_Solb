@@ -1,0 +1,557 @@
+﻿@model DAL.Models.CCMDailyProductionReportBLL
+
+@using System.Linq
+
+@{
+    Layout = null;
+
+    int totalBillets =
+        Model.Details != null
+            ? Model.Details.Sum(
+                x => x.TotalBillets
+            )
+            : 0;
+
+    int totalGoodBillets =
+        Model.Details != null
+            ? Model.Details.Sum(
+                x => x.GoodBillets
+            )
+            : 0;
+
+    string remarks =
+        Model.Details != null
+            ? Model.Details
+                .Where(
+                    x =>
+                        !string.IsNullOrWhiteSpace(
+                            x.Remarks
+                        )
+                )
+                .Select(
+                    x => x.Remarks
+                )
+                .FirstOrDefault()
+            : string.Empty;
+}
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <title>
+        CCM Daily Production Report
+    </title>
+
+    <style>
+        @@page {
+            size: A4 landscape;
+            margin: 7mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #fff;
+            color: #000;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9px;
+        }
+
+        .report-container {
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-table td {
+            border: 1px solid #000;
+            vertical-align: middle;
+        }
+
+        .logo-cell {
+            width: 18%;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .title-cell {
+            width: 58%;
+            padding: 8px;
+            text-align: center;
+        }
+
+            .title-cell .company {
+                font-size: 16px;
+                font-weight: bold;
+            }
+
+            .title-cell .section {
+                margin-top: 3px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            .title-cell .report-title {
+                margin-top: 4px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+
+        .document-cell {
+            width: 24%;
+            padding: 0;
+        }
+
+        .document-table td {
+            padding: 5px;
+            border: 0;
+            border-bottom: 1px solid #000;
+            font-size: 8px;
+        }
+
+        .document-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .meta-table {
+            margin-top: 5px;
+        }
+
+            .meta-table td {
+                padding: 5px 7px;
+                border: 1px solid #000;
+                font-size: 9px;
+            }
+
+        .production-table {
+            margin-top: 6px;
+            table-layout: fixed;
+        }
+
+            .production-table th,
+            .production-table td {
+                padding: 4px 2px;
+                border: 1px solid #000;
+                text-align: center;
+                vertical-align: middle;
+                word-wrap: break-word;
+            }
+
+            .production-table thead th {
+                background: #e7e7e7;
+                font-weight: bold;
+            }
+
+            .production-table .sr {
+                width: 3.5%;
+            }
+
+            .production-table .grade {
+                width: 7%;
+            }
+
+            .production-table .length {
+                width: 4%;
+            }
+
+            .production-table .crop {
+                width: 6%;
+            }
+
+            .production-table .bend {
+                width: 4%;
+            }
+
+            .production-table .total {
+                width: 6%;
+            }
+
+            .production-table .good {
+                width: 6%;
+            }
+
+        .total-row td {
+            background: #ededed;
+            font-weight: bold;
+        }
+
+        .remarks-container {
+            min-height: 45px;
+            margin-top: 6px;
+            padding: 6px 8px;
+            border: 1px solid #000;
+        }
+
+        .remarks-title {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .signature-table {
+            margin-top: 22px;
+        }
+
+            .signature-table td {
+                width: 50%;
+                padding: 5px 35px;
+                text-align: center;
+                vertical-align: bottom;
+            }
+
+        .signature-name {
+            min-height: 16px;
+        }
+
+        .signature-line {
+            margin-top: 24px;
+            padding-top: 5px;
+            border-top: 1px solid #000;
+            font-weight: bold;
+        }
+
+        .footer-note {
+            margin-top: 7px;
+            color: #555;
+            font-size: 7px;
+            text-align: right;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="report-container">
+
+        <table class="header-table">
+
+            <tr>
+
+                <td class="logo-cell">
+                    SOLB
+                    <br />
+                    STEEL
+                </td>
+
+                <td class="title-cell">
+
+                    <div class="company">
+                        SOLB STEEL COMPANY
+                    </div>
+
+                    <div class="section">
+                        MELTSHOP - CCM SECTION
+                    </div>
+
+                    <div class="report-title">
+                        CCM DAILY PRODUCTION REPORT
+                    </div>
+
+                </td>
+
+                <td class="document-cell">
+
+                    <table class="document-table">
+
+                        <tr>
+                            <td>
+                                <strong>
+                                    Document No.
+                                </strong>
+                            </td>
+
+                            <td>
+                                QMF-SM-969
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <strong>
+                                    Revision
+                                </strong>
+                            </td>
+
+                            <td>
+                                Rev. 0
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <strong>
+                                    Page
+                                </strong>
+                            </td>
+
+                            <td>
+                                Page 1 of 1
+                            </td>
+                        </tr>
+
+                    </table>
+
+                </td>
+
+            </tr>
+
+        </table>
+
+        <table class="meta-table">
+
+            <tr>
+
+                <td>
+                    <strong>
+                        Report No.:
+                    </strong>
+
+                    @Model.ReportNo
+                </td>
+
+                <td>
+                    <strong>
+                        Date:
+                    </strong>
+
+                    @Model.ReportDate.ToString(
+                        "dd-MMM-yyyy"
+                    )
+                </td>
+
+                <td>
+                    <strong>
+                        Shift:
+                    </strong>
+
+                    @Model.Shift
+                </td>
+
+                <td>
+                    <strong>
+                        Team:
+                    </strong>
+
+                    @Model.Team
+                </td>
+
+            </tr>
+
+        </table>
+
+        <table class="production-table">
+
+            <thead>
+
+                <tr>
+
+                    <th rowspan="2"
+                        class="sr">
+                        Sr.
+                    </th>
+
+                    <th rowspan="2"
+                        class="grade">
+                        Grade
+                    </th>
+
+                    <th colspan="12">
+                        NUMBER OF BILLETS FOR
+                        150 × 150
+                    </th>
+
+                    <th rowspan="2"
+                        class="crop">
+                        Crop End /
+                        Start
+                    </th>
+
+                    <th rowspan="2"
+                        class="bend">
+                        Bend
+                    </th>
+
+                    <th rowspan="2"
+                        class="total">
+                        Total
+                        Billets
+                    </th>
+
+                    <th rowspan="2"
+                        class="good">
+                        Good
+                        Billets
+                    </th>
+
+                </tr>
+
+                <tr>
+                    <th class="length">14M</th>
+                    <th class="length">13M</th>
+                    <th class="length">12M</th>
+                    <th class="length">11M</th>
+                    <th class="length">10M</th>
+                    <th class="length">09M</th>
+                    <th class="length">08M</th>
+                    <th class="length">07M</th>
+                    <th class="length">06M</th>
+                    <th class="length">05M</th>
+                    <th class="length">04M</th>
+                    <th class="length">&lt; 4M</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @if (
+                    Model.Details != null &&
+                    Model.Details.Count > 0
+                )
+                {
+                    foreach (
+                        var item
+                        in Model.Details
+                            .OrderBy(
+                                x => x.SequenceNo
+                            )
+                    )
+                    {
+                        <tr>
+
+                            <td>
+                                @item.SequenceNo
+                            </td>
+
+                            <td>
+                                @item.Grade
+                            </td>
+
+                            <td>@item.Billet14M</td>
+                            <td>@item.Billet13M</td>
+                            <td>@item.Billet12M</td>
+                            <td>@item.Billet11M</td>
+                            <td>@item.Billet10M</td>
+                            <td>@item.Billet09M</td>
+                            <td>@item.Billet08M</td>
+                            <td>@item.Billet07M</td>
+                            <td>@item.Billet06M</td>
+                            <td>@item.Billet05M</td>
+                            <td>@item.Billet04M</td>
+                            <td>@item.BilletBelow4M</td>
+                            <td>@item.CropEndStart</td>
+                            <td>@item.Bend</td>
+                            <td>@item.TotalBillets</td>
+                            <td>@item.GoodBillets</td>
+
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="18">
+                            No production details found.
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+
+            <tfoot>
+
+                <tr class="total-row">
+
+                    <td colspan="16"
+                        style="text-align:right;">
+
+                        TOTAL
+
+                    </td>
+
+                    <td>
+                        @totalBillets
+                    </td>
+
+                    <td>
+                        @totalGoodBillets
+                    </td>
+
+                </tr>
+
+            </tfoot>
+
+        </table>
+
+        <div class="remarks-container">
+
+            <div class="remarks-title">
+                REMARKS
+            </div>
+
+            <div>
+                @(string.IsNullOrWhiteSpace(
+                    remarks
+                )
+                    ? "-"
+                    : remarks)
+            </div>
+
+        </div>
+
+        <table class="signature-table">
+
+            <tr>
+
+                <td>
+
+                    <div class="signature-name">
+                        @Model.BilletYardOperator
+                    </div>
+
+                    <div class="signature-line">
+                        SIGNATURE OF
+                        BILLET YARD OPERATOR
+                    </div>
+
+                </td>
+
+                <td>
+
+                    <div class="signature-name">
+                        @Model.CCMForeman
+                    </div>
+
+                    <div class="signature-line">
+                        SIGNATURE OF
+                        CCM FOREMAN
+                    </div>
+
+                </td>
+
+            </tr>
+
+        </table>
+
+        <div class="footer-note">
+            Generated from CCM Production Portal
+        </div>
+
+    </div>
+
+</body>
+
+</html>

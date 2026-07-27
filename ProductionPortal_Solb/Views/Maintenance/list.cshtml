@@ -1,7 +1,19 @@
 ﻿@using System.Globalization
 @{
     ViewBag.Title = "list";
-    var delay = Model as List<DAL.Models.PlantDelayBLL>;
+
+    var delay =
+        Model as List<DAL.Models.PlantDelayBLL>;
+
+    string selectedDelayType =
+        string.IsNullOrWhiteSpace(
+            Convert.ToString(ViewBag.DelayType)
+        )
+            ? "Unscheduled"
+            : Convert.ToString(ViewBag.DelayType);
+
+    string selectedAgency =
+        Convert.ToString(ViewBag.Agency);
 }
 <!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
@@ -22,20 +34,124 @@
 </div>
 <!-- End XP Breadcrumbbar -->
 <!-- Filters Section -->
-<div class="xp-breadcrumbbar" style="padding: 50px 30px 0 30px;">
+<style>
+    .maintenance-filter-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .06);
+    }
+
+        .maintenance-filter-card label {
+            color: #4b5563;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .35px;
+        }
+
+    .delay-type-filter {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 9px;
+        min-height: 40px;
+        padding: 5px;
+        border: 1px solid #d1d5db;
+        border-radius: 9px;
+        background: #f9fafb;
+    }
+
+    .delay-radio {
+        position: relative;
+        margin: 0;
+    }
+
+        .delay-radio input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .delay-radio label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 92px;
+            min-height: 30px;
+            margin: 0;
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            background: #ffffff;
+            color: #4b5563;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: none;
+            letter-spacing: 0;
+            transition: all .18s ease;
+        }
+
+        .delay-radio input:checked + label {
+            border-color: #a6173f;
+            background: #a6173f;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(166, 23, 63, .18);
+        }
+
+    .filter-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+    }
+
+    .btn-filter {
+        border-color: #a6173f;
+        background: #a6173f;
+        color: #ffffff;
+        font-weight: 700;
+    }
+
+        .btn-filter:hover,
+        .btn-filter:focus {
+            border-color: #7f1230;
+            background: #7f1230;
+            color: #ffffff;
+        }
+
+    @@media(max-width: 767px) {
+        .filter-actions {
+            margin-top: 8px;
+        }
+
+        .delay-radio label {
+            min-width: 82px;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar"
+     style="padding: 35px 30px 0 30px;">
+
     <div class="row">
         <div class="col-lg-12">
-            <div class="card mb-3">
+
+            <div class="card maintenance-filter-card mb-3">
                 <div class="card-body">
+
                     <form id="filterForm"
                           method="get"
                           action="@Url.Action("list", "Maintenance")">
 
                         <div class="row align-items-end">
 
-                            <div class="col-md-3">
+                            <div class="col-xl-2 col-md-4">
                                 <div class="form-group">
-                                    <label for="fromDate">From Date</label>
+                                    <label for="fromDate">
+                                        From Date
+                                    </label>
 
                                     <input type="date"
                                            id="fromDate"
@@ -45,9 +161,11 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-xl-2 col-md-4">
                                 <div class="form-group">
-                                    <label for="toDate">To Date</label>
+                                    <label for="toDate">
+                                        To Date
+                                    </label>
 
                                     <input type="date"
                                            id="toDate"
@@ -57,9 +175,11 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-xl-2 col-md-4">
                                 <div class="form-group">
-                                    <label for="plant">Plant</label>
+                                    <label for="plant">
+                                        Plant
+                                    </label>
 
                                     <select id="plant"
                                             name="plant"
@@ -94,70 +214,126 @@
                                                 @((ViewBag.Plant as string) == "CCM" ? "selected" : "")>
                                             CCM
                                         </option>
-
                                     </select>
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-xl-2 col-md-4">
                                 <div class="form-group">
-                                    <button type="submit"
-                                            class="btn btn-primary mr-2">
-                                        <i class="fa fa-filter"></i>
-                                        Filter
-                                    </button>
+                                    <label for="agency">
+                                        Agency
+                                    </label>
 
-                                    <a href="@Url.Action("list", "Maintenance")"
-                                       class="btn btn-secondary">
-                                        <i class="fa fa-times"></i>
-                                        Clear
-                                    </a>
+                                    <select id="agency"
+                                            name="agency"
+                                            class="form-control">
+
+                                        <option value=""
+                                                @(string.IsNullOrWhiteSpace(selectedAgency) ? "selected" : "")>
+                                            All Agencies
+                                        </option>
+
+                                        <option value="Electrical"
+                                                @(selectedAgency == "Electrical" ? "selected" : "")>
+                                            Electrical
+                                        </option>
+
+                                        <option value="Mechanical"
+                                                @(selectedAgency == "Mechanical" ? "selected" : "")>
+                                            Mechanical
+                                        </option>
+
+                                        <option value="Utility"
+                                                @(selectedAgency == "Utility" ? "selected" : "")>
+                                            Utility
+                                        </option>
+
+                                        <option value="Cranes"
+                                                @(selectedAgency == "Cranes" ? "selected" : "")>
+                                            Cranes
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-3 col-md-8">
+                                <div class="form-group">
+                                    <label>
+                                        Delay Type
+                                    </label>
+
+                                    <div class="delay-type-filter">
+
+                                        <div class="delay-radio">
+                                            <input type="radio"
+                                                   id="delayScheduled"
+                                                   name="delayType"
+                                                   value="Scheduled"
+                                                   @(selectedDelayType.Equals("Scheduled", StringComparison.OrdinalIgnoreCase) ? "checked" : "") />
+
+                                            <label for="delayScheduled">
+                                                Scheduled
+                                            </label>
+                                        </div>
+
+                                        <div class="delay-radio">
+                                            <input type="radio"
+                                                   id="delayUnscheduled"
+                                                   name="delayType"
+                                                   value="Unscheduled"
+                                                   @(selectedDelayType.Equals("Unscheduled", StringComparison.OrdinalIgnoreCase) ? "checked" : "") />
+
+                                            <label for="delayUnscheduled">
+                                                Unscheduled
+                                            </label>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-4 col-md-4">
+                                <div class="form-group">
+                                    <div class="filter-actions">
+
+                                        <button type="submit"
+                                                class="btn btn-filter"
+                                                title="Apply Filters">
+                                            <i class="fa fa-filter"></i>
+                                        </button>
+
+                                        <a href="@Url.Action(
+                                            "list",
+                                            "Maintenance"
+                                        )"
+                                           class="btn btn-secondary"
+                                           title="Clear Filters">
+                                            <i class="fa fa-times"></i>
+                                        </a>
+
+                                        <button type="submit"
+                                                class="btn btn-success"
+                                                title="Download Failure Analysis"
+                                                formaction="@Url.Action(
+                                                    "ExportFailureAnalysisExcel",
+                                                    "Maintenance"
+                                                )"
+                                                formmethod="get">
+                                            <i class="fa fa-file-excel-o"></i>
+                                            Failure Analysis Report
+                                        </button>
+
+                                    </div>
                                 </div>
                             </div>
 
                         </div>
 
                     </form>
-                    <!--<form id="filterForm" method="get" action="@Url.Action("list", "Maintenance")" class="d-flex justify-content-between">
 
-        <div class="d-flex">
-            <div class="form-group mr-3">
-                <label for="fromDate" class="mr-2">From</label>
-                <input type="date" id="fromDate" name="fromDate" class="form-control" value="@ViewBag.FromDate" />
-            </div>
-
-            <div class="form-group mr-3">
-                <label for="toDate" class="mr-2">To</label>
-                <input type="date" id="toDate" name="toDate" class="form-control" value="@ViewBag.ToDate" />
-            </div>
-
-            <div class="col-md-2">
-                <label>Plant</label>
-                <select id="plantFilter" class="form-control">
-                    <option value="">All</option>
-                    <option value="Rolling Mill 1">RM 1</option>
-                    <option value="Rolling Mill 2">RM 2</option>
-                    <option value="EAF">EAF</option>
-                    <option value="LF">LF</option>
-                    <option value="CCM">CCM</option>
-                </select>
-            </div>
-
-            <div class="form-group d-flex align-items-end mr-3">
-                <button type="submit" id="filterBtn" class="btn btn-primary mr-2">Filter</button>
-                <a href="@Url.Action("list", "Maintenance")" id="clearBtn" class="btn btn-secondary">Clear</a>
-            </div>
-        </div>-->
-                    @*<div class="d-flex justify-content-end">
-            <div class="form-group d-flex align-items-end">
-                <button type="button" id="exportPdf" class="btn btn-danger mr-2">
-                    <i class="fa fa-file-pdf-o"></i> Export PDF
-                </button>
-            </div>
-        </div>*@
-                    <!--</form>-->
                 </div>
             </div>
+
         </div>
     </div>
 </div>
@@ -178,6 +354,8 @@
                                     <th>Start Time</th>
                                     <th>End Time</th>
                                     <th>Total Duration</th>
+                                    <th>Delay Type</th>
+                                    <th>Agency</th>
                                     <th>Delay Code</th>
                                     <th>Equipment</th>
                                     <th>Reason</th>
@@ -199,10 +377,25 @@
                                             <td>@item.StartTime</td>
                                             <td>@item.EndTime</td>
                                             <td>@item.TotalDuration</td>
+                                            <td>@item.DelayType</td>
                                             <td>@item.AgencyName</td>
+                                            <td>@item.Delaycode</td>
                                             <td>@item.Equipments</td>
                                             <td>@item.Reason</td>
                                             <td>
+                                                <a href="@Url.Action(
+                                                        "add",
+                                                        "DelayCounterMeasure",
+                                                        new
+                                                        {
+                                                            plantDelayID = item.ID
+                                                        }
+                                                    )"
+                                                   class="btn btn-sm btn-warning"
+                                                   title="Countermeasures">
+
+                                                    <i class="fa fa-tasks"></i>
+                                                </a>
                                                 <a href="javascript:void(0);"
                                                    class="btn btn-sm btn-danger btn-delete"
                                                    data-id="@item.ID">
@@ -218,7 +411,7 @@
                                 else
                                 {
                                     <tr>
-                                        <td colspan="10" class="text-center text-muted font-italic">
+                                        <td colspan="12" class="text-center text-muted font-italic">
                                             No data available
                                         </td>
                                     </tr>

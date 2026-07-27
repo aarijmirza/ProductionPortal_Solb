@@ -4,6 +4,7 @@
     ViewBag.Title = "Bundle Section";
 
     var pageModel = Model ?? new DAL.Models.ViewModel.RollingMillChargeVM();
+
 }
 <style>
     /* Select2 ko Bootstrap form-control jesa banane ke liye */
@@ -167,7 +168,47 @@
                         <input type="text" id="theoreticalWeight" class="form-control" name="TheoriticalWeight" readonly />
                     </div>
 
-                    <div class="form-group col-md-6">
+
+                    <div class="form-group col-md-2">
+                        <label for="size">Size</label>
+                        <select class="form-control" id="size" name="size" required>
+                            <option disabled selected>-- please select --</option>
+                            <option value="5.5 MM">5.5 MM</option>
+                            <option value="6 MM">6 MM</option>
+                            <option value="6.5 MM">6.5 MM</option>
+                            <option value="7 MM">7 MM MM</option>
+                            <option value="8 MM">8 MM</option>
+                            <option value="9 MM">9 MM</option>
+                            <option value="10 MM">10 MM</option>
+                            <option value="11 MM">11 MM</option>
+                            <option value="12 MM">12 MM</option>
+                            <option value="14 MM">14 MM</option>
+                            <option value="16 MM">16 MM</option>
+                            <option value="18 MM">18 MM</option>
+                            <option value="20 MM">20 MM</option>
+                            <option value="22 MM">22 MM</option>
+                            <option value="25 MM">25 MM</option>
+                            <option value="28 MM">28 MM</option>
+                            <option value="30 MM">30 MM</option>
+                            <option value="32 MM">32 MM</option>
+                            <option value="36 MM">36 MM</option>
+                            <option value="40 MM">40 MM</option>
+
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-2">
+                        <label for="profile">Profile</label>
+                        <select class="form-control" id="profile" name="profile" required>
+                            <option disabled selected>-- please select --</option>
+                            <option value="RB">RB</option>
+                            <option value="WR">WR</option>
+                            <option value="RC">RIC</option>
+                            <option value="PB">PB</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-4">
                         <label>Remarks</label>
                         <textarea class="form-control" id="txtRemarks" rows="2" name="Remarks"></textarea>
                     </div>
@@ -216,6 +257,8 @@
                         <tr>
                             <th>Heat #</th>
                             <th>Boarding #</th>
+                            <th>Size</th>
+                            <th>Profile</th>
                             <th>Steel Grade</th>
                             <th>Total Bundles</th>
                             <th>Total Weight (MT)</th>
@@ -231,6 +274,8 @@
                                 <tr data-shift="@item.Shift">
                                     <td>@item.HeatNo</td>
                                     <td>@item.BilletBoardingNo</td>
+                                    <td>@item.Size</td>
+                                    <td>@item.Profile</td>
                                     <td>@item.SteelGrade</td>
                                     <td>@item.TotalBundleProduced</td>
                                     <td>@item.TheoriticalWeight</td>
@@ -262,7 +307,9 @@
                                            data-ponumber="@item.PONumber"
                                            data-bundles="@item.TotalBundleProduced"
                                            data-weight="@item.TheoriticalWeight"
-                                           data-remarks="@item.Remarks">
+                                           data-remarks="@item.Remarks"
+                                           data-size="@item.Size"
+                                           data-profile="@item.Profile">
                                             Edit
                                         </a>
 
@@ -435,6 +482,8 @@
             var bundles = $(this).data("bundles");
             var totalWeight = $(this).data("weight");
             var remarks = $(this).data("remarks");
+            var profile = $(this).data("profile");
+            var size = $(this).data("size");
 
             $("#hdnID").val(id);
             $("#date").val(date);
@@ -449,6 +498,9 @@
             $("#totalBundles").val(bundles);
             $("#theoreticalWeight").val(totalWeight);
             $("#txtRemarks").val(remarks || "");
+            $("#size").val(size || "");
+            $("#profile").val(profile || "");
+
 
             $("#btnSubmit")
                 .removeClass("btn-primary")

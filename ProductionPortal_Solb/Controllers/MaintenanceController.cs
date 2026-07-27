@@ -1,8 +1,10 @@
 ﻿using BAL.Repositories;
+using ClosedXML.Excel;
 using DAL.Models;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -17,43 +19,47 @@ namespace ProductionPortal_Solb.Controllers
             repo = new DelayRespository();
         }
         // GET: Maintenance
+
+
         public ActionResult list(
             DateTime? fromDate,
             DateTime? toDate,
-            string plant)
+            string plant,
+            string delayType,
+            string agency)
         {
-            DateTime startDate = fromDate ?? DateTime.Today;
-            DateTime endDate = toDate ?? DateTime.Today;
+            DateTime startDate =
+                fromDate ?? DateTime.Today;
 
-            // Invalid date range protection
-            if (startDate.Date > endDate.Date)
-            {
-                DateTime temp = startDate;
-                startDate = endDate;
-                endDate = temp;
-            }
+            DateTime endDate =
+                toDate ?? DateTime.Today;
 
-            plant = string.IsNullOrWhiteSpace(plant)
-                ? null
-                : plant.Trim();
+            delayType =
+                string.IsNullOrWhiteSpace(delayType)
+                    ? "Unscheduled"
+                    : delayType;
+
+            ViewBag.FromDate =
+                startDate.ToString("yyyy-MM-dd");
+
+            ViewBag.ToDate =
+                endDate.ToString("yyyy-MM-dd");
+
+            ViewBag.Plant = plant;
+            ViewBag.DelayType = delayType;
+            ViewBag.Agency = agency;
 
             var model = repo.GetMaintenanceRecords(
-                startDate.Date,
-                endDate.Date,
-                plant
+                startDate,
+                endDate,
+                plant,
+                delayType,
+                agency,
+                false
             );
-
-            ViewBag.FromDate = startDate.ToString("yyyy-MM-dd");
-            ViewBag.ToDate = endDate.ToString("yyyy-MM-dd");
-            ViewBag.Plant = plant ?? "";
 
             return View(model);
         }
-
-        //public ActionResult detail()
-        //{
-        //    return View();
-        //}
 
         public ActionResult detail(int id)
         {
@@ -88,51 +94,6 @@ namespace ProductionPortal_Solb.Controllers
                 return RedirectToAction("list");
             }
         }
-
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public ActionResult InsertMaintenanceAnalysis(FailureAnalysisBLL model)
-        //{
-        //    try
-        //    {
-        //        if (model == null)
-        //        {
-        //            TempData["ErrorMessage"] = "Invalid data.";
-        //            return RedirectToAction("list");
-        //        }
-
-        //        if (model.DelayID <= 0)
-        //        {
-        //            TempData["ErrorMessage"] = "Invalid Delay ID.";
-        //            return RedirectToAction("list");
-        //        }
-
-        //        // Auto Generate Analysis Code from Controller
-        //        model.AnalysisCode = repo.GenerateAnalysisCode();
-
-        //        model.StatusID = 1;
-        //        model.CreatedBy = User.Identity.Name;
-        //        model.CreatedDate = DateTime.Now;
-
-        //        int result = repo.InsertMaintenanceAnalysis(model);
-
-        //        if (result < 0)
-        //        {
-        //            TempData["SuccessMessage"] = "Maintenance analysis saved successfully. Analysis Code: " + model.AnalysisCode;
-        //        }
-        //        else
-        //        {
-        //            TempData["ErrorMessage"] = "Maintenance analysis not saved.";
-        //        }
-
-        //        return RedirectToAction("detail", new { id = model.DelayID });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        TempData["ErrorMessage"] = "Error: " + ex.Message;
-        //        return RedirectToAction("detail", new { id = model.DelayID });
-        //    }
-        //}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -361,6 +322,262 @@ namespace ProductionPortal_Solb.Controllers
 
                         repo.InsertFailureAnalysisAction(action);
                     }
+                }
+            }
+        }
+
+        public ActionResult ExportFailureAnalysisExcel(
+            DateTime? fromDate,
+            DateTime? toDate,
+            string plant,
+            string delayType,
+            string agency)
+        {
+            DateTime startDate =
+                fromDate ?? DateTime.Today;
+
+            DateTime endDate =
+                toDate ?? DateTime.Today;
+
+            delayType =
+                string.IsNullOrWhiteSpace(delayType)
+                    ? "Unscheduled"
+                    : delayType.Trim();
+
+            List<PlantDelayBLL> records =
+                repo.GetMaintenanceRecords(
+                    startDate,
+                    endDate,
+                    plant,
+                    delayType,
+                    agency,
+                    false
+                );
+
+            using (var workbook = new XLWorkbook())
+            {
+                var sheet =
+                    workbook.Worksheets.Add(
+                        "Failure Analysis"
+                    );
+
+                string[] headers =
+                {
+            "Plant",
+            "Product Size",
+            "Production Date",
+            "Delay Start",
+            "Delay End",
+            "Total Minutes",
+            "Agency",
+            "Area",
+            "Equipment",
+            "Delay Description",
+            "Reason for Occurrence",
+            "Action Taken",
+            "Last PM Date",
+            "Failure Report Status",
+            "Long Term Action to Increase MTBF",
+            "Long Term Action to Decrease MTTR",
+            "SAP Breakdown No.",
+            "Failure Category 1 (Component)",
+            "Failure Category 2 (Root Cause)"
+        };
+
+                for (int column = 0;
+                     column < headers.Length;
+                     column++)
+                {
+                    sheet.Cell(1, column + 1).Value =
+                        headers[column];
+                }
+
+                int rowNumber = 2;
+
+                foreach (var item in records)
+                {
+                    sheet.Cell(rowNumber, 1).Value =
+                        item.Plant;
+
+                    sheet.Cell(rowNumber, 2).Value =
+                        item.ProductSize;
+
+                    sheet.Cell(rowNumber, 3).Value =
+                        item.Date;
+
+                    sheet.Cell(rowNumber, 4).Value =
+                        item.StartTime.HasValue
+                            ? item.StartTime.Value
+                                .ToString(@"hh\:mm")
+                            : "";
+
+                    sheet.Cell(rowNumber, 5).Value =
+                        item.EndTime.HasValue
+                            ? item.EndTime.Value
+                                .ToString(@"hh\:mm")
+                            : "";
+
+                    sheet.Cell(rowNumber, 6).Value =
+                        item.TotalDuration;
+
+                    sheet.Cell(rowNumber, 7).Value =
+                        item.AgencyName;
+
+                    sheet.Cell(rowNumber, 8).Value =
+                        item.Area;
+
+                    sheet.Cell(rowNumber, 9).Value =
+                        item.Equipments;
+
+                    sheet.Cell(rowNumber, 10).Value =
+                        item.DelayDescription;
+
+                    sheet.Cell(rowNumber, 11).Value =
+                        item.ReasonForOccurence;
+
+                    sheet.Cell(rowNumber, 12).Value =
+                        item.ActionTaken;
+
+                    sheet.Cell(rowNumber, 13).Value =
+                        item.LastPMDate;
+
+                    sheet.Cell(rowNumber, 14).Value =
+                        item.FailureReportStatus;
+
+                    sheet.Cell(rowNumber, 15).Value =
+                        item.IncreaseMTBF;
+
+                    sheet.Cell(rowNumber, 16).Value =
+                        item.DecreaseMTTR;
+
+                    sheet.Cell(rowNumber, 17).Value =
+                        item.SAPBreakdownOrder;
+
+                    sheet.Cell(rowNumber, 18).Value =
+                        item.FailureCategory1Component;
+
+                    sheet.Cell(rowNumber, 19).Value =
+                        item.FailureCategory2RootCause;
+
+                    rowNumber++;
+                }
+
+                var headerRange =
+                    sheet.Range(
+                        1,
+                        1,
+                        1,
+                        headers.Length
+                    );
+
+                headerRange.Style.Fill.BackgroundColor =
+                    XLColor.FromHtml("#0B7285");
+
+                headerRange.Style.Font.FontColor =
+                    XLColor.White;
+
+                headerRange.Style.Font.Bold = true;
+
+                headerRange.Style.Alignment
+                    .Horizontal =
+                    XLAlignmentHorizontalValues.Center;
+
+                headerRange.Style.Alignment
+                    .Vertical =
+                    XLAlignmentVerticalValues.Center;
+
+                headerRange.Style.Alignment
+                    .WrapText = true;
+
+                headerRange.Style.Border
+                    .OutsideBorder =
+                    XLBorderStyleValues.Thin;
+
+                headerRange.Style.Border
+                    .InsideBorder =
+                    XLBorderStyleValues.Thin;
+
+                if (rowNumber > 2)
+                {
+                    var dataRange =
+                        sheet.Range(
+                            2,
+                            1,
+                            rowNumber - 1,
+                            headers.Length
+                        );
+
+                    dataRange.Style.Alignment
+                        .Vertical =
+                        XLAlignmentVerticalValues.Center;
+
+                    dataRange.Style.Alignment
+                        .WrapText = true;
+
+                    dataRange.Style.Border
+                        .OutsideBorder =
+                        XLBorderStyleValues.Thin;
+
+                    dataRange.Style.Border
+                        .InsideBorder =
+                        XLBorderStyleValues.Thin;
+
+                    for (int row = 2;
+                         row < rowNumber;
+                         row++)
+                    {
+                        if (row % 2 == 0)
+                        {
+                            sheet.Range(
+                                row,
+                                1,
+                                row,
+                                headers.Length
+                            )
+                            .Style.Fill.BackgroundColor =
+                                XLColor.FromHtml(
+                                    "#CDEBF3"
+                                );
+                        }
+                    }
+                }
+
+                sheet.Column(3)
+                    .Style.DateFormat.Format =
+                    "dd-MMM-yyyy";
+
+                sheet.Column(13)
+                    .Style.DateFormat.Format =
+                    "dd-MMM-yyyy";
+
+                sheet.SheetView.FreezeRows(1);
+                sheet.RangeUsed()?.SetAutoFilter();
+
+                sheet.Columns(1, 9)
+                    .AdjustToContents();
+
+                sheet.Columns(10, 19)
+                    .Width = 30;
+
+                sheet.Row(1).Height = 38;
+
+                using (var stream =
+                    new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+
+                    string fileName =
+                        "Failure_Analysis_" +
+                        startDate.ToString("yyyyMMdd") +
+                        "_to_" +
+                        endDate.ToString("yyyyMMdd") +
+                        ".xlsx";
+
+                    return File(
+                        stream.ToArray(),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        fileName
+                    );
                 }
             }
         }

@@ -1,0 +1,1160 @@
+﻿@model DAL.Models.CCMDailyProductionReportBLL
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = Model != null && Model.ID > 0
+        ? "Edit CCM Daily Production Report"
+        : "CCM Daily Production Report";
+
+    int initialRowCount =
+        Model != null && Model.ID > 0
+            ? Model.Details.Count
+            : Math.Min(Model.Details.Count, 1);
+}
+
+<style>
+    :root {
+        --solb-maroon: #9f163d;
+        --solb-maroon-dark: #75102d;
+        --solb-maroon-soft: #faeef2;
+        --solb-bg: #f3f5f7;
+        --solb-border: #dfe3e8;
+        --solb-text: #202936;
+        --solb-muted: #6b7280;
+    }
+
+    body {
+        background: var(--solb-bg);
+    }
+
+    .ccm-shell {
+        max-width: 1720px;
+        margin: 0 auto;
+    }
+
+    .ccm-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 20px 24px;
+        margin-bottom: 16px;
+        border-radius: 16px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--solb-maroon-dark), var(--solb-maroon));
+        box-shadow: 0 10px 26px rgba(117, 16, 45, .20);
+        overflow: hidden;
+        position: relative;
+    }
+
+        .ccm-header:after {
+            content: "";
+            position: absolute;
+            right: -60px;
+            top: -110px;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.06);
+        }
+
+        .ccm-header h3 {
+            margin: 0;
+            color: #fff;
+            font-size: 21px;
+            font-weight: 800;
+        }
+
+        .ccm-header p {
+            margin: 5px 0 0;
+            color: rgba(255,255,255,.90);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+    .ccm-doc-chip {
+        position: relative;
+        z-index: 2;
+        min-width: 130px;
+        padding: 9px 13px;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 10px;
+        background: rgba(255,255,255,.10);
+        text-align: center;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .ccm-card {
+        margin-bottom: 17px;
+        overflow: hidden;
+        border: 1px solid var(--solb-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    }
+
+    .ccm-card-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--solb-border);
+        background: linear-gradient(180deg,#fff,#fafbfc);
+    }
+
+        .ccm-card-title h5 {
+            margin: 0;
+            color: var(--solb-text);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .ccm-card-title small {
+            color: var(--solb-muted);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+    .ccm-card-body {
+        padding: 18px;
+    }
+
+    .header-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr 1fr 1fr 1.35fr 1.35fr;
+        gap: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+        .form-group label {
+            margin-bottom: 6px;
+            color: #4b5563;
+            font-size: 10.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .35px;
+        }
+
+    .required:after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-control {
+        height: 40px;
+        border: 1px solid #cfd5dc;
+        border-radius: 8px;
+        box-shadow: none;
+        color: var(--solb-text);
+        font-size: 13px;
+    }
+
+        .form-control:focus {
+            border-color: var(--solb-maroon);
+            box-shadow: 0 0 0 3px rgba(159,22,61,.10);
+        }
+
+    .production-scroll {
+        overflow: auto;
+        max-height: none;
+        border: 1px solid var(--solb-border);
+        border-radius: 11px;
+        background: #fff;
+    }
+
+    .production-table {
+        min-width: 1450px;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .production-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            padding: 9px 6px;
+            border-color: rgba(255,255,255,.15);
+            background: var(--solb-maroon-dark);
+            color: #fff;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+            font-size: 10.5px;
+            font-weight: 800;
+        }
+
+        .production-table thead tr:nth-child(2) th {
+            top: 37px;
+            background: var(--solb-maroon);
+        }
+
+        .production-table td {
+            padding: 5px;
+            border-color: #e5e7eb;
+            vertical-align: middle;
+            text-align: center;
+            background: #fff;
+        }
+
+        .production-table tbody tr:nth-child(even) td {
+            background: #fbfbfc;
+        }
+
+        .production-table tbody tr:hover td {
+            background: #fff7fa;
+        }
+
+    .sticky-one,
+    .sticky-two {
+        position: sticky;
+        z-index: 4;
+    }
+
+    .sticky-one {
+        left: 0;
+        width: 52px;
+        min-width: 52px;
+    }
+
+    .sticky-two {
+        left: 52px;
+        width: 125px;
+        min-width: 125px;
+    }
+
+    .production-table thead .sticky-one,
+    .production-table thead .sticky-two {
+        z-index: 7;
+        background: var(--solb-maroon-dark);
+    }
+
+    .serial-cell {
+        color: var(--solb-maroon-dark);
+        background: var(--solb-maroon-soft) !important;
+        font-weight: 800;
+    }
+
+    .production-table .form-control {
+        height: 32px;
+        min-width: 60px;
+        padding: 4px 5px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .production-table .grade-input {
+        min-width: 115px;
+        text-align: left;
+        font-weight: 700;
+    }
+
+    .production-table .remarks-input {
+        min-width: 220px;
+        text-align: left;
+    }
+
+    .production-table .row-total {
+        background: #f1f3f5 !important;
+        color: var(--solb-maroon-dark);
+        font-weight: 800;
+    }
+
+
+    .grid-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .grid-toolbar-text {
+        color: var(--solb-muted);
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .btn-add-row {
+        border: 1px solid var(--solb-maroon);
+        border-radius: 8px;
+        padding: 7px 14px;
+        background: var(--solb-maroon);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+        .btn-add-row:hover,
+        .btn-add-row:focus {
+            background: var(--solb-maroon-dark);
+            border-color: var(--solb-maroon-dark);
+            color: #fff;
+        }
+
+    .btn-remove-row {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid #efc3cc;
+        border-radius: 7px;
+        background: #fff4f6;
+        color: var(--solb-maroon-dark);
+        font-size: 13px;
+    }
+
+        .btn-remove-row:hover {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+    .overall-remarks {
+        margin-top: 16px;
+        padding: 15px;
+        border: 1px solid var(--solb-border);
+        border-radius: 12px;
+        background: #fafbfc;
+    }
+
+        .overall-remarks label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--solb-text);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .overall-remarks textarea {
+            min-height: 90px;
+            resize: vertical;
+            background: #fff;
+        }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(170px, 1fr));
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    .summary-box {
+        padding: 13px 15px;
+        border: 1px solid var(--solb-border);
+        border-radius: 11px;
+        background: #fff;
+        border-left: 4px solid var(--solb-maroon);
+    }
+
+        .summary-box.good {
+            border-left-color: #198754;
+        }
+
+        .summary-box.nonprime {
+            border-left-color: #d28a00;
+        }
+
+        .summary-box.rows {
+            border-left-color: #64748b;
+        }
+
+        .summary-box span {
+            display: block;
+            color: var(--solb-muted);
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .35px;
+        }
+
+        .summary-box strong {
+            display: block;
+            margin-top: 3px;
+            color: var(--solb-text);
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+    .action-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 13px 16px;
+        border-top: 1px solid var(--solb-border);
+        background: rgba(255,255,255,.96);
+        backdrop-filter: blur(8px);
+    }
+
+    .action-note {
+        color: var(--solb-muted);
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .btn-solb {
+        min-width: 135px;
+        padding: 9px 20px;
+        border-radius: 8px;
+        border-color: var(--solb-maroon);
+        background: var(--solb-maroon);
+        color: #fff;
+        font-weight: 700;
+    }
+
+        .btn-solb:hover,
+        .btn-solb:focus {
+            border-color: var(--solb-maroon-dark);
+            background: var(--solb-maroon-dark);
+            color: #fff;
+        }
+
+    .validation-summary-errors {
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        border: 1px solid #f5c2c7;
+        border-radius: 9px;
+        background: #f8d7da;
+        color: #842029;
+        font-size: 12px;
+    }
+
+    .field-validation-error {
+        display: block;
+        margin-top: 3px;
+        color: #dc3545;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    @@media(max-width:1199px) {
+        .header-grid {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+    @@media(max-width:767px) {
+        .grid-toolbar {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .btn-add-row {
+            width: 100%;
+        }
+
+        .ccm-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .header-grid,
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .ccm-card-body {
+            padding: 14px;
+        }
+
+        .action-bar {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+            .action-bar .btn {
+                width: 100%;
+            }
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            background: #fff !important;
+        }
+
+        .ccm-card, .ccm-header {
+            box-shadow: none !important;
+        }
+
+        .production-scroll {
+            overflow: visible !important;
+            max-height: none !important;
+        }
+
+        .production-table {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+
+            .production-table th,
+            .production-table td {
+                position: static !important;
+                padding: 3px !important;
+                font-size: 8px !important;
+            }
+
+            .production-table .form-control {
+                min-width: 0 !important;
+                height: auto !important;
+                padding: 0 !important;
+                border: 0 !important;
+                font-size: 8px !important;
+            }
+
+        @@page {
+            size: A4 landscape;
+            margin: 7mm;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h4 class="xp-page-title">@ViewBag.Title</h4>
+        </div>
+        <div class="col-md-4 text-right">
+            <a href="@Url.Action("List","CCMProduction")"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="ccm-shell">
+
+        <div class="ccm-header">
+            <div>
+                <h3>CCM Daily Production Report</h3>
+                <p>SOLB Steel Company · Meltshop / CCM Section</p>
+            </div>
+
+            <div class="ccm-doc-chip">
+                QMF-SM-969<br />
+                Rev. 0
+            </div>
+        </div>
+
+        @using (Html.BeginForm("Add", "CCMProduction", FormMethod.Post,
+            new { id = "ccmProductionForm", autocomplete = "off" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(x => x.ID)
+            @Html.HiddenFor(x => x.StatusID)
+
+            <div class="ccm-card">
+                <div class="ccm-card-title">
+                    <div>
+                        <h5>Report Information</h5>
+                        <small>Basic report details and responsible personnel</small>
+                    </div>
+                </div>
+
+                <div class="ccm-card-body">
+
+
+                    <div class="header-grid">
+                        <div class="form-group">
+                            <label class="required">Report No.</label>
+                            @Html.TextBoxFor(x => x.ReportNo,
+                                     new
+                                     {
+                                         @class = "form-control",
+                                         placeholder = "CCM-20260310",
+                                         required = "required"
+                                     })
+                            @Html.ValidationMessageFor(x => x.ReportNo)
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Report Date</label>
+                            @Html.TextBoxFor(x => x.ReportDate, "{0:yyyy-MM-dd}",
+                                     new
+                                     {
+                                         @class = "form-control",
+                                         type = "date",
+                                         required = "required"
+                                     })
+                            @Html.ValidationMessageFor(x => x.ReportDate)
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Shift</label>
+                            @Html.DropDownListFor(x => x.Shift,
+                                     (SelectList)ViewBag.Shifts,
+                                     "-- Select Shift --",
+                                     new
+                                     {
+                                         @class = "form-control",
+                                         required = "required"
+                                     })
+                            @Html.ValidationMessageFor(x => x.Shift)
+                        </div>
+
+                        <div class="form-group">
+                            <label>Team</label>
+                            @Html.TextBoxFor(x => x.Team,
+                                     new
+                                     {
+                                         @class = "form-control",
+                                         placeholder = "Team"
+                                     })
+                        </div>
+
+                        <div class="form-group">
+                            <label>CCM Foreman</label>
+                            @Html.TextBoxFor(x => x.CCMForeman,
+                                     new
+                                     {
+                                         @class = "form-control",
+                                         placeholder = "Foreman name"
+                                     })
+                        </div>
+
+                        <div class="form-group">
+                            <label>Billet Yard Operator</label>
+                            @Html.TextBoxFor(x => x.BilletYardOperator,
+                                     new
+                                     {
+                                         @class = "form-control",
+                                         placeholder = "Operator name"
+                                     })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ccm-card">
+                <div class="ccm-card-title">
+                    <div>
+                        <h5>Billet Production Details</h5>
+                        <small>Add or remove grade-wise production rows as required</small>
+                    </div>
+                </div>
+
+                <div class="ccm-card-body">
+
+                    <div class="grid-toolbar no-print">
+                        <div class="grid-toolbar-text">
+                            Use “Add Row” to enter another billet grade.
+                        </div>
+
+                        <button type="button"
+                                class="btn-add-row"
+                                id="btnAddProductionRow">
+                            <i class="fa fa-plus"></i>
+                            Add Row
+                        </button>
+                    </div>
+
+                    <div class="production-scroll">
+                        <table class="table table-bordered production-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="sticky-one">Sr.</th>
+                                    <th rowspan="2" class="sticky-two">Grade</th>
+                                    <th colspan="12">No. of Billets for 150 × 150</th>
+                                    <th rowspan="2">Crop End / Start</th>
+                                    <th rowspan="2">Bend</th>
+                                    <th rowspan="2">Total Billets</th>
+                                    <th rowspan="2">Good Billets</th>
+                                    <th rowspan="2" class="no-print">Action</th>
+                                </tr>
+                                <tr>
+                                    <th>14M</th>
+                                    <th>13M</th>
+                                    <th>12M</th>
+                                    <th>11M</th>
+                                    <th>10M</th>
+                                    <th>09M</th>
+                                    <th>08M</th>
+                                    <th>07M</th>
+                                    <th>06M</th>
+                                    <th>05M</th>
+                                    <th>04M</th>
+                                    <th>&lt; 4M</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="productionRows">
+                                @for (int i = 0; i < initialRowCount; i++)
+                                {
+                                    <tr class="production-row" data-row-index="@i">
+                                        <td class="serial-cell sticky-one row-sequence">
+                                            @(i + 1)
+
+                                            @Html.HiddenFor(
+                                                     x => x.Details[i].ID,
+                                                     new { @class = "detail-id" }
+                                                 )
+
+                                            @Html.HiddenFor(
+                                                     x => x.Details[i].ReportID,
+                                                     new { @class = "detail-report-id" }
+                                                 )
+
+                                            @Html.HiddenFor(
+                                                     x => x.Details[i].SequenceNo,
+                                                     new { @class = "detail-sequence" }
+                                                 )
+                                        </td>
+
+                                        <td class="sticky-two">
+                                            @Html.TextBoxFor(
+                                                     x => x.Details[i].Grade,
+                                                     new
+                                                     {
+                                                         @class = "form-control grade-input",
+                                                         placeholder = "Grade"
+                                                     }
+                                                 )
+                                        </td>
+
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet14M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet13M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet12M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet11M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet10M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet09M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet08M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet07M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet06M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet05M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet04M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].BilletBelow4M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].CropEndStart, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <td>@Html.TextBoxFor(x => x.Details[i].Bend, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+
+                                        <td>
+                                            <input type="number"
+                                                   class="form-control row-total"
+                                                   value="@Model.Details[i].TotalBillets"
+                                                   readonly />
+                                        </td>
+
+                                        <td>
+                                            @Html.TextBoxFor(
+                                                     x => x.Details[i].GoodBillets,
+                                                     new
+                                                     {
+                                                         @class = "form-control good-billet-input",
+                                                         type = "number",
+                                                         min = "0"
+                                                     }
+                                                 )
+                                        </td>
+
+                                        @Html.HiddenFor(
+                                                 x => x.Details[i].Remarks,
+                                                 new { @class = "detail-remarks" }
+                                             )
+
+                                        <td class="no-print">
+                                            <button type="button"
+                                                    class="btn-remove-row"
+                                                    title="Remove row">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="overall-remarks">
+                        <label for="overallRemarks">
+                            Overall Remarks
+                        </label>
+
+                        <textarea id="overallRemarks"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Enter overall production remarks...">@(initialRowCount > 0 ? Model.Details[0].Remarks : "")</textarea>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <span>Total Billets</span>
+                            <strong id="grandTotalBillets">0</strong>
+                        </div>
+
+                        <div class="summary-box good">
+                            <span>Good / Prime Billets</span>
+                            <strong id="grandGoodBillets">0</strong>
+                        </div>
+
+                        <div class="summary-box nonprime">
+                            <span>Non-Prime Billets</span>
+                            <strong id="grandNonPrimeBillets">0</strong>
+                        </div>
+
+                        <div class="summary-box rows">
+                            <span>Active Rows</span>
+                            <strong id="activeRows">0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-bar no-print">
+                    <div class="action-note">
+                        Row and report totals are calculated automatically.
+                    </div>
+
+                    <div>
+                        <a href="@Url.Action("List","CCMProduction")"
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+
+                        <button type="submit" class="btn btn-solb">
+                            <i class="fa fa-save"></i>
+                            @(Model != null && Model.ID > 0 ? "Update Report" : "Save Report")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        var productionRows =
+            document.getElementById("productionRows");
+
+        var addButton =
+            document.getElementById("btnAddProductionRow");
+
+        var overallRemarks =
+            document.getElementById("overallRemarks");
+
+        function toInt(value) {
+            var parsed = parseInt(value, 10);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function inputHtml(index, property, cssClass, type) {
+            var inputType = type || "number";
+            var minAttribute =
+                inputType === "number" ? ' min="0"' : "";
+
+            return '<input type="' + inputType + '"' +
+                ' name="Details[' + index + '].' + property + '"' +
+                ' id="Details_' + index + '__' + property + '"' +
+                ' value="' + (inputType === "number" ? "0" : "") + '"' +
+                minAttribute +
+                ' class="form-control ' + cssClass + '" />';
+        }
+
+        function createProductionRow(index) {
+            var row = document.createElement("tr");
+
+            row.className = "production-row";
+            row.setAttribute("data-row-index", index);
+
+            row.innerHTML =
+                '<td class="serial-cell sticky-one row-sequence">' +
+                (index + 1) +
+                '<input type="hidden" class="detail-id"' +
+                ' name="Details[' + index + '].ID"' +
+                ' id="Details_' + index + '__ID" value="0" />' +
+                '<input type="hidden" class="detail-report-id"' +
+                ' name="Details[' + index + '].ReportID"' +
+                ' id="Details_' + index + '__ReportID" value="0" />' +
+                '<input type="hidden" class="detail-sequence"' +
+                ' name="Details[' + index + '].SequenceNo"' +
+                ' id="Details_' + index + '__SequenceNo"' +
+                ' value="' + (index + 1) + '" />' +
+                '</td>' +
+
+                '<td class="sticky-two">' +
+                inputHtml(index, "Grade", "grade-input", "text") +
+                '</td>' +
+
+                '<td>' + inputHtml(index, "Billet14M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet13M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet12M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet11M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet10M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet09M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet08M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet07M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet06M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet05M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Billet04M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "BilletBelow4M", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "CropEndStart", "billet-input") + '</td>' +
+                '<td>' + inputHtml(index, "Bend", "billet-input") + '</td>' +
+
+                '<td><input type="number" value="0"' +
+                ' class="form-control row-total" readonly /></td>' +
+
+                '<td>' + inputHtml(
+                    index,
+                    "GoodBillets",
+                    "good-billet-input"
+                ) + '</td>' +
+
+                '<input type="hidden"' +
+                ' name="Details[' + index + '].Remarks"' +
+                ' id="Details_' + index + '__Remarks"' +
+                ' class="detail-remarks" value="" />' +
+
+                '<td class="no-print">' +
+                '<button type="button" class="btn-remove-row"' +
+                ' title="Remove row">' +
+                '<i class="fa fa-trash"></i>' +
+                '</button>' +
+                '</td>';
+
+            return row;
+        }
+
+        function calculateRow(row) {
+            var total = 0;
+
+            row.querySelectorAll(".billet-input")
+                .forEach(function (input) {
+                    var value = toInt(input.value);
+
+                    if (value < 0) {
+                        value = 0;
+                        input.value = 0;
+                    }
+
+                    total += value;
+                });
+
+            var totalInput =
+                row.querySelector(".row-total");
+
+            if (totalInput) {
+                totalInput.value = total;
+            }
+
+            var goodInput =
+                row.querySelector(".good-billet-input");
+
+            if (goodInput) {
+                var good = toInt(goodInput.value);
+
+                if (good < 0) {
+                    good = 0;
+                    goodInput.value = 0;
+                }
+
+                if (good > total) {
+                    good = total;
+                    goodInput.value = total;
+                }
+            }
+
+            return total;
+        }
+
+        function syncOverallRemarks() {
+            var remarkInputs =
+                productionRows.querySelectorAll(".detail-remarks");
+
+            remarkInputs.forEach(function (input, index) {
+                input.value =
+                    index === 0
+                        ? overallRemarks.value
+                        : "";
+            });
+        }
+
+        function reindexRows() {
+            var rows =
+                productionRows.querySelectorAll(".production-row");
+
+            rows.forEach(function (row, index) {
+                row.setAttribute("data-row-index", index);
+
+                var sequenceCell =
+                    row.querySelector(".row-sequence");
+
+                if (sequenceCell) {
+                    sequenceCell.childNodes[0].nodeValue =
+                        (index + 1);
+                }
+
+                row.querySelectorAll(
+                    "input[name], select[name], textarea[name]"
+                ).forEach(function (input) {
+                    var propertyMatch =
+                        input.name.match(
+                            /^Details\[\d+\]\.(.+)$/
+                        );
+
+                    if (!propertyMatch) return;
+
+                    var property = propertyMatch[1];
+
+                    input.name =
+                        "Details[" + index + "]." + property;
+
+                    input.id =
+                        "Details_" + index + "__" + property;
+
+                    if (property === "SequenceNo") {
+                        input.value = index + 1;
+                    }
+                });
+            });
+
+            syncOverallRemarks();
+        }
+
+        function calculateSummary() {
+            var totalBillets = 0;
+            var goodBillets = 0;
+            var activeRows = 0;
+
+            productionRows
+                .querySelectorAll(".production-row")
+                .forEach(function (row) {
+                    var rowTotal = calculateRow(row);
+
+                    var goodInput =
+                        row.querySelector(".good-billet-input");
+
+                    var gradeInput =
+                        row.querySelector(".grade-input");
+
+                    var good =
+                        goodInput ? toInt(goodInput.value) : 0;
+
+                    var hasGrade =
+                        gradeInput &&
+                        gradeInput.value.trim() !== "";
+
+                    totalBillets += rowTotal;
+                    goodBillets += good;
+
+                    if (rowTotal > 0 || good > 0 || hasGrade) {
+                        activeRows++;
+                    }
+                });
+
+            document.getElementById(
+                "grandTotalBillets"
+            ).innerText = totalBillets;
+
+            document.getElementById(
+                "grandGoodBillets"
+            ).innerText = goodBillets;
+
+            document.getElementById(
+                "grandNonPrimeBillets"
+            ).innerText =
+                Math.max(0, totalBillets - goodBillets);
+
+            document.getElementById(
+                "activeRows"
+            ).innerText = activeRows;
+
+            syncOverallRemarks();
+        }
+
+        function addRow() {
+            var index =
+                productionRows
+                    .querySelectorAll(".production-row")
+                    .length;
+
+            productionRows.appendChild(
+                createProductionRow(index)
+            );
+
+            reindexRows();
+            calculateSummary();
+
+            var newGrade =
+                productionRows.lastElementChild
+                    .querySelector(".grade-input");
+
+            if (newGrade) {
+                newGrade.focus();
+            }
+        }
+
+        function removeRow(button) {
+            var rows =
+                productionRows.querySelectorAll(".production-row");
+
+            if (rows.length <= 1) {
+                alert("At least one production row is required.");
+                return;
+            }
+
+            button.closest(".production-row").remove();
+
+            reindexRows();
+            calculateSummary();
+        }
+
+        addButton.addEventListener("click", addRow);
+
+        productionRows.addEventListener(
+            "click",
+            function (event) {
+                var removeButton =
+                    event.target.closest(".btn-remove-row");
+
+                if (removeButton) {
+                    removeRow(removeButton);
+                }
+            }
+        );
+
+        productionRows.addEventListener(
+            "input",
+            calculateSummary
+        );
+
+        productionRows.addEventListener(
+            "change",
+            calculateSummary
+        );
+
+        overallRemarks.addEventListener(
+            "input",
+            syncOverallRemarks
+        );
+
+        var form =
+            document.getElementById("ccmProductionForm");
+
+        if (form) {
+            form.addEventListener(
+                "submit",
+                function () {
+                    reindexRows();
+                    calculateSummary();
+                    syncOverallRemarks();
+                }
+            );
+        }
+
+        reindexRows();
+        calculateSummary();
+    });
+</script>

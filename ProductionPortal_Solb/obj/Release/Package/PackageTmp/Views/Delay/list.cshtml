@@ -81,7 +81,7 @@
                                 <select id="shiftFilter" name="shift" class="form-control">
                                     <option value="" @(ViewBag.Shift == "" ? "selected" : "")>All</option>
                                     <option value="Morning" @(ViewBag.Shift == "Morning" ? "selected" : "")>Morning</option>
-                                    <option value="Afternoon" @(ViewBag.Shift == "Evening" ? "selected" : "")>Afternoon</option>
+                                    <option value="Evening" @(ViewBag.Shift == "Evening" ? "selected" : "")>Afternoon</option>
                                     <option value="Night" @(ViewBag.Shift == "Night" ? "selected" : "")>Night</option>
                                     <option value="Long Morning" @(ViewBag.Shift == "Long Morning" ? "selected" : "")>Long Morning</option>
                                     <option value="Long Night" @(ViewBag.Shift == "Long Night" ? "selected" : "")>Long Night</option>
@@ -171,16 +171,16 @@
                                             <td>@item.Reason</td>
                                             <td>
                                                 @*<a href="javascript:void(0);"
-                                                   onclick="openDelayPopup('@item.ID', '@(item.Date?.ToString("yyyy-MM-dd"))', '@item.Area' )"
-                                                   class="btn btn-sm btn-success">
-                                                    <i class="mdi mdi-plus"></i>
-                                                </a>*@
+                                                       onclick="openDelayPopup('@item.ID', '@(item.Date?.ToString("yyyy-MM-dd"))', '@item.Area' )"
+                                                       class="btn btn-sm btn-success">
+                                                        <i class="mdi mdi-plus"></i>
+                                                    </a>*@
 
                                                 @*<a href="@Url.Action("details", "CCM", new { ID = item.ID })"
-                                                   class="btn btn-sm btn-info"
-                                                   onclick="event.stopPropagation();">
-                                                    <i class="mdi mdi-book-open-page-variant"></i>
-                                                </a>*@
+                                                       class="btn btn-sm btn-info"
+                                                       onclick="event.stopPropagation();">
+                                                        <i class="mdi mdi-book-open-page-variant"></i>
+                                                    </a>*@
 
                                                 <a href="javascript:void(0);"
                                                    class="btn btn-sm btn-danger btn-delete"

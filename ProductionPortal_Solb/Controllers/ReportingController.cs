@@ -20,6 +20,7 @@ using static DAL.Models.ViewModel;
 using System.Windows.Media.Imaging;
 using Rotativa;
 using Rotativa.Options;
+using DAL.Repository;
 
 namespace ProductionPortal_Solb.Controllers
 {
@@ -29,12 +30,18 @@ namespace ProductionPortal_Solb.Controllers
         RollingMillRepository rm;
         ConsumptionRepository crepo;
         SupplyChainRepository srepo;
+        MaintenanceRepository mrepo;
+        RollingMillTargetsRepository targetRepo;
+        RollingMillDailyTargetRepository dailyTargetRepo;
         public ReportingController()
         {
             repo = new DelayRespository();
             rm = new RollingMillRepository();
             crepo = new ConsumptionRepository();
             srepo = new SupplyChainRepository();
+            mrepo = new MaintenanceRepository();
+            targetRepo = new RollingMillTargetsRepository();
+            dailyTargetRepo = new RollingMillDailyTargetRepository();
         }
 
         // GET: Reporting
@@ -161,98 +168,6 @@ namespace ProductionPortal_Solb.Controllers
             return dt;
         }
 
-        //public ActionResult DownloadDailyProductionPDF()
-        //{
-        //    string templatePath = Server.MapPath("~/Templates/DailyProductionReport.xlsx");
-        //    string excelPath = Server.MapPath("~/Temp/DPR_" + DateTime.Now.Ticks + ".xlsx");
-        //    string pdfPath = Server.MapPath("~/Temp/DPR_" + DateTime.Now.Ticks + ".pdf");
-
-        //    if (!System.IO.File.Exists(templatePath))
-        //        return Content("Excel template not found.");
-
-        //    // 1) LOAD DATA FROM DATABASE
-        //    DataTable dt = GetSMPDailyReportData();   // YOUR DATABASE METHOD
-
-        //    // 2) FILL EXCEL
-        //    using (var package = new OfficeOpenXml.ExcelPackage(new FileInfo(templatePath)))
-        //    {
-        //        var ws = package.Workbook.Worksheets["Daily Report"];
-
-        //        if (ws == null)
-        //            return Content("Sheet 'Daily Report' not found.");
-
-        //        // ============== HEADER DATE =================
-        //        ws.Cells["H2"].Value = DateTime.Now.ToString("dd MMM yyyy");
-
-        //        // ============== PRODUCTION SUMMARY ==========
-        //        ws.Cells["D7"].Value = GetVal(dt, "ActualProduction");
-        //        ws.Cells["E7"].Value = GetVal(dt, "Diff");
-        //        ws.Cells["F7"].Value = GetVal(dt, "FuelConsumption");
-        //        ws.Cells["G7"].Value = GetVal(dt, "PowerConsumption");
-        //        ws.Cells["H7"].Value = GetVal(dt, "WaterConsumption");
-        //        ws.Cells["I7"].Value = GetVal(dt, "Misroll");
-        //        ws.Cells["J7"].Value = GetVal(dt, "Chopping");
-        //        ws.Cells["K7"].Value = GetVal(dt, "ActualYield");
-        //        ws.Cells["L7"].Value = GetVal(dt, "TheoreticalYield");
-        //        ws.Cells["M7"].Value = GetVal(dt, "RRR_Day");
-        //        ws.Cells["N7"].Value = GetVal(dt, "RRR_YTD");
-        //        ws.Cells["O7"].Value = GetVal(dt, "Prod_Day");
-        //        ws.Cells["P7"].Value = GetVal(dt, "Prod_YTD");
-
-        //        // ============== MONTHLY =====================
-        //        ws.Cells["C11"].Value = GetVal(dt, "MonthPlan");
-        //        ws.Cells["D11"].Value = GetVal(dt, "MonthActual");
-        //        ws.Cells["E11"].Value = GetVal(dt, "MonthDiff");
-
-        //        // ============== YEARLY ======================
-        //        ws.Cells["C14"].Value = GetVal(dt, "YearPlan");
-        //        ws.Cells["D14"].Value = GetVal(dt, "YearActual");
-
-        //        package.SaveAs(new FileInfo(excelPath));
-        //    }
-
-        //    // 3) CONVERT EXCEL TO PDF (PRESERVES CHARTS & COLORS)
-        //    Spire.Xls.Workbook book = new Spire.Xls.Workbook();
-        //    book.LoadFromFile(excelPath);
-        //    book.SaveToFile(pdfPath, Spire.Xls.FileFormat.PDF);
-
-        //    // 4) RETURN PDF DOWNLOAD
-        //    byte[] pdfBytes = System.IO.File.ReadAllBytes(pdfPath);
-
-        //    // Clean temp files
-        //    System.IO.File.Delete(excelPath);
-        //    System.IO.File.Delete(pdfPath);
-
-        //    return File(pdfBytes, "application/pdf", "DailyProductionReport.pdf");
-        //}
-
-        //private object GetVal(DataTable dt1, string v)
-        //{
-        //    DataTable dt = new DataTable();
-        //    dt.Columns.Add("ActualProduction");
-        //    dt.Columns.Add("Diff");
-        //    dt.Columns.Add("FuelConsumption");
-        //    dt.Columns.Add("PowerConsumption");
-        //    dt.Columns.Add("WaterConsumption");
-        //    dt.Columns.Add("Misroll");
-        //    dt.Columns.Add("Chopping");
-        //    dt.Columns.Add("ActualYield");
-        //    dt.Columns.Add("TheoreticalYield");
-        //    dt.Columns.Add("RRR_Day");
-        //    dt.Columns.Add("RRR_YTD");
-        //    dt.Columns.Add("Prod_Day");
-        //    dt.Columns.Add("Prod_YTD");
-        //    dt.Columns.Add("MonthPlan");
-        //    dt.Columns.Add("MonthActual");
-        //    dt.Columns.Add("MonthDiff");
-        //    dt.Columns.Add("YearPlan");
-        //    dt.Columns.Add("YearActual");
-
-        //    dt.Rows.Add(972.25, 230, 32.2, 131.43, 0.16, 4.201, 0, 97.16, 99.11, 75.79, 77.34, 73.66, 80.67, 26469, 26699, 230, 125371, 127569);
-
-        //    return dt;
-        //}
-
         public ActionResult DownloadDailyProductionPDF()
         {
             string templatePath = Server.MapPath("~/Templates/Daily Production Report.xlsx");
@@ -334,176 +249,12 @@ namespace ProductionPortal_Solb.Controllers
             return File(file, "application/pdf", "DailyProductionReport.pdf");
         }
 
-        // ==========================
-        // SAFE FUNCTION (DEFAULT 0)
-        // ==========================
         public string Safe(DataTable dt, string col)
         {
             if (dt == null || dt.Rows.Count == 0) return "0";
             if (!dt.Columns.Contains(col)) return "0";
             return dt.Rows[0][col].ToString();
         }
-
-        //public ActionResult DownloadSMPDailyReport()
-        //{
-        //    // ===== DATA (replace with DB later) =====
-        //    string reportDate = DateTime.Now.ToString("dd-MMM-yyyy");
-
-        //    // SUMMARY
-        //    string heats = "25", dri = "2500", scrap = "300", liquid = "2620", casted = "2570", ttt = "60.3";
-
-        //    // KPI
-        //    string availT = "87%", perfT = "85%", yieldT = "87%", qYieldT = "99%", eafT = "140", ccmT = "140";
-        //    string availA = "80", perfA = "69", yieldA = "85", qYieldA = "100", eafA = "135", ccmA = "130";
-
-        //    // CONSUMPTION
-        //    string driKg = "1060", scrapKg = "125", fesi = "2.1", fesmn = "12.3", femn = "1.3", rice = "0.3";
-        //    string lime = "25", dolo = "25", coal = "2.1", fluorspar = "0.56", carbon = "15.3", blank = "";
-
-        //    // POWER
-        //    string power = "590", lpg = "10", o2 = "33", ar = "0.16", n2 = "1", water = "1.8";
-
-        //    // DELAY
-        //    string mech = "30", elec = "29", opr = "35", refra = "31", utility = "0", crane = "2";
-
-        //    // ===== PDF =====
-        //    MemoryStream ms = new MemoryStream();
-        //    Document pdf = new Document(PageSize.A4, 20, 20, 20, 20);
-        //    PdfWriter.GetInstance(pdf, ms);
-        //    pdf.Open();
-
-        //    Font title = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
-        //    Font bold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
-        //    Font normal = FontFactory.GetFont(FontFactory.HELVETICA, 9);
-
-        //    BaseColor boxGray = new BaseColor(245, 245, 245);
-        //    float bw = 0.7f;
-
-        //    // ===== HEADER =====
-        //    PdfPTable head = new PdfPTable(2);
-        //    head.WidthPercentage = 100;
-        //    head.SetWidths(new float[] { 20, 80 });
-
-        //    Image logo = Image.GetInstance(Server.MapPath("~/assets/images/logo.png"));
-        //    logo.ScaleAbsolute(60, 30);
-        //    head.AddCell(new PdfPCell(logo) { Border = Rectangle.NO_BORDER });
-
-        //    head.AddCell(new PdfPCell(new Phrase("SMP Daily Performance Report", title))
-        //    {
-        //        VerticalAlignment = Element.ALIGN_CENTER,
-        //        Border = Rectangle.NO_BORDER,
-        //        PaddingTop = 10
-        //    });
-
-        //    pdf.Add(head);
-        //    pdf.Add(new Paragraph($"Date: {reportDate}", bold));
-        //    pdf.Add(Chunk.NEWLINE);
-
-        //    // ===== HELPER =====
-        //    PdfPCell Box(string h, string v, string u)
-        //    {
-        //        PdfPTable t = new PdfPTable(1);
-        //        t.AddCell(new PdfPCell(new Phrase(h, normal)));
-        //        t.AddCell(new PdfPCell(new Phrase(v + " " + u, bold)) { HorizontalAlignment = Element.ALIGN_CENTER });
-
-        //        return new PdfPCell(t)
-        //        {
-        //            BorderWidth = bw,
-        //            Padding = 4,
-        //            BackgroundColor = boxGray
-        //        };
-        //    }
-
-        //    // ===== KPI ROW =====
-        //    PdfPTable row1 = new PdfPTable(6); row1.WidthPercentage = 100;
-        //    row1.AddCell(Box("Number of Heats", heats, "Total"));
-        //    row1.AddCell(Box("DRI", dri, "Ton"));
-        //    row1.AddCell(Box("Scrap", scrap, "Ton"));
-        //    row1.AddCell(Box("Liquid Steel", liquid, "Ton"));
-        //    row1.AddCell(Box("Casted Weight", casted, "Ton"));
-        //    row1.AddCell(Box("Tap to Tap", ttt, "Min"));
-        //    pdf.Add(row1);
-
-        //    pdf.Add(Chunk.NEWLINE);
-
-        //    // ===== TARGET / ACTUAL =====
-        //    PdfPTable perf = new PdfPTable(6); perf.WidthPercentage = 100;
-        //    perf.AddCell(Box("Availability", availT, ""));
-        //    perf.AddCell(Box("Performance", perfT, ""));
-        //    perf.AddCell(Box("Yield", yieldT, ""));
-        //    perf.AddCell(Box("Quality Yield", qYieldT, ""));
-        //    perf.AddCell(Box("EAF Productivity", eafT, "TPH"));
-        //    perf.AddCell(Box("CCM Productivity", ccmT, "TPH"));
-
-        //    perf.AddCell(Box("Actual", availA, ""));
-        //    perf.AddCell(Box("Actual", perfA, ""));
-        //    perf.AddCell(Box("Actual", yieldA, ""));
-        //    perf.AddCell(Box("Actual", qYieldA, ""));
-        //    perf.AddCell(Box("Actual", eafA, "TPH"));
-        //    perf.AddCell(Box("Actual", ccmA, "TPH"));
-        //    pdf.Add(perf);
-
-        //    pdf.Add(Chunk.NEWLINE);
-
-        //    // ===== CONSUMPTION =====
-        //    PdfPTable cons = new PdfPTable(6); cons.WidthPercentage = 100;
-        //    cons.AddCell(Box("DRI", driKg, "kg/t"));
-        //    cons.AddCell(Box("Scrap", scrapKg, "kg/t"));
-        //    cons.AddCell(Box("Fe-Si", fesi, "kg/t"));
-        //    cons.AddCell(Box("Fe-SiMn", fesmn, "kg/t"));
-        //    cons.AddCell(Box("Fe-Mn", femn, "kg/t"));
-        //    cons.AddCell(Box("Rice Husk", rice, "kg/t"));
-
-        //    cons.AddCell(Box("Lime", lime, "kg/t"));
-        //    cons.AddCell(Box("Dolo Lime", dolo, "kg/t"));
-        //    cons.AddCell(Box("Charge Coal", coal, "kg/t"));
-        //    cons.AddCell(Box("Fluorspar", fluorspar, "kg/t"));
-        //    cons.AddCell(Box("Clacined Carbon", carbon, "kg/t"));
-        //    cons.AddCell(Box("", blank, ""));
-        //    pdf.Add(cons);
-
-        //    pdf.Add(Chunk.NEWLINE);
-
-        //    // ===== POWER =====
-        //    PdfPTable util = new PdfPTable(6); util.WidthPercentage = 100;
-        //    util.AddCell(Box("Power", power, "kWh/t"));
-        //    util.AddCell(Box("LPG", lpg, "Nm3/t"));
-        //    util.AddCell(Box("Oxygen", o2, "Nm3/t"));
-        //    util.AddCell(Box("Argon", ar, "Nm3/t"));
-        //    util.AddCell(Box("Nitrogen", n2, "Nm3/t"));
-        //    util.AddCell(Box("Water", water, "m3"));
-        //    pdf.Add(util);
-
-        //    pdf.Add(Chunk.NEWLINE);
-
-        //    // ===== DELAYS =====
-        //    PdfPTable delay = new PdfPTable(6); delay.WidthPercentage = 100;
-        //    delay.AddCell(Box("Mechanical", mech, "min"));
-        //    delay.AddCell(Box("Electrical", elec, "min"));
-        //    delay.AddCell(Box("Operation", opr, "min"));
-        //    delay.AddCell(Box("Refractory", refra, "min"));
-        //    delay.AddCell(Box("Utility", utility, "min"));
-        //    delay.AddCell(Box("Crane", crane, "min"));
-        //    pdf.Add(delay);
-
-        //    // ===== REMARKS =====
-        //    pdf.Add(Chunk.NEWLINE);
-        //    PdfPCell remarks = new PdfPCell(new Phrase("Remarks:", bold))
-        //    {
-        //        MinimumHeight = 80,
-        //        BorderWidth = bw,
-        //        Padding = 6
-        //    };
-
-        //    PdfPTable rem = new PdfPTable(1); rem.WidthPercentage = 100;
-        //    rem.AddCell(remarks);
-        //    pdf.Add(rem);
-
-        //    pdf.Close();
-
-        //    Response.AppendHeader("Content-Disposition", "attachment; filename=SMP_Daily_Report.pdf");
-        //    return File(ms.ToArray(), "application/pdf");
-        //}
 
         public ActionResult DownloadSMPDailyReport()
         {
@@ -703,189 +454,6 @@ namespace ProductionPortal_Solb.Controllers
                 { HorizontalAlignment = Element.ALIGN_CENTER };
         }
 
-
-        //    public ActionResult DownloadSteelPlantProductionPDF()
-        //    {
-        //        // ------------ current month / year ------------
-        //        DateTime now = DateTime.Now;
-        //        string monthName = now.ToString("MMMM").ToUpper();    // e.g. NOVEMBER
-        //        int year = now.Year;
-        //        int daysInMonth = DateTime.DaysInMonth(year, now.Month);
-
-        //        // ------------ pdf setup ------------
-        //        MemoryStream ms = new MemoryStream();
-        //        Document pdf = new Document(PageSize.A3.Rotate(), 8, 8, 10, 10);
-        //        PdfWriter.GetInstance(pdf, ms);
-        //        pdf.Open();
-
-        //        Font titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14);
-        //        Font headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 7);
-        //        Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 7);
-        //        Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 7);
-
-        //        BaseColor yellow = new BaseColor(255, 223, 128);
-        //        BaseColor gray = new BaseColor(230, 230, 230);
-        //        float bw = 0.6f;
-
-        //        // ------------ helpers ------------
-        //        PdfPCell GroupHeader(string text, int colspan)
-        //        {
-        //            return new PdfPCell(new Phrase(text, headerFont))
-        //            {
-        //                Colspan = colspan,
-        //                BackgroundColor = yellow,
-        //                HorizontalAlignment = Element.ALIGN_CENTER,
-        //                VerticalAlignment = Element.ALIGN_MIDDLE,
-        //                BorderWidth = bw
-        //            };
-        //        }
-
-        //        PdfPCell VerticalHeader(string text)
-        //        {
-        //            return new PdfPCell(new Phrase(text, headerFont))
-        //            {
-        //                Rotation = 90,
-        //                BackgroundColor = yellow,
-        //                HorizontalAlignment = Element.ALIGN_CENTER,
-        //                VerticalAlignment = Element.ALIGN_MIDDLE,
-        //                Padding = 4,
-        //                BorderWidth = bw
-        //            };
-        //        }
-
-        //        PdfPCell DataCell(string text = "")
-        //        {
-        //            return new PdfPCell(new Phrase(text ?? "", normalFont))
-        //            {
-        //                HorizontalAlignment = Element.ALIGN_CENTER,
-        //                VerticalAlignment = Element.ALIGN_MIDDLE,
-        //                BorderWidth = bw
-        //            };
-        //        }
-
-        //        PdfPCell BoldCell(string text)
-        //        {
-        //            return new PdfPCell(new Phrase(text ?? "", boldFont))
-        //            {
-        //                HorizontalAlignment = Element.ALIGN_CENTER,
-        //                VerticalAlignment = Element.ALIGN_MIDDLE,
-        //                BorderWidth = bw,
-        //                BackgroundColor = gray
-        //            };
-        //        }
-
-        //        // ------------ title ------------
-        //        pdf.Add(new Paragraph("STEEL PLANT DAILY PRODUCTION STATISTICS", titleFont)
-        //        {
-        //            Alignment = Element.ALIGN_CENTER
-        //        });
-
-        //        pdf.Add(new Paragraph($"FOR THE MONTH {monthName}, {year}", boldFont)
-        //        {
-        //            Alignment = Element.ALIGN_CENTER
-        //        });
-
-        //        pdf.Add(Chunk.NEWLINE);
-
-        //        // ------------ main table (32 columns) ------------
-        //        const int COLS = 32;
-        //        PdfPTable table = new PdfPTable(COLS)
-        //        {
-        //            WidthPercentage = 100,
-        //            HeaderRows = 2
-        //        };
-        //        table.SetWidths(Enumerable.Repeat(1f, COLS).ToArray());
-
-        //        // row 1 – group headers (colspans)
-        //        table.AddCell(GroupHeader("Charge", 5)); // Scrap, DRI, HBI, Total, Yield
-        //        table.AddCell(GroupHeader("Tapped Steel", 3)); // Tap Wt, Liquid, Casting
-        //        table.AddCell(GroupHeader("Energy", 4)); // Total, Prod, Spec, Power On
-        //        table.AddCell(GroupHeader("Temperature", 3)); // T1, T2, T3
-        //        table.AddCell(GroupHeader("Carbon Injection", 2)); // Kg, Coal
-        //        table.AddCell(GroupHeader("Additives", 3)); // Lime, Dolo, Fluor
-        //        table.AddCell(GroupHeader("Oxygen", 2)); // Nm3, Spec
-        //        table.AddCell(GroupHeader("Productivity", 3)); // TPH, Yield, Tap-Tap
-        //        table.AddCell(GroupHeader("Quality", 6)); // R, T, LCC, C, S, TE
-        //        table.AddCell(GroupHeader("Day", 1)); // Day
-
-        //        // row 2 – leaf headers (32 exactly)
-        //        string[] leafHeaders =
-        //        {
-        //    // Charge (5)
-        //    "Scrap", "DRI", "HBI", "Total", "Yield",
-
-        //    // Tapped Steel (3)
-        //    "Tap Wt", "Liquid", "Casting",
-
-        //    // Energy (4)
-        //    "Total kWh", "Prod kWh", "Spec kWh", "Power On",
-
-        //    // Temperature (3)
-        //    "T1", "T2", "T3",
-
-        //    // Carbon Injection (2)
-        //    "Kg", "Coal",
-
-        //    // Additives (3)
-        //    "Lime", "Dolo", "Fluor",
-
-        //    // Oxygen (2)
-        //    "Nm3", "Spec",
-
-        //    // Productivity (3)
-        //    "TPH", "Yield", "Tap–Tap",
-
-        //    // Quality (6)
-        //    "R", "T", "LCC", "C", "S", "TE",
-
-        //    // Day (1)
-        //    "Day"
-        //};
-
-        //        if (leafHeaders.Length != COLS)
-        //            throw new Exception("Header definition must have exactly 32 columns.");
-
-        //        foreach (var h in leafHeaders)
-        //            table.AddCell(VerticalHeader(h));
-
-        //        // ------------ data rows (dummy data – replace with DB) ------------
-        //        // 31 numeric columns + 1 Day column
-        //        for (int d = 1; d <= daysInMonth; d++)
-        //        {
-        //            for (int c = 0; c < COLS - 1; c++)
-        //            {
-        //                // dummy value – you will bind real values from DB instead
-        //                double value = (d * (c + 1)) / 10.0;
-        //                table.AddCell(DataCell(value.ToString("0.0")));
-        //            }
-
-        //            // Day number in last column
-        //            table.AddCell(BoldCell(d.ToString()));
-        //        }
-
-        //        // ------------ AVG row ------------
-        //        table.AddCell(BoldCell("AVG"));
-        //        for (int c = 1; c < COLS - 1; c++)
-        //            table.AddCell(BoldCell("0.00"));   // later you can compute real averages
-
-        //        table.AddCell(BoldCell(""));           // Day column blank
-
-        //        // ------------ SUM row ------------
-        //        table.AddCell(BoldCell("SUM"));
-        //        for (int c = 1; c < COLS - 1; c++)
-        //            table.AddCell(BoldCell("0.00"));   // later you can compute real sums
-
-        //        table.AddCell(BoldCell(""));
-
-        //        // add table to pdf
-        //        pdf.Add(table);
-        //        pdf.Close();
-
-        //        return File(ms.ToArray(),
-        //                    "application/pdf",
-        //                    $"SteelPlantDailyProduction_{monthName}_{year}.pdf");
-        //    }
-
         public ActionResult DownloadDailyPlantStatistics()
         {
             MemoryStream ms = new MemoryStream();
@@ -1021,46 +589,6 @@ namespace ProductionPortal_Solb.Controllers
             pdf.Close();
             return File(ms.ToArray(), "application/pdf", "Steel_Plant_Daily_Report.pdf");
         }
-
-        //public ActionResult ShiftProductionReport(DateTime? from, DateTime? to, string shift)
-        //{
-        //    DateTime selectedDate = from ?? DateTime.Today;
-        //    DateTime todate = to ?? DateTime.Today;
-
-        //    var dischargedData = rm.GetDichargedHeat(selectedDate, todate, shift);
-        //    var delayData = repo.GetAllRMDelay(selectedDate, todate, shift);
-
-        //    var shiftDetails = rm.RollingMillDetails()
-        //        .Where(x =>
-        //            x.Date >= selectedDate &&
-        //            x.Date < selectedDate.AddDays(1) &&
-        //            (string.IsNullOrEmpty(shift) || x.Shift == shift)
-        //        )
-        //        .OrderByDescending(x => x.ID)
-        //        .FirstOrDefault();
-
-        //    var vm = new ShiftProductionReportVM
-        //    {
-        //        Delays = delayData ?? new List<PlantDelayBLL>(),
-        //        DischargedHeats = dischargedData ?? new List<BilletDischargingBLL>()
-        //    };
-
-        //    ViewBag.TotalBundles = vm.DischargedHeats.Count;
-        //    ViewBag.Cobble = vm.Delays.Count(x => x.DelayType == "Cobble");
-        //    ViewBag.HotOut = vm.Delays.Count(x => x.DelayType == "HotOut");
-
-        //    ViewBag.From = selectedDate;
-        //    ViewBag.To = todate;
-        //    ViewBag.Shift = string.IsNullOrWhiteSpace(shift) ? "All" : shift;
-
-        //    // ✅ Header fields from Shift Details
-        //    ViewBag.ReportDate = (shiftDetails?.Date ?? selectedDate).ToString("dd/MM/yyyy");
-        //    ViewBag.ReportShift = shiftDetails?.Shift ?? shift;
-        //    ViewBag.ReportTeam = shiftDetails?.Team ?? "";
-        //    ViewBag.ReportShiftIncharge = shiftDetails?.ShiftIncharge ?? "";
-
-        //    return View(vm);
-        //}
 
         public ActionResult ShiftProductionReport(DateTime? date, string plant, string shift, bool download = false)
         {
@@ -1199,91 +727,418 @@ namespace ProductionPortal_Solb.Controllers
             return View();
         }
 
-        public ActionResult ShiftProductionDashboard(DateTime? date, string plant, string shift)
+        //    public ActionResult ShiftProductionDashboard(DateTime? date, string plant, string shift)
+        //    {
+        //        DateTime selectedDate = date ?? DateTime.Today;
+
+        //        string selectedPlant = string.IsNullOrWhiteSpace(plant) ? "" : plant.Trim();
+        //        string selectedShift = string.IsNullOrWhiteSpace(shift) ? "" : shift.Trim();
+
+        //        var dischargedData = rm.GetDichargedHeat(selectedDate, selectedDate, selectedShift)
+        //                            ?? new List<BilletDischargingBLL>();
+
+        //        var delayData = repo.GetAllRMDelay(selectedDate, selectedDate, selectedShift)
+        //                        ?? new List<PlantDelayBLL>();
+
+        //        if (!string.IsNullOrWhiteSpace(selectedPlant))
+        //        {
+        //            dischargedData = dischargedData
+        //                .Where(x =>
+        //                    !string.IsNullOrWhiteSpace(x.Plant) &&
+        //                    x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase)
+        //                )
+        //                .ToList();
+
+        //            delayData = delayData
+        //                .Where(x =>
+        //                    !string.IsNullOrWhiteSpace(x.Plant) &&
+        //                    x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase)
+        //                )
+        //                .ToList();
+        //        }
+
+        //        var shiftDetails = rm.RollingMillDetails()
+        //            .Where(x =>
+        //                x.Date >= selectedDate.Date &&
+        //                x.Date < selectedDate.Date.AddDays(1) &&
+        //                x.StatusID == 1 &&
+        //                (
+        //                    string.IsNullOrWhiteSpace(selectedPlant) ||
+        //                    (
+        //                        !string.IsNullOrWhiteSpace(x.Plant) &&
+        //                        x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase)
+        //                    )
+        //                ) &&
+        //                (
+        //                    string.IsNullOrWhiteSpace(selectedShift) ||
+        //                    (
+        //                        !string.IsNullOrWhiteSpace(x.Shift) &&
+        //                        x.Shift.Trim().Equals(selectedShift, StringComparison.OrdinalIgnoreCase)
+        //                    )
+        //                )
+        //            )
+        //            .OrderByDescending(x => x.ID)
+        //            .FirstOrDefault();
+
+        //        var vm = new ShiftProductionReportVM
+        //        {
+        //            Delays = delayData,
+        //            DischargedHeats = dischargedData
+        //        };
+
+        //        ViewBag.ReportDate = (shiftDetails?.Date ?? selectedDate).ToString("dd/MM/yyyy");
+        //        ViewBag.ReportPlant = shiftDetails?.Plant ?? selectedPlant;
+        //        //ViewBag.ReportShift = shiftDetails?.Shift ?? selectedShift;
+
+        //        var reportShifts = vm.DischargedHeats != null
+        //? vm.DischargedHeats
+        //    .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
+        //    .Select(x => x.Shift.Trim())
+        //    .Distinct(StringComparer.OrdinalIgnoreCase)
+        //    .ToList()
+        //: new List<string>();
+
+        //        ViewBag.ReportShift = reportShifts.Any()
+        //            ? string.Join(", ", reportShifts)
+        //            : selectedShift;
+
+        //        ViewBag.ReportTeam = shiftDetails?.Team ?? "";
+        //        ViewBag.ReportShiftIncharge = shiftDetails?.ShiftIncharge ?? "";
+
+        //        return View(vm);
+        //    }
+
+        public ActionResult ShiftProductionDashboard(
+    DateTime? fromdate,
+    DateTime? todate,
+    string plant,
+    string shift)
         {
-            DateTime selectedDate = date ?? DateTime.Today;
+            // =========================================================
+            // DATE FILTER
+            // =========================================================
 
-            string selectedPlant = string.IsNullOrWhiteSpace(plant) ? "" : plant.Trim();
-            string selectedShift = string.IsNullOrWhiteSpace(shift) ? "" : shift.Trim();
+            DateTime fromDate = (fromdate ?? DateTime.Today).Date;
+            DateTime toDate = (todate ?? fromDate).Date;
 
-            var dischargedData = rm.GetDichargedHeat(selectedDate, selectedDate, selectedShift)
-                                ?? new List<BilletDischargingBLL>();
+            if (fromDate > toDate)
+            {
+                DateTime tempDate = fromDate;
+                fromDate = toDate;
+                toDate = tempDate;
+            }
 
-            var delayData = repo.GetAllRMDelay(selectedDate, selectedDate, selectedShift)
-                            ?? new List<PlantDelayBLL>();
+            string selectedPlant = string.IsNullOrWhiteSpace(plant)
+                ? string.Empty
+                : plant.Trim();
+
+            string selectedShift = string.IsNullOrWhiteSpace(shift)
+                ? string.Empty
+                : shift.Trim();
+
+            // =========================================================
+            // MONTHLY TARGET
+            // Selected To Date ke month/year ka target load hoga
+            // =========================================================
+
+            string targetMonth = toDate.ToString(
+                "MMMM",
+                System.Globalization.CultureInfo.InvariantCulture
+            );
+
+            string targetYear = toDate.Year.ToString();
+
+            RollingMillTargetsBLL monthlyTarget =
+                targetRepo.GetByMonthYear(
+                    targetMonth,
+                    targetYear
+                );
+
+            // =========================================================
+            // SELECTED FILTER PRODUCTION DATA
+            // KPI aur detail table ke liye
+            // =========================================================
+
+            var dischargedData = rm.GetDichargedHeats(
+                fromDate,
+                toDate,
+                selectedPlant,
+                selectedShift
+            ) ?? new List<BilletDischargingBLL>();
+
+            // =========================================================
+            // ACCUMULATED MONTH-TO-DATE PRODUCTION DATA
+            // Is data mein koi downtime deduction nahi hogi
+            // =========================================================
+
+            DateTime monthStartDate = new DateTime(
+                toDate.Year,
+                toDate.Month,
+                1
+            );
+
+            var dailyTarget =
+    dailyTargetRepo.GetByDate(toDate);
+
+            ViewBag.DailyProductionTarget =
+                dailyTarget != null
+                    ? dailyTarget.DailyProductionTarget
+                    : 0;
+
+            ViewBag.DailyFuelConsumption =
+                dailyTarget != null
+                    ? dailyTarget.FuelConsumption
+                    : 0;
+
+            var monthlyChartData = rm.GetDichargedHeats(
+                monthStartDate,
+                toDate,
+                selectedPlant,
+                selectedShift
+            ) ?? new List<BilletDischargingBLL>();
+
+            // =========================================================
+            // DELAY DATA
+            // Sirf downtime calculations/chart ke liye
+            // =========================================================
+
+            var delayData = repo.GetAllRMDelay(
+                fromDate,
+                toDate,
+                selectedShift
+            ) ?? new List<PlantDelayBLL>();
+
+            // =========================================================
+            // SAFE PLANT FILTER
+            // =========================================================
 
             if (!string.IsNullOrWhiteSpace(selectedPlant))
             {
                 dischargedData = dischargedData
                     .Where(x =>
                         !string.IsNullOrWhiteSpace(x.Plant) &&
-                        x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase)
+                        x.Plant.Trim().Equals(
+                            selectedPlant,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .ToList();
+
+                monthlyChartData = monthlyChartData
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.Plant) &&
+                        x.Plant.Trim().Equals(
+                            selectedPlant,
+                            StringComparison.OrdinalIgnoreCase
+                        )
                     )
                     .ToList();
 
                 delayData = delayData
                     .Where(x =>
                         !string.IsNullOrWhiteSpace(x.Plant) &&
-                        x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase)
+                        x.Plant.Trim().Equals(
+                            selectedPlant,
+                            StringComparison.OrdinalIgnoreCase
+                        )
                     )
                     .ToList();
             }
 
-            var shiftDetails = rm.RollingMillDetails()
-                .Where(x =>
-                    x.Date >= selectedDate.Date &&
-                    x.Date < selectedDate.Date.AddDays(1) &&
-                    x.StatusID == 1 &&
-                    (
-                        string.IsNullOrWhiteSpace(selectedPlant) ||
-                        (
-                            !string.IsNullOrWhiteSpace(x.Plant) &&
-                            x.Plant.Trim().Equals(selectedPlant, StringComparison.OrdinalIgnoreCase)
-                        )
-                    ) &&
-                    (
-                        string.IsNullOrWhiteSpace(selectedShift) ||
-                        (
-                            !string.IsNullOrWhiteSpace(x.Shift) &&
-                            x.Shift.Trim().Equals(selectedShift, StringComparison.OrdinalIgnoreCase)
+            // =========================================================
+            // SAFE SHIFT FILTER
+            // =========================================================
+
+            if (!string.IsNullOrWhiteSpace(selectedShift))
+            {
+                dischargedData = dischargedData
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.Shift) &&
+                        x.Shift.Trim().Equals(
+                            selectedShift,
+                            StringComparison.OrdinalIgnoreCase
                         )
                     )
+                    .ToList();
+
+                monthlyChartData = monthlyChartData
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.Shift) &&
+                        x.Shift.Trim().Equals(
+                            selectedShift,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .ToList();
+
+                delayData = delayData
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.Shift) &&
+                        x.Shift.Trim().Equals(
+                            selectedShift,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .ToList();
+            }
+
+            // =========================================================
+            // SHIFT DETAILS
+            // =========================================================
+
+            var shiftDetailsList = rm.RollingMillDetails()
+                .Where(x =>
+                    x.StatusID == 1 &&
+                    x.Date >= fromDate &&
+                    x.Date < toDate.AddDays(1)
                 )
-                .OrderByDescending(x => x.ID)
+                .ToList();
+
+            if (!string.IsNullOrWhiteSpace(selectedPlant))
+            {
+                shiftDetailsList = shiftDetailsList
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.Plant) &&
+                        x.Plant.Trim().Equals(
+                            selectedPlant,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(selectedShift))
+            {
+                shiftDetailsList = shiftDetailsList
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.Shift) &&
+                        x.Shift.Trim().Equals(
+                            selectedShift,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .ToList();
+            }
+
+            var shiftDetails = shiftDetailsList
+                .OrderByDescending(x => x.Date)
+                .ThenByDescending(x => x.ID)
                 .FirstOrDefault();
+
+            // Total scheduled shift minutes for the complete selected period.
+            // Each shift-detail record is counted separately, so a monthly report
+            // does not incorrectly use only one day's 24 hours.
+            Func<string, decimal> getShiftHours = shiftName =>
+            {
+                if (string.IsNullOrWhiteSpace(shiftName))
+                    return 0;
+
+                string value = shiftName.Trim();
+
+                if (value.Equals("Morning", StringComparison.OrdinalIgnoreCase) ||
+                    value.Equals("Evening", StringComparison.OrdinalIgnoreCase) ||
+                    value.Equals("Night", StringComparison.OrdinalIgnoreCase))
+                {
+                    return 8;
+                }
+
+                if (value.Equals("Long Morning", StringComparison.OrdinalIgnoreCase) ||
+                    value.Equals("Long Night", StringComparison.OrdinalIgnoreCase))
+                {
+                    return 12;
+                }
+
+                return 0;
+            };
+
+            decimal totalShiftMinutes = shiftDetailsList
+                .GroupBy(x => new
+                {
+                    ShiftDate = x.Date.Date,
+                    ShiftName = (x.Shift ?? string.Empty).Trim().ToUpper()
+                })
+                .Select(g => g.First())
+                .Sum(x => getShiftHours(x.Shift) * 60);
+
+            // Fallback only when no shift-detail records are available.
+            if (totalShiftMinutes <= 0)
+            {
+                int totalDays = (toDate - fromDate).Days + 1;
+
+                if (!string.IsNullOrWhiteSpace(selectedShift))
+                {
+                    totalShiftMinutes = getShiftHours(selectedShift) * 60 * totalDays;
+                }
+                else
+                {
+                    totalShiftMinutes = 24 * 60 * totalDays;
+                }
+            }
+
+            // =========================================================
+            // VIEW MODEL
+            // =========================================================
 
             var vm = new ShiftProductionReportVM
             {
                 Delays = delayData,
-                DischargedHeats = dischargedData
+                DischargedHeats = dischargedData,
+
+                // Accumulated chart isi separate month-to-date list se banega
+                MonthlyProductionData = monthlyChartData,
+
+                RollingMillTarget = monthlyTarget
             };
 
-            ViewBag.ReportDate = (shiftDetails?.Date ?? selectedDate).ToString("dd/MM/yyyy");
-            ViewBag.ReportPlant = shiftDetails?.Plant ?? selectedPlant;
-            //ViewBag.ReportShift = shiftDetails?.Shift ?? selectedShift;
+            // =========================================================
+            // VIEWBAGS
+            // =========================================================
 
-            var reportShifts = vm.DischargedHeats != null
-    ? vm.DischargedHeats
-        .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
-        .Select(x => x.Shift.Trim())
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .ToList()
-    : new List<string>();
+            ViewBag.FromDate = fromDate.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate.ToString("yyyy-MM-dd");
+
+            ViewBag.SelectedPlant = selectedPlant;
+            ViewBag.SelectedShift = selectedShift;
+
+            ViewBag.TargetMonth = targetMonth;
+            ViewBag.TargetYear = targetYear;
+            ViewBag.TotalShiftMinutes = totalShiftMinutes;
+
+            ViewBag.ReportDate = fromDate == toDate
+                ? fromDate.ToString("dd/MM/yyyy")
+                : fromDate.ToString("dd/MM/yyyy") +
+                  " - " +
+                  toDate.ToString("dd/MM/yyyy");
+
+            ViewBag.ReportPlant =
+                !string.IsNullOrWhiteSpace(selectedPlant)
+                    ? selectedPlant
+                    : "All Plants";
+
+            var reportShifts = dischargedData
+                .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
+                .Select(x => x.Shift.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
             ViewBag.ReportShift = reportShifts.Any()
                 ? string.Join(", ", reportShifts)
-                : selectedShift;
+                : !string.IsNullOrWhiteSpace(selectedShift)
+                    ? selectedShift
+                    : "All Shifts";
 
-            ViewBag.ReportTeam = shiftDetails?.Team ?? "";
-            ViewBag.ReportShiftIncharge = shiftDetails?.ShiftIncharge ?? "";
+            ViewBag.ReportTeam =
+                shiftDetails != null
+                    ? shiftDetails.Team ?? string.Empty
+                    : string.Empty;
+
+            ViewBag.ReportShiftIncharge =
+                shiftDetails != null
+                    ? shiftDetails.ShiftIncharge ?? string.Empty
+                    : string.Empty;
 
             return View(vm);
         }
-
-        //public ActionResult UtilityDailyReport()
-        //{
-        //    return View();
-        //}
 
         public ActionResult UtilityDailyReport(DateTime? date)
         {
@@ -1308,10 +1163,34 @@ namespace ProductionPortal_Solb.Controllers
             }
         }
 
-        public ActionResult CMDDailyReport()
+
+        public ActionResult CMDDailyReport(
+            DateTime? fromDate,
+            DateTime? toDate)
         {
-            return View();
+            DateTime selectedFromDate = fromDate?.Date ?? DateTime.Today;
+            DateTime selectedToDate = toDate?.Date ?? DateTime.Today;
+
+            if (selectedFromDate > selectedToDate)
+            {
+                TempData["Error"] = "From Date cannot be greater than To Date.";
+
+                selectedFromDate = DateTime.Today;
+                selectedToDate = DateTime.Today;
+            }
+
+            var model = mrepo.GetDashboard(
+                selectedFromDate,
+                selectedToDate
+            );
+
+            return View(model);
         }
+
+        //public ActionResult CMDDailyReport()
+        //{
+        //    return View();
+        //}
 
         public ActionResult SupplyChainReport(DateTime? from, DateTime? to, bool download = false)
         {

@@ -1,0 +1,763 @@
+﻿@model DAL.Models.DelayCounterMeasureVM
+
+@{
+    ViewBag.Title = "Delay Countermeasures";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .countermeasure-card {
+        border: 0;
+        border-radius: 14px;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, .08);
+    }
+
+        .countermeasure-card .card-header {
+            border-radius: 14px 14px 0 0;
+            background: #7f1230;
+            color: #fff;
+            font-weight: 700;
+        }
+
+    .delay-summary {
+        padding: 15px;
+        border-left: 4px solid #a6173f;
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+
+    .summary-label {
+        margin-bottom: 3px;
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .summary-value {
+        color: #111827;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .form-label {
+        color: #374151;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .required {
+        color: #dc2626;
+    }
+
+    .table-countermeasure thead th {
+        border-color: #163c5a;
+        background: #174f75;
+        color: #fff;
+        font-size: 11px;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .table-countermeasure td {
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    .status-open {
+        color: #b45309;
+        font-weight: 700;
+    }
+
+    .status-closed {
+        color: #15803d;
+        font-weight: 700;
+    }
+
+    .status-overdue {
+        color: #b91c1c;
+        font-weight: 700;
+    }
+</style>
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6">
+            <h4 class="xp-page-title">
+                Delay Countermeasures
+            </h4>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="card countermeasure-card mb-4">
+        <div class="card-header">
+            Delay Information
+        </div>
+
+        <div class="card-body">
+            <div class="delay-summary">
+                <div class="row">
+
+                    <div class="col-md-2">
+                        <div class="summary-label">
+                            Delay Code
+                        </div>
+
+                        <div class="summary-value">
+                            @Model.DelayDetail.Delaycode
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="summary-label">
+                            Date
+                        </div>
+
+                        <div class="summary-value">
+                            @(Model.DelayDetail.Date
+                                ?.ToString("dd-MMM-yyyy"))
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="summary-label">
+                            Plant
+                        </div>
+
+                        <div class="summary-value">
+                            @Model.DelayDetail.Plant
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="summary-label">
+                            Agency
+                        </div>
+
+                        <div class="summary-value">
+                            @Model.DelayDetail.AgencyName
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="summary-label">
+                            Equipment
+                        </div>
+
+                        <div class="summary-value">
+                            @Model.DelayDetail.Equipments
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="summary-label">
+                            Duration
+                        </div>
+
+                        <div class="summary-value">
+                            @Model.DelayDetail.TotalDuration min
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card-body">
+
+            @using (Html.BeginForm(
+                "SaveMultiple",
+                "DelayCounterMeasure",
+                FormMethod.Post,
+                new
+                {
+                    id = "counterMeasureForm"
+                }))
+            {
+                @Html.AntiForgeryToken()
+
+                @Html.HiddenFor(
+                    x => x.PlantDelayID
+                )
+
+                <div class="card countermeasure-card mb-4">
+
+                    <div class="card-header d-flex
+                    justify-content-between
+                    align-items-center">
+
+                        <span>
+                            Add Countermeasures
+                        </span>
+
+                        <button type="button"
+                                id="btnAddCounterMeasure"
+                                class="btn btn-sm btn-light">
+
+                            <i class="fa fa-plus"></i>
+                            Add More
+                        </button>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div id="counterMeasureContainer">
+
+                            <div class="countermeasure-entry"
+                                 data-index="0">
+
+                                <div class="entry-header">
+                                    <span class="entry-number">
+                                        Countermeasure 1
+                                    </span>
+
+                                    <button type="button"
+                                            class="btn btn-sm
+                                       btn-danger
+                                       btn-remove-entry"
+                                            style="display:none;">
+
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
+
+                                <div class="row">
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Countermeasure
+                                                <span class="text-danger">
+                                                    *
+                                                </span>
+                                            </label>
+
+                                            <textarea name="CounterMeasures[0].CounterMeasure"
+                                                      class="form-control"
+                                                      rows="3"
+                                                      required></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>
+                                                SAP Order No.
+                                            </label>
+
+                                            <input type="text"
+                                                   name="CounterMeasures[0].SAPOrderNo"
+                                                   class="form-control" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>
+                                                Responsible
+                                            </label>
+
+                                            <input type="text"
+                                                   name="CounterMeasures[0].Responsible"
+                                                   class="form-control" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>
+                                                Target Date
+                                            </label>
+
+                                            <input type="date"
+                                                   name="CounterMeasures[0].TargetDate"
+                                                   class="form-control" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>
+                                                Status
+                                            </label>
+
+                                            <select name="CounterMeasures[0].CounterMeasureStatus"
+                                                    class="form-control counter-status">
+
+                                                <option value="Open">
+                                                    Open
+                                                </option>
+
+                                                <option value="In Progress">
+                                                    In Progress
+                                                </option>
+
+                                                <option value="Closed">
+                                                    Closed
+                                                </option>
+
+                                                <option value="Overdue">
+                                                    Overdue
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Evidence for Completion
+                                            </label>
+
+                                            <textarea name="CounterMeasures[0].EvidenceForCompletion"
+                                                      class="form-control"
+                                                      rows="2"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12
+                                    reason-section">
+
+                                        <div class="form-group">
+                                            <label>
+                                                Reason for Not Closing
+                                            </label>
+
+                                            <textarea name="CounterMeasures[0].ReasonForNotClosing"
+                                                      class="form-control"
+                                                      rows="2"></textarea>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="text-right mt-3">
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+
+                                <i class="fa fa-save"></i>
+                                Save All Countermeasures
+                            </button>
+
+                            <a href="@Url.Action(
+                    "list",
+                    "Maintenance"
+                )"
+                               class="btn btn-secondary">
+
+                                Back
+                            </a>
+
+                        </div>
+
+                    </div>
+                </div>
+            }
+
+        </div>
+
+        <div class="card countermeasure-card">
+            <div class="card-header">
+                Existing Countermeasures
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+
+                    <table class="table table-bordered
+                              table-hover
+                              table-countermeasure">
+
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Countermeasure</th>
+                                <th>SAP Order No.</th>
+                                <th>Responsible</th>
+                                <th>Target Date</th>
+                                <th>Evidence for Completion</th>
+                                <th>Status</th>
+                                <th>Reason for Not Closing</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.ExistingCounterMeasures != null &&
+                                 Model.ExistingCounterMeasures.Any())
+                            {
+                                int serial = 1;
+
+                                foreach (var item in
+                                    Model.ExistingCounterMeasures)
+                                {
+                                    string statusClass =
+                                        item.CounterMeasureStatus ==
+                                        "Closed"
+                                            ? "status-closed"
+                                            : item.CounterMeasureStatus ==
+                                              "Overdue"
+                                                ? "status-overdue"
+                                                : "status-open";
+
+                                    <tr>
+                                        <td class="text-center">
+                                            @serial
+                                        </td>
+
+                                        <td>
+                                            @item.CounterMeasure
+                                        </td>
+
+                                        <td>
+                                            @item.SAPOrderNo
+                                        </td>
+
+                                        <td>
+                                            @item.Responsible
+                                        </td>
+
+                                        <td>
+                                            @(item.TargetDate
+                                            ?.ToString(
+                                                "dd-MMM-yyyy"
+                                            ))
+                                        </td>
+
+                                        <td>
+                                            @item.EvidenceForCompletion
+                                        </td>
+
+                                        <td class="@statusClass">
+                                            @item.CounterMeasureStatus
+                                        </td>
+
+                                        <td>
+                                            @item.ReasonForNotClosing
+                                        </td>
+
+                                        <td class="text-center">
+                                            <button type="button"
+                                                    class="btn btn-sm
+                                                       btn-info
+                                                       btn-edit"
+                                                    data-id="@item.ID">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+
+                                            <button type="button"
+                                                    class="btn btn-sm
+                                                       btn-danger
+                                                       btn-delete"
+                                                    data-id="@item.ID">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    serial++;
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="9"
+                                        class="text-center text-muted">
+                                        No countermeasure entered
+                                        against this delay.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+
+        var counterIndex = 1;
+
+        $("#btnAddCounterMeasure")
+            .on("click", function () {
+
+                var entryHtml = `
+                        <div class="countermeasure-entry"
+                             data-index="${counterIndex}">
+
+                            <div class="entry-header">
+                                <span class="entry-number">
+                                    Countermeasure ${counterIndex + 1}
+                                </span>
+
+                                <button type="button"
+                                        class="btn btn-sm
+                                               btn-danger
+                                               btn-remove-entry">
+
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>
+                                            Countermeasure
+                                            <span class="text-danger">
+                                                *
+                                            </span>
+                                        </label>
+
+                                        <textarea
+                                            name="CounterMeasures[${counterIndex}].CounterMeasure"
+                                            class="form-control"
+                                            rows="3"
+                                            required></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>
+                                            SAP Order No.
+                                        </label>
+
+                                        <input type="text"
+                                               name="CounterMeasures[${counterIndex}].SAPOrderNo"
+                                               class="form-control" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>
+                                            Responsible
+                                        </label>
+
+                                        <input type="text"
+                                               name="CounterMeasures[${counterIndex}].Responsible"
+                                               class="form-control" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>
+                                            Target Date
+                                        </label>
+
+                                        <input type="date"
+                                               name="CounterMeasures[${counterIndex}].TargetDate"
+                                               class="form-control" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>
+                                            Status
+                                        </label>
+
+                                        <select
+                                            name="CounterMeasures[${counterIndex}].CounterMeasureStatus"
+                                            class="form-control counter-status">
+
+                                            <option value="Open">
+                                                Open
+                                            </option>
+
+                                            <option value="In Progress">
+                                                In Progress
+                                            </option>
+
+                                            <option value="Closed">
+                                                Closed
+                                            </option>
+
+                                            <option value="Overdue">
+                                                Overdue
+                                            </option>
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>
+                                            Evidence for Completion
+                                        </label>
+
+                                        <textarea
+                                            name="CounterMeasures[${counterIndex}].EvidenceForCompletion"
+                                            class="form-control"
+                                            rows="2"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12
+                                            reason-section">
+
+                                    <div class="form-group">
+                                        <label>
+                                            Reason for Not Closing
+                                        </label>
+
+                                        <textarea
+                                            name="CounterMeasures[${counterIndex}].ReasonForNotClosing"
+                                            class="form-control"
+                                            rows="2"></textarea>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    `;
+
+                $("#counterMeasureContainer")
+                    .append(entryHtml);
+
+                counterIndex++;
+
+                updateEntryNumbers();
+            });
+
+        $(document).on(
+            "click",
+            ".btn-remove-entry",
+            function () {
+
+                $(this)
+                    .closest(".countermeasure-entry")
+                    .remove();
+
+                reIndexCounterMeasures();
+            }
+        );
+
+        $(document).on(
+            "change",
+            ".counter-status",
+            function () {
+
+                var entry =
+                    $(this)
+                        .closest(".countermeasure-entry");
+
+                var reasonSection =
+                    entry.find(".reason-section");
+
+                if ($(this).val() === "Closed") {
+                    reasonSection.hide();
+                    reasonSection
+                        .find("textarea")
+                        .val("");
+                } else {
+                    reasonSection.show();
+                }
+            }
+        );
+
+        function updateEntryNumbers() {
+            $(".countermeasure-entry")
+                .each(function (index) {
+
+                    $(this)
+                        .find(".entry-number")
+                        .text(
+                            "Countermeasure " +
+                            (index + 1)
+                        );
+                });
+        }
+
+        function reIndexCounterMeasures() {
+
+            $(".countermeasure-entry")
+                .each(function (index) {
+
+                    $(this)
+                        .attr(
+                            "data-index",
+                            index
+                        );
+
+                    $(this)
+                        .find(
+                            "input, textarea, select"
+                        )
+                        .each(function () {
+
+                            var name =
+                                $(this)
+                                    .attr("name");
+
+                            if (!name) {
+                                return;
+                            }
+
+                            var updatedName =
+                                name.replace(
+                                    /CounterMeasures\[\d+\]/,
+                                    "CounterMeasures[" +
+                                    index +
+                                    "]"
+                                );
+
+                            $(this)
+                                .attr(
+                                    "name",
+                                    updatedName
+                                );
+                        });
+                });
+
+            counterIndex =
+                $(".countermeasure-entry")
+                    .length;
+
+            updateEntryNumbers();
+
+            if (counterIndex === 1) {
+                $(".btn-remove-entry")
+                    .hide();
+            } else {
+                $(".btn-remove-entry")
+                    .show();
+            }
+        }
+
+    });
+</script>

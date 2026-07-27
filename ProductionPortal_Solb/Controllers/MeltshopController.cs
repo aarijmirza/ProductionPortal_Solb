@@ -38,16 +38,6 @@ namespace ProductionPortal_Solb.Controllers
             return View("~/Views/Meltshop/ElectricArcFurnace/EAFlist.cshtml", requests);
         }
 
-        //public ActionResult DailyHeatSummary()
-        //{
-        //    var vm = new EAFReportVM();
-        //    {
-        //        var EAFdata = repo.GetAllEAFRecord();
-        //    }
-        //    //var requests = repo.GetAllEAFRecord();
-        //    return View("~/Views/Meltshop/ElectricArcFurnace/DailyHeatSummary.cshtml", vm);
-        //}
-
         public ActionResult DailyHeatSummary(DateTime? from, DateTime? to)
         {
             DateTime fromDate = from ?? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -72,16 +62,6 @@ namespace ProductionPortal_Solb.Controllers
                 vm
             );
         }
-
-
-        //public ActionResult DailyHeatSummary()
-        //{
-        //    var vm = new EAFReportVM();
-
-        //    vm.EAFdata = repo.GetAllEAFRecord().ToList();
-
-        //    return View("~/Views/Meltshop/ElectricArcFurnace/DailyHeatSummary.cshtml", vm);
-        //}
 
         public ActionResult EAFadd()
         {
@@ -252,16 +232,6 @@ namespace ProductionPortal_Solb.Controllers
             return RedirectToAction("LFlist");
         }
 
-        //public ActionResult LFDailyHeatSummary(DateTime? from, DateTime? to)
-        //{
-        //    DateTime fromDate = from ?? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-        //    DateTime toDate = (to ?? DateTime.Now).Date.AddDays(1);
-
-        //    var list = repo.GetLFListByDate(fromDate, toDate);
-
-        //    return View("~/Views/Meltshop/LaddleFurnace/LFDailyHeatSummary.cshtml", list); // OR VM
-        //}
-
         public ActionResult LFDailyHeatSummary(DateTime? from, DateTime? to)
         {
             DateTime fromDate = from ?? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -286,15 +256,6 @@ namespace ProductionPortal_Solb.Controllers
                 vm
             );
         }
-
-        //public ActionResult LFDailyHeatSummary()
-        //{
-        //    var vm = new LFReportVM();
-
-        //    vm.LFdata = repo.GetAllLFRecord().ToList();
-
-        //    return View("~/Views/Meltshop/LaddleFurnace/LFDailyHeatSummary.cshtml", vm);
-        //}
 
         public ActionResult SMPDelayReport(DateTime? startdate, DateTime? enddate)
         {

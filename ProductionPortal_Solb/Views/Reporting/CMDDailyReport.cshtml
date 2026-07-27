@@ -1,5 +1,8 @@
-﻿@using System.Globalization
-@using Newtonsoft.Json
+﻿@model DAL.Models.CMDPerformanceDashboardVM
+@using System
+@using System.Globalization
+@using System.Linq
+@using System.Collections.Generic
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -599,142 +602,122 @@
                 <h3>SOLB Steel - CMD Daily Performance Dashboard</h3>
                 <small>
                     <b>
-                        Date: 13 May 2026 |
+                        Date: @Model.FromDate.ToString("dd MMM yyyy") - @Model.ToDate.ToString("dd MMM yyyy") |
                         Report: CMD Daily Performance Report
                     </b>
                 </small>
             </div>
 
             <div class="col-md-4 text-right no-print">
-                <button type="button" class="btn btn-light btn-sm" onclick="printCMDReport()">
-                    Print / Save PDF
-                </button>
+                @using (Html.BeginForm("CMDPerformance", "Executive", FormMethod.Get, new { @class = "form-inline justify-content-end" }))
+                {
+                    @*<input type="date"
+                           name="reportDate"
+                           value="@Model.ReportDate.ToString("yyyy-MM-dd")"
+                           class="form-control form-control-sm mr-2" />
+
+                    <button type="submit" class="btn btn-light btn-sm mr-2">Load</button>*@
+                    <button type="button" class="btn btn-light btn-sm" onclick="printCMDReport()">Print / Save PDF</button>
+                }
             </div>
         </div>
     </div>
 
     <div class="top-grid">
-        <div class="top-box">
-            <div class="red-head">Daily Production in Tons</div>
-            <div class="mini-values">
-                SMP <span style="color:#c1000b">1,245</span> MT<br />
-                RM1 1,282 MT<br />
-                RM2 1,345 MT
-            </div>
-            <div class="compare-label">VS Yesterday</div>
-            <div class="big-up green">▲ 7.5%</div>
-            <div class="bar-wrap">
-                <div class="bar-col"><div class="bar" style="height:75px"><span>1011</span></div>RM1</div>
-                <div class="bar-col"><div class="bar" style="height:95px"><span>1282</span></div>RM2</div>
-                <div class="bar-col"><div class="bar" style="height:105px"><span>1345</span></div>SMP</div>
-            </div>
-        </div>
+        @{
+            var cards = new[]
+            {
+                new { Title = "Daily Production in Tons", Compare = "VS Yesterday", Data = Model.DailyProduction },
+                new { Title = "Production in Tons Month to Date", Compare = "VS Previous Month", Data = Model.MTDProduction },
+                new { Title = "Production in Tons Year to Date", Compare = "VS Previous Year", Data = Model.YTDProduction }
+            };
+        }
 
-        <div class="top-box">
-            <div class="red-head">Production in Tons Month to Date</div>
-            <div class="mini-values">
-                SMP <span style="color:#c1000b">35,150</span> MT<br />
-                RM1 32,650 MT<br />
-                RM2 31,558 MT
-            </div>
-            <div class="compare-label">VS Last Month</div>
-            <div class="big-up green">▲ 5.5%</div>
-            <div class="bar-wrap">
-                <div class="bar-col"><div class="bar" style="height:128px"><span>4250</span></div>RM1</div>
-                <div class="bar-col"><div class="bar" style="height:93px"><span>3000</span></div>RM2</div>
-                <div class="bar-col"><div class="bar" style="height:82px"><span>2700</span></div>SMP</div>
-            </div>
-        </div>
+        @foreach (var card in cards)
+        {
+            var p = card.Data ?? new DAL.Models.ProductionSummaryVM();
+            var maxValue = Math.Max(p.SMP, Math.Max(p.RM1, p.RM2));
+            var rm1Height = maxValue > 0 ? Math.Max(8, Convert.ToInt32((p.RM1 / maxValue) * 105)) : 0;
+            var rm2Height = maxValue > 0 ? Math.Max(8, Convert.ToInt32((p.RM2 / maxValue) * 105)) : 0;
+            var smpHeight = maxValue > 0 ? Math.Max(8, Convert.ToInt32((p.SMP / maxValue) * 105)) : 0;
 
-        <div class="top-box">
-            <div class="red-head">Production in Tons Year to Date</div>
-            <div class="mini-values">
-                SMP <span style="color:#c1000b">165,750</span> MT<br />
-                RM1 164,750 MT<br />
-                RM2 163,345 MT
+            <div class="top-box">
+                <div class="red-head">@card.Title</div>
+                <div class="mini-values">
+                    SMP <span style="color:#c1000b">@p.SMP.ToString("N0")</span> MT<br />
+                    RM1 @p.RM1.ToString("N0") MT<br />
+                    RM2 @p.RM2.ToString("N0") MT
+                </div>
+                <div class="compare-label">@card.Compare</div>
+                <div class="big-up @(p.ComparisonPercentage >= 0 ? "green" : "text-danger")">
+                    @(p.ComparisonPercentage >= 0 ? "▲" : "▼")
+                    @Math.Abs(p.ComparisonPercentage).ToString("N1")%
+                </div>
+                <div class="bar-wrap">
+                    <div class="bar-col"><div class="bar" style="height:@(rm1Height)px"><span>@p.RM1.ToString("N0")</span></div>RM1</div>
+                    <div class="bar-col"><div class="bar" style="height:@(rm2Height)px"><span>@p.RM2.ToString("N0")</span></div>RM2</div>
+                    <div class="bar-col"><div class="bar" style="height:@(smpHeight)px"><span>@p.SMP.ToString("N0")</span></div>SMP</div>
+                </div>
             </div>
-            <div class="compare-label">VS Last Month</div>
-            <div class="big-up green">▲ 4.3%</div>
-            <div class="bar-wrap">
-                <div class="bar-col"><div class="bar" style="height:130px"><span>425716</span></div>RM1</div>
-                <div class="bar-col"><div class="bar" style="height:78px"><span>415675</span></div>RM2</div>
-                <div class="bar-col"><div class="bar" style="height:82px"><span>416608</span></div>SMP</div>
-            </div>
-        </div>
+        }
     </div>
 
     <div class="pie-grid">
-        <div class="pie-box">
-            <div class="red-head pie-title">SMP Downtime %</div>
-            <div class="pies">
-                <div>
-                    <div class="pie-label">Delays onto DATE (DTD)</div>
-                    <div class="pie">
-                        <span class="p1">31.3%</span>
-                        <span class="p2">24.5%</span>
-                        <span class="p3">27.1%</span>
-                        <span class="p4">17.2%</span>
-                    </div>
-                </div>
-                <div>
-                    <div class="pie-label">MONTH TO DATE (MTD)</div>
-                    <div class="pie">
-                        <span class="p1">30.0%</span>
-                        <span class="p2">30.0%</span>
-                        <span class="p3">25.0%</span>
-                        <span class="p4">15.0%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @foreach (var plant in new[] { "SMP", "RM1", "RM2" })
+        {
+            var d = Model.Downtime != null
+                ? Model.Downtime.FirstOrDefault(x => x.Plant == plant)
+                : null;
 
-        <div class="pie-box">
-            <div class="red-head pie-title">RM1 Downtime %</div>
-            <div class="pies">
-                <div>
-                    <div class="pie-label">Delays onto DATE (DTD)</div>
-                    <div class="pie">
-                        <span class="p1">31.3%</span>
-                        <span class="p2">24.5%</span>
-                        <span class="p3">27.1%</span>
-                        <span class="p4">17.2%</span>
-                    </div>
-                </div>
-                <div>
-                    <div class="pie-label">MONTH TO DATE (MTD)</div>
-                    <div class="pie">
-                        <span class="p1">30.0%</span>
-                        <span class="p2">30.0%</span>
-                        <span class="p3">25.0%</span>
-                        <span class="p4">15.0%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+            if (d == null)
+            {
+                d = new DAL.Models.DowntimeSummaryVM { Plant = plant };
+            }
 
-        <div class="pie-box">
-            <div class="red-head pie-title">RM2 Downtime %</div>
-            <div class="pies">
-                <div>
-                    <div class="pie-label">Delays onto DATE (DTD)</div>
-                    <div class="pie">
-                        <span class="p1">31.3%</span>
-                        <span class="p2">24.5%</span>
-                        <span class="p3">27.1%</span>
-                        <span class="p4">17.2%</span>
+            var dtd1 = d.DTDUtilities;
+            var dtd2 = dtd1 + d.DTDMechanical;
+            var dtd3 = dtd2 + d.DTDElectrical;
+
+            var mtd1 = d.MTDUtilities;
+            var mtd2 = mtd1 + d.MTDMechanical;
+            var mtd3 = mtd2 + d.MTDElectrical;
+
+            var dtdGradient = string.Format(
+                CultureInfo.InvariantCulture,
+                "conic-gradient(#0c4c58 0 {0}%, #accb8e {0}% {1}%, #f57c00 {1}% {2}%, #a696bf {2}% 100%)",
+                dtd1, dtd2, dtd3
+            );
+
+            var mtdGradient = string.Format(
+                CultureInfo.InvariantCulture,
+                "conic-gradient(#0c4c58 0 {0}%, #accb8e {0}% {1}%, #f57c00 {1}% {2}%, #a696bf {2}% 100%)",
+                mtd1, mtd2, mtd3
+            );
+
+            <div class="pie-box">
+                <div class="red-head pie-title">@plant Downtime %</div>
+                <div class="pies">
+                    <div>
+                        <div class="pie-label">Delays on Date (DTD)</div>
+                        <div class="pie" style="background:@dtdGradient">
+                            <span class="p1">@d.DTDUtilities.ToString("N1")%</span>
+                            <span class="p2">@d.DTDMechanical.ToString("N1")%</span>
+                            <span class="p3">@d.DTDElectrical.ToString("N1")%</span>
+                            <span class="p4">@d.DTDCranes.ToString("N1")%</span>
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <div class="pie-label">MONTH TO DATE (MTD)</div>
-                    <div class="pie">
-                        <span class="p1">30.0%</span>
-                        <span class="p2">30.0%</span>
-                        <span class="p3">25.0%</span>
-                        <span class="p4">15.0%</span>
+                    <div>
+                        <div class="pie-label">Month to Date (MTD)</div>
+                        <div class="pie" style="background:@mtdGradient">
+                            <span class="p1">@d.MTDUtilities.ToString("N1")%</span>
+                            <span class="p2">@d.MTDMechanical.ToString("N1")%</span>
+                            <span class="p3">@d.MTDElectrical.ToString("N1")%</span>
+                            <span class="p4">@d.MTDCranes.ToString("N1")%</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
 
     <div class="legend">
@@ -747,147 +730,112 @@
     <div class="section-grid">
         <div class="sub-heading">FAILURE EQUIPMENT WISE - TOP 5</div>
 
-        <div class="chart-panel">
-            <div class="panel-title">STEEL MAKING PLANT</div>
-            <div class="bars-five">
-                <div class="vbar" style="height:94px"><span>10</span></div>
-                <div class="vbar" style="height:85px"><span>9</span></div>
-                <div class="vbar" style="height:76px"><span>8</span></div>
-                <div class="vbar" style="height:67px"><span>7</span></div>
-                <div class="vbar" style="height:67px"><span>7</span></div>
-            </div>
-            <div class="xlabels">
-                <span>Station #1</span>
-                <span>Finishing Deck</span>
-                <span>Sensor</span>
-                <span>Tying Machine 4</span>
-                <span>Tying Machine 1</span>
-            </div>
-            <div class="legend-small">■ Total Delay Hours</div>
-        </div>
+        @foreach (var plant in new[] { "SMP", "RM1", "RM2" })
+        {
+            var items = (Model.EquipmentFailures ?? new List<DAL.Models.TopFailureVM>())
+                .Where(x => x.Plant == plant)
+                .OrderByDescending(x => x.DelayHours)
+                .Take(5)
+                .ToList();
 
-        <div class="chart-panel">
-            <div class="panel-title">ROLLING MILL 1</div>
-            <div class="bars-five">
-                <div class="vbar" style="height:67px"><span>7</span></div>
-                <div class="vbar" style="height:58px"><span>6</span></div>
-                <div class="vbar" style="height:48px"><span>5</span></div>
-                <div class="vbar" style="height:48px"><span>5</span></div>
-                <div class="vbar" style="height:39px"><span>4</span></div>
-            </div>
-            <div class="xlabels">
-                <span>Tying Machine 4</span>
-                <span>Finishing Block</span>
-                <span>Station #7</span>
-                <span>Sensor</span>
-                <span>Tying Machine 1</span>
-            </div>
-            <div class="legend-small">■ Total Delay Hours</div>
-        </div>
+            var max = items.Any() ? items.Max(x => x.DelayHours) : 0;
 
-        <div class="chart-panel">
-            <div class="panel-title">ROLLING MILL 2</div>
-            <div class="bars-five">
-                <div class="vbar" style="height:67px"><span>7</span></div>
-                <div class="vbar" style="height:58px"><span>6</span></div>
-                <div class="vbar" style="height:48px"><span>5</span></div>
-                <div class="vbar" style="height:48px"><span>5</span></div>
-                <div class="vbar" style="height:39px"><span>4</span></div>
+            <div class="chart-panel">
+                <div class="panel-title">@plant</div>
+
+                @if (items.Any())
+                {
+                    <div class="bars-five">
+                        @foreach (var item in items)
+                        {
+                            var height = max > 0 ? Math.Max(8, Convert.ToInt32((item.DelayHours / max) * 94)) : 0;
+                            <div class="vbar" style="height:@(height)px"><span>@item.DelayHours.ToString("N1")</span></div>
+                        }
+                    </div>
+                    <div class="xlabels">
+                        @foreach (var item in items)
+                        {
+                            <span>@item.Name</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted p-4">No equipment delay data.</div>
+                }
+
+                <div class="legend-small">■ Total Delay Hours</div>
             </div>
-            <div class="xlabels">
-                <span>Tying Machine 4</span>
-                <span>Finishing Block</span>
-                <span>Station #4</span>
-                <span>Sensor</span>
-                <span>Tying Machine 1</span>
-            </div>
-            <div class="legend-small">■ Total Delay Hours</div>
-        </div>
+        }
 
         <div class="sub-heading">FAILURE RCA WISE (MTD) - TOP 5</div>
 
-        <div class="chart-panel">
-            <div class="panel-title">STEEL MAKING PLANT</div>
-            <div class="hbar-row"><span>Design issues</span><div class="hbar-bg"><div class="hbar" style="width:33%"></div></div><b>3</b></div>
-            <div class="hbar-row"><span>Human Mistake</span><div class="hbar-bg"><div class="hbar" style="width:100%"></div></div><b>9</b></div>
-            <div class="hbar-row"><span>Poor Operation Condition</span><div class="hbar-bg"><div class="hbar" style="width:56%"></div></div><b>5</b></div>
-            <div class="hbar-row"><span>Undetectable</span><div class="hbar-bg"><div class="hbar" style="width:67%"></div></div><b>6</b></div>
-            <div class="hbar-row"><span>Machine Poor Condition</span><div class="hbar-bg"><div class="hbar" style="width:22%"></div></div><b>2</b></div>
-            <div class="hbar-row"><span>Can Be avoided</span><div class="hbar-bg"><div class="hbar" style="width:44%"></div></div><b>4</b></div>
-            <div class="hbar-row"><span>Shortage of Spares</span><div class="hbar-bg"><div class="hbar" style="width:89%"></div></div><b>8</b></div>
-            <div class="legend-small">Total Delay Hours</div>
-        </div>
+        @foreach (var plant in new[] { "SMP", "RM1", "RM2" })
+        {
+            var items = (Model.RCAFailures ?? new List<DAL.Models.TopFailureVM>())
+                .Where(x => x.Plant == plant)
+                .OrderByDescending(x => x.DelayHours)
+                .Take(5)
+                .ToList();
 
-        <div class="chart-panel">
-            <div class="panel-title">ROLLING MILL 1</div>
-            <div class="hbar-row"><span>Design issues</span><div class="hbar-bg"><div class="hbar" style="width:33%"></div></div><b>3</b></div>
-            <div class="hbar-row"><span>Human Mistake</span><div class="hbar-bg"><div class="hbar" style="width:100%"></div></div><b>9</b></div>
-            <div class="hbar-row"><span>Poor Operation Condition</span><div class="hbar-bg"><div class="hbar" style="width:56%"></div></div><b>5</b></div>
-            <div class="hbar-row"><span>Undetectable</span><div class="hbar-bg"><div class="hbar" style="width:67%"></div></div><b>6</b></div>
-            <div class="hbar-row"><span>Machine Poor Condition</span><div class="hbar-bg"><div class="hbar" style="width:22%"></div></div><b>2</b></div>
-            <div class="hbar-row"><span>Can Be avoided</span><div class="hbar-bg"><div class="hbar" style="width:44%"></div></div><b>4</b></div>
-            <div class="hbar-row"><span>Shortage of Spares</span><div class="hbar-bg"><div class="hbar" style="width:89%"></div></div><b>8</b></div>
-            <div class="legend-small">Total Delay Hours</div>
-        </div>
+            var max = items.Any() ? items.Max(x => x.DelayHours) : 0;
 
-        <div class="chart-panel">
-            <div class="panel-title">ROLLING MILL 2</div>
-            <div class="hbar-row"><span>Design issues</span><div class="hbar-bg"><div class="hbar" style="width:33%"></div></div><b>3</b></div>
-            <div class="hbar-row"><span>Human Mistake</span><div class="hbar-bg"><div class="hbar" style="width:100%"></div></div><b>9</b></div>
-            <div class="hbar-row"><span>Poor Operation Condition</span><div class="hbar-bg"><div class="hbar" style="width:56%"></div></div><b>5</b></div>
-            <div class="hbar-row"><span>Undetectable</span><div class="hbar-bg"><div class="hbar" style="width:67%"></div></div><b>6</b></div>
-            <div class="hbar-row"><span>Machine Poor Condition</span><div class="hbar-bg"><div class="hbar" style="width:22%"></div></div><b>2</b></div>
-            <div class="hbar-row"><span>Can Be avoided</span><div class="hbar-bg"><div class="hbar" style="width:44%"></div></div><b>4</b></div>
-            <div class="hbar-row"><span>Shortage of Spares</span><div class="hbar-bg"><div class="hbar" style="width:89%"></div></div><b>8</b></div>
-            <div class="legend-small">Total Delay Hours</div>
-        </div>
+            <div class="chart-panel">
+                <div class="panel-title">@plant</div>
+
+                @if (items.Any())
+                {
+                    foreach (var item in items)
+                    {
+                        var width = max > 0 ? Math.Round((item.DelayHours / max) * 100, 2) : 0;
+                        <div class="hbar-row">
+                            <span>@item.Name</span>
+                            <div class="hbar-bg">
+                                <div class="hbar" style="width:@(width.ToString(CultureInfo.InvariantCulture))%"></div>
+                            </div>
+                            <b>@item.DelayHours.ToString("N1")</b>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted p-4">No RCA delay data.</div>
+                }
+            </div>
+        }
 
         <div class="sub-heading">Counter Measures Closure Rate %</div>
 
-        <div class="chart-panel">
-            <div class="panel-title">STEEL MAKING PLANT</div>
-            <svg class="line-chart" viewBox="0 0 300 110">
-                <polyline points="20,78 70,70 120,55 170,48 220,60 270,48" fill="none" stroke="#1c6aa6" stroke-width="2" />
-                <polyline points="20,62 70,55 120,42 170,44 220,42 270,35" fill="none" stroke="#c00000" stroke-width="2" />
-                <polyline points="20,86 70,78 120,72 170,82 220,76 270,70" fill="none" stroke="#6c9f2e" stroke-width="2" />
-                <polyline points="20,70 70,60 120,50 170,76 220,63 270,58" fill="none" stroke="#6a5aa8" stroke-width="2" />
-            </svg>
-            <div class="line-labels">
-                <span>Jan 26</span><span>Feb 26</span><span>Mar 26</span>
-                <span>April 24</span><span>May 26</span><span>June 26</span>
-            </div>
-            <div class="legend-small">Mechanical &nbsp;&nbsp; Electrical &nbsp;&nbsp; Utility &nbsp;&nbsp; Cranes</div>
-        </div>
+        @foreach (var plant in new[] { "SMP", "RM1", "RM2" })
+        {
+            var items = (Model.ClosureRates ?? new List<DAL.Models.ClosureRateVM>())
+                .Where(x => x.Plant == plant)
+                .OrderBy(x => x.MonthNumber)
+                .ToList();
 
-        <div class="chart-panel">
-            <div class="panel-title">ROLLING MILL 1</div>
-            <svg class="line-chart" viewBox="0 0 300 110">
-                <polyline points="20,78 70,70 120,55 170,48 220,60 270,48" fill="none" stroke="#1c6aa6" stroke-width="2" />
-                <polyline points="20,62 70,55 120,42 170,44 220,42 270,35" fill="none" stroke="#c00000" stroke-width="2" />
-                <polyline points="20,86 70,78 120,72 170,82 220,76 270,70" fill="none" stroke="#6c9f2e" stroke-width="2" />
-                <polyline points="20,70 70,60 120,50 170,76 220,63 270,58" fill="none" stroke="#6a5aa8" stroke-width="2" />
-            </svg>
-            <div class="line-labels">
-                <span>Jan 26</span><span>Feb 26</span><span>Mar 26</span>
-                <span>April 24</span><span>May 26</span><span>June 26</span>
-            </div>
-            <div class="legend-small">Mechanical &nbsp;&nbsp; Electrical &nbsp;&nbsp; Utility &nbsp;&nbsp; Cranes</div>
-        </div>
+            <div class="chart-panel">
+                <div class="panel-title">@plant</div>
 
-        <div class="chart-panel">
-            <div class="panel-title">ROLLING MILL 2</div>
-            <svg class="line-chart" viewBox="0 0 300 110">
-                <polyline points="20,78 70,70 120,55 170,48 220,60 270,48" fill="none" stroke="#1c6aa6" stroke-width="2" />
-                <polyline points="20,62 70,55 120,42 170,44 220,42 270,35" fill="none" stroke="#c00000" stroke-width="2" />
-                <polyline points="20,86 70,78 120,72 170,82 220,76 270,70" fill="none" stroke="#6c9f2e" stroke-width="2" />
-                <polyline points="20,70 70,60 120,50 170,76 220,63 270,58" fill="none" stroke="#6a5aa8" stroke-width="2" />
-            </svg>
-            <div class="line-labels">
-                <span>Jan 26</span><span>Feb 26</span><span>Mar 26</span>
-                <span>April 24</span><span>May 26</span><span>June 26</span>
+                @if (items.Any())
+                {
+                    foreach (var item in items)
+                    {
+                        var width = Math.Max(0, Math.Min(100, item.ClosurePercentage));
+                        <div class="hbar-row">
+                            <span>@item.MonthName - @item.Department</span>
+                            <div class="hbar-bg">
+                                <div class="hbar" style="width:@(width.ToString(CultureInfo.InvariantCulture))%"></div>
+                            </div>
+                            <b>@item.ClosurePercentage.ToString("N0")%</b>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted p-4">Closure-rate data is not connected.</div>
+                }
             </div>
-            <div class="legend-small">Mechanical &nbsp;&nbsp; Electrical &nbsp;&nbsp; Utility &nbsp;&nbsp; Cranes</div>
-        </div>
+        }
     </div>
 
     <div class="bottom-title">Description of Top Delays on Date</div>
@@ -905,42 +853,27 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>M</td>
-                <td>20</td>
-                <td>E</td>
-                <td>SBH01</td>
-                <td>Mill not ready</td>
-                <td>Due to finishing area DC bus fault</td>
-                <td>Rectified by electrical</td>
-            </tr>
-            <tr>
-                <td>M</td>
-                <td>5</td>
-                <td>E</td>
-                <td>Stand # 2</td>
-                <td>Mill not ready</td>
-                <td>Due to stand #2 drive alarm</td>
-                <td>Rectified by electrical</td>
-            </tr>
-            <tr>
-                <td>M</td>
-                <td>45</td>
-                <td>E</td>
-                <td>BBD # 1</td>
-                <td>Mill not ready</td>
-                <td>Due to BBD1 drive alarm</td>
-                <td>Rectified by electrical</td>
-            </tr>
-            <tr>
-                <td>M</td>
-                <td>10</td>
-                <td>E</td>
-                <td>RCL2</td>
-                <td>After ghost rolling mill not ready</td>
-                <td>Due to RC2 alignment timeout alarm</td>
-                <td>Rectified by electrical</td>
-            </tr>
+            @if (Model.TopDelays != null && Model.TopDelays.Any())
+            {
+                foreach (var item in Model.TopDelays)
+                {
+                    <tr>
+                        <td>@item.Shift</td>
+                        <td>@item.TotalDuration.ToString("N1")</td>
+                        <td>@item.DelayCode</td>
+                        <td>@item.EquipmentCode</td>
+                        <td>@item.Description</td>
+                        <td>@item.ReasonForOccurrence</td>
+                        <td>@item.ActionTaken</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7">No delay records found for @Model.ReportDate.ToString("dd MMM yyyy").</td>
+                </tr>
+            }
         </tbody>
     </table>
 

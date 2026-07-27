@@ -43,7 +43,8 @@
 39. Print
 40. Responsive
 */
-@import url("https://fonts.googleapis.com/css?family=Comfortaa:300,400,700");
+/*@import url("https://fonts.googleapis.com/css?family=Comfortaa:300,400,700");*/
+@import url('https://fonts.googleapis.com/css2?family=Offside&display=swap');
 /* 
 ===============
     General
@@ -54,8 +55,14 @@ html {
     min-height: 100%;
 }
 
+.offside-regular {
+    font-family: "Offside", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
 body {
-    font-family: "Comfortaa", cursive;
+    font-family: "Offside", sans-serif;
     margin: 0;
     background: #F0F4F9;
     font-size: 15px;

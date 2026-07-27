@@ -16,6 +16,10 @@ namespace DAL.Models
         
         public string Plant { get; set; }    
 
+        public string Size { get; set; }  
+        
+        public string Profile { get; set; }    
+
         public string HeatNo { get; set; }
 
         public string BilletBoardingNo { get; set; }

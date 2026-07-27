@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
   <Import Project="..\packages\EntityFramework.6.5.2\build\EntityFramework.props" Condition="Exists('..\packages\EntityFramework.6.5.2\build\EntityFramework.props')" />
   <Import Project="..\packages\Microsoft.AspNetCore.Mvc.Razor.Extensions.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Mvc.Razor.Extensions.props" Condition="Exists('..\packages\Microsoft.AspNetCore.Mvc.Razor.Extensions.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Mvc.Razor.Extensions.props')" />
   <Import Project="..\packages\Microsoft.DiaSymReader.Native.1.7.0\build\Microsoft.DiaSymReader.Native.props" Condition="Exists('..\packages\Microsoft.DiaSymReader.Native.1.7.0\build\Microsoft.DiaSymReader.Native.props')" />
   <Import Project="..\packages\Microsoft.AspNetCore.Razor.Design.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Razor.Design.props" Condition="Exists('..\packages\Microsoft.AspNetCore.Razor.Design.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Razor.Design.props')" />
   <Import Project="..\packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.props" Condition="Exists('..\packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.props')" />
-  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -53,6 +53,18 @@
     <Reference Include="BouncyCastle.Cryptography, Version=2.0.0.0, Culture=neutral, PublicKeyToken=072edcf4a5328938, processorArchitecture=MSIL">
       <HintPath>..\packages\BouncyCastle.Cryptography.2.4.0\lib\net461\BouncyCastle.Cryptography.dll</HintPath>
     </Reference>
+    <Reference Include="ClosedXML, Version=0.105.0.0, Culture=neutral, PublicKeyToken=fd1eb21b62ae805b, processorArchitecture=MSIL">
+      <HintPath>..\packages\ClosedXML.0.105.0\lib\netstandard2.0\ClosedXML.dll</HintPath>
+    </Reference>
+    <Reference Include="ClosedXML.Parser, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1d5f7376574c51ec, processorArchitecture=MSIL">
+      <HintPath>..\packages\ClosedXML.Parser.2.0.0\lib\netstandard2.0\ClosedXML.Parser.dll</HintPath>
+    </Reference>
+    <Reference Include="DocumentFormat.OpenXml, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>..\packages\DocumentFormat.OpenXml.3.1.1\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="DocumentFormat.OpenXml.Framework, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>..\packages\DocumentFormat.OpenXml.Framework.3.1.1\lib\net46\DocumentFormat.OpenXml.Framework.dll</HintPath>
+    </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.5.2\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
@@ -64,6 +76,9 @@
     </Reference>
     <Reference Include="EPPlus.Interfaces, Version=8.1.0.0, Culture=neutral, PublicKeyToken=a694d7f3b0907a61, processorArchitecture=MSIL">
       <HintPath>..\packages\EPPlus.Interfaces.8.1.0\lib\net462\EPPlus.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelNumberFormat, Version=1.1.0.0, Culture=neutral, PublicKeyToken=23c6f5d73be07eca, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExcelNumberFormat.1.1.0\lib\net20\ExcelNumberFormat.dll</HintPath>
     </Reference>
     <Reference Include="HarfBuzzSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\HarfBuzzSharp.8.3.0.1\lib\net462\HarfBuzzSharp.dll</HintPath>
@@ -191,6 +206,9 @@
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CodeAnalysis, Version=2.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.2.8.0\lib\netstandard1.3\Microsoft.CodeAnalysis.dll</HintPath>
     </Reference>
@@ -199,6 +217,9 @@
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.Razor, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Razor.2.2.0\lib\net46\Microsoft.CodeAnalysis.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.DotNet.PlatformAbstractions, Version=2.1.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
@@ -268,6 +289,9 @@
       <HintPath>..\packages\Newtonsoft.Json.Bson.1.0.1\lib\net45\Newtonsoft.Json.Bson.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="RBush, Version=4.0.0.0, Culture=neutral, PublicKeyToken=c77e27b81f4d0187, processorArchitecture=MSIL">
+      <HintPath>..\packages\RBush.Signed.4.0.0\lib\net47\RBush.dll</HintPath>
+    </Reference>
     <Reference Include="Rotativa, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Rotativa.1.7.3\lib\net461\Rotativa.dll</HintPath>
     </Reference>
@@ -276,6 +300,9 @@
     </Reference>
     <Reference Include="Rotativa.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Rotativa.Core.2.0.0\lib\net45\Rotativa.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SixLabors.Fonts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
+      <HintPath>..\packages\SixLabors.Fonts.1.0.0\lib\netstandard2.0\SixLabors.Fonts.dll</HintPath>
     </Reference>
     <Reference Include="Spire.XLS, Version=15.11.3.0, Culture=neutral, PublicKeyToken=663f351905198cb3, processorArchitecture=MSIL">
       <HintPath>..\packages\Spire.XLS.15.11.3\lib\net48\Spire.XLS.dll</HintPath>
@@ -524,33 +551,30 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
-      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
+    <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\NoCacheAttribute.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\BoardingController.cs" />
     <Compile Include="Controllers\CCMController.cs" />
+    <Compile Include="Controllers\CCMProductionController.cs" />
     <Compile Include="Controllers\ConsumptionController.cs" />
     <Compile Include="Controllers\DelayController.cs" />
+    <Compile Include="Controllers\DelayCounterMeasureController.cs" />
     <Compile Include="Controllers\ExecutiveController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\MaintenanceController.cs" />
     <Compile Include="Controllers\MeltshopController.cs" />
     <Compile Include="Controllers\RMReportsController.cs" />
-    <Compile Include="Controllers\RMTargetController.cs" />
+    <Compile Include="Controllers\TargetController.cs" />
     <Compile Include="Controllers\SMPReportsController.cs" />
     <Compile Include="Controllers\QualityController.cs" />
     <Compile Include="Controllers\ReportingController.cs" />
     <Compile Include="Controllers\RollingMillController.cs" />
     <Compile Include="Controllers\ScrapyardController.cs" />
     <Compile Include="Controllers\SecurityController.cs" />
-    <Compile Include="Controllers\SMPTargetController.cs" />
     <Compile Include="Controllers\StockController.cs" />
     <Compile Include="Controllers\SupplyChainController.cs" />
     <Compile Include="Controllers\UserController.cs" />
@@ -567,6 +591,7 @@
     <Content Include="assets\fonts\dripicons-v2.svg" />
     <Content Include="assets\fonts\fontawesome-webfont.svg" />
     <Content Include="assets\fonts\ionicons.svg" />
+    <Content Include="assets\fonts\letters_for_learners\Letters for Learners Font ReadMe.txt" />
     <Content Include="assets\fonts\materialdesignicons-webfont.svg" />
     <Content Include="assets\fonts\Simple-Line-Icons.svg" />
     <Content Include="assets\fonts\themify.svg" />
@@ -1721,16 +1746,7 @@
     <Content Include="assets\icons\typicons\typicons.svg" />
     <Content Include="assets\images\authentication\authentication-bg.png" />
     <Content Include="assets\images\authentication\lock-user.jpg" />
-    <Content Include="assets\images\colorpicker\alpha.png" />
-    <Content Include="assets\images\colorpicker\hue.png" />
-    <Content Include="assets\images\colorpicker\saturation.png" />
-    <Content Include="assets\images\colorpicker\transparent.png" />
-    <Content Include="assets\images\email\email-attach-1.jpg" />
-    <Content Include="assets\images\email\email-attach-2.jpg" />
-    <Content Include="assets\images\email\email-user.jpg" />
     <Content Include="assets\images\favicon.png" />
-    <Content Include="assets\images\flags\ar.svg" />
-    <Content Include="assets\images\flags\en.svg" />
     <Content Include="assets\images\logo.png" />
     <Content Include="assets\images\supply\billet.png" />
     <Content Include="assets\images\supply\dri.png" />
@@ -1752,58 +1768,6 @@
     <Content Include="assets\images\supply\sub-raw-material.png" />
     <Content Include="assets\images\supply\truck.png" />
     <Content Include="assets\images\supply\wire-rod-coil.png" />
-    <Content Include="assets\images\topbar\user-message-1.jpg" />
-    <Content Include="assets\images\topbar\user-message-2.jpg" />
-    <Content Include="assets\images\topbar\user-message-3.jpg" />
-    <Content Include="assets\images\topbar\user.jpg" />
-    <Content Include="assets\images\ui-alert\sweet-alert-bg.png" />
-    <Content Include="assets\images\ui-cards\ui-cards-1.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-10.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-11.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-12.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-13.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-14.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-15.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-16.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-2.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-3.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-4.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-5.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-6.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-7.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-8.jpg" />
-    <Content Include="assets\images\ui-cards\ui-cards-9.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-1.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-10.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-11.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-12.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-13.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-14.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-15.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-16.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-2.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-3.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-4.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-5.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-6.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-7.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-8.jpg" />
-    <Content Include="assets\images\ui-carousel\ui-cards-9.jpg" />
-    <Content Include="assets\images\ui-images\image-center.jpg" />
-    <Content Include="assets\images\ui-images\image-circle.jpg" />
-    <Content Include="assets\images\ui-images\image-responsive.jpg" />
-    <Content Include="assets\images\ui-images\image-rounded.jpg" />
-    <Content Include="assets\images\ui-images\image-thumbnail.jpg" />
-    <Content Include="assets\images\ui-media\media-image-1.jpg" />
-    <Content Include="assets\images\ui-media\media-image-10.jpg" />
-    <Content Include="assets\images\ui-media\media-image-2.jpg" />
-    <Content Include="assets\images\ui-media\media-image-3.jpg" />
-    <Content Include="assets\images\ui-media\media-image-4.jpg" />
-    <Content Include="assets\images\ui-media\media-image-5.jpg" />
-    <Content Include="assets\images\ui-media\media-image-6.jpg" />
-    <Content Include="assets\images\ui-media\media-image-7.jpg" />
-    <Content Include="assets\images\ui-media\media-image-8.jpg" />
-    <Content Include="assets\images\ui-media\media-image-9.jpg" />
     <Content Include="assets\js\bootstrap.min.js" />
     <Content Include="assets\js\detect.js" />
     <Content Include="assets\js\init\barrating-init.js" />
@@ -2514,6 +2478,13 @@
     <Content Include="assets\scss\_topbar.scss" />
     <Content Include="assets\scss\_variables.scss" />
     <Content Include="assets\scss\_widgets.scss" />
+    <Content Include="assets\fonts\letters_for_learners\Letters for Learners Dots.ttf" />
+    <Content Include="assets\fonts\letters_for_learners\Letters for Learners Lined Dots.ttf" />
+    <Content Include="assets\fonts\letters_for_learners\Letters for Learners Lined.ttf" />
+    <Content Include="assets\fonts\letters_for_learners\Letters for Learners Outline Bold.ttf" />
+    <Content Include="assets\fonts\letters_for_learners\Letters for Learners Outline Light.ttf" />
+    <Content Include="assets\fonts\letters_for_learners\Letters for Learners Outline.ttf" />
+    <Content Include="assets\fonts\letters_for_learners\Letters for Learners.ttf" />
     <None Include="packages.config" />
     <Content Include="Views\Login\login.cshtml" />
     <Content Include="Views\UserRole\add.cshtml" />
@@ -2607,10 +2578,16 @@
     <Content Include="Views\Executive\list.cshtml" />
     <Content Include="Views\SMPReports\SMPDailyDashboard - Copy.cshtml" />
     <Content Include="Views\Executive\dashboard.cshtml" />
+    <Content Include="Views\Shared\_Layout - Copy.cshtml" />
+    <Content Include="Views\Target\add.cshtml" />
+    <Content Include="Views\Target\list.cshtml" />
+    <Content Include="Views\Reporting\ShiftProductionDashboard - Copy.cshtml" />
+    <Content Include="Views\CCMProduction\Add.cshtml" />
+    <Content Include="Views\CCMProduction\List.cshtml" />
+    <Content Include="Views\CCMProduction\PdfReport.cshtml" />
+    <Content Include="Views\DelayCounterMeasure\add.cshtml" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Views\Base\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
@@ -2647,7 +2624,6 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
     <Error Condition="!Exists('..\packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.props'))" />
     <Error Condition="!Exists('..\packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.AspNetCore.Razor.Design.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Razor.Design.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.AspNetCore.Razor.Design.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Razor.Design.props'))" />
@@ -2656,6 +2632,7 @@
     <Error Condition="!Exists('..\packages\Microsoft.AspNetCore.Mvc.Razor.Extensions.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Mvc.Razor.Extensions.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.AspNetCore.Mvc.Razor.Extensions.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Mvc.Razor.Extensions.targets'))" />
     <Error Condition="!Exists('..\packages\EntityFramework.6.5.2\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.5.2\build\EntityFramework.props'))" />
     <Error Condition="!Exists('..\packages\EntityFramework.6.5.2\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.5.2\build\EntityFramework.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
   </Target>
   <Import Project="..\packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.targets" Condition="Exists('..\packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.targets')" />
   <Import Project="..\packages\Microsoft.AspNetCore.Mvc.Razor.Extensions.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Mvc.Razor.Extensions.targets" Condition="Exists('..\packages\Microsoft.AspNetCore.Mvc.Razor.Extensions.2.2.0\build\netstandard2.0\Microsoft.AspNetCore.Mvc.Razor.Extensions.targets')" />

@@ -50,6 +50,50 @@ namespace WebAPICode.Helpers
             }
         }
 
+        public static DataSet ExecuteDataSet(
+           string commandText,
+           CommandType commandType,
+           params SqlParameter[] parameters)
+        {
+            DataSet dataSet = new DataSet();
+
+            using (
+                SqlConnection connection =
+                    new SqlConnection(
+                        connectionString
+                    )
+            )
+            using (
+                SqlCommand command =
+                    new SqlCommand(
+                        commandText,
+                        connection
+                    )
+            )
+            using (
+                SqlDataAdapter adapter =
+                    new SqlDataAdapter(command)
+            )
+            {
+                command.CommandType =
+                    commandType;
+
+                command.CommandTimeout = 120;
+
+                if (parameters != null &&
+                    parameters.Length > 0)
+                {
+                    command.Parameters
+                        .AddRange(parameters);
+                }
+
+                adapter.Fill(dataSet);
+            }
+
+            return dataSet;
+        }
+
+
         public static List<T> GetList<T>(string query)
         {
             var list = new List<T>();
@@ -511,6 +555,112 @@ namespace WebAPICode.Helpers
 
             DateTime result;
             return DateTime.TryParse(row[columnName].ToString(), out result) ? result : (DateTime?)null;
+        }
+
+        public static DataTable ExecuteDataTable(
+                 string commandText,
+                 CommandType commandType,
+                 params SqlParameter[] parameters)
+        {
+            DataTable dt = new DataTable();
+
+            using (SqlConnection connection =
+                   new SqlConnection(connectionString))
+            using (SqlCommand command =
+                   new SqlCommand(commandText, connection))
+            {
+                command.CommandType = commandType;
+                command.CommandTimeout = 120;
+
+                AddParameters(command, parameters);
+
+                using (SqlDataAdapter adapter =
+                       new SqlDataAdapter(command))
+                {
+                    adapter.Fill(dt);
+                }
+            }
+
+            return dt;
+        }
+
+        // =========================================================
+        // EXECUTE SCALAR
+        // INSERT WITH SCOPE_IDENTITY / SINGLE VALUE
+        // =========================================================
+        public static object ExecuteScalar(
+            string commandText,
+            CommandType commandType,
+            params SqlParameter[] parameters)
+        {
+            using (SqlConnection connection =
+                   new SqlConnection(connectionString))
+            using (SqlCommand command =
+                   new SqlCommand(commandText, connection))
+            {
+                command.CommandType = commandType;
+                command.CommandTimeout = 120;
+
+                AddParameters(command, parameters);
+
+                connection.Open();
+
+                return command.ExecuteScalar();
+            }
+        }
+
+        // =========================================================
+        // EXECUTE NON QUERY
+        // UPDATE / DELETE / INSERT WITHOUT RETURN VALUE
+        // =========================================================
+        public static int ExecuteNonQuery(
+            string commandText,
+            CommandType commandType,
+            params SqlParameter[] parameters)
+        {
+            using (SqlConnection connection =
+                   new SqlConnection(connectionString))
+            using (SqlCommand command =
+                   new SqlCommand(commandText, connection))
+            {
+                command.CommandType = commandType;
+                command.CommandTimeout = 120;
+
+                AddParameters(command, parameters);
+
+                connection.Open();
+
+                return command.ExecuteNonQuery();
+            }
+        }
+
+        // =========================================================
+        // ADD PARAMETERS
+        // =========================================================
+        private static void AddParameters(
+            SqlCommand command,
+            SqlParameter[] parameters)
+        {
+            if (parameters == null ||
+                parameters.Length == 0)
+            {
+                return;
+            }
+
+            foreach (SqlParameter parameter in parameters)
+            {
+                if (parameter == null)
+                {
+                    continue;
+                }
+
+                if (parameter.Value == null)
+                {
+                    parameter.Value = DBNull.Value;
+                }
+
+                command.Parameters.Add(parameter);
+            }
         }
     }
 }

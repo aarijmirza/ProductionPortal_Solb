@@ -43,5 +43,7 @@ namespace DAL.Models
         public string Size { get; set; }
         public string Profile { get; set; }
         public string Remarks { get; set; }
+
+        public List<BilletDischargingBLL> MonthlyProductionData { get; set; }
     }
 }

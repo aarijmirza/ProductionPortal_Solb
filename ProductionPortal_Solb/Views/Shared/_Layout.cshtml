@@ -8,32 +8,24 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="Neon is a bootstrap, laravel & php admin dashboard template">
-    <meta name="keywords" content="admin, admin dashboard, admin panel, admin template, admin theme, bootstrap 4, laravel, php, crm, analytics, responsive, sass support, ui kits, web app, clean design">
-    <meta name="author" content="Themesbox17">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Production Portal - Solb Steel</title>
-    <!-- Fevicon -->
-    <link rel="shortcut icon" href="~/assets/images/favicon.png">
-    <!-- Start CSS --> <!-- Chartist Chart CSS -->
-    <link rel="stylesheet" href="~/assets/plugins/chartist-js/chartist.min.css">
-    <!-- Switchery CSS -->
-    <link href="~/assets/plugins/switchery/switchery.min.css" rel="stylesheet">
-    <!-- Datepicker CSS -->
-    <link href="~/assets/plugins/datepicker/datepicker.min.css" rel="stylesheet" type="text/css">
-    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-    <link href="~/assets/css/icons.css" rel="stylesheet" type="text/css">
-    <link href="~/assets/css/style.css" rel="stylesheet" type="text/css">
-    <!-- End CSS --> <!-- DataTables CSS -->
-    <link href="~/assets/plugins/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-    <link href="~/assets/plugins/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-    <!-- Responsive Datatable CSS -->
-    <link href="~/assets/plugins/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Select2 -->
-    @*<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />*@
 
+    <link rel="shortcut icon" href="@Url.Content("~/assets/images/favicon.png")">
 
+    <link href="@Url.Content("~/assets/css/icons.css")"
+          rel="stylesheet"
+          type="text/css" />
+
+    @Styles.Render("~/bundles/core-css")
+    @Styles.Render("~/bundles/plugin-css")
+
+    @RenderSection("styles", required: false)
+
+    @* Keep only one jQuery reference because some existing pages may use
+        inline jQuery before the closing body tag. *@
+    @Scripts.Render("~/bundles/jquery")
 </head>
 
 <body class="xp-vertical">
@@ -67,7 +59,7 @@
                 <!-- Start XP Col -->
                 <div class="col-2 col-md-1 col-lg-1 order-2 order-md-1 align-self-center">
                     <div class="xp-menubar">
-                        <a class="xp-menu-hamburger" href="javascript:void();">
+                        <a class="xp-menu-hamburger" href="javascript:void(0);">
                             <i class="icon-menu font-20 text-white"></i>
                         </a>
                     </div>
@@ -112,7 +104,7 @@
                 <div class="xp-navigationbar">
                     <ul class="xp-vertical-menu">
                         <li>
-                            <a href="javaScript:void();">
+                            <a href="javascript:void(0);">
                                 <span>DASHBOARD'S</span><i class="icon-arrow-right pull-right"></i>
                             </a>
                             <ul class="xp-vertical-submenu">
@@ -126,7 +118,7 @@
                         @if (User.IsInRole("Administrator") || User.IsInRole("User") || User.IsInRole("Steel Making User") || User.IsInRole("QC User"))
                         {
                             <li>
-                                <a href="javaScript:void();">
+                                <a href="javascript:void(0);">
                                     <span>STEEL MAKING PLANT</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
@@ -135,8 +127,12 @@
                                     <li><a href="@Url.Action("EAFlist", "Meltshop")">ELECTRIC ARC FURNACE</a></li>
                                 </ul><ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("LFlist", "Meltshop")">LADDLE FURNACE</a></li>
-                                </ul><ul class="xp-vertical-submenu">
+                                </ul>
+                                <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("list", "CCM")">CCM</a></li>
+                                </ul>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("List", "CCMProduction")">BILLET YARD REPORT</a></li>
                                 </ul>
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("CCMYieldlist", "CCM")">CCM YIELD BREAK DOWN</a></li>
@@ -149,7 +145,7 @@
                         @if (User.IsInRole("Administrator") || User.IsInRole("QC User") || User.IsInRole("Rolling Mill User") || User.IsInRole("User"))
                         {
                             <li>
-                                <a href="javaScript:void();">
+                                <a href="javascript:void(0);">
                                     <span>QUALITY CONTROL</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 @if (User.IsInRole("Administrator") || User.IsInRole("User") || User.IsInRole("QC User") || User.IsInRole("Steel Making User"))
@@ -200,6 +196,7 @@
                                         <li><a href="@Url.Action("AddDischarge","RollingMill")">FURNACE DISCHARGE</a></li>
                                         <li><a href="@Url.Action("RMHourlyDischarge","RollingMill")">HOURLY DATA BREAKDOWN</a></li>
                                         <li><a href="@Url.Action("AddBundleSection","RollingMill")">BUNDLE SECTION</a></li>
+                                        <li><a href="@Url.Action("add","Target")">ROLLING MILL TARGETS</a></li>
                                         @if (User.IsInRole("User") || User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User"))
                                         {
                                             <li><a href="@Url.Action("list", "Delay")">DELAY RECORD</a></li>
@@ -220,7 +217,7 @@
                         @if (User.IsInRole("Administrator") || User.IsInRole("User"))
                         {
                             <li>
-                                <a href="javaScript:void();">
+                                <a href="javascript:void(0);">
                                     <span>CMD MAINTENANCE</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
@@ -231,7 +228,7 @@
                         @if (User.IsInRole("Administrator") || User.IsInRole("Supply Chain"))
                         {
                             <li>
-                                <a href="javaScript:void();">
+                                <a href="javascript:void(0);">
                                     <span>SUPPLY CHAIN</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
@@ -248,7 +245,7 @@
                         @if (User.IsInRole("Administrator") || User.IsInRole("User"))
                         {
                             <li>
-                                <a href="javaScript:void();">
+                                <a href="javascript:void(0);">
                                     <span>UTILITY CONSUMPTION</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
@@ -259,7 +256,7 @@
                         @if (User.IsInRole("Administrator") || User.IsInRole("Sher"))
                         {
                             <li>
-                                <a href="javaScript:void();">
+                                <a href="javascript:void(0);">
                                     <span>HSE</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
@@ -271,7 +268,7 @@
                         @if (User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User") || User.IsInRole("Supply Chain"))
                         {
                             <li>
-                                <a href="javaScript:void();">
+                                <a href="javascript:void(0);">
                                     <span>REPORTS</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
@@ -307,7 +304,7 @@
                         @if (User.IsInRole("Administrator"))
                         {
                             <li>
-                                <a href="javaScript:void();">
+                                <a href="javascript:void(0);">
                                     <span>SETTING</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
@@ -345,84 +342,17 @@
 
     </div>
     <!-- End XP Container -->
-    <!-- Start JS -->
-    <script>
-        function applyFilter() {
+    <!-- Core JavaScript -->
+    @Scripts.Render("~/bundles/core-js")
 
-            var department = $("#department").val();
-            var date = $("#date").val();
-            var shift = $("#shift").val();
+    <!-- Plugin JavaScript -->
+    @Scripts.Render("~/bundles/plugin-js")
 
-            $.ajax({
-                url: '/RollingMill/SaveFilter',
-                type: 'POST',
-                data: {
-                    Department: department,
-                    Shift: shift,
-                    FilterDate: date
-                },
-                success: function () {
-
-                    window.location.href = "/home/dashboard";
-
-                }
-            });
-        }
-    </script>
-
-    <script src="~/assets/js/jquery.min.js"></script>
-    <script src="~/assets/js/popper.min.js"></script>
-    <script src="~/assets/js/bootstrap.min.js"></script>
-    <script src="~/assets/js/modernizr.min.js"></script>
-    <script src="~/assets/js/detect.js"></script>
-    <script src="~/assets/js/jquery.slimscroll.js"></script>
-    <script src="~/assets/js/sidebar-menu.js"></script>
-
-    <!-- Required Datatable JS -->
-    <script src="~/assets/plugins/datatables/jquery.dataTables.min.js"></script>
-    <script src="~/assets/plugins/datatables/dataTables.bootstrap4.min.js"></script>
-
-    <!-- Chartist Chart JS -->
-    <script src="~/assets/plugins/chartist-js/chartist.min.js"></script>
-    <script src="~/assets/plugins/chartist-js/chartist-plugin-tooltip.min.js"></script>
-
-    <!-- To Do List JS -->
-    <script src="~/assets/js/init/to-do-list-init.js"></script>
-
-    <!-- Datepicker JS -->
-    <script src="~/assets/plugins/datepicker/datepicker.min.js"></script>
-    <script src="~/assets/plugins/datepicker/i18n/datepicker.en.js"></script>
-
-    <!-- Dashboard JS -->
-    <script src="~/assets/js/init/dashborad.js"></script>
-
-    <!-- Select2 JS (AFTER jQuery) -->
+    <!-- Select2 is currently loaded from CDN because no local Select2 folder
+         was shown in the project structure. -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
 
-    <!-- Main JS -->
-    <script src="~/assets/js/main.js"></script>
-    <!-- End JS -->
-    <!-- Buttons Examples -->
-    <script src="~/assets/plugins/datatables/dataTables.buttons.min.js"></script>
-    <script src="~/assets/plugins/datatables/buttons.bootstrap4.min.js"></script>
-    <script src="~/assets/plugins/datatables/jszip.min.js"></script>
-    <script src="~/assets/plugins/datatables/pdfmake.min.js"></script>
-    <script src="~/assets/plugins/datatables/vfs_fonts.js"></script>
-    <script src="~/assets/plugins/datatables/buttons.html5.min.js"></script>
-    <script src="~/assets/plugins/datatables/buttons.print.min.js"></script>
-    <script src="~/assets/plugins/datatables/buttons.colVis.min.js"></script>
-
-
-    <!-- Responsive Examples -->
-    <script src="~/assets/plugins/datatables/dataTables.responsive.min.js"></script>
-    <script src="~/assets/plugins/datatables/responsive.bootstrap4.min.js"></script>
-
-    <!-- Datatable init JS -->
-    @*<script src="~/assets/js/init/table-datatable-init.js"></script>*@
-
-    <!-- Switchery js -->
-    <script src="~/assets/plugins/switchery/switchery.min.js"></script>
-    <script src="~/assets/js/init/switchery-init.js"></script>
+    @RenderSection("scripts", required: false)
 
 </body>
 </html>

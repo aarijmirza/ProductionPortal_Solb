@@ -60,11 +60,15 @@ namespace DAL.Models
         {
             public List<PlantDelayBLL> Delays { get; set; }
             public List<BilletDischargingBLL> DischargedHeats { get; set; }
+            public List<BilletDischargingBLL> MonthlyProductionData { get; set; }
+            public RollingMillTargetsBLL RollingMillTarget { get; set; }
 
             public ShiftProductionReportVM()
             {
                 Delays = new List<PlantDelayBLL>();
                 DischargedHeats = new List<BilletDischargingBLL>();
+                MonthlyProductionData = new List<BilletDischargingBLL>();
+
             }
         }
 
@@ -376,6 +380,30 @@ namespace DAL.Models
             RM1 = new PlantConsumptionBLL { Plant = "RM1" };
             RM2 = new PlantConsumptionBLL { Plant = "RM2" };
             Records = new List<PlantConsumptionBLL>();
+        }
+    }
+
+    public class DelayCounterMeasureVM
+    {
+        public int PlantDelayID { get; set; }
+
+        public PlantDelayBLL DelayDetail { get; set; }
+
+        public List<DelayCounterMeasureBLL>
+            CounterMeasures
+        { get; set; }
+
+        public List<DelayCounterMeasureBLL>
+            ExistingCounterMeasures
+        { get; set; }
+
+        public DelayCounterMeasureVM()
+        {
+            CounterMeasures =
+                new List<DelayCounterMeasureBLL>();
+
+            ExistingCounterMeasures =
+                new List<DelayCounterMeasureBLL>();
         }
     }
 }

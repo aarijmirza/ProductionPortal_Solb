@@ -44,6 +44,7 @@
     <Reference Include="System.Buffers, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.6.0\lib\net462\System.Buffers.dll</HintPath>
     </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=6.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Diagnostics.DiagnosticSource.6.0.2\lib\net461\System.Diagnostics.DiagnosticSource.dll</HintPath>
@@ -88,12 +89,16 @@
     <Compile Include="Models\BilletDischargingBLL.cs" />
     <Compile Include="Models\BilletGrades.cs" />
     <Compile Include="Models\BundlingSectionBLL.cs" />
+    <Compile Include="Models\CCMDailyProductionReportBLL.cs" />
     <Compile Include="Models\CCMYeildBLL.cs" />
     <Compile Include="Models\CCMBLL.cs" />
     <Compile Include="Models\CCMChemicalAnalysisBLL.cs" />
+    <Compile Include="Models\CCMDailyProductionReportDetailBLL.cs" />
+    <Compile Include="Models\CMDPerformanceDashboardVM.cs" />
     <Compile Include="Models\DailySummaryReportBLL.cs" />
     <Compile Include="Models\DelayAgencyBLL.cs" />
     <Compile Include="Models\DelayComponentBLL.cs" />
+    <Compile Include="Models\DelayCounterMeasureBLL.cs" />
     <Compile Include="Models\DelayEquipmentBLL.cs" />
     <Compile Include="Models\ElectricArcFurnaceBLL.cs" />
     <Compile Include="Models\FailureAnalysisActionBLL.cs" />
@@ -110,7 +115,9 @@
     <Compile Include="Models\RMHourlyDischargeBLL.cs" />
     <Compile Include="Models\RMQCInspectionBLL.cs" />
     <Compile Include="Models\RMShiftDetailsBLL.cs" />
+    <Compile Include="Models\RollingMillDailyTargetBLL.cs" />
     <Compile Include="Models\RollingMillMaster.cs" />
+    <Compile Include="Models\RollingMillTargetsBLL.cs" />
     <Compile Include="Models\SampleHBIDRIBLL.cs" />
     <Compile Include="Models\ScrapyardBLL.cs" />
     <Compile Include="Models\DelaysBLL.cs" />
