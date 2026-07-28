@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Security.Principal;
@@ -14,38 +13,65 @@ namespace ProductionPortal_Solb
 {
     public class MvcApplication : HttpApplication
     {
-        private static readonly HashSet<string> AllowedLanguages =
-            new HashSet<string>(
-                StringComparer.OrdinalIgnoreCase)
-            {
-                "en",
-                "en-US",
-                "ar",
-                "ar-SA"
-            };
+        private const string DefaultLanguage = "en";
 
-        private static readonly ConcurrentDictionary<string, CultureInfo>
-            CultureCache =
-                new ConcurrentDictionary<string, CultureInfo>(
-                    StringComparer.OrdinalIgnoreCase);
+        private static readonly HashSet<string>
+            AllowedLanguages =
+                new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase)
+                {
+                    "en",
+                    "en-US",
+                    "ar",
+                    "ar-SA"
+                };
 
-        private static readonly HashSet<string> StaticExtensions =
-            new HashSet<string>(
-                StringComparer.OrdinalIgnoreCase)
-            {
-                ".css",
-                ".js",
-                ".png",
-                ".jpg",
-                ".jpeg",
-                ".gif",
-                ".svg",
-                ".ico",
-                ".woff",
-                ".woff2",
-                ".ttf",
-                ".map"
-            };
+        private static readonly Dictionary<string, CultureInfo>
+            Cultures =
+                new Dictionary<string, CultureInfo>(
+                    StringComparer.OrdinalIgnoreCase)
+                {
+                    {
+                        "en",
+                        CreateCulture("en")
+                    },
+                    {
+                        "en-US",
+                        CreateCulture("en-US")
+                    },
+                    {
+                        "ar",
+                        CreateCulture("ar")
+                    },
+                    {
+                        "ar-SA",
+                        CreateCulture("ar-SA")
+                    }
+                };
+
+        private static readonly HashSet<string>
+            StaticExtensions =
+                new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase)
+                {
+                    ".css",
+                    ".js",
+                    ".png",
+                    ".jpg",
+                    ".jpeg",
+                    ".gif",
+                    ".webp",
+                    ".svg",
+                    ".ico",
+                    ".woff",
+                    ".woff2",
+                    ".ttf",
+                    ".eot",
+                    ".map",
+                    ".pdf",
+                    ".xlsx",
+                    ".xls"
+                };
 
         protected void Application_Start()
         {
@@ -63,47 +89,62 @@ namespace ProductionPortal_Solb
                 BundleTable.Bundles
             );
 
-            // Production mein CSS/JS bundles minify honge.
+#if DEBUG
+            BundleTable.EnableOptimizations = false;
+#else
             BundleTable.EnableOptimizations = true;
-
-            // Common cultures ko application start par cache kar do.
-            GetOrCreateCulture("en");
-            GetOrCreateCulture("en-US");
-            GetOrCreateCulture("ar");
-            GetOrCreateCulture("ar-SA");
+#endif
         }
 
-        protected void Application_BeginRequest()
+        protected void Application_BeginRequest(
+            object sender,
+            EventArgs e)
         {
-            // Static files ke liye culture processing ki zarurat nahi.
-            if (IsStaticResource(Request.CurrentExecutionFilePath))
+            string path =
+                Request.CurrentExecutionFilePath;
+
+            if (IsStaticResource(path))
             {
                 return;
             }
 
-            string language = GetRequestLanguage();
+            string language =
+                GetRequestLanguage();
 
-            CultureInfo cultureInfo =
-                GetOrCreateCulture(language);
+            CultureInfo culture;
+
+            if (!Cultures.TryGetValue(
+                language,
+                out culture))
+            {
+                culture =
+                    Cultures[DefaultLanguage];
+            }
 
             Thread.CurrentThread.CurrentCulture =
-                cultureInfo;
+                culture;
 
             Thread.CurrentThread.CurrentUICulture =
-                cultureInfo;
+                culture;
         }
 
         protected void Application_PostAuthenticateRequest(
             object sender,
             EventArgs e)
         {
+            if (Context.User == null)
+            {
+                return;
+            }
+
             HttpCookie authCookie =
                 Request.Cookies[
                     FormsAuthentication.FormsCookieName
                 ];
 
             if (authCookie == null ||
-                string.IsNullOrWhiteSpace(authCookie.Value))
+                string.IsNullOrWhiteSpace(
+                    authCookie.Value))
             {
                 return;
             }
@@ -117,24 +158,36 @@ namespace ProductionPortal_Solb
 
                 if (ticket == null ||
                     ticket.Expired ||
-                    string.IsNullOrWhiteSpace(ticket.UserData))
-                {
-                    return;
-                }
-
-                string[] data =
-                    ticket.UserData.Split('|');
-
-                if (data.Length < 2)
+                    string.IsNullOrWhiteSpace(
+                        ticket.Name))
                 {
                     return;
                 }
 
                 string role =
-                    data[0].Trim();
+                    string.Empty;
 
                 string userId =
-                    data[1].Trim();
+                    string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(
+                    ticket.UserData))
+                {
+                    string[] data =
+                        ticket.UserData.Split('|');
+
+                    if (data.Length > 0)
+                    {
+                        role =
+                            data[0].Trim();
+                    }
+
+                    if (data.Length > 1)
+                    {
+                        userId =
+                            data[1].Trim();
+                    }
+                }
 
                 GenericIdentity identity =
                     new GenericIdentity(
@@ -142,23 +195,27 @@ namespace ProductionPortal_Solb
                         "Forms"
                     );
 
+                string[] roles =
+                    string.IsNullOrWhiteSpace(role)
+                        ? new string[0]
+                        : new[] { role };
+
                 GenericPrincipal principal =
                     new GenericPrincipal(
                         identity,
-                        string.IsNullOrWhiteSpace(role)
-                            ? new string[0]
-                            : new[] { role }
+                        roles
                     );
 
-                Context.User = principal;
-                Thread.CurrentPrincipal = principal;
+                Context.User =
+                    principal;
 
-                // Context.Items sirf current request ke liye hota hai
-                // aur Session ke muqable mein lightweight hai.
-                Context.Items["AuthenticatedUserID"] =
+                Thread.CurrentPrincipal =
+                    principal;
+
+                Context.Items["UserID"] =
                     userId;
 
-                Context.Items["AuthenticatedUserRole"] =
+                Context.Items["UserRole"] =
                     role;
             }
             catch
@@ -178,123 +235,145 @@ namespace ProductionPortal_Solb
                 return;
             }
 
-            string userId =
-                Convert.ToString(
-                    Context.Items[
-                        "AuthenticatedUserID"
-                    ]
-                );
+            /*
+                Session sirf tab populate karo jab
+                current session mein values missing hon.
+            */
 
-            string role =
-                Convert.ToString(
-                    Context.Items[
-                        "AuthenticatedUserRole"
-                    ]
-                );
-
-            // Session ko har request par blindly overwrite na karo.
-            if (!string.IsNullOrWhiteSpace(userId) &&
-                !string.Equals(
-                    Convert.ToString(
-                        Context.Session["UserID"]
-                    ),
-                    userId,
-                    StringComparison.Ordinal))
+            if (Context.Session["UserID"] == null)
             {
-                Context.Session["UserID"] =
-                    userId;
+                string userId =
+                    Convert.ToString(
+                        Context.Items["UserID"]
+                    );
+
+                if (!string.IsNullOrWhiteSpace(
+                    userId))
+                {
+                    Context.Session["UserID"] =
+                        userId;
+                }
             }
 
-            if (!string.IsNullOrWhiteSpace(role) &&
-                !string.Equals(
-                    Convert.ToString(
-                        Context.Session["UserRole"]
-                    ),
-                    role,
-                    StringComparison.Ordinal))
+            if (Context.Session["UserRole"] == null)
             {
-                Context.Session["UserRole"] =
-                    role;
+                string role =
+                    Convert.ToString(
+                        Context.Items["UserRole"]
+                    );
+
+                if (!string.IsNullOrWhiteSpace(
+                    role))
+                {
+                    Context.Session["UserRole"] =
+                        role;
+                }
             }
+        }
+
+        protected void Application_Error(
+            object sender,
+            EventArgs e)
+        {
+            Exception exception =
+                Server.GetLastError();
+
+            if (exception == null)
+            {
+                return;
+            }
+
+            /*
+                Yahan logging add kar sakte ho.
+                Response.Write ya heavy DB logging
+                har error par mat karna.
+            */
         }
 
         private string GetRequestLanguage()
         {
-            HttpCookie languageCookie =
+            HttpCookie cookie =
                 Request.Cookies["lang"];
 
-            string language =
-                languageCookie != null
-                    ? languageCookie.Value
-                    : null;
-
-            if (string.IsNullOrWhiteSpace(language) ||
-                !AllowedLanguages.Contains(language))
+            if (cookie == null ||
+                string.IsNullOrWhiteSpace(
+                    cookie.Value))
             {
-                return "en";
+                return DefaultLanguage;
             }
 
-            return language.Trim();
+            string language =
+                cookie.Value.Trim();
+
+            return AllowedLanguages.Contains(
+                language)
+                    ? language
+                    : DefaultLanguage;
         }
 
-        private static CultureInfo GetOrCreateCulture(
+        private static CultureInfo CreateCulture(
             string language)
         {
-            return CultureCache.GetOrAdd(
-                language,
-                key =>
-                {
-                    CultureInfo culture;
+            CultureInfo culture;
 
-                    try
-                    {
-                        culture =
-                            new CultureInfo(key);
-                    }
-                    catch (CultureNotFoundException)
-                    {
-                        culture =
-                            new CultureInfo("en");
-                    }
+            try
+            {
+                culture =
+                    new CultureInfo(language);
+            }
+            catch (CultureNotFoundException)
+            {
+                culture =
+                    new CultureInfo(
+                        DefaultLanguage
+                    );
+            }
 
-                    culture.DateTimeFormat.Calendar =
-                        new GregorianCalendar();
+            culture.DateTimeFormat.Calendar =
+                new GregorianCalendar();
 
-                    // Cached instance ko read-only banana thread-safe hai.
-                    return CultureInfo.ReadOnly(culture);
-                }
+            return CultureInfo.ReadOnly(
+                culture
             );
         }
 
         private static bool IsStaticResource(
             string path)
         {
-            if (string.IsNullOrWhiteSpace(path))
+            if (string.IsNullOrWhiteSpace(
+                path))
             {
                 return false;
             }
 
             string extension =
-                VirtualPathUtility.GetExtension(path);
+                VirtualPathUtility
+                    .GetExtension(path);
 
             return
-                !string.IsNullOrWhiteSpace(extension) &&
-                StaticExtensions.Contains(extension);
+                !string.IsNullOrWhiteSpace(
+                    extension) &&
+                StaticExtensions.Contains(
+                    extension);
         }
 
         private void ExpireAuthenticationCookie()
         {
             HttpCookie cookie =
                 new HttpCookie(
-                    FormsAuthentication.FormsCookieName,
+                    FormsAuthentication
+                        .FormsCookieName,
                     string.Empty
-                )
-                {
-                    Expires =
-                        DateTime.UtcNow.AddDays(-1),
+                );
 
-                    HttpOnly = true
-                };
+            cookie.Expires =
+                DateTime.UtcNow.AddDays(-1);
+
+            cookie.HttpOnly =
+                true;
+
+            cookie.Secure =
+                Request.IsSecureConnection;
 
             Response.Cookies.Add(cookie);
         }

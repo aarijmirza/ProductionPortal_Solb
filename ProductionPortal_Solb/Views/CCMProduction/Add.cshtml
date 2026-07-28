@@ -2,8 +2,8 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = Model != null && Model.ID > 0
-        ? "Edit CCM Daily Production Report"
-        : "CCM Daily Production Report";
+        ? "Edit Billet Yard Report"
+        : "Billet Yard Report";
 
     int initialRowCount =
         Model != null && Model.ID > 0
@@ -436,6 +436,132 @@
         font-weight: 700;
     }
 
+
+    .production-card-list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .production-detail-card {
+        overflow: hidden;
+        border: 1px solid var(--solb-border);
+        border-radius: 13px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(15,23,42,.05);
+    }
+
+    .production-detail-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--solb-border);
+        background: linear-gradient(180deg,#fff,#fafbfc);
+    }
+
+    .production-card-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--solb-text);
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .production-card-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 29px;
+        height: 29px;
+        border-radius: 50%;
+        background: var(--solb-maroon-soft);
+        color: var(--solb-maroon-dark);
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .production-detail-card-body {
+        padding: 15px;
+    }
+
+    .production-card-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(130px, 1fr));
+        gap: 12px;
+    }
+
+        .production-card-grid .span-2 {
+            grid-column: span 2;
+        }
+
+        .production-card-grid .span-full {
+            grid-column: 1 / -1;
+        }
+
+    .length-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(90px, 1fr));
+        gap: 9px;
+        padding: 12px;
+        border: 1px solid var(--solb-border);
+        border-radius: 10px;
+        background: #fafbfc;
+    }
+
+    .length-grid-title {
+        grid-column: 1 / -1;
+        color: var(--solb-maroon-dark);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .35px;
+    }
+
+    .weight-field .form-control {
+        font-weight: 800;
+        color: var(--solb-maroon-dark);
+        background: #fffafb;
+    }
+
+    .calculated-field .form-control {
+        font-weight: 800;
+        color: #374151;
+        background: #f1f3f5;
+    }
+
+    .card-remove-button {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid #efc3cc;
+        border-radius: 7px;
+        background: #fff4f6;
+        color: var(--solb-maroon-dark);
+    }
+
+    @@media(max-width:1199px) {
+        .production-card-grid {
+            grid-template-columns: repeat(3, minmax(140px, 1fr));
+        }
+
+        .length-grid {
+            grid-template-columns: repeat(4, minmax(90px, 1fr));
+        }
+    }
+
+    @@media(max-width:767px) {
+        .production-card-grid,
+        .length-grid {
+            grid-template-columns: 1fr;
+        }
+
+            .production-card-grid .span-2 {
+                grid-column: span 1;
+            }
+    }
+
     @@media(max-width:1199px) {
         .header-grid {
             grid-template-columns: repeat(3,1fr);
@@ -540,7 +666,7 @@
 
         <div class="ccm-header">
             <div>
-                <h3>CCM Daily Production Report</h3>
+                <h3>Billet Yard Report</h3>
                 <p>SOLB Steel Company · Meltshop / CCM Section</p>
             </div>
 
@@ -572,68 +698,68 @@
                         <div class="form-group">
                             <label class="required">Report No.</label>
                             @Html.TextBoxFor(x => x.ReportNo,
-                                     new
-                                     {
-                                         @class = "form-control",
-                                         placeholder = "CCM-20260310",
-                                         required = "required"
-                                     })
+                                               new
+                                               {
+                                                   @class = "form-control",
+                                                   placeholder = "CCM-20260310",
+                                                   required = "required"
+                                               })
                             @Html.ValidationMessageFor(x => x.ReportNo)
                         </div>
 
                         <div class="form-group">
                             <label class="required">Report Date</label>
                             @Html.TextBoxFor(x => x.ReportDate, "{0:yyyy-MM-dd}",
-                                     new
-                                     {
-                                         @class = "form-control",
-                                         type = "date",
-                                         required = "required"
-                                     })
+                                               new
+                                               {
+                                                   @class = "form-control",
+                                                   type = "date",
+                                                   required = "required"
+                                               })
                             @Html.ValidationMessageFor(x => x.ReportDate)
                         </div>
 
                         <div class="form-group">
                             <label class="required">Shift</label>
                             @Html.DropDownListFor(x => x.Shift,
-                                     (SelectList)ViewBag.Shifts,
-                                     "-- Select Shift --",
-                                     new
-                                     {
-                                         @class = "form-control",
-                                         required = "required"
-                                     })
+                                               (SelectList)ViewBag.Shifts,
+                                               "-- Select Shift --",
+                                               new
+                                               {
+                                                   @class = "form-control",
+                                                   required = "required"
+                                               })
                             @Html.ValidationMessageFor(x => x.Shift)
                         </div>
 
                         <div class="form-group">
                             <label>Team</label>
                             @Html.TextBoxFor(x => x.Team,
-                                     new
-                                     {
-                                         @class = "form-control",
-                                         placeholder = "Team"
-                                     })
+                                               new
+                                               {
+                                                   @class = "form-control",
+                                                   placeholder = "Team"
+                                               })
                         </div>
 
                         <div class="form-group">
                             <label>CCM Foreman</label>
                             @Html.TextBoxFor(x => x.CCMForeman,
-                                     new
-                                     {
-                                         @class = "form-control",
-                                         placeholder = "Foreman name"
-                                     })
+                                               new
+                                               {
+                                                   @class = "form-control",
+                                                   placeholder = "Foreman name"
+                                               })
                         </div>
 
                         <div class="form-group">
                             <label>Billet Yard Operator</label>
                             @Html.TextBoxFor(x => x.BilletYardOperator,
-                                     new
-                                     {
-                                         @class = "form-control",
-                                         placeholder = "Operator name"
-                                     })
+                                               new
+                                               {
+                                                   @class = "form-control",
+                                                   placeholder = "Operator name"
+                                               })
                         </div>
                     </div>
                 </div>
@@ -662,119 +788,194 @@
                         </button>
                     </div>
 
-                    <div class="production-scroll">
-                        <table class="table table-bordered production-table">
-                            <thead>
-                                <tr>
-                                    <th rowspan="2" class="sticky-one">Sr.</th>
-                                    <th rowspan="2" class="sticky-two">Grade</th>
-                                    <th colspan="12">No. of Billets for 150 × 150</th>
-                                    <th rowspan="2">Crop End / Start</th>
-                                    <th rowspan="2">Bend</th>
-                                    <th rowspan="2">Total Billets</th>
-                                    <th rowspan="2">Good Billets</th>
-                                    <th rowspan="2" class="no-print">Action</th>
-                                </tr>
-                                <tr>
-                                    <th>14M</th>
-                                    <th>13M</th>
-                                    <th>12M</th>
-                                    <th>11M</th>
-                                    <th>10M</th>
-                                    <th>09M</th>
-                                    <th>08M</th>
-                                    <th>07M</th>
-                                    <th>06M</th>
-                                    <th>05M</th>
-                                    <th>04M</th>
-                                    <th>&lt; 4M</th>
-                                </tr>
-                            </thead>
+                    <div id="productionRows"
+                         class="production-card-list">
 
-                            <tbody id="productionRows">
-                                @for (int i = 0; i < initialRowCount; i++)
-                                {
-                                    <tr class="production-row" data-row-index="@i">
-                                        <td class="serial-cell sticky-one row-sequence">
+                        @for (int i = 0; i < initialRowCount; i++)
+                        {
+                            <div class="production-detail-card production-row"
+                                 data-row-index="@i">
+
+                                <div class="production-detail-card-header">
+                                    <div class="production-card-title">
+                                        <span class="production-card-number row-sequence">
                                             @(i + 1)
+                                        </span>
+                                        <span>Billet Production Entry</span>
+                                    </div>
 
-                                            @Html.HiddenFor(
-                                                     x => x.Details[i].ID,
-                                                     new { @class = "detail-id" }
-                                                 )
+                                    <button type="button"
+                                            class="card-remove-button btn-remove-row no-print"
+                                            title="Remove entry">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
 
-                                            @Html.HiddenFor(
-                                                     x => x.Details[i].ReportID,
-                                                     new { @class = "detail-report-id" }
-                                                 )
+                                <div class="production-detail-card-body">
 
-                                            @Html.HiddenFor(
-                                                     x => x.Details[i].SequenceNo,
-                                                     new { @class = "detail-sequence" }
-                                                 )
-                                        </td>
+                                    @Html.HiddenFor(x => x.Details[i].ID, new { @class = "detail-id" })
+                                    @Html.HiddenFor(x => x.Details[i].ReportID, new { @class = "detail-report-id" })
+                                    @Html.HiddenFor(x => x.Details[i].SequenceNo, new { @class = "detail-sequence" })
+                                    @Html.HiddenFor(x => x.Details[i].Remarks, new { @class = "detail-remarks" })
 
-                                        <td class="sticky-two">
+                                    <div class="production-card-grid">
+
+                                        <div class="form-group">
+                                            <label>Heat No.</label>
+
                                             @Html.TextBoxFor(
-                                                     x => x.Details[i].Grade,
+                                                     x => x.Details[i].HeatNo,
                                                      new
                                                      {
-                                                         @class = "form-control grade-input",
-                                                         placeholder = "Grade"
+                                                         @class = "form-control heat-no-input",
+                                                         placeholder = "Enter heat no.",
+                                                         autocomplete = "off"
                                                      }
                                                  )
-                                        </td>
+                                        </div>
 
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet14M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet13M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet12M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet11M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet10M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet09M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet08M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet07M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet06M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet05M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Billet04M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].BilletBelow4M, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].CropEndStart, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
-                                        <td>@Html.TextBoxFor(x => x.Details[i].Bend, new { @class = "form-control billet-input", type = "number", min = "0" })</td>
+                                        <div class="form-group">
+                                            <label>Grade</label>
+                                            @Html.TextBoxFor(
+                                                          x => x.Details[i].Grade,
+                                                          new
+                                                          {
+                                                              @class = "form-control grade-input",
+                                                              placeholder = "Enter billet grade"
+                                                          }
+                                                      )
+                                        </div>
 
-                                        <td>
+                                        <div class="form-group calculated-field">
+                                            <label>Total Billets</label>
                                             <input type="number"
                                                    class="form-control row-total"
                                                    value="@Model.Details[i].TotalBillets"
                                                    readonly />
-                                        </td>
+                                        </div>
 
-                                        <td>
+                                        <div class="form-group">
+                                            <label>Good / Prime Billets</label>
                                             @Html.TextBoxFor(
-                                                     x => x.Details[i].GoodBillets,
-                                                     new
-                                                     {
-                                                         @class = "form-control good-billet-input",
-                                                         type = "number",
-                                                         min = "0"
-                                                     }
-                                                 )
-                                        </td>
+                                                          x => x.Details[i].GoodBillets,
+                                                          new
+                                                          {
+                                                              @class = "form-control good-billet-input",
+                                                              type = "number",
+                                                              min = "0"
+                                                          }
+                                                      )
+                                        </div>
 
-                                        @Html.HiddenFor(
-                                                 x => x.Details[i].Remarks,
-                                                 new { @class = "detail-remarks" }
-                                             )
+                                        <div class="form-group">
+                                            <label>Crop End / Start</label>
+                                            @Html.TextBoxFor(
+                                                          x => x.Details[i].CropEndStart,
+                                                          new
+                                                          {
+                                                              @class = "form-control billet-input",
+                                                              type = "number",
+                                                              min = "0"
+                                                          }
+                                                      )
+                                        </div>
 
-                                        <td class="no-print">
-                                            <button type="button"
-                                                    class="btn-remove-row"
-                                                    title="Remove row">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                                        <div class="form-group">
+                                            <label>Bend</label>
+                                            @Html.TextBoxFor(
+                                                          x => x.Details[i].Bend,
+                                                          new
+                                                          {
+                                                              @class = "form-control billet-input",
+                                                              type = "number",
+                                                              min = "0"
+                                                          }
+                                                      )
+                                        </div>
+
+                                        <div class="length-grid span-full">
+                                            <div class="length-grid-title">
+                                                No. of Billets for 150 × 150
+                                            </div>
+
+                                            <div class="form-group"><label>14M</label>@Html.TextBoxFor(x => x.Details[i].Billet14M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>13M</label>@Html.TextBoxFor(x => x.Details[i].Billet13M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>12M</label>@Html.TextBoxFor(x => x.Details[i].Billet12M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>11M</label>@Html.TextBoxFor(x => x.Details[i].Billet11M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>10M</label>@Html.TextBoxFor(x => x.Details[i].Billet10M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>09M</label>@Html.TextBoxFor(x => x.Details[i].Billet09M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>08M</label>@Html.TextBoxFor(x => x.Details[i].Billet08M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>07M</label>@Html.TextBoxFor(x => x.Details[i].Billet07M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>06M</label>@Html.TextBoxFor(x => x.Details[i].Billet06M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>05M</label>@Html.TextBoxFor(x => x.Details[i].Billet05M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>04M</label>@Html.TextBoxFor(x => x.Details[i].Billet04M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>&lt; 4M</label>@Html.TextBoxFor(x => x.Details[i].BilletBelow4M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                        </div>
+
+                                        <div class="form-group weight-field">
+                                            <label>Prime Billet Weight</label>
+                                            @Html.TextBoxFor(
+                                                          x => x.Details[i].PrimeBilletWeight,
+                                                          new
+                                                          {
+                                                              @class = "form-control prime-weight-input",
+                                                              type = "number",
+                                                              min = "0",
+                                                              step = "0.001",
+                                                              placeholder = "0.000"
+                                                          }
+                                                      )
+                                        </div>
+
+                                        <div class="form-group weight-field">
+                                            <label>Short Billet Weight</label>
+                                            @Html.TextBoxFor(
+                                                          x => x.Details[i].ShortBilletWeight,
+                                                          new
+                                                          {
+                                                              @class = "form-control short-weight-input",
+                                                              type = "number",
+                                                              min = "0",
+                                                              step = "0.001",
+                                                              placeholder = "0.000"
+                                                          }
+                                                      )
+                                        </div>
+
+                                        <div class="form-group calculated-field">
+                                            <label>Total Weight</label>
+                                            @Html.TextBoxFor(
+                                                          x => x.Details[i].TotalWeight,
+                                                          new
+                                                          {
+                                                              @class = "form-control total-weight-input",
+                                                              type = "number",
+                                                              step = "0.001",
+                                                              @readonly = "readonly"
+                                                          }
+                                                      )
+                                        </div>
+
+                                        <div class="form-group weight-field">
+                                            <label>Per Coil / Bundle Weight</label>
+                                            @Html.TextBoxFor(
+                                                          x => x.Details[i].PerCoilBundleWeight,
+                                                          new
+                                                          {
+                                                              @class = "form-control coil-bundle-weight-input",
+                                                              type = "number",
+                                                              min = "0",
+                                                              step = "0.001",
+                                                              placeholder = "0.000"
+                                                          }
+                                                      )
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
                     </div>
 
                     <div class="overall-remarks">
@@ -850,6 +1051,11 @@
             return isNaN(parsed) ? 0 : parsed;
         }
 
+        function toDecimal(value) {
+            var parsed = parseFloat(value);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
         function inputHtml(index, property, cssClass, type) {
             var inputType = type || "number";
             var minAttribute =
@@ -863,15 +1069,51 @@
                 ' class="form-control ' + cssClass + '" />';
         }
 
+        function decimalInputHtml(
+            index,
+            property,
+            cssClass,
+            readOnly) {
+
+            return '<input type="number"' +
+                ' name="Details[' + index + '].' + property + '"' +
+                ' id="Details_' + index + '__' + property + '"' +
+                ' value="0.000" min="0" step="0.001"' +
+                (readOnly ? ' readonly' : '') +
+                ' class="form-control ' + cssClass + '" />';
+        }
+
+        function lengthInputHtml(index, property, label) {
+            return '<div class="form-group">' +
+                '<label>' + label + '</label>' +
+                inputHtml(index, property, "billet-input") +
+                '</div>';
+        }
+
         function createProductionRow(index) {
-            var row = document.createElement("tr");
+            var card = document.createElement("div");
 
-            row.className = "production-row";
-            row.setAttribute("data-row-index", index);
+            card.className =
+                "production-detail-card production-row";
 
-            row.innerHTML =
-                '<td class="serial-cell sticky-one row-sequence">' +
+            card.setAttribute("data-row-index", index);
+
+            card.innerHTML =
+                '<div class="production-detail-card-header">' +
+                '<div class="production-card-title">' +
+                '<span class="production-card-number row-sequence">' +
                 (index + 1) +
+                '</span>' +
+                '<span>Billet Production Entry</span>' +
+                '</div>' +
+                '<button type="button"' +
+                ' class="card-remove-button btn-remove-row no-print"' +
+                ' title="Remove entry">' +
+                '<i class="fa fa-trash"></i>' +
+                '</button>' +
+                '</div>' +
+
+                '<div class="production-detail-card-body">' +
                 '<input type="hidden" class="detail-id"' +
                 ' name="Details[' + index + '].ID"' +
                 ' id="Details_' + index + '__ID" value="0" />' +
@@ -882,49 +1124,102 @@
                 ' name="Details[' + index + '].SequenceNo"' +
                 ' id="Details_' + index + '__SequenceNo"' +
                 ' value="' + (index + 1) + '" />' +
-                '</td>' +
-
-                '<td class="sticky-two">' +
-                inputHtml(index, "Grade", "grade-input", "text") +
-                '</td>' +
-
-                '<td>' + inputHtml(index, "Billet14M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet13M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet12M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet11M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet10M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet09M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet08M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet07M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet06M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet05M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Billet04M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "BilletBelow4M", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "CropEndStart", "billet-input") + '</td>' +
-                '<td>' + inputHtml(index, "Bend", "billet-input") + '</td>' +
-
-                '<td><input type="number" value="0"' +
-                ' class="form-control row-total" readonly /></td>' +
-
-                '<td>' + inputHtml(
-                    index,
-                    "GoodBillets",
-                    "good-billet-input"
-                ) + '</td>' +
-
-                '<input type="hidden"' +
+                '<input type="hidden" class="detail-remarks"' +
                 ' name="Details[' + index + '].Remarks"' +
-                ' id="Details_' + index + '__Remarks"' +
-                ' class="detail-remarks" value="" />' +
+                ' id="Details_' + index + '__Remarks" value="" />' +
 
-                '<td class="no-print">' +
-                '<button type="button" class="btn-remove-row"' +
-                ' title="Remove row">' +
-                '<i class="fa fa-trash"></i>' +
-                '</button>' +
-                '</td>';
+                '<div class="production-card-grid">' +
+                '<div class="form-group">' +
+                '<label>Heat No.</label>' +
+                inputHtml(index, "HeatNo", "heat-no-input", "text") +
+                '</div>' +
+                '<div class="form-group">' +
+                '<label>Grade</label>' +
+                inputHtml(index, "Grade", "grade-input", "text") +
+                '</div>' +
 
-            return row;
+                '<div class="form-group calculated-field">' +
+                '<label>Total Billets</label>' +
+                '<input type="number" value="0"' +
+                ' class="form-control row-total" readonly />' +
+                '</div>' +
+
+                '<div class="form-group">' +
+                '<label>Good / Prime Billets</label>' +
+                inputHtml(index, "GoodBillets", "good-billet-input") +
+                '</div>' +
+
+                '<div class="form-group">' +
+                '<label>Crop End / Start</label>' +
+                inputHtml(index, "CropEndStart", "billet-input") +
+                '</div>' +
+
+                '<div class="form-group">' +
+                '<label>Bend</label>' +
+                inputHtml(index, "Bend", "billet-input") +
+                '</div>' +
+
+                '<div class="length-grid span-full">' +
+                '<div class="length-grid-title">' +
+                'No. of Billets for 150 × 150' +
+                '</div>' +
+                lengthInputHtml(index, "Billet14M", "14M") +
+                lengthInputHtml(index, "Billet13M", "13M") +
+                lengthInputHtml(index, "Billet12M", "12M") +
+                lengthInputHtml(index, "Billet11M", "11M") +
+                lengthInputHtml(index, "Billet10M", "10M") +
+                lengthInputHtml(index, "Billet09M", "09M") +
+                lengthInputHtml(index, "Billet08M", "08M") +
+                lengthInputHtml(index, "Billet07M", "07M") +
+                lengthInputHtml(index, "Billet06M", "06M") +
+                lengthInputHtml(index, "Billet05M", "05M") +
+                lengthInputHtml(index, "Billet04M", "04M") +
+                lengthInputHtml(index, "BilletBelow4M", "&lt; 4M") +
+                '</div>' +
+
+                '<div class="form-group weight-field">' +
+                '<label>Prime Billet Weight</label>' +
+                decimalInputHtml(
+                    index,
+                    "PrimeBilletWeight",
+                    "prime-weight-input",
+                    false
+                ) +
+                '</div>' +
+
+                '<div class="form-group weight-field">' +
+                '<label>Short Billet Weight</label>' +
+                decimalInputHtml(
+                    index,
+                    "ShortBilletWeight",
+                    "short-weight-input",
+                    false
+                ) +
+                '</div>' +
+
+                '<div class="form-group calculated-field">' +
+                '<label>Total Weight</label>' +
+                decimalInputHtml(
+                    index,
+                    "TotalWeight",
+                    "total-weight-input",
+                    true
+                ) +
+                '</div>' +
+
+                '<div class="form-group weight-field">' +
+                '<label>Per Coil / Bundle Weight</label>' +
+                decimalInputHtml(
+                    index,
+                    "PerCoilBundleWeight",
+                    "coil-bundle-weight-input",
+                    false
+                ) +
+                '</div>' +
+                '</div>' +
+                '</div>';
+
+            return card;
         }
 
         function calculateRow(row) {
@@ -966,6 +1261,37 @@
                 }
             }
 
+            var primeWeightInput =
+                row.querySelector(".prime-weight-input");
+
+            var shortWeightInput =
+                row.querySelector(".short-weight-input");
+
+            var totalWeightInput =
+                row.querySelector(".total-weight-input");
+
+            var primeWeight =
+                primeWeightInput
+                    ? Math.max(
+                        0,
+                        toDecimal(primeWeightInput.value)
+                    )
+                    : 0;
+
+            var shortWeight =
+                shortWeightInput
+                    ? Math.max(
+                        0,
+                        toDecimal(shortWeightInput.value)
+                    )
+                    : 0;
+
+            if (totalWeightInput) {
+                totalWeightInput.value =
+                    (primeWeight + shortWeight)
+                        .toFixed(3);
+            }
+
             return total;
         }
 
@@ -992,7 +1318,7 @@
                     row.querySelector(".row-sequence");
 
                 if (sequenceCell) {
-                    sequenceCell.childNodes[0].nodeValue =
+                    sequenceCell.textContent =
                         (index + 1);
                 }
 
@@ -1087,12 +1413,12 @@
             reindexRows();
             calculateSummary();
 
-            var newGrade =
+            var newHeatNo =
                 productionRows.lastElementChild
-                    .querySelector(".grade-input");
+                    .querySelector(".heat-no-input");
 
-            if (newGrade) {
-                newGrade.focus();
+            if (newHeatNo) {
+                newHeatNo.focus();
             }
         }
 

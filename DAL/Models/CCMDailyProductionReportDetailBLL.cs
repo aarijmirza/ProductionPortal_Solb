@@ -10,6 +10,8 @@ namespace DAL.Models
 
         public int SequenceNo { get; set; }
 
+        public string HeatNo { get; set; }
+
         public string Grade { get; set; }
 
         public int Billet14M { get; set; }
@@ -50,6 +52,14 @@ namespace DAL.Models
 
         public DateTime? CreatedDate { get; set; }
 
+        public decimal? PrimeBilletWeight { get; set; }
+
+        public decimal? ShortBilletWeight { get; set; }
+
+        public decimal? TotalWeight { get; set; }
+
+        public decimal? PerCoilBundleWeight { get; set; }
+
         public int TotalBillets
         {
             get
@@ -71,5 +81,7 @@ namespace DAL.Models
                     Bend;
             }
         }
+
+        public string UpdatedBy { get; set; }
     }
 }

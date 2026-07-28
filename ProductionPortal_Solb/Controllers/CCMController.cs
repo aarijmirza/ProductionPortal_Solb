@@ -1,19 +1,23 @@
 ﻿using BAL.Repositories;
 using DAL.Models;
-using iTextSharp.text.pdf;
 using iTextSharp.text;
+using iTextSharp.text.pdf;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using System.Globalization;
+using System.Web.SessionState;
 using static DAL.Models.ViewModel;
 
 namespace ProductionPortal_Solb.Controllers
 {
+    [SessionState(
+    SessionStateBehavior.ReadOnly
+    )]
     public class CCMController : Controller
     {
         CCMRespository repo;

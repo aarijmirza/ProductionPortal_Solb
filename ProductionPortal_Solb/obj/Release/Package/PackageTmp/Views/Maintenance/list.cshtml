@@ -358,7 +358,7 @@
                                     <th>Agency</th>
                                     <th>Delay Code</th>
                                     <th>Equipment</th>
-                                    <th>Reason</th>
+                                    <th>Description</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -381,7 +381,7 @@
                                             <td>@item.AgencyName</td>
                                             <td>@item.Delaycode</td>
                                             <td>@item.Equipments</td>
-                                            <td>@item.Reason</td>
+                                            <td>@item.DelayDescription</td>
                                             <td>
                                                 <a href="@Url.Action(
                                                         "add",
@@ -396,11 +396,11 @@
 
                                                     <i class="fa fa-tasks"></i>
                                                 </a>
-                                                <a href="javascript:void(0);"
+                                                @*<a href="javascript:void(0);"
                                                    class="btn btn-sm btn-danger btn-delete"
                                                    data-id="@item.ID">
                                                     <i class="mdi mdi-trash-can"></i>
-                                                </a>
+                                                </a>*@
                                                 <a href="@Url.Action("detail", "Maintenance", new { ID = item.ID })" class="btn btn-sm btn-info" onclick="event.stopPropagation();">
                                                     <i class="mdi mdi-book-open-page-variant"></i>
                                                 </a>

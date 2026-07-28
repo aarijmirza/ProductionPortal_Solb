@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -273,137 +274,174 @@ namespace BAL.Repositories
         }
 
         private string BuildDetailsXml(
-            IEnumerable<
-                CCMDailyProductionReportDetailBLL
-            > details)
+            List<CCMDailyProductionReportDetailBLL> details)
         {
-            List<
-                CCMDailyProductionReportDetailBLL
-            > rows =
-                (
-                    details ??
-                    new List<
-                        CCMDailyProductionReportDetailBLL
-                    >()
-                )
-                .Where(x =>
-                    !string.IsNullOrWhiteSpace(
-                        x.Grade
-                    ) ||
-                    x.TotalBillets > 0 ||
-                    x.GoodBillets > 0 ||
-                    !string.IsNullOrWhiteSpace(
-                        x.Remarks
-                    )
-                )
-                .ToList();
-
-            XDocument xml =
-                new XDocument(
-                    new XElement(
-                        "Details",
-
-                        rows.Select(x =>
-                            new XElement(
-                                "Detail",
-
-                                new XElement(
-                                    "SequenceNo",
-                                    x.SequenceNo
-                                ),
-
-                                new XElement(
-                                    "Grade",
-                                    x.Grade ??
-                                    string.Empty
-                                ),
-
-                                new XElement(
-                                    "Billet14M",
-                                    x.Billet14M
-                                ),
-
-                                new XElement(
-                                    "Billet13M",
-                                    x.Billet13M
-                                ),
-
-                                new XElement(
-                                    "Billet12M",
-                                    x.Billet12M
-                                ),
-
-                                new XElement(
-                                    "Billet11M",
-                                    x.Billet11M
-                                ),
-
-                                new XElement(
-                                    "Billet10M",
-                                    x.Billet10M
-                                ),
-
-                                new XElement(
-                                    "Billet09M",
-                                    x.Billet09M
-                                ),
-
-                                new XElement(
-                                    "Billet08M",
-                                    x.Billet08M
-                                ),
-
-                                new XElement(
-                                    "Billet07M",
-                                    x.Billet07M
-                                ),
-
-                                new XElement(
-                                    "Billet06M",
-                                    x.Billet06M
-                                ),
-
-                                new XElement(
-                                    "Billet05M",
-                                    x.Billet05M
-                                ),
-
-                                new XElement(
-                                    "Billet04M",
-                                    x.Billet04M
-                                ),
-
-                                new XElement(
-                                    "BilletBelow4M",
-                                    x.BilletBelow4M
-                                ),
-
-                                new XElement(
-                                    "CropEndStart",
-                                    x.CropEndStart
-                                ),
-
-                                new XElement(
-                                    "Bend",
-                                    x.Bend
-                                ),
-
-                                new XElement(
-                                    "GoodBillets",
-                                    x.GoodBillets
-                                ),
-
-                                new XElement(
-                                    "Remarks",
-                                    x.Remarks ??
-                                    string.Empty
-                                )
-                            )
-                        )
-                    )
+            XElement root =
+                new XElement(
+                    "Details"
                 );
 
-            return xml.ToString(
+            if (details == null)
+            {
+                return root.ToString(
+                    SaveOptions.DisableFormatting
+                );
+            }
+
+            foreach (CCMDailyProductionReportDetailBLL item
+                in details)
+            {
+                XElement row =
+                    new XElement(
+                        "Detail",
+
+                        new XElement(
+                            "ID",
+                            item.ID
+                        ),
+
+                        new XElement(
+                            "ReportID",
+                            item.ReportID
+                        ),
+
+                        new XElement(
+                            "SequenceNo",
+                            item.SequenceNo
+                        ),
+
+                        new XElement(
+                            "HeatNo",
+                            item.HeatNo ?? ""
+                        ),
+
+                        new XElement(
+                            "Grade",
+                            item.Grade ?? ""
+                        ),
+
+                        new XElement(
+                            "Billet14M",
+                            item.Billet14M
+                        ),
+
+                        new XElement(
+                            "Billet13M",
+                            item.Billet13M
+                        ),
+
+                        new XElement(
+                            "Billet12M",
+                            item.Billet12M
+                        ),
+
+                        new XElement(
+                            "Billet11M",
+                            item.Billet11M
+                        ),
+
+                        new XElement(
+                            "Billet10M",
+                            item.Billet10M
+                        ),
+
+                        new XElement(
+                            "Billet09M",
+                            item.Billet09M
+                        ),
+
+                        new XElement(
+                            "Billet08M",
+                            item.Billet08M
+                        ),
+
+                        new XElement(
+                            "Billet07M",
+                            item.Billet07M
+                        ),
+
+                        new XElement(
+                            "Billet06M",
+                            item.Billet06M
+                        ),
+
+                        new XElement(
+                            "Billet05M",
+                            item.Billet05M
+                        ),
+
+                        new XElement(
+                            "Billet04M",
+                            item.Billet04M
+                        ),
+
+                        new XElement(
+                            "BilletBelow4M",
+                            item.BilletBelow4M
+                        ),
+
+                        new XElement(
+                            "CropEndStart",
+                            item.CropEndStart
+                        ),
+
+                        new XElement(
+                            "Bend",
+                            item.Bend
+                        ),
+
+                        new XElement(
+                            "TotalBillets",
+                            item.TotalBillets
+                        ),
+
+                        new XElement(
+                            "GoodBillets",
+                            item.GoodBillets
+                        ),
+
+                        new XElement(
+                            "PrimeBilletWeight",
+                            (item.PrimeBilletWeight ?? 0M)
+                             .ToString(
+                                 CultureInfo.InvariantCulture
+                             )
+                        ),
+
+                        new XElement(
+                            "ShortBilletWeight",
+                            (item.ShortBilletWeight ?? 0M)
+                            .ToString(
+                                CultureInfo.InvariantCulture
+                            )
+                        ),
+
+                        new XElement(
+                            "TotalWeight",
+                            (item.TotalWeight ?? 0M)
+                            .ToString(
+                                CultureInfo.InvariantCulture
+                            )
+                        ),
+
+                        new XElement(
+                            "PerCoilBundleWeight",
+                            (item.PerCoilBundleWeight ?? 0M)
+                            .ToString(
+                                CultureInfo.InvariantCulture
+                            )
+                        ),
+
+                        new XElement(
+                            "Remarks",
+                            item.Remarks ?? ""
+                        )
+                    );
+
+                root.Add(row);
+            }
+
+            return root.ToString(
                 SaveOptions.DisableFormatting
             );
         }

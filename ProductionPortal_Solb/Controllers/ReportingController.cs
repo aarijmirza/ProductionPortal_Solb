@@ -1,29 +1,33 @@
-﻿using iTextSharp.text.pdf;
+﻿using BAL.Repositories;
+using DAL.Models;
+using DAL.Repository;
 using iTextSharp.text;
+using iTextSharp.text.pdf;
+using OfficeOpenXml;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
+using Rotativa;
+using Rotativa.Options;
+using Spire.Xls;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
+using System.Data.SqlClient;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using OfficeOpenXml;
-using Spire.Xls;
-using System.Configuration;
-using System.Data.SqlClient;
-using WebAPICode.Helpers;
-using DAL.Models;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
-using System.Globalization;
-using BAL.Repositories;
-using static DAL.Models.ViewModel;
+using System.Web.SessionState;
 using System.Windows.Media.Imaging;
-using Rotativa;
-using Rotativa.Options;
-using DAL.Repository;
+using WebAPICode.Helpers;
+using static DAL.Models.ViewModel;
 
 namespace ProductionPortal_Solb.Controllers
 {
+    [SessionState(
+    SessionStateBehavior.ReadOnly
+    )]
     public class ReportingController : Controller
     {
         DelayRespository repo;
