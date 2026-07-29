@@ -1,7 +1,23 @@
 ﻿@{
     var selectedDate = Session["RM_Date"];
     var selectedShift = Session["RM_Shift"];
+
+    bool isAdmin = User.IsInRole("Administrator");
+    bool isUser = User.IsInRole("User");
+    bool isRollingMill = User.IsInRole("Rolling Mill User");
+    bool isQC = User.IsInRole("QC User");
+    bool isSher = User.IsInRole("Sher");
+    bool isSupplyChain = User.IsInRole("Supply Chain");
+    bool isUtility = User.IsInRole("Utility");
+
+    // Keep both names for safety because old code was using "Steel Making User"
+    // and role list shows "Steel Making".
+    bool isSteelMaking = User.IsInRole("Steel Making") || User.IsInRole("Steel Making User");
+
+    // Dashboard and Reports visible for all department roles
+    bool canViewDashboardReports = isAdmin || isUser || isRollingMill || isQC || isSher || isSupplyChain || isUtility || isSteelMaking;
 }
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -29,6 +45,7 @@
 </head>
 
 <body class="xp-vertical">
+
     <!-- Search Modal -->
     <div class="modal search-modal fade" id="xpSearchModal" tabindex="-1" role="dialog" aria-labelledby="xpSearchModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -48,15 +65,13 @@
             </div>
         </div>
     </div>
+    <!-- End Search Modal -->
     <!-- Start XP Container -->
     <div id="xp-container">
+
         <!-- Start XP Topbar -->
         <div class="xp-topbar">
-
-            <!-- Start XP Row -->
             <div class="row">
-
-                <!-- Start XP Col -->
                 <div class="col-2 col-md-1 col-lg-1 order-2 order-md-1 align-self-center">
                     <div class="xp-menubar">
                         <a class="xp-menu-hamburger" href="javascript:void(0);">
@@ -64,29 +79,31 @@
                         </a>
                     </div>
                 </div>
-                <!-- End XP Col -->
-                <!-- Start XP Col -->
+
                 <div class="col-10 col-md-11 col-lg-11 order-1 order-md-2">
                     <div class="xp-profilebar text-right">
                         <ul class="list-inline mb-0">
                             <li class="list-inline-item mr-0">
                                 <div class="dropdown xp-userprofile">
-                                    @*<a class="dropdown-toggle" href="#" role="button" id="xp-userprofile" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="~/assets/images/topbar/user.jpg" alt="user-profile" class="rounded-circle img-fluid"><span class="xp-user-live"></span></a>*@
-                                    <a class="dropdown-toggle py-3 text-white text-center font-18" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Welcome, @User.Identity.Name</a>
+                                    <a class="dropdown-toggle py-3 text-white text-center font-18"
+                                       href="#"
+                                       role="button"
+                                       data-toggle="dropdown"
+                                       aria-haspopup="true"
+                                       aria-expanded="false">
+                                        Welcome, @User.Identity.Name
+                                    </a>
                                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="xp-userprofile">
-                                        @*<a class="dropdown-item py-3 text-white text-center font-16" href="#">Welcome, @User.Identity.Name</a>*@
-                                        <a class="dropdown-item py-3" href="@Url.Action("Logout", "Login")"><i class="icon-power text-danger mr-2"></i> Logout</a>
+                                        <a class="dropdown-item py-3" href="@Url.Action("Logout", "Login")">
+                                            <i class="icon-power text-danger mr-2"></i> Logout
+                                        </a>
                                     </div>
                                 </div>
                             </li>
                         </ul>
                     </div>
                 </div>
-                <!-- End XP Col -->
-
             </div>
-            <!-- End XP Row -->
-
         </div>
         <!-- End XP Topbar -->
         <!-- Start XP Leftbar -->
@@ -97,91 +114,118 @@
 
                 <!-- Start XP Logobar -->
                 <div class="xp-logobar text-center">
-                    <a href="@Url.Action("Index", "Home")" class="xp-logo"><img src="~/assets/images/logo.png" class="img-fluid" alt="logo" style="width:50%;"></a>
+                    <a href="@Url.Action("Index", "Home")" class="xp-logo">
+                        <img src="~/assets/images/logo.png" class="img-fluid" alt="logo" style="width:50%;">
+                    </a>
                 </div>
                 <!-- End XP Logobar -->
                 <!-- Start XP Navigationbar -->
                 <div class="xp-navigationbar">
                     <ul class="xp-vertical-menu">
-                        <li>
-                            <a href="javascript:void(0);">
-                                <span>DASHBOARD'S</span><i class="icon-arrow-right pull-right"></i>
-                            </a>
-                            <ul class="xp-vertical-submenu">
-                                <li><a href="@Url.Action("ReportingSection", "Reporting")">OPERATION DASHBOARD</a></li>
-                            </ul>
-                            <ul class="xp-vertical-submenu">
-                                <li><a href="@Url.Action("list", "Executive")">EXECUTIVE DASHBOARD</a></li>
-                            </ul>
-                        </li>
-                        @*<li class="xp-vertical-header">MELTSHOP SECTION</li>*@
-                        @if (User.IsInRole("Administrator") || User.IsInRole("User") || User.IsInRole("Steel Making User") || User.IsInRole("QC User"))
+
+                        @* DASHBOARDS - Visible for all department roles *@
+                        @if (canViewDashboardReports)
+                        {
+                            <li>
+                                <a href="javascript:void(0);">
+                                    <span>DASHBOARD'S</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("ReportingSection", "Reporting")">OPERATION DASHBOARD</a></li>
+                                </ul>
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("list", "Executive")">EXECUTIVE DASHBOARD</a></li>
+                                </ul>
+                            </li>
+                        }
+
+                        @* STEEL MAKING PLANT - Only Admin, Steel Making and QC *@
+                        @if (isAdmin || isSteelMaking || isQC)
                         {
                             <li>
                                 <a href="javascript:void(0);">
                                     <span>STEEL MAKING PLANT</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("list", "Scrapyard")">SCRAPYARD</a></li>
-                                </ul><ul class="xp-vertical-submenu">
+                                </ul>
+
+                                <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("EAFlist", "Meltshop")">ELECTRIC ARC FURNACE</a></li>
-                                </ul><ul class="xp-vertical-submenu">
+                                </ul>
+
+                                <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("LFlist", "Meltshop")">LADDLE FURNACE</a></li>
                                 </ul>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("list", "CCM")">CCM</a></li>
                                 </ul>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("List", "CCMProduction")">BILLET YARD REPORT</a></li>
                                 </ul>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("CCMYieldlist", "CCM")">CCM YIELD BREAK DOWN</a></li>
                                 </ul>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("SMPlist", "Delay")">DELAY RECORD</a></li>
                                 </ul>
                             </li>
                         }
-                        @if (User.IsInRole("Administrator") || User.IsInRole("QC User") || User.IsInRole("Rolling Mill User") || User.IsInRole("User"))
+
+                        @* QUALITY CONTROL - QC section with relevant access *@
+                        @if (isAdmin || isQC || isRollingMill || isSteelMaking)
                         {
                             <li>
                                 <a href="javascript:void(0);">
                                     <span>QUALITY CONTROL</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
-                                @if (User.IsInRole("Administrator") || User.IsInRole("User") || User.IsInRole("QC User") || User.IsInRole("Steel Making User"))
+
+                                @if (isAdmin || isQC || isSteelMaking)
                                 {
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("HeatChemistry", "Quality")">HEAT CHEMISTRY</a></li>
                                     </ul>
+
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("castmillCertificate", "Quality")">CAST / MILL CERTIFICATE</a></li>
                                     </ul>
                                 }
-                                @if (User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User") || User.IsInRole("QC User"))
+
+                                @if (isAdmin || isQC || isRollingMill)
                                 {
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("AddInspectionRM", "Quality")">QC INSPECTION DATA - RM</a></li>
                                     </ul>
+
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("BilletBoard", "Quality")">BILLET BOARD</a></li>
                                     </ul>
+
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("QCInspectionRMadd", "Quality")">RM MECHANICAL TEST RESULT</a></li>
                                     </ul>
                                 }
-                                @if (User.IsInRole("Administrator") || User.IsInRole("QC User"))
+
+                                @if (isAdmin || isQC)
                                 {
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("SlagByProductList", "Quality")">SLAG & BY PRODUCTS</a></li>
                                     </ul>
+
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("HBIDRIlist", "Quality")">DRI / HBI ANALYSIS</a></li>
                                     </ul>
                                 }
-
                             </li>
                         }
-                        @if (User.IsInRole("Rolling Mill User") || User.IsInRole("Administrator") || User.IsInRole("user"))
+
+                        @* ROLLING MILL - Only Admin and Rolling Mill User *@
+                        @if (isAdmin || isRollingMill)
                         {
                             <li>
                                 <a href="javascript:void(0);">
@@ -191,22 +235,19 @@
                                 @if (selectedDate != null && selectedShift != null)
                                 {
                                     <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("AddDetails","RollingMill")">DETAILS</a></li>
-                                        <li><a href="@Url.Action("AddCharge","RollingMill")">BILLET CHARGING</a></li>
-                                        <li><a href="@Url.Action("AddDischarge","RollingMill")">FURNACE DISCHARGE</a></li>
-                                        <li><a href="@Url.Action("RMHourlyDischarge","RollingMill")">HOURLY DATA BREAKDOWN</a></li>
-                                        <li><a href="@Url.Action("AddBundleSection","RollingMill")">BUNDLE SECTION</a></li>
-                                        <li><a href="@Url.Action("add","Target")">ROLLING MILL TARGETS</a></li>
-                                        @if (User.IsInRole("User") || User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User"))
-                                        {
-                                            <li><a href="@Url.Action("list", "Delay")">DELAY RECORD</a></li>
-                                        }
+                                        <li><a href="@Url.Action("AddDetails", "RollingMill")">DETAILS</a></li>
+                                        <li><a href="@Url.Action("AddCharge", "RollingMill")">BILLET CHARGING</a></li>
+                                        <li><a href="@Url.Action("AddDischarge", "RollingMill")">FURNACE DISCHARGE</a></li>
+                                        <li><a href="@Url.Action("RMHourlyDischarge", "RollingMill")">HOURLY DATA BREAKDOWN</a></li>
+                                        <li><a href="@Url.Action("AddBundleSection", "RollingMill")">BUNDLE SECTION</a></li>
+                                        <li><a href="@Url.Action("add", "Target")">ROLLING MILL TARGETS</a></li>
+                                        <li><a href="@Url.Action("list", "Delay")">DELAY RECORD</a></li>
                                     </ul>
                                 }
                                 else
                                 {
                                     <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("AddDetails","RollingMill")">ROLLING MILL DETAILS</a></li>
+                                        <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
                                         <li style="color:red; padding:10px;">
                                             ⚠ Please select shift first
                                         </li>
@@ -214,7 +255,9 @@
                                 }
                             </li>
                         }
-                        @if (User.IsInRole("Administrator") || User.IsInRole("User"))
+
+                        @* CMD MAINTENANCE - No separate CMD role available, so kept Admin/User *@
+                        @if (isAdmin || isUser)
                         {
                             <li>
                                 <a href="javascript:void(0);">
@@ -225,24 +268,31 @@
                                 </ul>
                             </li>
                         }
-                        @if (User.IsInRole("Administrator") || User.IsInRole("Supply Chain"))
+
+                        @* SUPPLY CHAIN - Only Admin and Supply Chain *@
+                        @if (isAdmin || isSupplyChain)
                         {
                             <li>
                                 <a href="javascript:void(0);">
                                     <span>SUPPLY CHAIN</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("list", "SupplyChain")">SUPPLY CHAIN REPORT</a></li>
                                 </ul>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("add", "Stock")">MATERIAL STOCK</a></li>
                                 </ul>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("Stocklist", "Stock")">SUPPLY CHAIN STOCK</a></li>
                                 </ul>
                             </li>
                         }
-                        @if (User.IsInRole("Administrator") || User.IsInRole("User"))
+
+                        @* UTILITY - Only Admin and Utility *@
+                        @if (isAdmin || isUtility)
                         {
                             <li>
                                 <a href="javascript:void(0);">
@@ -253,7 +303,9 @@
                                 </ul>
                             </li>
                         }
-                        @if (User.IsInRole("Administrator") || User.IsInRole("Sher"))
+
+                        @* SHER - Only Admin and Sher *@
+                        @if (isAdmin || isSher)
                         {
                             <li>
                                 <a href="javascript:void(0);">
@@ -261,60 +313,43 @@
                                 </a>
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("KPIAdd", "Security")">SHER DETAIL</a></li>
-                                    @*<li><a href="@Url.Action("FSadd", "Security")">FIRE SYSTEM KPI</a></li>*@
                                 </ul>
                             </li>
                         }
-                        @if (User.IsInRole("Administrator") || User.IsInRole("Rolling Mill User") || User.IsInRole("Supply Chain"))
+
+                        @* REPORTS - Visible for all department roles *@
+                        @if (canViewDashboardReports)
                         {
                             <li>
                                 <a href="javascript:void(0);">
                                     <span>REPORTS</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("list", "SMPReports")">SMP REPORTS</a></li>
                                     <li><a href="@Url.Action("list", "RMReports")">ROLLING MILL REPORTS</a></li>
-                                    @*@if (User.IsInRole("Administrator") || User.IsInRole("User") || User.IsInRole("Supply Chain"))
-                                                                {
-                                        <li><a href="@Url.Action("ReportingSection", "Reporting")">OTHER REPORTS</a></li>
-                                                                }*@
-                                    @*<li><a href="@Url.Action("ProductionSummary", "SMPReports")">DIRECTOR SUMMARY REPORTS</a></li>*@
-
-                                    @*<li><a href="@Url.Action("DownloadSMPIntegratedPDF", "Reporting")">SMP INTEGRATED REPORT</a></li>
-                                        <li><a href="@Url.Action("DownloadSMPDailyReport", "Reporting")">SMP DAILY SUMMARY REPORT</a></li>
-                                        <li><a href="@Url.Action("DownloadDailyPlantStatistics", "Reporting")">SMP MONTHLY STATISTIC REPORT</a></li>*@
-
                                 </ul>
-                                @*<ul class="xp-vertical-submenu">
-                                        @if (User.IsInRole("Administrator") || User.IsInRole("User"))
-                                        {
-                                            <li><a href="@Url.Action("DownloadSMPIntegratedPDF", "Reporting")">SMP INTEGRATED REPORT</a></li>
-                                            <li><a href="@Url.Action("DownloadSMPDailyReport", "Reporting")">SMP DAILY SUMMARY REPORT</a></li>
-                                            <li><a href="@Url.Action("DownloadDailyPlantStatistics", "Reporting")">SMP MONTHLY STATISTIC REPORT</a></li>
-                                        }
-                                        @if (User.IsInRole("Rolling Mill User") || User.IsInRole("Administrator") || User.IsInRole("User"))
-                                        {
-                                            <li><a href="@Url.Action("DailyProductionRM", "Reporting")" target="_blank">RM DAILY PRODUCTION REPORT</a></li>
-                                            <li><a href="@Url.Action("RMMonthlyPerformanceReport", "Reporting")" target="_blank">RM MONTHLY SUMMARY REPORT</a></li>
-                                        }
-                                    </ul>*@
                             </li>
                         }
 
-                        @if (User.IsInRole("Administrator"))
+                        @* SETTINGS - Only Administrator *@
+                        @if (isAdmin)
                         {
                             <li>
                                 <a href="javascript:void(0);">
                                     <span>SETTING</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("list", "UserRole")">USER ROLE</a></li>
                                 </ul>
+
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("list", "User")">USER DETAILS</a></li>
                                 </ul>
                             </li>
                         }
+
                     </ul>
                 </div>
                 <!-- End XP Navigationbar -->

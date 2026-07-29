@@ -3,217 +3,180 @@ using DAL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
-using static DAL.Models.UtilityDailyReportVM;
 
 namespace ProductionPortal_Solb.Controllers
 {
     public class DelayCounterMeasureController : Controller
     {
-        private readonly
-            DelayCounterMeasureRepository repo =
-                new DelayCounterMeasureRepository();
+        private readonly DelayCounterMeasureRepository repo =
+            new DelayCounterMeasureRepository();
 
-        private readonly
-            DelayRespository maintenanceRepo =
-                new DelayRespository();
+        private readonly DelayRespository maintenanceRepo =
+            new DelayRespository();
 
-        public ActionResult Add(
-            int plantDelayID)
+        [HttpGet]
+        public ActionResult Add(int plantDelayID)
         {
             if (plantDelayID <= 0)
             {
-                TempData["Error"] =
-                    "Invalid Plant Delay ID.";
+                TempData["Error"] = "Invalid Plant Delay ID.";
 
-                return RedirectToAction(
-                    "list",
-                    "Maintenance"
-                );
+                return RedirectToAction("list", "Maintenance");
             }
 
             DelayCounterMeasureVM model =
-                repo.GetPageData(
-                    plantDelayID
-                );
+                repo.GetPageData(plantDelayID);
 
             if (model == null)
             {
-                TempData["Error"] =
-                    "Failure Analysis record not found.";
+                TempData["Error"] = "Delay record not found.";
 
-                return RedirectToAction(
-                    "list",
-                    "Maintenance"
-                );
+                return RedirectToAction("list", "Maintenance");
+            }
+
+            model.PlantDelayID = plantDelayID;
+
+            if (model.CounterMeasures == null)
+            {
+                model.CounterMeasures = new List<DelayCounterMeasureBLL>();
+            }
+
+            if (model.ExistingCounterMeasures == null)
+            {
+                model.ExistingCounterMeasures = new List<DelayCounterMeasureBLL>();
             }
 
             FailureAnalysisBLL analysis =
-                repo
-                    .GetFailureAnalysisByDelayID(
-                        plantDelayID
-                    );
+                repo.GetFailureAnalysisByDelayID(plantDelayID);
 
-            ViewBag.Analysis =
-                analysis;
+            if (analysis == null)
+            {
+                ViewBag.AnalysisMessage =
+                    "Failure Analysis data not found against this delay.";
+            }
+
+            ViewBag.Analysis = analysis;
 
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult SaveMultiple(
-            DelayCounterMeasureVM model)
+        public ActionResult SaveMultiple(DelayCounterMeasureVM model)
         {
             try
             {
-                string createdBy =
-                    Convert.ToString(
-                        Session["UserName"]
+                if (model == null || model.PlantDelayID <= 0)
+                {
+                    TempData["Error"] = "Invalid countermeasure data.";
+
+                    return RedirectToAction("list", "Maintenance");
+                }
+
+                if (model.CounterMeasures == null ||
+                    !model.CounterMeasures.Any(x =>
+                        !string.IsNullOrWhiteSpace(x.CounterMeasure)))
+                {
+                    TempData["Error"] =
+                        "Please enter at least one countermeasure.";
+
+                    return RedirectToAction(
+                        "Add",
+                        new
+                        {
+                            plantDelayID = model.PlantDelayID
+                        }
                     );
+                }
+
+                List<DelayCounterMeasureBLL> validCounterMeasures =
+                    model.CounterMeasures
+                        .Where(x => !string.IsNullOrWhiteSpace(x.CounterMeasure))
+                        .ToList();
+
+                string createdBy =
+                    Convert.ToString(Session["UserName"]);
+
+                if (string.IsNullOrWhiteSpace(createdBy))
+                {
+                    createdBy = Convert.ToString(Session["UserID"]);
+                }
+
+                if (string.IsNullOrWhiteSpace(createdBy))
+                {
+                    createdBy = User.Identity.Name;
+                }
 
                 int savedRecords =
                     repo.SaveMultiple(
                         model.PlantDelayID,
-                        model.CounterMeasures,
+                        validCounterMeasures,
                         createdBy
                     );
 
                 TempData["Success"] =
-                    savedRecords +
-                    " countermeasure(s) saved successfully.";
+                    savedRecords + " countermeasure(s) saved successfully.";
 
                 return RedirectToAction(
                     "Add",
                     new
                     {
-                        plantDelayID =
-                            model.PlantDelayID
+                        plantDelayID = model.PlantDelayID
                     }
                 );
             }
             catch (Exception ex)
             {
-                TempData["Error"] =
-                    ex.Message;
+                TempData["Error"] = ex.Message;
 
                 return RedirectToAction(
                     "Add",
                     new
                     {
                         plantDelayID =
-                            model.PlantDelayID
+                            model != null
+                                ? model.PlantDelayID
+                                : 0
                     }
                 );
             }
         }
 
-        //[HttpGet]
-        //public JsonResult GetByID(
-        //    int id)
-        //{
-        //    DelayCounterMeasureBLL model =
-        //        repo.GetByID(id);
-
-        //    if (model == null)
-        //    {
-        //        return Json(
-        //            new
-        //            {
-        //                success = false,
-        //                message =
-        //                    "Record not found."
-        //            },
-        //            JsonRequestBehavior.AllowGet
-        //        );
-        //    }
-
-        //    return Json(
-        //        new
-        //        {
-        //            success = true,
-        //            data = new
-        //            {
-        //                model.ID,
-        //                model.PlantDelayID,
-        //                model.CounterMeasure,
-        //                model.SAPOrderNo,
-        //                model.Responsible,
-
-        //                TargetDate =
-        //                    model.TargetDate
-        //                        .HasValue
-        //                            ? model.TargetDate
-        //                                .Value
-        //                                .ToString(
-        //                                    "yyyy-MM-dd"
-        //                                )
-        //                            : "",
-
-        //                model.EvidenceForCompletion,
-        //                model.CounterMeasureStatus,
-        //                model.ReasonForNotClosing
-        //            }
-        //        },
-        //        JsonRequestBehavior.AllowGet
-        //    );
-        //}
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Update(
-            DelayCounterMeasureBLL model)
+        public ActionResult Update(DelayCounterMeasureBLL model)
         {
+            if (model == null || model.ID <= 0)
+            {
+                TempData["Error"] = "Invalid countermeasure record.";
+
+                return RedirectToAction("list", "Maintenance");
+            }
+
             model.UpdatedBy =
-                Convert.ToString(
-                    Session["UserID"]
-                );
+                Convert.ToString(Session["UserID"]);
+
+            if (string.IsNullOrWhiteSpace(model.UpdatedBy))
+            {
+                model.UpdatedBy = User.Identity.Name;
+            }
 
             bool result =
                 repo.Update(model);
 
-            TempData[result
-                ? "Success"
-                : "Error"] =
+            TempData[result ? "Success" : "Error"] =
                 result
                     ? "Countermeasure updated successfully."
                     : "Countermeasure could not be updated.";
 
             return RedirectToAction(
-                "add",
+                "Add",
                 new
                 {
-                    plantDelayID =
-                        model.PlantDelayID
+                    plantDelayID = model.PlantDelayID
                 }
             );
         }
-
-        //[HttpPost]
-        //public JsonResult Delete(
-        //    int id)
-        //{
-        //    string updatedBy =
-        //        Convert.ToString(
-        //            Session["UserID"]
-        //        );
-
-        //    bool result =
-        //        repo.Delete(
-        //            id,
-        //            updatedBy
-        //        );
-
-        //    return Json(
-        //        new
-        //        {
-        //            success = result,
-        //            message = result
-        //                ? "Countermeasure deleted."
-        //                : "Record could not be deleted."
-        //        }
-        //    );
-        //}
     }
 }
