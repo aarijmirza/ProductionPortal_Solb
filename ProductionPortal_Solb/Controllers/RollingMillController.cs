@@ -10,12 +10,16 @@ using System.Globalization;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.SessionState;
 using WebAPICode.Helpers;
 using static DAL.Models.ViewModel;
 using static iTextSharp.text.pdf.AcroFields;
 
 namespace ProductionPortal_Solb.Controllers
 {
+    [SessionState(
+    SessionStateBehavior.ReadOnly
+    )]
     public class RollingMillController : BaseController
     {
         QualityRepository repo;

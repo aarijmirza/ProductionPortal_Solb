@@ -1,27 +1,31 @@
 ﻿using BAL.Repositories;
 using DAL.Models;
-using iTextSharp.text.pdf;
 using iTextSharp.text;
+using iTextSharp.text.pdf;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
+using Rotativa;
+using Rotativa.Options;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using System.Globalization;
-using System.Data;
+using System.Web.SessionState;
 using System.Web.UI.WebControls;
-using Image = iTextSharp.text.Image;
-using static DAL.Models.ViewModel;
 using System.Windows.Media.Imaging;
-using Rotativa;
-using Rotativa.Options;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
+using static DAL.Models.ViewModel;
+using Image = iTextSharp.text.Image;
 
 
 namespace ProductionPortal_Solb.Controllers
 {
+    [SessionState(
+    SessionStateBehavior.ReadOnly
+    )]
     public class MeltshopController : Controller
     {
         MeltshopRepository repo;

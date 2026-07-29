@@ -5,8 +5,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using WebAPICode.Helpers;
 
@@ -24,6 +22,58 @@ namespace BAL.Repositories
                 );
             }
 
+            if (string.IsNullOrWhiteSpace(
+                model.ReportNo))
+            {
+                throw new ArgumentException(
+                    "Report number is required."
+                );
+            }
+
+            if (model.ReportDate ==
+                DateTime.MinValue)
+            {
+                throw new ArgumentException(
+                    "Report date is required."
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                model.Shift))
+            {
+                throw new ArgumentException(
+                    "Shift is required."
+                );
+            }
+
+            if (model.Details == null)
+            {
+                model.Details =
+                    new List<
+                        CCMDailyProductionReportDetailBLL
+                    >();
+            }
+
+            model.Details =
+                model.Details
+                    .Where(IsValidDetail)
+                    .ToList();
+
+            if (model.Details.Count == 0)
+            {
+                throw new ArgumentException(
+                    "At least one billet production entry is required."
+                );
+            }
+
+            for (int i = 0;
+                 i < model.Details.Count;
+                 i++)
+            {
+                model.Details[i].SequenceNo =
+                    i + 1;
+            }
+
             string detailsXml =
                 BuildDetailsXml(
                     model.Details
@@ -33,64 +83,82 @@ namespace BAL.Repositories
             {
                 new SqlParameter(
                     "@ID",
-                    model.ID
-                ),
+                    SqlDbType.Int
+                )
+                {
+                    Value = model.ID
+                },
 
                 new SqlParameter(
                     "@ReportNo",
-                    model.ReportNo ??
-                    string.Empty
-                ),
+                    SqlDbType.NVarChar,
+                    50
+                )
+                {
+                    Value = model.ReportNo.Trim()
+                },
 
                 new SqlParameter(
                     "@ReportDate",
-                    model.ReportDate.Date
-                ),
+                    SqlDbType.Date
+                )
+                {
+                    Value = model.ReportDate.Date
+                },
 
                 new SqlParameter(
                     "@Shift",
-                    string.IsNullOrWhiteSpace(
-                        model.Shift
-                    )
-                        ? (object)DBNull.Value
-                        : model.Shift
-                ),
+                    SqlDbType.NVarChar,
+                    50
+                )
+                {
+                    Value = DbValue(model.Shift)
+                },
 
                 new SqlParameter(
                     "@Team",
-                    string.IsNullOrWhiteSpace(
-                        model.Team
-                    )
-                        ? (object)DBNull.Value
-                        : model.Team
-                ),
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value = DbValue(model.Team)
+                },
 
                 new SqlParameter(
                     "@CCMForeman",
-                    string.IsNullOrWhiteSpace(
-                        model.CCMForeman
-                    )
-                        ? (object)DBNull.Value
-                        : model.CCMForeman
-                ),
+                    SqlDbType.NVarChar,
+                    150
+                )
+                {
+                    Value =
+                        DbValue(
+                            model.CCMForeman
+                        )
+                },
 
                 new SqlParameter(
                     "@BilletYardOperator",
-                    string.IsNullOrWhiteSpace(
-                        model.BilletYardOperator
-                    )
-                        ? (object)DBNull.Value
-                        : model.BilletYardOperator
-                ),
+                    SqlDbType.NVarChar,
+                    150
+                )
+                {
+                    Value =
+                        DbValue(
+                            model.BilletYardOperator
+                        )
+                },
 
                 new SqlParameter(
                     "@CreatedBy",
-                    string.IsNullOrWhiteSpace(
-                        model.CreatedBy
-                    )
-                        ? (object)DBNull.Value
-                        : model.CreatedBy
-                ),
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        DbValue(
+                            model.CreatedBy
+                        )
+                },
 
                 new SqlParameter(
                     "@DetailsXml",
@@ -103,85 +171,25 @@ namespace BAL.Repositories
 
             DataTable dt =
                 DBHelper.ExecuteDataTable(
-                    "sp_SaveCCMDailyProductionReport",
+                    "dbo.sp_SaveCCMDailyProductionReport",
                     CommandType.StoredProcedure,
                     parameters
                 );
-
-            if (dt != null &&
-                dt.Rows.Count > 0)
-            {
-                return Convert.ToInt32(
-                    dt.Rows[0]["ID"]
-                );
-            }
-
-            return 0;
-        }
-
-        public List<
-            CCMDailyProductionReportBLL
-        > GetAll(
-            DateTime? fromDate,
-            DateTime? toDate,
-            string shift)
-        {
-            SqlParameter[] parameters =
-            {
-                new SqlParameter(
-                    "@FromDate",
-                    fromDate.HasValue
-                        ? (object)
-                            fromDate.Value.Date
-                        : DBNull.Value
-                ),
-
-                new SqlParameter(
-                    "@ToDate",
-                    toDate.HasValue
-                        ? (object)
-                            toDate.Value.Date
-                        : DBNull.Value
-                ),
-
-                new SqlParameter(
-                    "@Shift",
-                    string.IsNullOrWhiteSpace(
-                        shift
-                    )
-                        ? (object)DBNull.Value
-                        : shift
-                )
-            };
-
-            DataTable dt =
-                DBHelper.ExecuteDataTable(
-                    "sp_GetCCMDailyProductionReports",
-                    CommandType.StoredProcedure,
-                    parameters
-                );
-
-            List<
-                CCMDailyProductionReportBLL
-            > list =
-                new List<
-                    CCMDailyProductionReportBLL
-                >();
 
             if (dt == null ||
-                dt.Rows.Count == 0)
+                dt.Rows.Count == 0 ||
+                !dt.Columns.Contains("ID") ||
+                dt.Rows[0]["ID"] ==
+                    DBNull.Value)
             {
-                return list;
-            }
-
-            foreach (DataRow row in dt.Rows)
-            {
-                list.Add(
-                    MapHeader(row)
+                throw new DataException(
+                    "Saved report ID was not returned."
                 );
             }
 
-            return list;
+            return Convert.ToInt32(
+                dt.Rows[0]["ID"]
+            );
         }
 
         public CCMDailyProductionReportBLL
@@ -191,13 +199,16 @@ namespace BAL.Repositories
             {
                 new SqlParameter(
                     "@ID",
-                    id
+                    SqlDbType.Int
                 )
+                {
+                    Value = id
+                }
             };
 
             DataSet ds =
                 DBHelper.ExecuteDataSet(
-                    "sp_GetCCMDailyProductionReportByID",
+                    "dbo.sp_GetCCMDailyProductionReportByID",
                     CommandType.StoredProcedure,
                     parameters
                 );
@@ -214,6 +225,11 @@ namespace BAL.Repositories
                     ds.Tables[0].Rows[0]
                 );
 
+            model.Details =
+                new List<
+                    CCMDailyProductionReportDetailBLL
+                >();
+
             if (ds.Tables.Count > 1)
             {
                 foreach (
@@ -229,6 +245,76 @@ namespace BAL.Repositories
             return model;
         }
 
+        public List<
+            CCMDailyProductionReportBLL
+        > GetAll(
+            DateTime? fromDate,
+            DateTime? toDate,
+            string shift)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@FromDate",
+                    SqlDbType.Date
+                )
+                {
+                    Value =
+                        fromDate.HasValue
+                            ? (object)
+                                fromDate.Value.Date
+                            : DBNull.Value
+                },
+
+                new SqlParameter(
+                    "@ToDate",
+                    SqlDbType.Date
+                )
+                {
+                    Value =
+                        toDate.HasValue
+                            ? (object)
+                                toDate.Value.Date
+                            : DBNull.Value
+                },
+
+                new SqlParameter(
+                    "@Shift",
+                    SqlDbType.NVarChar,
+                    50
+                )
+                {
+                    Value = DbValue(shift)
+                }
+            };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "dbo.sp_GetCCMDailyProductionReports",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            var list =
+                new List<
+                    CCMDailyProductionReportBLL
+                >();
+
+            if (dt == null)
+            {
+                return list;
+            }
+
+            foreach (DataRow row in dt.Rows)
+            {
+                list.Add(
+                    MapHeader(row)
+                );
+            }
+
+            return list;
+        }
+
         public bool Delete(
             int id,
             string updatedBy)
@@ -237,72 +323,62 @@ namespace BAL.Repositories
             {
                 new SqlParameter(
                     "@ID",
-                    id
-                ),
+                    SqlDbType.Int
+                )
+                {
+                    Value = id
+                },
 
                 new SqlParameter(
                     "@UpdatedBy",
-                    string.IsNullOrWhiteSpace(
-                        updatedBy
-                    )
-                        ? (object)DBNull.Value
-                        : updatedBy
+                    SqlDbType.NVarChar,
+                    100
                 )
+                {
+                    Value =
+                        DbValue(updatedBy)
+                }
             };
 
             DataTable dt =
                 DBHelper.ExecuteDataTable(
-                    "sp_DeleteCCMDailyProductionReport",
+                    "dbo.sp_DeleteCCMDailyProductionReport",
                     CommandType.StoredProcedure,
                     parameters
                 );
 
-            if (dt != null &&
-                dt.Rows.Count > 0)
-            {
-                int affectedRows =
-                    Convert.ToInt32(
-                        dt.Rows[0][
-                            "AffectedRows"
-                        ]
-                    );
-
-                return affectedRows > 0;
-            }
-
-            return false;
+            return
+                dt != null &&
+                dt.Rows.Count > 0 &&
+                dt.Columns.Contains(
+                    "AffectedRows"
+                ) &&
+                dt.Rows[0]["AffectedRows"] !=
+                    DBNull.Value &&
+                Convert.ToInt32(
+                    dt.Rows[0]["AffectedRows"]
+                ) > 0;
         }
 
         private string BuildDetailsXml(
-            List<CCMDailyProductionReportDetailBLL> details)
+            List<
+                CCMDailyProductionReportDetailBLL
+            > details)
         {
             XElement root =
-                new XElement(
-                    "Details"
-                );
+                new XElement("Details");
 
-            if (details == null)
-            {
-                return root.ToString(
-                    SaveOptions.DisableFormatting
-                );
-            }
-
-            foreach (CCMDailyProductionReportDetailBLL item
+            foreach (
+                CCMDailyProductionReportDetailBLL item
                 in details)
             {
-                XElement row =
+                root.Add(
                     new XElement(
                         "Detail",
 
                         new XElement(
                             "ID",
                             item.ID
-                        ),
-
-                        new XElement(
-                            "ReportID",
-                            item.ReportID
                         ),
 
                         new XElement(
@@ -341,48 +417,13 @@ namespace BAL.Repositories
                         ),
 
                         new XElement(
-                            "Billet10M",
-                            item.Billet10M
+                            "GoodBillets",
+                            item.GoodBillets
                         ),
 
                         new XElement(
-                            "Billet09M",
-                            item.Billet09M
-                        ),
-
-                        new XElement(
-                            "Billet08M",
-                            item.Billet08M
-                        ),
-
-                        new XElement(
-                            "Billet07M",
-                            item.Billet07M
-                        ),
-
-                        new XElement(
-                            "Billet06M",
-                            item.Billet06M
-                        ),
-
-                        new XElement(
-                            "Billet05M",
-                            item.Billet05M
-                        ),
-
-                        new XElement(
-                            "Billet04M",
-                            item.Billet04M
-                        ),
-
-                        new XElement(
-                            "BilletBelow4M",
-                            item.BilletBelow4M
-                        ),
-
-                        new XElement(
-                            "CropEndStart",
-                            item.CropEndStart
+                            "ShortBillets",
+                            item.ShortBillets
                         ),
 
                         new XElement(
@@ -396,39 +437,51 @@ namespace BAL.Repositories
                         ),
 
                         new XElement(
-                            "GoodBillets",
-                            item.GoodBillets
+                            "TotalLength",
+                            DecimalText(
+                                item.TotalLength
+                            )
+                        ),
+
+                        new XElement(
+                            "ShortBilletTotalLength",
+                            DecimalText(
+                                item.ShortBilletTotalLength
+                            )
+                        ),
+
+                        new XElement(
+                            "ShortBilletAvgLength",
+                            DecimalText(
+                                item.ShortBilletAvgLength
+                            )
+                        ),
+
+                        new XElement(
+                            "PerUnitWeight",
+                            DecimalText(
+                                item.PerCoilBundleWeight
+                            )
                         ),
 
                         new XElement(
                             "PrimeBilletWeight",
-                            (item.PrimeBilletWeight ?? 0M)
-                             .ToString(
-                                 CultureInfo.InvariantCulture
-                             )
+                            DecimalText(
+                                item.PrimeBilletWeight
+                            )
                         ),
 
                         new XElement(
                             "ShortBilletWeight",
-                            (item.ShortBilletWeight ?? 0M)
-                            .ToString(
-                                CultureInfo.InvariantCulture
+                            DecimalText(
+                                item.ShortBilletWeight
                             )
                         ),
 
                         new XElement(
                             "TotalWeight",
-                            (item.TotalWeight ?? 0M)
-                            .ToString(
-                                CultureInfo.InvariantCulture
-                            )
-                        ),
-
-                        new XElement(
-                            "PerCoilBundleWeight",
-                            (item.PerCoilBundleWeight ?? 0M)
-                            .ToString(
-                                CultureInfo.InvariantCulture
+                            DecimalText(
+                                item.TotalWeight
                             )
                         ),
 
@@ -436,14 +489,57 @@ namespace BAL.Repositories
                             "Remarks",
                             item.Remarks ?? ""
                         )
-                    );
-
-                root.Add(row);
+                    )
+                );
             }
 
             return root.ToString(
                 SaveOptions.DisableFormatting
             );
+        }
+
+        private bool IsValidDetail(
+            CCMDailyProductionReportDetailBLL item)
+        {
+            if (item == null)
+            {
+                return false;
+            }
+
+            return
+                !string.IsNullOrWhiteSpace(
+                    item.HeatNo
+                ) ||
+                !string.IsNullOrWhiteSpace(
+                    item.Grade
+                ) ||
+                item.Billet14M > 0 ||
+                item.Billet13M > 0 ||
+                item.Billet12M > 0 ||
+                item.Billet11M > 0 ||
+                item.GoodBillets > 0 ||
+                item.ShortBillets > 0 ||
+                item.Bend > 0 ||
+                item.TotalBillets > 0 ||
+                (item.TotalLength ?? 0M) > 0 ||
+                (item.ShortBilletTotalLength ?? 0M) > 0 ||
+                (item.ShortBilletAvgLength ?? 0M) > 0 ||
+                (item.PerCoilBundleWeight ?? 0M) > 0 ||
+                (item.PrimeBilletWeight ?? 0M) > 0 ||
+                (item.ShortBilletWeight ?? 0M) > 0 ||
+                (item.TotalWeight ?? 0M) > 0 ||
+                !string.IsNullOrWhiteSpace(
+                    item.Remarks
+                );
+        }
+
+        private string DecimalText(
+            decimal? value)
+        {
+            return
+                (value ?? 0M).ToString(
+                    CultureInfo.InvariantCulture
+                );
         }
 
         private CCMDailyProductionReportBLL
@@ -452,10 +548,7 @@ namespace BAL.Repositories
             return new CCMDailyProductionReportBLL
             {
                 ID =
-                    GetInt(
-                        row,
-                        "ID"
-                    ),
+                    GetInt(row, "ID"),
 
                 ReportNo =
                     GetString(
@@ -505,6 +598,12 @@ namespace BAL.Repositories
                         "PrimeBillets"
                     ),
 
+                ShortBillets =
+                    GetInt(
+                        row,
+                        "ShortBillets"
+                    ),
+
                 StatusID =
                     GetInt(
                         row,
@@ -544,10 +643,7 @@ namespace BAL.Repositories
                 new CCMDailyProductionReportDetailBLL
                 {
                     ID =
-                        GetInt(
-                            row,
-                            "ID"
-                        ),
+                        GetInt(row, "ID"),
 
                     ReportID =
                         GetInt(
@@ -559,6 +655,12 @@ namespace BAL.Repositories
                         GetInt(
                             row,
                             "SequenceNo"
+                        ),
+
+                    HeatNo =
+                        GetString(
+                            row,
+                            "HeatNo"
                         ),
 
                     Grade =
@@ -591,58 +693,16 @@ namespace BAL.Repositories
                             "Billet11M"
                         ),
 
-                    Billet10M =
+                    GoodBillets =
                         GetInt(
                             row,
-                            "Billet10M"
+                            "GoodBillets"
                         ),
 
-                    Billet09M =
+                    ShortBillets =
                         GetInt(
                             row,
-                            "Billet09M"
-                        ),
-
-                    Billet08M =
-                        GetInt(
-                            row,
-                            "Billet08M"
-                        ),
-
-                    Billet07M =
-                        GetInt(
-                            row,
-                            "Billet07M"
-                        ),
-
-                    Billet06M =
-                        GetInt(
-                            row,
-                            "Billet06M"
-                        ),
-
-                    Billet05M =
-                        GetInt(
-                            row,
-                            "Billet05M"
-                        ),
-
-                    Billet04M =
-                        GetInt(
-                            row,
-                            "Billet04M"
-                        ),
-
-                    BilletBelow4M =
-                        GetInt(
-                            row,
-                            "BilletBelow4M"
-                        ),
-
-                    CropEndStart =
-                        GetInt(
-                            row,
-                            "CropEndStart"
+                            "ShortBillets"
                         ),
 
                     Bend =
@@ -651,10 +711,52 @@ namespace BAL.Repositories
                             "Bend"
                         ),
 
-                    GoodBillets =
+                    TotalBillets =
                         GetInt(
                             row,
-                            "GoodBillets"
+                            "TotalBillets"
+                        ),
+
+                    TotalLength =
+                        GetNullableDecimal(
+                            row,
+                            "TotalLength"
+                        ),
+
+                    ShortBilletTotalLength =
+                        GetNullableDecimal(
+                            row,
+                            "ShortBilletTotalLength"
+                        ),
+
+                    ShortBilletAvgLength =
+                        GetNullableDecimal(
+                            row,
+                            "ShortBilletAvgLength"
+                        ),
+
+                    PerCoilBundleWeight =
+                        GetNullableDecimal(
+                            row,
+                            "PerUnitWeight"
+                        ),
+
+                    PrimeBilletWeight =
+                        GetNullableDecimal(
+                            row,
+                            "PrimeBilletWeight"
+                        ),
+
+                    ShortBilletWeight =
+                        GetNullableDecimal(
+                            row,
+                            "ShortBilletWeight"
+                        ),
+
+                    TotalWeight =
+                        GetNullableDecimal(
+                            row,
+                            "TotalWeight"
                         ),
 
                     Remarks =
@@ -679,8 +781,29 @@ namespace BAL.Repositories
                         GetNullableDate(
                             row,
                             "CreatedDate"
+                        ),
+
+                    UpdatedBy =
+                        GetString(
+                            row,
+                            "UpdatedBy"
+                        ),
+
+                    UpdatedDate =
+                        GetNullableDate(
+                            row,
+                            "UpdatedDate"
                         )
                 };
+        }
+
+        private object DbValue(
+            string value)
+        {
+            return string.IsNullOrWhiteSpace(
+                value)
+                    ? (object)DBNull.Value
+                    : value.Trim();
         }
 
         private int GetInt(
@@ -709,7 +832,7 @@ namespace BAL.Repositories
                 row[columnName] != DBNull.Value
                     ? Convert.ToString(
                         row[columnName]
-                    )
+                    ).Trim()
                     : string.Empty;
         }
 
@@ -741,6 +864,22 @@ namespace BAL.Repositories
                         row[columnName]
                     )
                     : (DateTime?)null;
+        }
+
+        private decimal? GetNullableDecimal(
+            DataRow row,
+            string columnName)
+        {
+            return
+                row.Table.Columns.Contains(
+                    columnName
+                ) &&
+                row[columnName] != DBNull.Value
+                    ? Convert.ToDecimal(
+                        row[columnName],
+                        CultureInfo.InvariantCulture
+                    )
+                    : (decimal?)null;
         }
     }
 }

@@ -10,6 +10,9 @@ using System.Web.SessionState;
 
 namespace ProductionPortal_Solb.Controllers
 {
+    [SessionState(
+    SessionStateBehavior.ReadOnly
+    )]
     public class ScrapyardController : Controller
     {
         ScrapyardRepository repo;

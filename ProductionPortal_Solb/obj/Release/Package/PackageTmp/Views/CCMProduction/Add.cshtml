@@ -698,68 +698,68 @@
                         <div class="form-group">
                             <label class="required">Report No.</label>
                             @Html.TextBoxFor(x => x.ReportNo,
-                                               new
-                                               {
-                                                   @class = "form-control",
-                                                   placeholder = "CCM-20260310",
-                                                   required = "required"
-                                               })
+                                                                                                 new
+                                                                                                 {
+                                                                                                     @class = "form-control",
+                                                                                                     placeholder = "CCM-20260310",
+                                                                                                     required = "required"
+                                                                                                 })
                             @Html.ValidationMessageFor(x => x.ReportNo)
                         </div>
 
                         <div class="form-group">
                             <label class="required">Report Date</label>
                             @Html.TextBoxFor(x => x.ReportDate, "{0:yyyy-MM-dd}",
-                                               new
-                                               {
-                                                   @class = "form-control",
-                                                   type = "date",
-                                                   required = "required"
-                                               })
+                                                                                                 new
+                                                                                                 {
+                                                                                                     @class = "form-control",
+                                                                                                     type = "date",
+                                                                                                     required = "required"
+                                                                                                 })
                             @Html.ValidationMessageFor(x => x.ReportDate)
                         </div>
 
                         <div class="form-group">
                             <label class="required">Shift</label>
                             @Html.DropDownListFor(x => x.Shift,
-                                               (SelectList)ViewBag.Shifts,
-                                               "-- Select Shift --",
-                                               new
-                                               {
-                                                   @class = "form-control",
-                                                   required = "required"
-                                               })
+                                                                                                 (SelectList)ViewBag.Shifts,
+                                                                                                 "-- Select Shift --",
+                                                                                                 new
+                                                                                                 {
+                                                                                                     @class = "form-control",
+                                                                                                     required = "required"
+                                                                                                 })
                             @Html.ValidationMessageFor(x => x.Shift)
                         </div>
 
                         <div class="form-group">
                             <label>Team</label>
                             @Html.TextBoxFor(x => x.Team,
-                                               new
-                                               {
-                                                   @class = "form-control",
-                                                   placeholder = "Team"
-                                               })
+                                                                                                 new
+                                                                                                 {
+                                                                                                     @class = "form-control",
+                                                                                                     placeholder = "Team"
+                                                                                                 })
                         </div>
 
                         <div class="form-group">
                             <label>CCM Foreman</label>
                             @Html.TextBoxFor(x => x.CCMForeman,
-                                               new
-                                               {
-                                                   @class = "form-control",
-                                                   placeholder = "Foreman name"
-                                               })
+                                                                                                 new
+                                                                                                 {
+                                                                                                     @class = "form-control",
+                                                                                                     placeholder = "Foreman name"
+                                                                                                 })
                         </div>
 
                         <div class="form-group">
                             <label>Billet Yard Operator</label>
                             @Html.TextBoxFor(x => x.BilletYardOperator,
-                                               new
-                                               {
-                                                   @class = "form-control",
-                                                   placeholder = "Operator name"
-                                               })
+                                                                                                 new
+                                                                                                 {
+                                                                                                     @class = "form-control",
+                                                                                                     placeholder = "Operator name"
+                                                                                                 })
                         </div>
                     </div>
                 </div>
@@ -824,31 +824,33 @@
                                             <label>Heat No.</label>
 
                                             @Html.TextBoxFor(
-                                                     x => x.Details[i].HeatNo,
-                                                     new
-                                                     {
-                                                         @class = "form-control heat-no-input",
-                                                         placeholder = "Enter heat no.",
-                                                         autocomplete = "off"
-                                                     }
-                                                 )
+                                                                                                                                     x => x.Details[i].HeatNo,
+                                                                                                                                     new
+                                                                                                                                     {
+                                                                                                                                         @class = "form-control heat-no-input",
+                                                                                                                                         placeholder = "Enter heat no.",
+                                                                                                                                         autocomplete = "off"
+                                                                                                                                     }
+                                                                                                                                 )
                                         </div>
 
                                         <div class="form-group">
                                             <label>Grade</label>
                                             @Html.TextBoxFor(
-                                                          x => x.Details[i].Grade,
-                                                          new
-                                                          {
-                                                              @class = "form-control grade-input",
-                                                              placeholder = "Enter billet grade"
-                                                          }
-                                                      )
+                                                                                                                                          x => x.Details[i].Grade,
+                                                                                                                                          new
+                                                                                                                                          {
+                                                                                                                                              @class = "form-control grade-input",
+                                                                                                                                              placeholder = "Enter billet grade"
+                                                                                                                                          }
+                                                                                                                                      )
                                         </div>
 
                                         <div class="form-group calculated-field">
                                             <label>Total Billets</label>
                                             <input type="number"
+                                                   name="Details[@i].TotalBillets"
+                                                   id="Details_@(i)__TotalBillets"
                                                    class="form-control row-total"
                                                    value="@Model.Details[i].TotalBillets"
                                                    readonly />
@@ -857,40 +859,89 @@
                                         <div class="form-group">
                                             <label>Good / Prime Billets</label>
                                             @Html.TextBoxFor(
-                                                          x => x.Details[i].GoodBillets,
-                                                          new
-                                                          {
-                                                              @class = "form-control good-billet-input",
-                                                              type = "number",
-                                                              min = "0"
-                                                          }
-                                                      )
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label>Crop End / Start</label>
-                                            @Html.TextBoxFor(
-                                                          x => x.Details[i].CropEndStart,
-                                                          new
-                                                          {
-                                                              @class = "form-control billet-input",
-                                                              type = "number",
-                                                              min = "0"
-                                                          }
-                                                      )
+                                                                                                                                          x => x.Details[i].GoodBillets,
+                                                                                                                                          new
+                                                                                                                                          {
+                                                                                                                                              @class = "form-control good-billet-input",
+                                                                                                                                              type = "number",
+                                                                                                                                              min = "0",
+                                                                                                                                              @readonly = "readonly"
+                                                                                                                                          }
+                                                                                                                                      )
                                         </div>
 
                                         <div class="form-group">
                                             <label>Bend</label>
                                             @Html.TextBoxFor(
-                                                          x => x.Details[i].Bend,
-                                                          new
-                                                          {
-                                                              @class = "form-control billet-input",
-                                                              type = "number",
-                                                              min = "0"
-                                                          }
-                                                      )
+                                                                                                                                          x => x.Details[i].Bend,
+                                                                                                                                          new
+                                                                                                                                          {
+                                                                                                                                              @class = "form-control billet-input",
+                                                                                                                                              type = "number",
+                                                                                                                                              min = "0"
+                                                                                                                                          }
+                                                                                                                                      )
+                                        </div>
+
+                                        <div class="form-group weight-field">
+                                            <label>Per Unit Weight</label>
+                                            @Html.TextBoxFor(
+                                                                                                                                         x => x.Details[i].PerCoilBundleWeight,
+                                                                                                                                         new
+                                                                                                                                         {
+                                                                                                                                             @class = "form-control coil-bundle-weight-input",
+                                                                                                                                             type = "number",
+                                                                                                                                             min = "0",
+                                                                                                                                             step = "0.000001",
+                                                                                                                                             placeholder = "0.00000"
+                                                                                                                                         }
+                                                                                                                                     )
+                                        </div>
+
+                                        <div class="form-group weight-field">
+                                            <label>Prime Billet Weight</label>
+                                            @Html.TextBoxFor(
+                                                                                                                                         x => x.Details[i].PrimeBilletWeight,
+                                                                                                                                         new
+                                                                                                                                         {
+                                                                                                                                             @class = "form-control prime-weight-input",
+                                                                                                                                             type = "number",
+                                                                                                                                             min = "0",
+                                                                                                                                             step = "0.00001",
+                                                                                                                                             placeholder = "0.00000",
+                                                                                                                                             @readonly = "readonly"
+                                                                                                                                         }
+                                                                                                                                     )
+                                        </div>
+
+                                        <div class="form-group weight-field">
+                                            <label>Short Billet Weight</label>
+                                            @Html.TextBoxFor(
+                                                                                                                                         x => x.Details[i].ShortBilletWeight,
+                                                                                                                                         new
+                                                                                                                                         {
+                                                                                                                                             @class = "form-control short-weight-input",
+                                                                                                                                             type = "number",
+                                                                                                                                             min = "0",
+                                                                                                                                             step = "0.00001",
+                                                                                                                                             placeholder = "0.00000",
+                                                                                                                                             @readonly = "readonly"
+                                                                                                                                         }
+                                                                                                                                     )
+                                        </div>
+
+                                        <div class="form-group calculated-field">
+                                            <label>Total Weight</label>
+                                            @Html.TextBoxFor(
+                                                                                                                                         x => x.Details[i].TotalWeight,
+                                                                                                                                         new
+                                                                                                                                         {
+                                                                                                                                             @class = "form-control total-weight-input",
+                                                                                                                                             type = "number",
+                                                                                                                                             step = "0.00001",
+                                                                                                                                             @readonly = "readonly"
+                                                                                                                                         }
+                                                                                                                                     )
                                         </div>
 
                                         <div class="length-grid span-full">
@@ -898,77 +949,58 @@
                                                 No. of Billets for 150 × 150
                                             </div>
 
-                                            <div class="form-group"><label>14M</label>@Html.TextBoxFor(x => x.Details[i].Billet14M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>13M</label>@Html.TextBoxFor(x => x.Details[i].Billet13M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>12M</label>@Html.TextBoxFor(x => x.Details[i].Billet12M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>11M</label>@Html.TextBoxFor(x => x.Details[i].Billet11M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>10M</label>@Html.TextBoxFor(x => x.Details[i].Billet10M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>09M</label>@Html.TextBoxFor(x => x.Details[i].Billet09M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>08M</label>@Html.TextBoxFor(x => x.Details[i].Billet08M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>07M</label>@Html.TextBoxFor(x => x.Details[i].Billet07M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>06M</label>@Html.TextBoxFor(x => x.Details[i].Billet06M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>05M</label>@Html.TextBoxFor(x => x.Details[i].Billet05M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>04M</label>@Html.TextBoxFor(x => x.Details[i].Billet04M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
-                                            <div class="form-group"><label>&lt; 4M</label>@Html.TextBoxFor(x => x.Details[i].BilletBelow4M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>14m</label>@Html.TextBoxFor(x => x.Details[i].Billet14M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>13m</label>@Html.TextBoxFor(x => x.Details[i].Billet13M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>12m</label>@Html.TextBoxFor(x => x.Details[i].Billet12M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>11m</label>@Html.TextBoxFor(x => x.Details[i].Billet11M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group calculated-field">
+                                                <label>Total Length (m)</label>
+                                                <input type="number"
+                                                       name="Details[@i].TotalLength"
+                                                       id="Details_@(i)__TotalLength"
+                                                       class="form-control prime-total-length-input"
+                                                       value="@((Model.Details[i].TotalLength ?? 0M).ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture))"
+                                                       min="0"
+                                                       step="0.00001"
+                                                       readonly />
+                                            </div>
                                         </div>
 
-                                        <div class="form-group weight-field">
-                                            <label>Prime Billet Weight</label>
+                                        <div class="form-group">
+                                            <label>Short Billet Quantity</label>
                                             @Html.TextBoxFor(
-                                                          x => x.Details[i].PrimeBilletWeight,
-                                                          new
-                                                          {
-                                                              @class = "form-control prime-weight-input",
-                                                              type = "number",
-                                                              min = "0",
-                                                              step = "0.001",
-                                                              placeholder = "0.000"
-                                                          }
-                                                      )
+                                                               x => x.Details[i].ShortBillets,
+                                                               new
+                                                               {
+                                                                   @class = "form-control short-billet-quantity-input",
+                                                                   type = "number",
+                                                                   min = "0",
+                                                                   step = "1"
+                                                               }
+                                                           )
                                         </div>
 
-                                        <div class="form-group weight-field">
-                                            <label>Short Billet Weight</label>
-                                            @Html.TextBoxFor(
-                                                          x => x.Details[i].ShortBilletWeight,
-                                                          new
-                                                          {
-                                                              @class = "form-control short-weight-input",
-                                                              type = "number",
-                                                              min = "0",
-                                                              step = "0.001",
-                                                              placeholder = "0.000"
-                                                          }
-                                                      )
+                                        <div class="form-group">
+                                            <label>Short Billet Total Length (m)</label>
+                                            <input type="number"
+                                                   name="Details[@i].ShortBilletTotalLength"
+                                                   id="Details_@(i)__ShortBilletTotalLength"
+                                                   class="form-control short-total-length-input"
+                                                   value="@((Model.Details[i].ShortBilletTotalLength ?? 0M).ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture))"
+                                                   min="0"
+                                                   step="0.00001" />
                                         </div>
 
                                         <div class="form-group calculated-field">
-                                            <label>Total Weight</label>
-                                            @Html.TextBoxFor(
-                                                          x => x.Details[i].TotalWeight,
-                                                          new
-                                                          {
-                                                              @class = "form-control total-weight-input",
-                                                              type = "number",
-                                                              step = "0.001",
-                                                              @readonly = "readonly"
-                                                          }
-                                                      )
-                                        </div>
-
-                                        <div class="form-group weight-field">
-                                            <label>Per Coil / Bundle Weight</label>
-                                            @Html.TextBoxFor(
-                                                          x => x.Details[i].PerCoilBundleWeight,
-                                                          new
-                                                          {
-                                                              @class = "form-control coil-bundle-weight-input",
-                                                              type = "number",
-                                                              min = "0",
-                                                              step = "0.001",
-                                                              placeholder = "0.000"
-                                                          }
-                                                      )
+                                            <label>Short Billet Avg. Length (m)</label>
+                                            <input type="number"
+                                                   name="Details[@i].ShortBilletAvgLength"
+                                                   id="Details_@(i)__ShortBilletAvgLength"
+                                                   class="form-control short-average-length-input"
+                                                   value="@((Model.Details[i].ShortBilletAvgLength ?? 0M).ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture))"
+                                                   min="0"
+                                                   step="0.00001"
+                                                   readonly />
                                         </div>
 
                                     </div>
@@ -1001,7 +1033,7 @@
                         </div>
 
                         <div class="summary-box nonprime">
-                            <span>Non-Prime Billets</span>
+                            <span>Short Billets</span>
                             <strong id="grandNonPrimeBillets">0</strong>
                         </div>
 
@@ -1034,453 +1066,919 @@
     </div>
 </div>
 
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-        var productionRows =
-            document.getElementById("productionRows");
-
-        var addButton =
-            document.getElementById("btnAddProductionRow");
-
-        var overallRemarks =
-            document.getElementById("overallRemarks");
-
-        function toInt(value) {
-            var parsed = parseInt(value, 10);
-            return isNaN(parsed) ? 0 : parsed;
-        }
-
-        function toDecimal(value) {
-            var parsed = parseFloat(value);
-            return isNaN(parsed) ? 0 : parsed;
-        }
-
-        function inputHtml(index, property, cssClass, type) {
-            var inputType = type || "number";
-            var minAttribute =
-                inputType === "number" ? ' min="0"' : "";
-
-            return '<input type="' + inputType + '"' +
-                ' name="Details[' + index + '].' + property + '"' +
-                ' id="Details_' + index + '__' + property + '"' +
-                ' value="' + (inputType === "number" ? "0" : "") + '"' +
-                minAttribute +
-                ' class="form-control ' + cssClass + '" />';
-        }
-
-        function decimalInputHtml(
-            index,
-            property,
-            cssClass,
-            readOnly) {
-
-            return '<input type="number"' +
-                ' name="Details[' + index + '].' + property + '"' +
-                ' id="Details_' + index + '__' + property + '"' +
-                ' value="0.000" min="0" step="0.001"' +
-                (readOnly ? ' readonly' : '') +
-                ' class="form-control ' + cssClass + '" />';
-        }
-
-        function lengthInputHtml(index, property, label) {
-            return '<div class="form-group">' +
-                '<label>' + label + '</label>' +
-                inputHtml(index, property, "billet-input") +
-                '</div>';
-        }
-
-        function createProductionRow(index) {
-            var card = document.createElement("div");
-
-            card.className =
-                "production-detail-card production-row";
-
-            card.setAttribute("data-row-index", index);
-
-            card.innerHTML =
-                '<div class="production-detail-card-header">' +
-                '<div class="production-card-title">' +
-                '<span class="production-card-number row-sequence">' +
-                (index + 1) +
-                '</span>' +
-                '<span>Billet Production Entry</span>' +
-                '</div>' +
-                '<button type="button"' +
-                ' class="card-remove-button btn-remove-row no-print"' +
-                ' title="Remove entry">' +
-                '<i class="fa fa-trash"></i>' +
-                '</button>' +
-                '</div>' +
-
-                '<div class="production-detail-card-body">' +
-                '<input type="hidden" class="detail-id"' +
-                ' name="Details[' + index + '].ID"' +
-                ' id="Details_' + index + '__ID" value="0" />' +
-                '<input type="hidden" class="detail-report-id"' +
-                ' name="Details[' + index + '].ReportID"' +
-                ' id="Details_' + index + '__ReportID" value="0" />' +
-                '<input type="hidden" class="detail-sequence"' +
-                ' name="Details[' + index + '].SequenceNo"' +
-                ' id="Details_' + index + '__SequenceNo"' +
-                ' value="' + (index + 1) + '" />' +
-                '<input type="hidden" class="detail-remarks"' +
-                ' name="Details[' + index + '].Remarks"' +
-                ' id="Details_' + index + '__Remarks" value="" />' +
-
-                '<div class="production-card-grid">' +
-                '<div class="form-group">' +
-                '<label>Heat No.</label>' +
-                inputHtml(index, "HeatNo", "heat-no-input", "text") +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label>Grade</label>' +
-                inputHtml(index, "Grade", "grade-input", "text") +
-                '</div>' +
-
-                '<div class="form-group calculated-field">' +
-                '<label>Total Billets</label>' +
-                '<input type="number" value="0"' +
-                ' class="form-control row-total" readonly />' +
-                '</div>' +
-
-                '<div class="form-group">' +
-                '<label>Good / Prime Billets</label>' +
-                inputHtml(index, "GoodBillets", "good-billet-input") +
-                '</div>' +
-
-                '<div class="form-group">' +
-                '<label>Crop End / Start</label>' +
-                inputHtml(index, "CropEndStart", "billet-input") +
-                '</div>' +
-
-                '<div class="form-group">' +
-                '<label>Bend</label>' +
-                inputHtml(index, "Bend", "billet-input") +
-                '</div>' +
-
-                '<div class="length-grid span-full">' +
-                '<div class="length-grid-title">' +
-                'No. of Billets for 150 × 150' +
-                '</div>' +
-                lengthInputHtml(index, "Billet14M", "14M") +
-                lengthInputHtml(index, "Billet13M", "13M") +
-                lengthInputHtml(index, "Billet12M", "12M") +
-                lengthInputHtml(index, "Billet11M", "11M") +
-                lengthInputHtml(index, "Billet10M", "10M") +
-                lengthInputHtml(index, "Billet09M", "09M") +
-                lengthInputHtml(index, "Billet08M", "08M") +
-                lengthInputHtml(index, "Billet07M", "07M") +
-                lengthInputHtml(index, "Billet06M", "06M") +
-                lengthInputHtml(index, "Billet05M", "05M") +
-                lengthInputHtml(index, "Billet04M", "04M") +
-                lengthInputHtml(index, "BilletBelow4M", "&lt; 4M") +
-                '</div>' +
-
-                '<div class="form-group weight-field">' +
-                '<label>Prime Billet Weight</label>' +
-                decimalInputHtml(
-                    index,
-                    "PrimeBilletWeight",
-                    "prime-weight-input",
-                    false
-                ) +
-                '</div>' +
-
-                '<div class="form-group weight-field">' +
-                '<label>Short Billet Weight</label>' +
-                decimalInputHtml(
-                    index,
-                    "ShortBilletWeight",
-                    "short-weight-input",
-                    false
-                ) +
-                '</div>' +
-
-                '<div class="form-group calculated-field">' +
-                '<label>Total Weight</label>' +
-                decimalInputHtml(
-                    index,
-                    "TotalWeight",
-                    "total-weight-input",
-                    true
-                ) +
-                '</div>' +
-
-                '<div class="form-group weight-field">' +
-                '<label>Per Coil / Bundle Weight</label>' +
-                decimalInputHtml(
-                    index,
-                    "PerCoilBundleWeight",
-                    "coil-bundle-weight-input",
-                    false
-                ) +
-                '</div>' +
-                '</div>' +
-                '</div>';
-
-            return card;
-        }
-
-        function calculateRow(row) {
-            var total = 0;
-
-            row.querySelectorAll(".billet-input")
-                .forEach(function (input) {
-                    var value = toInt(input.value);
-
-                    if (value < 0) {
-                        value = 0;
-                        input.value = 0;
-                    }
-
-                    total += value;
-                });
-
-            var totalInput =
-                row.querySelector(".row-total");
-
-            if (totalInput) {
-                totalInput.value = total;
-            }
-
-            var goodInput =
-                row.querySelector(".good-billet-input");
-
-            if (goodInput) {
-                var good = toInt(goodInput.value);
-
-                if (good < 0) {
-                    good = 0;
-                    goodInput.value = 0;
-                }
-
-                if (good > total) {
-                    good = total;
-                    goodInput.value = total;
-                }
-            }
-
-            var primeWeightInput =
-                row.querySelector(".prime-weight-input");
-
-            var shortWeightInput =
-                row.querySelector(".short-weight-input");
-
-            var totalWeightInput =
-                row.querySelector(".total-weight-input");
-
-            var primeWeight =
-                primeWeightInput
-                    ? Math.max(
-                        0,
-                        toDecimal(primeWeightInput.value)
-                    )
-                    : 0;
-
-            var shortWeight =
-                shortWeightInput
-                    ? Math.max(
-                        0,
-                        toDecimal(shortWeightInput.value)
-                    )
-                    : 0;
-
-            if (totalWeightInput) {
-                totalWeightInput.value =
-                    (primeWeight + shortWeight)
-                        .toFixed(3);
-            }
-
-            return total;
-        }
-
-        function syncOverallRemarks() {
-            var remarkInputs =
-                productionRows.querySelectorAll(".detail-remarks");
-
-            remarkInputs.forEach(function (input, index) {
-                input.value =
-                    index === 0
-                        ? overallRemarks.value
-                        : "";
-            });
-        }
-
-        function reindexRows() {
-            var rows =
-                productionRows.querySelectorAll(".production-row");
-
-            rows.forEach(function (row, index) {
-                row.setAttribute("data-row-index", index);
-
-                var sequenceCell =
-                    row.querySelector(".row-sequence");
-
-                if (sequenceCell) {
-                    sequenceCell.textContent =
-                        (index + 1);
-                }
-
-                row.querySelectorAll(
-                    "input[name], select[name], textarea[name]"
-                ).forEach(function (input) {
-                    var propertyMatch =
-                        input.name.match(
-                            /^Details\[\d+\]\.(.+)$/
-                        );
-
-                    if (!propertyMatch) return;
-
-                    var property = propertyMatch[1];
-
-                    input.name =
-                        "Details[" + index + "]." + property;
-
-                    input.id =
-                        "Details_" + index + "__" + property;
-
-                    if (property === "SequenceNo") {
-                        input.value = index + 1;
-                    }
-                });
-            });
-
-            syncOverallRemarks();
-        }
-
-        function calculateSummary() {
-            var totalBillets = 0;
-            var goodBillets = 0;
-            var activeRows = 0;
-
-            productionRows
-                .querySelectorAll(".production-row")
-                .forEach(function (row) {
-                    var rowTotal = calculateRow(row);
-
-                    var goodInput =
-                        row.querySelector(".good-billet-input");
-
-                    var gradeInput =
-                        row.querySelector(".grade-input");
-
-                    var good =
-                        goodInput ? toInt(goodInput.value) : 0;
-
-                    var hasGrade =
-                        gradeInput &&
-                        gradeInput.value.trim() !== "";
-
-                    totalBillets += rowTotal;
-                    goodBillets += good;
-
-                    if (rowTotal > 0 || good > 0 || hasGrade) {
-                        activeRows++;
-                    }
-                });
-
-            document.getElementById(
-                "grandTotalBillets"
-            ).innerText = totalBillets;
-
-            document.getElementById(
-                "grandGoodBillets"
-            ).innerText = goodBillets;
-
-            document.getElementById(
-                "grandNonPrimeBillets"
-            ).innerText =
-                Math.max(0, totalBillets - goodBillets);
-
-            document.getElementById(
-                "activeRows"
-            ).innerText = activeRows;
-
-            syncOverallRemarks();
-        }
-
-        function addRow() {
-            var index =
-                productionRows
-                    .querySelectorAll(".production-row")
-                    .length;
-
-            productionRows.appendChild(
-                createProductionRow(index)
-            );
-
-            reindexRows();
-            calculateSummary();
-
-            var newHeatNo =
-                productionRows.lastElementChild
-                    .querySelector(".heat-no-input");
-
-            if (newHeatNo) {
-                newHeatNo.focus();
-            }
-        }
-
-        function removeRow(button) {
-            var rows =
-                productionRows.querySelectorAll(".production-row");
-
-            if (rows.length <= 1) {
-                alert("At least one production row is required.");
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            var productionRows =
+                document.getElementById(
+                    "productionRows"
+                );
+
+            var addRowButton =
+                document.getElementById(
+                    "btnAddProductionRow"
+                );
+
+            var overallRemarks =
+                document.getElementById(
+                    "overallRemarks"
+                );
+
+            if (!productionRows) {
                 return;
             }
 
-            button.closest(".production-row").remove();
+            function toNumber(value) {
+                var parsed =
+                    parseFloat(value);
 
-            reindexRows();
-            calculateSummary();
-        }
+                return isNaN(parsed)
+                    ? 0
+                    : parsed;
+            }
 
-        addButton.addEventListener("click", addRow);
+            function escapeHtml(value) {
+                return String(value || "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
 
-        productionRows.addEventListener(
-            "click",
-            function (event) {
-                var removeButton =
-                    event.target.closest(".btn-remove-row");
+            function getInputByProperty(
+                row,
+                propertyName) {
 
-                if (removeButton) {
-                    removeRow(removeButton);
+                return row.querySelector(
+                    '[name$=".' +
+                    propertyName +
+                    '"]'
+                );
+            }
+
+            function getValue(
+                row,
+                propertyName) {
+
+                var input =
+                    getInputByProperty(
+                        row,
+                        propertyName
+                    );
+
+                if (!input) {
+                    return 0;
+                }
+
+                var value =
+                    Math.max(
+                        0,
+                        toNumber(input.value)
+                    );
+
+                if (toNumber(input.value) < 0) {
+                    input.value = 0;
+                }
+
+                return value;
+            }
+
+            function setValue(
+                row,
+                selector,
+                value,
+                decimalPlaces) {
+
+                var input =
+                    row.querySelector(selector);
+
+                if (!input) {
+                    return;
+                }
+
+                input.value =
+                    Number(value)
+                        .toFixed(decimalPlaces);
+            }
+
+            function numberInput(
+                index,
+                propertyName,
+                className,
+                options) {
+
+                options = options || {};
+
+                var step =
+                    options.step || "1";
+
+                var value =
+                    options.value !== undefined
+                        ? options.value
+                        : "0";
+
+                var readOnly =
+                    options.readOnly
+                        ? " readonly"
+                        : "";
+
+                return (
+                    '<input type="number"' +
+                    ' name="Details[' + index + '].' +
+                    propertyName + '"' +
+                    ' id="Details_' + index + '__' +
+                    propertyName + '"' +
+                    ' class="form-control ' +
+                    className + '"' +
+                    ' value="' + value + '"' +
+                    ' min="0"' +
+                    ' step="' + step + '"' +
+                    readOnly +
+                    ' />'
+                );
+            }
+
+            function textInput(
+                index,
+                propertyName,
+                className,
+                placeholder) {
+
+                return (
+                    '<input type="text"' +
+                    ' name="Details[' + index + '].' +
+                    propertyName + '"' +
+                    ' id="Details_' + index + '__' +
+                    propertyName + '"' +
+                    ' class="form-control ' +
+                    className + '"' +
+                    ' value=""' +
+                    ' placeholder="' +
+                    escapeHtml(placeholder) + '"' +
+                    ' autocomplete="off" />'
+                );
+            }
+
+            function hiddenInput(
+                index,
+                propertyName,
+                className,
+                value) {
+
+                return (
+                    '<input type="hidden"' +
+                    ' name="Details[' + index + '].' +
+                    propertyName + '"' +
+                    ' id="Details_' + index + '__' +
+                    propertyName + '"' +
+                    ' class="' + className + '"' +
+                    ' value="' + escapeHtml(value) + '" />'
+                );
+            }
+
+            function createProductionRow(index) {
+
+                var card =
+                    document.createElement("div");
+
+                card.className =
+                    "production-detail-card production-row";
+
+                card.setAttribute(
+                    "data-row-index",
+                    index
+                );
+
+                card.innerHTML =
+                    '<div class="production-detail-card-header">' +
+                    '<div class="production-card-title">' +
+                    '<span class="production-card-number row-sequence">' +
+                    (index + 1) +
+                    '</span>' +
+                    '<span>Billet Production Entry</span>' +
+                    '</div>' +
+                    '<button type="button"' +
+                    ' class="card-remove-button btn-remove-row no-print"' +
+                    ' title="Remove entry">' +
+                    '<i class="fa fa-trash"></i>' +
+                    '</button>' +
+                    '</div>' +
+
+                    '<div class="production-detail-card-body">' +
+
+                    hiddenInput(
+                        index,
+                        "ID",
+                        "detail-id",
+                        "0"
+                    ) +
+
+                    hiddenInput(
+                        index,
+                        "ReportID",
+                        "detail-report-id",
+                        "0"
+                    ) +
+
+                    hiddenInput(
+                        index,
+                        "SequenceNo",
+                        "detail-sequence",
+                        index + 1
+                    ) +
+
+                    hiddenInput(
+                        index,
+                        "Remarks",
+                        "detail-remarks",
+                        overallRemarks
+                            ? overallRemarks.value
+                            : ""
+                    ) +
+
+                    '<div class="production-card-grid">' +
+
+                    '<div class="form-group">' +
+                    '<label>Heat No.</label>' +
+                    textInput(
+                        index,
+                        "HeatNo",
+                        "heat-no-input",
+                        "Enter heat no."
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                    '<label>Grade</label>' +
+                    textInput(
+                        index,
+                        "Grade",
+                        "grade-input",
+                        "Enter billet grade"
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group calculated-field">' +
+                    '<label>Total Billets</label>' +
+                    numberInput(
+                        index,
+                        "TotalBillets",
+                        "row-total",
+                        {
+                            step: "1",
+                            readOnly: true
+                        }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group calculated-field">' +
+                    '<label>Good / Prime Billets</label>' +
+                    numberInput(
+                        index,
+                        "GoodBillets",
+                        "good-billet-input",
+                        {
+                            step: "1",
+                            readOnly: true
+                        }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                    '<label>Bend</label>' +
+                    numberInput(
+                        index,
+                        "Bend",
+                        "billet-input",
+                        {
+                            step: "1"
+                        }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group weight-field">' +
+                    '<label>Per Unit Weight</label>' +
+                    numberInput(
+                        index,
+                        "PerCoilBundleWeight",
+                        "coil-bundle-weight-input",
+                        {
+                            step: "0.000001"
+                        }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group weight-field">' +
+                    '<label>Prime Billet Weight</label>' +
+                    numberInput(
+                        index,
+                        "PrimeBilletWeight",
+                        "prime-weight-input",
+                        {
+                            step: "0.00001",
+                            value: "0.00000",
+                            readOnly: true
+                        }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group weight-field">' +
+                    '<label>Short Billet Weight</label>' +
+                    numberInput(
+                        index,
+                        "ShortBilletWeight",
+                        "short-weight-input",
+                        {
+                            step: "0.00001",
+                            value: "0.00000",
+                            readOnly: true
+                        }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group calculated-field">' +
+                    '<label>Total Weight</label>' +
+                    numberInput(
+                        index,
+                        "TotalWeight",
+                        "total-weight-input",
+                        {
+                            step: "0.00001",
+                            value: "0.00000",
+                            readOnly: true
+                        }
+                    ) +
+                    '</div>' +
+
+                    '<div class="length-grid span-full">' +
+                    '<div class="length-grid-title">' +
+                    'No. of Billets for 150 × 150' +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                    '<label>14m</label>' +
+                    numberInput(
+                        index,
+                        "Billet14M",
+                        "billet-input",
+                        { step: "1" }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                    '<label>13m</label>' +
+                    numberInput(
+                        index,
+                        "Billet13M",
+                        "billet-input",
+                        { step: "1" }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                    '<label>12m</label>' +
+                    numberInput(
+                        index,
+                        "Billet12M",
+                        "billet-input",
+                        { step: "1" }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                    '<label>11m</label>' +
+                    numberInput(
+                        index,
+                        "Billet11M",
+                        "billet-input",
+                        { step: "1" }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group calculated-field">' +
+                    '<label>Total Length (m)</label>' +
+                    numberInput(
+                        index,
+                        "TotalLength",
+                        "prime-total-length-input",
+                        {
+                            step: "0.00001",
+                            value: "0.00000",
+                            readOnly: true
+                        }
+                    ) +
+                    '</div>' +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                    '<label>Short Billet Quantity</label>' +
+                    numberInput(
+                        index,
+                        "ShortBillets",
+                        "short-billet-quantity-input",
+                        { step: "1" }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                    '<label>Short Billet Total Length (m)</label>' +
+                    numberInput(
+                        index,
+                        "ShortBilletTotalLength",
+                        "short-total-length-input",
+                        {
+                            step: "0.00001",
+                            value: "0.00000"
+                        }
+                    ) +
+                    '</div>' +
+
+                    '<div class="form-group calculated-field">' +
+                    '<label>Short Billet Avg. Length (m)</label>' +
+                    numberInput(
+                        index,
+                        "ShortBilletAvgLength",
+                        "short-average-length-input",
+                        {
+                            step: "0.00001",
+                            value: "0.00000",
+                            readOnly: true
+                        }
+                    ) +
+                    '</div>' +
+
+                    '</div>' +
+                    '</div>';
+
+                return card;
+            }
+
+            function calculateRow(row) {
+
+                var billet14 =
+                    getValue(row, "Billet14M");
+
+                var billet13 =
+                    getValue(row, "Billet13M");
+
+                var billet12 =
+                    getValue(row, "Billet12M");
+
+                var billet11 =
+                    getValue(row, "Billet11M");
+
+                var shortQuantity =
+                    getValue(row, "ShortBillets");
+
+                var shortTotalLength =
+                    getValue(
+                        row,
+                        "ShortBilletTotalLength"
+                    );
+
+                var perUnitWeight =
+                    getValue(
+                        row,
+                        "PerCoilBundleWeight"
+                    );
+
+                var primeQuantity =
+                    billet14 +
+                    billet13 +
+                    billet12 +
+                    billet11;
+
+                var totalLength =
+                    (14 * billet14) +
+                    (13 * billet13) +
+                    (12 * billet12) +
+                    (11 * billet11);
+
+                var shortAverageLength =
+                    shortQuantity > 0
+                        ? shortTotalLength /
+                        shortQuantity
+                        : 0;
+
+                var primeBilletWeight =
+                    totalLength *
+                    perUnitWeight;
+
+                var shortBilletWeight =
+                    shortAverageLength *
+                    perUnitWeight;
+
+                var totalWeight =
+                    primeBilletWeight +
+                    shortBilletWeight;
+
+                var totalBillets =
+                    primeQuantity +
+                    shortQuantity;
+
+                var goodInput =
+                    row.querySelector(
+                        ".good-billet-input"
+                    );
+
+                var totalBilletsInput =
+                    row.querySelector(
+                        ".row-total"
+                    );
+
+                if (goodInput) {
+                    goodInput.value =
+                        Math.round(
+                            primeQuantity
+                        );
+                }
+
+                if (totalBilletsInput) {
+                    totalBilletsInput.value =
+                        Math.round(
+                            totalBillets
+                        );
+                }
+
+                setValue(
+                    row,
+                    ".prime-total-length-input",
+                    totalLength,
+                    5
+                );
+
+                setValue(
+                    row,
+                    ".short-average-length-input",
+                    shortAverageLength,
+                    5
+                );
+
+                setValue(
+                    row,
+                    ".prime-weight-input",
+                    primeBilletWeight,
+                    5
+                );
+
+                setValue(
+                    row,
+                    ".short-weight-input",
+                    shortBilletWeight,
+                    5
+                );
+
+                setValue(
+                    row,
+                    ".total-weight-input",
+                    totalWeight,
+                    5
+                );
+
+                return {
+                    totalBillets:
+                        totalBillets,
+
+                    primeBillets:
+                        primeQuantity,
+
+                    shortBillets:
+                        shortQuantity
+                };
+            }
+
+            function syncRemarks() {
+                var value =
+                    overallRemarks
+                        ? overallRemarks.value
+                        : "";
+
+                productionRows
+                    .querySelectorAll(
+                        ".detail-remarks"
+                    )
+                    .forEach(
+                        function (input) {
+                            input.value = value;
+                        }
+                    );
+            }
+
+            function updateRemoveButtons() {
+                var rows =
+                    productionRows
+                        .querySelectorAll(
+                            ".production-row"
+                        );
+
+                rows.forEach(
+                    function (row) {
+                        var button =
+                            row.querySelector(
+                                ".btn-remove-row"
+                            );
+
+                        if (button) {
+                            button.style.display =
+                                rows.length === 1
+                                    ? "none"
+                                    : "";
+                        }
+                    }
+                );
+            }
+
+            function reIndexRows() {
+                var rows =
+                    productionRows
+                        .querySelectorAll(
+                            ".production-row"
+                        );
+
+                rows.forEach(
+                    function (row, index) {
+
+                        row.setAttribute(
+                            "data-row-index",
+                            index
+                        );
+
+                        var number =
+                            row.querySelector(
+                                ".row-sequence"
+                            );
+
+                        if (number) {
+                            number.textContent =
+                                index + 1;
+                        }
+
+                        row.querySelectorAll(
+                            "input, select, textarea"
+                        ).forEach(
+                            function (input) {
+
+                                var name =
+                                    input.getAttribute(
+                                        "name"
+                                    );
+
+                                if (name) {
+                                    input.setAttribute(
+                                        "name",
+                                        name.replace(
+                                            /Details\[\d+\]/,
+                                            "Details[" +
+                                            index +
+                                            "]"
+                                        )
+                                    );
+                                }
+
+                                var id =
+                                    input.getAttribute(
+                                        "id"
+                                    );
+
+                                if (id) {
+                                    input.setAttribute(
+                                        "id",
+                                        id.replace(
+                                            /Details_\d+__/,
+                                            "Details_" +
+                                            index +
+                                            "__"
+                                        )
+                                    );
+                                }
+                            }
+                        );
+
+                        var sequenceInput =
+                            row.querySelector(
+                                ".detail-sequence"
+                            );
+
+                        if (sequenceInput) {
+                            sequenceInput.value =
+                                index + 1;
+                        }
+                    }
+                );
+
+                updateRemoveButtons();
+            }
+
+            function calculateSummary() {
+
+                var totalBillets = 0;
+                var primeBillets = 0;
+                var shortBillets = 0;
+                var activeRows = 0;
+
+                productionRows
+                    .querySelectorAll(
+                        ".production-row"
+                    )
+                    .forEach(
+                        function (row) {
+
+                            var result =
+                                calculateRow(row);
+
+                            totalBillets +=
+                                result.totalBillets;
+
+                            primeBillets +=
+                                result.primeBillets;
+
+                            shortBillets +=
+                                result.shortBillets;
+
+                            var heatInput =
+                                row.querySelector(
+                                    ".heat-no-input"
+                                );
+
+                            var gradeInput =
+                                row.querySelector(
+                                    ".grade-input"
+                                );
+
+                            var hasHeader =
+                                (
+                                    heatInput &&
+                                    heatInput.value.trim() !== ""
+                                ) ||
+                                (
+                                    gradeInput &&
+                                    gradeInput.value.trim() !== ""
+                                );
+
+                            if (
+                                result.totalBillets > 0 ||
+                                hasHeader
+                            ) {
+                                activeRows++;
+                            }
+                        }
+                    );
+
+                var grandTotal =
+                    document.getElementById(
+                        "grandTotalBillets"
+                    );
+
+                var grandPrime =
+                    document.getElementById(
+                        "grandGoodBillets"
+                    );
+
+                var grandShort =
+                    document.getElementById(
+                        "grandNonPrimeBillets"
+                    );
+
+                var activeRowsElement =
+                    document.getElementById(
+                        "activeRows"
+                    );
+
+                if (grandTotal) {
+                    grandTotal.innerText =
+                        Math.round(totalBillets);
+                }
+
+                if (grandPrime) {
+                    grandPrime.innerText =
+                        Math.round(primeBillets);
+                }
+
+                if (grandShort) {
+                    grandShort.innerText =
+                        Math.round(shortBillets);
+                }
+
+                if (activeRowsElement) {
+                    activeRowsElement.innerText =
+                        activeRows;
                 }
             }
-        );
 
-        productionRows.addEventListener(
-            "input",
-            calculateSummary
-        );
+            if (addRowButton) {
+                addRowButton.addEventListener(
+                    "click",
+                    function () {
 
-        productionRows.addEventListener(
-            "change",
-            calculateSummary
-        );
+                        var index =
+                            productionRows
+                                .querySelectorAll(
+                                    ".production-row"
+                                )
+                                .length;
 
-        overallRemarks.addEventListener(
-            "input",
-            syncOverallRemarks
-        );
+                        var newRow =
+                            createProductionRow(
+                                index
+                            );
 
-        var form =
-            document.getElementById("ccmProductionForm");
+                        productionRows.appendChild(
+                            newRow
+                        );
 
-        if (form) {
-            form.addEventListener(
-                "submit",
-                function () {
-                    reindexRows();
-                    calculateSummary();
-                    syncOverallRemarks();
+                        reIndexRows();
+                        syncRemarks();
+                        calculateSummary();
+
+                        var heatInput =
+                            newRow.querySelector(
+                                ".heat-no-input"
+                            );
+
+                        if (heatInput) {
+                            heatInput.focus();
+                        }
+                    }
+                );
+            }
+
+            productionRows.addEventListener(
+                "click",
+                function (event) {
+
+                    var removeButton =
+                        event.target.closest(
+                            ".btn-remove-row"
+                        );
+
+                    if (!removeButton) {
+                        return;
+                    }
+
+                    var rows =
+                        productionRows
+                            .querySelectorAll(
+                                ".production-row"
+                            );
+
+                    if (rows.length <= 1) {
+                        return;
+                    }
+
+                    var row =
+                        removeButton.closest(
+                            ".production-row"
+                        );
+
+                    if (row) {
+                        row.remove();
+                        reIndexRows();
+                        calculateSummary();
+                    }
                 }
             );
-        }
 
-        reindexRows();
-        calculateSummary();
-    });
+            productionRows.addEventListener(
+                "input",
+                calculateSummary
+            );
+
+            productionRows.addEventListener(
+                "change",
+                calculateSummary
+            );
+
+            if (overallRemarks) {
+                overallRemarks.addEventListener(
+                    "input",
+                    syncRemarks
+                );
+            }
+
+            var form =
+                document.getElementById(
+                    "ccmProductionForm"
+                );
+
+            if (form) {
+                form.addEventListener(
+                    "submit",
+                    function () {
+                        reIndexRows();
+                        syncRemarks();
+                        calculateSummary();
+                    }
+                );
+            }
+
+            reIndexRows();
+            syncRemarks();
+            calculateSummary();
+        }
+    );
 </script>
+

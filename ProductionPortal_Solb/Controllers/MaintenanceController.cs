@@ -8,9 +8,13 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.SessionState;
 
 namespace ProductionPortal_Solb.Controllers
 {
+    [SessionState(
+    SessionStateBehavior.ReadOnly
+    )]
     public class MaintenanceController : Controller
     {
         DelayRespository repo = new DelayRespository();
@@ -25,8 +29,8 @@ namespace ProductionPortal_Solb.Controllers
             DateTime? fromDate,
             DateTime? toDate,
             string plant,
-            string delayType,
-            string agency)
+            string[] agency,
+            string[] delayType)
         {
             DateTime startDate =
                 fromDate ?? DateTime.Today;
@@ -34,10 +38,17 @@ namespace ProductionPortal_Solb.Controllers
             DateTime endDate =
                 toDate ?? DateTime.Today;
 
-            delayType =
-                string.IsNullOrWhiteSpace(delayType)
-                    ? "Unscheduled"
-                    : delayType;
+            string agencyCsv =
+                agency != null &&
+                agency.Length > 0
+                    ? string.Join(",", agency)
+                    : null;
+
+            string delayTypeCsv =
+                delayType != null &&
+                delayType.Length > 0
+                    ? string.Join(",", delayType)
+                    : null;
 
             ViewBag.FromDate =
                 startDate.ToString("yyyy-MM-dd");
@@ -46,19 +57,20 @@ namespace ProductionPortal_Solb.Controllers
                 endDate.ToString("yyyy-MM-dd");
 
             ViewBag.Plant = plant;
-            ViewBag.DelayType = delayType;
-            ViewBag.Agency = agency;
+            ViewBag.Agency = agencyCsv;
+            ViewBag.DelayType = delayTypeCsv;
 
-            var model = repo.GetMaintenanceRecords(
-                startDate,
-                endDate,
-                plant,
-                delayType,
-                agency,
-                false
-            );
+            var records =
+                repo.GetMaintenanceRecords(
+                    startDate,
+                    endDate,
+                    plant,
+                    delayTypeCsv,
+                    agencyCsv,
+                    false
+                );
 
-            return View(model);
+            return View(records);
         }
 
         public ActionResult detail(int id)
@@ -196,80 +208,6 @@ namespace ProductionPortal_Solb.Controllers
             }
         }
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public ActionResult InsertMaintenanceAnalysis(
-        //    FailureAnalysisBLL model,
-        //    string[] IncreaseMTBFAction,
-        //    string[] DecreaseMTTRAction)
-        //{
-        //    try
-        //    {
-        //        if (model == null)
-        //        {
-        //            TempData["ErrorMessage"] = "Invalid data.";
-        //            return RedirectToAction("list");
-        //        }
-
-        //        if (model.DelayID <= 0)
-        //        {
-        //            TempData["ErrorMessage"] = "Invalid Delay ID.";
-        //            return RedirectToAction("list");
-        //        }
-
-        //        int analysisID = 0;
-        //        int result = 0;
-
-        //        // New analysis
-        //        if (model.ID <= 0)
-        //        {
-        //            model.AnalysisCode = repo.GenerateAnalysisCode();
-        //            model.StatusID = 1;
-        //            model.CreatedBy = User.Identity.Name;
-        //            model.CreatedDate = DateTime.Now;
-
-        //            result = repo.InsertMaintenanceAnalysis(model);
-
-        //            // Agar aapka insert SP ID return nahi karta to analysisID 0 rahega.
-        //            // Actions DelayID ke against save ho jayengi.
-        //            analysisID = model.ID;
-        //        }
-        //        else
-        //        {
-        //            // Existing analysis update case
-        //            model.UpdatedBy = User.Identity.Name;
-        //            model.UpdatedDate = DateTime.Now;
-
-        //            //result = repo.UpdateMaintenanceAnalysis(model);
-        //            analysisID = model.ID;
-        //        }
-
-        //        if (result < 0)
-        //        {
-        //            SaveMtbfMttrActions((int)model.DelayID, analysisID, IncreaseMTBFAction, DecreaseMTTRAction);
-
-        //            TempData["SuccessMessage"] = "Maintenance analysis saved successfully.";
-        //        }
-        //        else
-        //        {
-        //            TempData["ErrorMessage"] = "Maintenance analysis not saved.";
-        //        }
-
-        //        return RedirectToAction("detail", new { id = model.DelayID });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        TempData["ErrorMessage"] = "Error: " + ex.Message;
-
-        //        int delayID = (int)(model != null ? model.DelayID : 0);
-
-        //        if (delayID > 0)
-        //            return RedirectToAction("detail", new { id = delayID });
-
-        //        return RedirectToAction("list");
-        //    }
-        //}
-
         private void SaveMtbfMttrActions(
     int delayID,
     int analysisID,
@@ -327,11 +265,11 @@ namespace ProductionPortal_Solb.Controllers
         }
 
         public ActionResult ExportFailureAnalysisExcel(
-            DateTime? fromDate,
-            DateTime? toDate,
-            string plant,
-            string delayType,
-            string agency)
+         DateTime? fromDate,
+         DateTime? toDate,
+         string plant,
+         string[] agency,
+         string[] delayType)
         {
             DateTime startDate =
                 fromDate ?? DateTime.Today;
@@ -339,19 +277,24 @@ namespace ProductionPortal_Solb.Controllers
             DateTime endDate =
                 toDate ?? DateTime.Today;
 
-            delayType =
-                string.IsNullOrWhiteSpace(delayType)
-                    ? "Unscheduled"
-                    : delayType.Trim();
+            string agencyCsv =
+                agency != null
+                    ? string.Join(",", agency)
+                    : null;
 
-            List<PlantDelayBLL> records =
+            string delayTypeCsv =
+                delayType != null
+                    ? string.Join(",", delayType)
+                    : null;
+
+            var records =
                 repo.GetMaintenanceRecords(
-                    startDate,
-                    endDate,
+                    fromDate ?? DateTime.Today,
+                    toDate ?? DateTime.Today,
                     plant,
-                    delayType,
-                    agency,
-                    false
+                    delayTypeCsv,
+                    agencyCsv,
+                    true
                 );
 
             using (var workbook = new XLWorkbook())

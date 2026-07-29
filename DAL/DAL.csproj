@@ -88,12 +88,12 @@
     <Compile Include="Models\BilletChargingBLL.cs" />
     <Compile Include="Models\BilletDischargingBLL.cs" />
     <Compile Include="Models\BilletGrades.cs" />
+    <Compile Include="Models\BilletYardBLL.cs" />
     <Compile Include="Models\BundlingSectionBLL.cs" />
     <Compile Include="Models\CCMDailyProductionReportBLL.cs" />
     <Compile Include="Models\CCMYeildBLL.cs" />
     <Compile Include="Models\CCMBLL.cs" />
     <Compile Include="Models\CCMChemicalAnalysisBLL.cs" />
-    <Compile Include="Models\CCMDailyProductionReportDetailBLL.cs" />
     <Compile Include="Models\CMDPerformanceDashboardVM.cs" />
     <Compile Include="Models\DailySummaryReportBLL.cs" />
     <Compile Include="Models\DelayAgencyBLL.cs" />

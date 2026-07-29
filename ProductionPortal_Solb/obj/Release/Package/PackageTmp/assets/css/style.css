@@ -44,7 +44,39 @@
 40. Responsive
 */
 /*@import url("https://fonts.googleapis.com/css?family=Comfortaa:300,400,700");*/
-@import url('https://fonts.googleapis.com/css2?family=Offside&display=swap');
+
+/*
+    Local Offside font for IIS deployment.
+
+    Expected folders:
+      Content/css/style.css
+      Content/fonts/offside-latin-400-normal.woff2
+      Content/fonts/offside-latin-400-normal.woff
+      Content/fonts/offside-latin-400-normal.ttf
+      Content/fonts/offside-latin-ext-400-normal.woff2
+      Content/fonts/offside-latin-ext-400-normal.woff
+      Content/fonts/offside-latin-ext-400-normal.ttf
+*/
+
+@font-face {
+    font-family: "Offside";
+    src: url("../fonts/offside-latin-ext-400-normal.woff2") format("woff2"), url("../fonts/offside-latin-ext-400-normal.woff") format("woff"), url("../fonts/offside-latin-ext-400-normal.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: "Offside";
+    src: url("../fonts/offside-latin-400-normal.woff2") format("woff2"), url("../fonts/offside-latin-400-normal.woff") format("woff"), url("../fonts/offside-latin-400-normal.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
 /* 
 ===============
     General
@@ -56,13 +88,13 @@ html {
 }
 
 .offside-regular {
-    font-family: "Offside", sans-serif;
+    font-family: "Offside", Arial, sans-serif;
     font-weight: 400;
     font-style: normal;
 }
 
 body {
-    font-family: "Offside", sans-serif;
+    font-family: "Offside", Arial, sans-serif;
     margin: 0;
     background: #F0F4F9;
     font-size: 15px;
@@ -70,6 +102,27 @@ body {
     color: #8A98AC;
     line-height: 1.5;
 }
+
+html,
+body,
+button,
+input,
+select,
+textarea,
+option,
+.form-control,
+.btn,
+.dropdown-menu,
+.table,
+.modal,
+.modal-title,
+.tooltip,
+.popover,
+.popover-header,
+.popover-body {
+    font-family: "Offside", Arial, sans-serif !important;
+}
+
 
 .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
@@ -1775,7 +1828,7 @@ a.text-dark:hover {
 
 /* -----  Popover  ----- */
 .popover {
-    font-family: "Comfortaa", cursive;
+    font-family: "Offside", Arial, sans-serif;
     border-radius: 5px;
     border: 1px solid #e1e4e9;
     box-shadow: 0 0 30px 0 rgba(200, 200, 200, 0.2);
@@ -3258,7 +3311,7 @@ a.text-dark:hover {
 ===================
 */
 .swal2-modal {
-    font-family: "Comfortaa", cursive;
+    font-family: "Offside", Arial, sans-serif;
 }
 
     .swal2-modal .swal2-title {
@@ -4627,7 +4680,7 @@ label {
 =========================
 */
 .datepicker {
-    font-family: "Comfortaa", cursive;
+    font-family: "Offside", Arial, sans-serif;
     color: #8A98AC;
     border: 1px solid #f0f1f4;
     box-shadow: 0 0 30px 0 rgba(200, 200, 200, 0.2);
@@ -4724,11 +4777,11 @@ label {
     }
 
 .datepicker--time-current-hours {
-    font-family: "Comfortaa", cursive;
+    font-family: "Offside", Arial, sans-serif;
 }
 
 .datepicker--time-current-minutes {
-    font-family: "Comfortaa", cursive;
+    font-family: "Offside", Arial, sans-serif;
 }
 
 .datepicker--buttons {
@@ -6143,7 +6196,7 @@ label {
     padding: 3px 12px;
     background: #313131;
     color: #ffffff;
-    font-family: "Comfortaa", cursive;
+    font-family: "Offside", Arial, sans-serif;
     font-weight: 400;
     text-align: center;
     border-radius: 5px;
@@ -6188,7 +6241,7 @@ canvas {
 
 /* -----  C3 chart ----- */
 .c3 svg {
-    font-family: "Comfortaa", cursive;
+    font-family: "Offside", Arial, sans-serif;
     font-size: 14px;
 }
 
@@ -6306,7 +6359,7 @@ canvas {
 }
 
     .morris-chart tspan {
-        font-family: "Comfortaa", cursive;
+        font-family: "Offside", Arial, sans-serif;
         color: #8A98AC;
         font-size: 14px;
         font-weight: 400;
@@ -6318,7 +6371,7 @@ canvas {
     color: #ffffff;
     background: #313131;
     border: none;
-    font-family: "Comfortaa", cursive;
+    font-family: "Offside", Arial, sans-serif;
     font-size: 14px;
     text-align: center;
 }

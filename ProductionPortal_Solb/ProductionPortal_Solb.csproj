@@ -2485,6 +2485,12 @@
     <Content Include="assets\fonts\letters_for_learners\Letters for Learners Outline Light.ttf" />
     <Content Include="assets\fonts\letters_for_learners\Letters for Learners Outline.ttf" />
     <Content Include="assets\fonts\letters_for_learners\Letters for Learners.ttf" />
+    <Content Include="assets\fonts\offside-latin-400-normal.ttf" />
+    <Content Include="assets\fonts\offside-latin-400-normal.woff" />
+    <Content Include="assets\fonts\offside-latin-400-normal.woff2" />
+    <Content Include="assets\fonts\offside-latin-ext-400-normal.ttf" />
+    <Content Include="assets\fonts\offside-latin-ext-400-normal.woff" />
+    <Content Include="assets\fonts\offside-latin-ext-400-normal.woff2" />
     <None Include="packages.config" />
     <Content Include="Views\Login\login.cshtml" />
     <Content Include="Views\UserRole\add.cshtml" />
@@ -2586,6 +2592,7 @@
     <Content Include="Views\CCMProduction\List.cshtml" />
     <Content Include="Views\CCMProduction\PdfReport.cshtml" />
     <Content Include="Views\DelayCounterMeasure\add.cshtml" />
+    <Content Include="Views\CCMProduction\Add - Copy.cshtml" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -15,11 +15,14 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.SessionState;
 using static DAL.Models.ViewModel;
 
 namespace ProductionPortal_Solb.Controllers
 {
-    [NoCache]
+    [SessionState(
+    SessionStateBehavior.ReadOnly
+    )]
     public class QualityController : Controller
     {
         QualityRepository repo;

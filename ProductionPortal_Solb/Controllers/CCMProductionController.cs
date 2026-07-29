@@ -1,118 +1,118 @@
 ﻿using BAL.Repositories;
 using DAL.Models;
-using DAL.Repository;
 using Rotativa;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
+using System.Web.SessionState;
 
 namespace ProductionPortal_Solb.Controllers
 {
-    public class CCMProductionController : Controller
+    [SessionState(
+        SessionStateBehavior.ReadOnly
+    )]
+    public class CCMProductionController :
+        Controller
     {
-        private readonly CCMDailyProductionRepository repo;
+        private readonly
+            CCMDailyProductionRepository repo;
 
         public CCMProductionController()
         {
-            repo = new CCMDailyProductionRepository();
+            repo =
+                new CCMDailyProductionRepository();
         }
 
-        #region Add / Edit GET
+        #region Add / Edit
 
         [HttpGet]
-        public ActionResult Add(int? id)
+        public ActionResult Add(
+            int? id)
         {
             CCMDailyProductionReportBLL model;
 
-            if (id.HasValue && id.Value > 0)
+            if (id.HasValue &&
+                id.Value > 0)
             {
-                model = repo.GetByID(id.Value);
+                model =
+                    repo.GetByID(
+                        id.Value
+                    );
 
                 if (model == null)
                 {
-                    return HttpNotFound();
+                    TempData["Error"] =
+                        "Billet Yard report not found.";
+
+                    return RedirectToAction(
+                        "List"
+                    );
                 }
             }
             else
             {
-                model = new CCMDailyProductionReportBLL
-                {
-                    ReportDate = DateTime.Today,
-
-                    ReportNo =
-                        "CCM-" +
-                        DateTime.Today.ToString("yyyyMMdd"),
-
-                    StatusID = 1,
-
-                    Details =
-                        new List<
-                            CCMDailyProductionReportDetailBLL
-                        >()
-                };
+                model =
+                    new CCMDailyProductionReportBLL();
             }
 
-            PrepareDetailRows(model);
-            LoadDropdowns(model.Shift);
+            EnsureAtLeastOneDetailRow(
+                model
+            );
+
+            LoadDropdowns(
+                model.Shift
+            );
 
             return View(model);
         }
-
-        #endregion
-
-        #region Add / Edit POST
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Add(
             CCMDailyProductionReportBLL model)
         {
-            PrepareDetailRows(model);
-
-            ValidateReport(model);
-
-            if (!ModelState.IsValid)
+            if (model == null)
             {
-                LoadDropdowns(model.Shift);
-                return View(model);
+                model =
+                    new CCMDailyProductionReportBLL();
             }
+
+            LoadDropdowns(
+                model.Shift
+            );
 
             try
             {
-                string userName =
-                    Convert.ToString(
-                        Session["UserName"] ??
-                        Session["EmployeeNo"] ??
-                        User.Identity.Name
-                    );
+                NormalizeDetailRows(model);
+                ValidateReport(model);
 
-                model.CreatedBy =
-                    string.IsNullOrWhiteSpace(userName)
-                        ? "System"
-                        : userName;
-
-                int savedID = repo.Save(model);
-
-                if (savedID > 0)
+                if (!ModelState.IsValid)
                 {
-                    TempData["Success"] =
-                        model.ID > 0
-                            ? "CCM daily production report updated successfully."
-                            : "CCM daily production report saved successfully.";
-
-                    return RedirectToAction(
-                        "Details",
-                        new
-                        {
-                            id = savedID
-                        }
+                    EnsureAtLeastOneDetailRow(
+                        model
                     );
+
+                    return View(model);
                 }
 
-                ModelState.AddModelError(
-                    "",
-                    "Report could not be saved."
+                model.CreatedBy =
+                    GetCurrentUser();
+
+                int savedID =
+                    repo.Save(model);
+
+                TempData["Success"] =
+                    model.ID > 0
+                        ? "Billet Yard report updated successfully."
+                        : "Billet Yard report saved successfully.";
+
+                return RedirectToAction(
+                    "Add",
+                    new
+                    {
+                        id = savedID
+                    }
                 );
             }
             catch (Exception ex)
@@ -121,29 +121,17 @@ namespace ProductionPortal_Solb.Controllers
                     "",
                     ex.Message
                 );
+
+                EnsureAtLeastOneDetailRow(
+                    model
+                );
+
+                LoadDropdowns(
+                    model.Shift
+                );
+
+                return View(model);
             }
-
-            LoadDropdowns(model.Shift);
-
-            return View(model);
-        }
-
-        #endregion
-
-        #region Details
-
-        [HttpGet]
-        public ActionResult Details(int id)
-        {
-            CCMDailyProductionReportBLL model =
-                repo.GetByID(id);
-
-            if (model == null)
-            {
-                return HttpNotFound();
-            }
-
-            return View(model);
         }
 
         #endregion
@@ -168,19 +156,45 @@ namespace ProductionPortal_Solb.Controllers
             }
 
             ViewBag.FromDate =
-                startDate.ToString("yyyy-MM-dd");
+                startDate.ToString(
+                    "yyyy-MM-dd"
+                );
 
             ViewBag.ToDate =
-                endDate.ToString("yyyy-MM-dd");
+                endDate.ToString(
+                    "yyyy-MM-dd"
+                );
 
-            ViewBag.Shift = shift;
+            ViewBag.Shift =
+                shift;
 
-            List<CCMDailyProductionReportBLL> model =
+            List<
+                CCMDailyProductionReportBLL
+            > list =
                 repo.GetAll(
                     startDate,
                     endDate,
                     shift
                 );
+
+            return View(list);
+        }
+
+        #endregion
+
+        #region Details
+
+        [HttpGet]
+        public ActionResult Details(
+            int id)
+        {
+            CCMDailyProductionReportBLL model =
+                repo.GetByID(id);
+
+            if (model == null)
+            {
+                return HttpNotFound();
+            }
 
             return View(model);
         }
@@ -191,48 +205,113 @@ namespace ProductionPortal_Solb.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id)
+        public JsonResult Delete(
+            int id)
         {
             try
             {
-                string userName =
-                    Convert.ToString(
-                        Session["UserName"] ??
-                        Session["EmployeeNo"] ??
-                        User.Identity.Name
+                bool deleted =
+                    repo.Delete(
+                        id,
+                        GetCurrentUser()
                     );
 
-                bool deleted = repo.Delete(
-                    id,
-                    string.IsNullOrWhiteSpace(userName)
-                        ? "System"
-                        : userName
-                );
+                return Json(
+                    new
+                    {
+                        success = deleted,
 
-                if (deleted)
-                {
-                    TempData["Success"] =
-                        "CCM production report deleted successfully.";
-                }
-                else
-                {
-                    TempData["Error"] =
-                        "Report could not be deleted.";
-                }
+                        message =
+                            deleted
+                                ? "Report deleted successfully."
+                                : "Unable to delete report."
+                    }
+                );
             }
             catch (Exception ex)
             {
-                TempData["Error"] = ex.Message;
+                return Json(
+                    new
+                    {
+                        success = false,
+                        message = ex.Message
+                    }
+                );
+            }
+        }
+
+        #endregion
+
+        #region PDF
+
+        [HttpGet]
+        public ActionResult DownloadPdf(
+            int id)
+        {
+            CCMDailyProductionReportBLL model =
+                repo.GetByID(id);
+
+            if (model == null)
+            {
+                return HttpNotFound();
             }
 
-            return RedirectToAction("List");
+            string safeShift =
+                string.IsNullOrWhiteSpace(
+                    model.Shift
+                )
+                    ? "NoShift"
+                    : model.Shift.Replace(
+                        " ",
+                        "_"
+                    );
+
+            string fileName =
+                "CCM_Daily_Production_" +
+                model.ReportDate.ToString(
+                    "yyyyMMdd"
+                ) +
+                "_" +
+                safeShift +
+                ".pdf";
+
+            return new ViewAsPdf(
+                "PdfReport",
+                model
+            )
+            {
+                FileName =
+                    fileName,
+
+                PageSize =
+                    Rotativa.Options.Size.A4,
+
+                PageOrientation =
+                    Rotativa.Options
+                        .Orientation
+                        .Landscape,
+
+                PageMargins =
+                    new Rotativa.Options.Margins
+                    {
+                        Top = 8,
+                        Bottom = 8,
+                        Left = 8,
+                        Right = 8
+                    },
+
+                CustomSwitches =
+                    "--print-media-type " +
+                    "--disable-smart-shrinking " +
+                    "--encoding utf-8"
+            };
         }
 
         #endregion
 
         #region Private Methods
 
-        private void PrepareDetailRows(
+        private void NormalizeDetailRows(
             CCMDailyProductionReportBLL model)
         {
             if (model.Details == null)
@@ -241,31 +320,65 @@ namespace ProductionPortal_Solb.Controllers
                     new List<
                         CCMDailyProductionReportDetailBLL
                     >();
+
+                return;
             }
 
-            int requiredRows = 9;
-
-            while (model.Details.Count < requiredRows)
-            {
-                model.Details.Add(
-                    new CCMDailyProductionReportDetailBLL()
-                );
-            }
+            model.Details =
+                model.Details
+                    .Where(
+                        x =>
+                            x != null &&
+                            IsDetailRowEntered(x)
+                    )
+                    .ToList();
 
             for (
                 int index = 0;
                 index < model.Details.Count;
                 index++)
             {
-                model.Details[index].SequenceNo =
-                    index + 1;
+                model.Details[index]
+                    .SequenceNo =
+                        index + 1;
             }
+        }
+
+        private bool IsDetailRowEntered(
+            CCMDailyProductionReportDetailBLL row)
+        {
+            return
+                !string.IsNullOrWhiteSpace(
+                    row.HeatNo
+                ) ||
+                !string.IsNullOrWhiteSpace(
+                    row.Grade
+                ) ||
+                row.Billet14M > 0 ||
+                row.Billet13M > 0 ||
+                row.Billet12M > 0 ||
+                row.Billet11M > 0 ||
+                row.GoodBillets > 0 ||
+                row.ShortBillets > 0 ||
+                row.Bend > 0 ||
+                row.TotalBillets > 0 ||
+                (row.TotalLength ?? 0M) > 0 ||
+                (row.ShortBilletTotalLength ?? 0M) > 0 ||
+                (row.ShortBilletAvgLength ?? 0M) > 0 ||
+                (row.PerCoilBundleWeight ?? 0M) > 0 ||
+                (row.PrimeBilletWeight ?? 0M) > 0 ||
+                (row.ShortBilletWeight ?? 0M) > 0 ||
+                (row.TotalWeight ?? 0M) > 0 ||
+                !string.IsNullOrWhiteSpace(
+                    row.Remarks
+                );
         }
 
         private void ValidateReport(
             CCMDailyProductionReportBLL model)
         {
-            if (model.ReportDate == DateTime.MinValue)
+            if (model.ReportDate ==
+                DateTime.MinValue)
             {
                 ModelState.AddModelError(
                     "ReportDate",
@@ -273,7 +386,8 @@ namespace ProductionPortal_Solb.Controllers
                 );
             }
 
-            if (string.IsNullOrWhiteSpace(model.ReportNo))
+            if (string.IsNullOrWhiteSpace(
+                model.ReportNo))
             {
                 ModelState.AddModelError(
                     "ReportNo",
@@ -281,7 +395,8 @@ namespace ProductionPortal_Solb.Controllers
                 );
             }
 
-            if (string.IsNullOrWhiteSpace(model.Shift))
+            if (string.IsNullOrWhiteSpace(
+                model.Shift))
             {
                 ModelState.AddModelError(
                     "Shift",
@@ -289,29 +404,14 @@ namespace ProductionPortal_Solb.Controllers
                 );
             }
 
-            bool hasAnyProductionRow =
-                model.Details != null &&
-                model.Details.Any(x =>
-                    !string.IsNullOrWhiteSpace(
-                        x.Grade
-                    ) ||
-                    x.TotalBillets > 0 ||
-                    x.GoodBillets > 0 ||
-                    !string.IsNullOrWhiteSpace(
-                        x.Remarks
-                    )
-                );
-
-            if (!hasAnyProductionRow)
+            if (model.Details == null ||
+                model.Details.Count == 0)
             {
                 ModelState.AddModelError(
                     "",
                     "Please enter at least one production row."
                 );
-            }
 
-            if (model.Details == null)
-            {
                 return;
             }
 
@@ -329,7 +429,30 @@ namespace ProductionPortal_Solb.Controllers
                         "Details[" +
                         index +
                         "].GoodBillets",
+
                         "Good billets cannot be negative."
+                    );
+                }
+
+                if (row.ShortBillets < 0)
+                {
+                    ModelState.AddModelError(
+                        "Details[" +
+                        index +
+                        "].ShortBillets",
+
+                        "Short billets cannot be negative."
+                    );
+                }
+
+                if (row.TotalBillets < 0)
+                {
+                    ModelState.AddModelError(
+                        "Details[" +
+                        index +
+                        "].TotalBillets",
+
+                        "Total billets cannot be negative."
                     );
                 }
 
@@ -340,14 +463,62 @@ namespace ProductionPortal_Solb.Controllers
                         "Details[" +
                         index +
                         "].GoodBillets",
+
                         "Good billets cannot exceed total billets."
+                    );
+                }
+
+                if (
+                    row.ShortBillets > 0 &&
+                    (row.ShortBilletTotalLength ?? 0M) <= 0)
+                {
+                    ModelState.AddModelError(
+                        "Details[" +
+                        index +
+                        "].ShortBilletTotalLength",
+
+                        "Short billet total length is required when short billet quantity is entered."
+                    );
+                }
+
+                if (
+                    (row.PerCoilBundleWeight ?? 0M) < 0)
+                {
+                    ModelState.AddModelError(
+                        "Details[" +
+                        index +
+                        "].PerCoilBundleWeight",
+
+                        "Per unit weight cannot be negative."
                     );
                 }
             }
         }
 
+        private void EnsureAtLeastOneDetailRow(
+            CCMDailyProductionReportBLL model)
+        {
+            if (model.Details == null)
+            {
+                model.Details =
+                    new List<
+                        CCMDailyProductionReportDetailBLL
+                    >();
+            }
+
+            if (model.Details.Count == 0)
+            {
+                model.Details.Add(
+                    new CCMDailyProductionReportDetailBLL
+                    {
+                        SequenceNo = 1
+                    }
+                );
+            }
+        }
+
         private void LoadDropdowns(
-            string selectedShift = null)
+            string selectedShift)
         {
             List<string> shifts =
                 new List<string>
@@ -366,53 +537,19 @@ namespace ProductionPortal_Solb.Controllers
                 );
         }
 
-        #endregion
-
-        [HttpGet]
-        public ActionResult DownloadPdf(int id)
+        private string GetCurrentUser()
         {
-            CCMDailyProductionReportBLL model =
-                repo.GetByID(id);
+            string userName =
+                Convert.ToString(
+                    Session["UserName"]
+                );
 
-            if (model == null)
-            {
-                return HttpNotFound();
-            }
-
-            string fileName =
-                "CCM_Daily_Production_" +
-                model.ReportDate.ToString("yyyyMMdd") +
-                "_" +
-                model.Shift.Replace(" ", "_") +
-                ".pdf";
-
-            return new ViewAsPdf(
-                "PdfReport",
-                model
-            )
-            {
-                FileName = fileName,
-
-                PageSize =
-                    Rotativa.Options.Size.A4,
-
-                PageOrientation =
-                    Rotativa.Options.Orientation.Landscape,
-
-                PageMargins =
-                    new Rotativa.Options.Margins
-                    {
-                        Top = 8,
-                        Bottom = 8,
-                        Left = 8,
-                        Right = 8
-                    },
-
-                CustomSwitches =
-                    "--print-media-type " +
-                    "--disable-smart-shrinking " +
-                    "--encoding utf-8"
-            };
+            return string.IsNullOrWhiteSpace(
+                userName)
+                    ? User.Identity.Name
+                    : userName;
         }
+
+        #endregion
     }
 }

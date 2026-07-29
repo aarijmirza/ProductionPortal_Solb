@@ -9,12 +9,16 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.SessionState;
 using System.Xml.Linq;
 using WebAPICode.Helpers;
 using static DAL.Models.ViewModel;
 
 namespace ProductionPortal_Solb.Controllers
 {
+    [SessionState(
+    SessionStateBehavior.ReadOnly
+    )]
     public class DelayController : BaseController
     {
         DelayRespository repo;

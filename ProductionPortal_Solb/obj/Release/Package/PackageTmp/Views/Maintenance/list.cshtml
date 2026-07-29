@@ -5,15 +5,27 @@
     var delay =
         Model as List<DAL.Models.PlantDelayBLL>;
 
-    string selectedDelayType =
-        string.IsNullOrWhiteSpace(
-            Convert.ToString(ViewBag.DelayType)
-        )
-            ? "Unscheduled"
-            : Convert.ToString(ViewBag.DelayType);
+    string selectedDelayTypesCsv =
+        Convert.ToString(ViewBag.DelayType);
 
-    string selectedAgency =
+    string selectedAgenciesCsv =
         Convert.ToString(ViewBag.Agency);
+
+    var selectedDelayTypes =
+        string.IsNullOrWhiteSpace(selectedDelayTypesCsv)
+            ? new List<string> { "Unscheduled" }
+            : selectedDelayTypesCsv
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .ToList();
+
+    var selectedAgencies =
+        string.IsNullOrWhiteSpace(selectedAgenciesCsv)
+            ? new List<string>()
+            : selectedAgenciesCsv
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .ToList();
 }
 <!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
@@ -34,6 +46,8 @@
 </div>
 <!-- End XP Breadcrumbbar -->
 <!-- Filters Section -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet" />
 <style>
     .maintenance-filter-card {
         border: 1px solid #e5e7eb;
@@ -98,6 +112,26 @@
             background: #a6173f;
             color: #ffffff;
             box-shadow: 0 4px 10px rgba(166, 23, 63, .18);
+        }
+
+    .select2-container {
+        width: 100% !important;
+    }
+
+    .select2-container--default .select2-selection--multiple {
+        min-height: 40px;
+        border: 1px solid #d1d5db;
+        border-radius: 9px;
+        padding: 3px 5px;
+    }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            border: 1px solid #d7a7b6;
+            border-radius: 16px;
+            background: #faeef2;
+            color: #75102d;
+            font-size: 11px;
+            font-weight: 700;
         }
 
     .filter-actions {
@@ -226,32 +260,30 @@
 
                                     <select id="agency"
                                             name="agency"
-                                            class="form-control">
-
-                                        <option value=""
-                                                @(string.IsNullOrWhiteSpace(selectedAgency) ? "selected" : "")>
-                                            All Agencies
-                                        </option>
+                                            class="form-control multi-select"
+                                            multiple="multiple"
+                                            data-placeholder="Select agencies">
 
                                         <option value="Electrical"
-                                                @(selectedAgency == "Electrical" ? "selected" : "")>
+                                                @(selectedAgencies.Any(x => x.Equals("Electrical", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             Electrical
                                         </option>
 
                                         <option value="Mechanical"
-                                                @(selectedAgency == "Mechanical" ? "selected" : "")>
+                                                @(selectedAgencies.Any(x => x.Equals("Mechanical", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             Mechanical
                                         </option>
 
                                         <option value="Utility"
-                                                @(selectedAgency == "Utility" ? "selected" : "")>
+                                                @(selectedAgencies.Any(x => x.Equals("Utility", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             Utility
                                         </option>
 
                                         <option value="Cranes"
-                                                @(selectedAgency == "Cranes" ? "selected" : "")>
+                                                @(selectedAgencies.Any(x => x.Equals("Cranes", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             Cranes
                                         </option>
+
                                     </select>
                                 </div>
                             </div>
@@ -262,81 +294,72 @@
                                         Delay Type
                                     </label>
 
-                                    <div class="delay-type-filter">
+                                    <select id="delayType"
+                                            name="delayType"
+                                            class="form-control multi-select"
+                                            multiple="multiple"
+                                            data-placeholder="Select delay types">
 
-                                        <div class="delay-radio">
-                                            <input type="radio"
-                                                   id="delayScheduled"
-                                                   name="delayType"
-                                                   value="Scheduled"
-                                                   @(selectedDelayType.Equals("Scheduled", StringComparison.OrdinalIgnoreCase) ? "checked" : "") />
+                                        <option value="Scheduled"
+                                                @(selectedDelayTypes.Any(x => x.Equals("Scheduled", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                            Scheduled
+                                        </option>
 
-                                            <label for="delayScheduled">
-                                                Scheduled
-                                            </label>
-                                        </div>
+                                        <option value="Unscheduled"
+                                                @(selectedDelayTypes.Any(x => x.Equals("Unscheduled", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                            Unscheduled
+                                        </option>
 
-                                        <div class="delay-radio">
-                                            <input type="radio"
-                                                   id="delayUnscheduled"
-                                                   name="delayType"
-                                                   value="Unscheduled"
-                                                   @(selectedDelayType.Equals("Unscheduled", StringComparison.OrdinalIgnoreCase) ? "checked" : "") />
-
-                                            <label for="delayUnscheduled">
-                                                Unscheduled
-                                            </label>
-                                        </div>
-
-                                    </div>
+                                    </select>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-xl-4 col-md-4">
-                                <div class="form-group">
-                                    <div class="filter-actions">
+                        <div class="col-xl-4 col-md-4">
+                            <div class="form-group">
+                                <div class="filter-actions">
 
-                                        <button type="submit"
-                                                class="btn btn-filter"
-                                                title="Apply Filters">
-                                            <i class="fa fa-filter"></i>
-                                        </button>
+                                    <button type="submit"
+                                            class="btn btn-filter"
+                                            title="Apply Filters">
+                                        <i class="fa fa-filter"></i>
+                                    </button>
 
-                                        <a href="@Url.Action(
+                                    <a href="@Url.Action(
                                             "list",
                                             "Maintenance"
                                         )"
-                                           class="btn btn-secondary"
-                                           title="Clear Filters">
-                                            <i class="fa fa-times"></i>
-                                        </a>
+                                       class="btn btn-secondary"
+                                       title="Clear Filters">
+                                        <i class="fa fa-times"></i>
+                                    </a>
 
-                                        <button type="submit"
-                                                class="btn btn-success"
-                                                title="Download Failure Analysis"
-                                                formaction="@Url.Action(
+                                    <button type="submit"
+                                            class="btn btn-success"
+                                            title="Download Failure Analysis"
+                                            formaction="@Url.Action(
                                                     "ExportFailureAnalysisExcel",
                                                     "Maintenance"
                                                 )"
-                                                formmethod="get">
-                                            <i class="fa fa-file-excel-o"></i>
-                                            Failure Analysis Report
-                                        </button>
+                                            formmethod="get">
+                                        <i class="fa fa-file-excel-o"></i>
+                                        Failure Analysis Report
+                                    </button>
 
-                                    </div>
                                 </div>
                             </div>
-
                         </div>
 
-                    </form>
-
                 </div>
-            </div>
 
+                </form>
+
+            </div>
         </div>
+
     </div>
 </div>
+
 <!-- Filter Section -->
 <!-- Start XP Contentbar -->
 <div class="xp-contentbar">
@@ -397,10 +420,10 @@
                                                     <i class="fa fa-tasks"></i>
                                                 </a>
                                                 @*<a href="javascript:void(0);"
-                                                   class="btn btn-sm btn-danger btn-delete"
-                                                   data-id="@item.ID">
-                                                    <i class="mdi mdi-trash-can"></i>
-                                                </a>*@
+                                                       class="btn btn-sm btn-danger btn-delete"
+                                                       data-id="@item.ID">
+                                                        <i class="mdi mdi-trash-can"></i>
+                                                    </a>*@
                                                 <a href="@Url.Action("detail", "Maintenance", new { ID = item.ID })" class="btn btn-sm btn-info" onclick="event.stopPropagation();">
                                                     <i class="mdi mdi-book-open-page-variant"></i>
                                                 </a>
@@ -426,8 +449,15 @@
 </div>
 <!-- End XP Contentbar -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function () {
+
+        $(".multi-select").select2({
+            width: "100%",
+            closeOnSelect: false,
+            allowClear: true
+        });
 
         // ==============================
         // DATATABLE INIT

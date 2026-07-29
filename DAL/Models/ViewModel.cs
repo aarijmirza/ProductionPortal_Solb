@@ -387,23 +387,40 @@ namespace DAL.Models
     {
         public int PlantDelayID { get; set; }
 
-        public PlantDelayBLL DelayDetail { get; set; }
+        public PlantDelayBLL DelayDetail
+        {
+            get;
+            set;
+        }
 
         public List<DelayCounterMeasureBLL>
             CounterMeasures
-        { get; set; }
+        {
+            get;
+            set;
+        }
 
         public List<DelayCounterMeasureBLL>
             ExistingCounterMeasures
-        { get; set; }
+        {
+            get;
+            set;
+        }
 
         public DelayCounterMeasureVM()
         {
+            DelayDetail =
+                new PlantDelayBLL();
+
             CounterMeasures =
-                new List<DelayCounterMeasureBLL>();
+                new List<
+                    DelayCounterMeasureBLL
+                >();
 
             ExistingCounterMeasures =
-                new List<DelayCounterMeasureBLL>();
+                new List<
+                    DelayCounterMeasureBLL
+                >();
         }
     }
 }

@@ -50,5 +50,21 @@ namespace DAL.Models
         public string Equipment { get; set; }
 
         public string DelayDescription { get; set; }
+
+        public string CounterMeasureA { get; set; }
+
+        public string IncreaseMTBF { get; set; }
+
+        public string DecreaseMTTR { get; set; }
+
+        public string IncreaseMTBF1 { get; set; }
+
+        public string DecreaseMTTR1 { get; set; }
+
+        public string RootCause { get; set; }
+
+        public string SAPBreakdownOrder { get; set; }
+
+        public string FailureReportStatus { get; set; }
     }
 }

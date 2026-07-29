@@ -1,0 +1,1788 @@
+﻿@model DAL.Models.CCMDailyProductionReportBLL
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = Model != null && Model.ID > 0
+        ? "Edit Billet Yard Report"
+        : "Billet Yard Report";
+
+    int initialRowCount =
+        Model != null && Model.ID > 0
+            ? Model.Details.Count
+            : Math.Min(Model.Details.Count, 1);
+}
+
+<style>
+    :root {
+        --solb-maroon: #9f163d;
+        --solb-maroon-dark: #75102d;
+        --solb-maroon-soft: #faeef2;
+        --solb-bg: #f3f5f7;
+        --solb-border: #dfe3e8;
+        --solb-text: #202936;
+        --solb-muted: #6b7280;
+    }
+
+    body {
+        background: var(--solb-bg);
+    }
+
+    .ccm-shell {
+        max-width: 1720px;
+        margin: 0 auto;
+    }
+
+    .ccm-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 20px 24px;
+        margin-bottom: 16px;
+        border-radius: 16px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--solb-maroon-dark), var(--solb-maroon));
+        box-shadow: 0 10px 26px rgba(117, 16, 45, .20);
+        overflow: hidden;
+        position: relative;
+    }
+
+        .ccm-header:after {
+            content: "";
+            position: absolute;
+            right: -60px;
+            top: -110px;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.06);
+        }
+
+        .ccm-header h3 {
+            margin: 0;
+            color: #fff;
+            font-size: 21px;
+            font-weight: 800;
+        }
+
+        .ccm-header p {
+            margin: 5px 0 0;
+            color: rgba(255,255,255,.90);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+    .ccm-doc-chip {
+        position: relative;
+        z-index: 2;
+        min-width: 130px;
+        padding: 9px 13px;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 10px;
+        background: rgba(255,255,255,.10);
+        text-align: center;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .ccm-card {
+        margin-bottom: 17px;
+        overflow: hidden;
+        border: 1px solid var(--solb-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    }
+
+    .ccm-card-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--solb-border);
+        background: linear-gradient(180deg,#fff,#fafbfc);
+    }
+
+        .ccm-card-title h5 {
+            margin: 0;
+            color: var(--solb-text);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .ccm-card-title small {
+            color: var(--solb-muted);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+    .ccm-card-body {
+        padding: 18px;
+    }
+
+    .header-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr 1fr 1fr 1.35fr 1.35fr;
+        gap: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+        .form-group label {
+            margin-bottom: 6px;
+            color: #4b5563;
+            font-size: 10.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .35px;
+        }
+
+    .required:after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-control {
+        height: 40px;
+        border: 1px solid #cfd5dc;
+        border-radius: 8px;
+        box-shadow: none;
+        color: var(--solb-text);
+        font-size: 13px;
+    }
+
+        .form-control:focus {
+            border-color: var(--solb-maroon);
+            box-shadow: 0 0 0 3px rgba(159,22,61,.10);
+        }
+
+    .production-scroll {
+        overflow: auto;
+        max-height: none;
+        border: 1px solid var(--solb-border);
+        border-radius: 11px;
+        background: #fff;
+    }
+
+    .production-table {
+        min-width: 1450px;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .production-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            padding: 9px 6px;
+            border-color: rgba(255,255,255,.15);
+            background: var(--solb-maroon-dark);
+            color: #fff;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+            font-size: 10.5px;
+            font-weight: 800;
+        }
+
+        .production-table thead tr:nth-child(2) th {
+            top: 37px;
+            background: var(--solb-maroon);
+        }
+
+        .production-table td {
+            padding: 5px;
+            border-color: #e5e7eb;
+            vertical-align: middle;
+            text-align: center;
+            background: #fff;
+        }
+
+        .production-table tbody tr:nth-child(even) td {
+            background: #fbfbfc;
+        }
+
+        .production-table tbody tr:hover td {
+            background: #fff7fa;
+        }
+
+    .sticky-one,
+    .sticky-two {
+        position: sticky;
+        z-index: 4;
+    }
+
+    .sticky-one {
+        left: 0;
+        width: 52px;
+        min-width: 52px;
+    }
+
+    .sticky-two {
+        left: 52px;
+        width: 125px;
+        min-width: 125px;
+    }
+
+    .production-table thead .sticky-one,
+    .production-table thead .sticky-two {
+        z-index: 7;
+        background: var(--solb-maroon-dark);
+    }
+
+    .serial-cell {
+        color: var(--solb-maroon-dark);
+        background: var(--solb-maroon-soft) !important;
+        font-weight: 800;
+    }
+
+    .production-table .form-control {
+        height: 32px;
+        min-width: 60px;
+        padding: 4px 5px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .production-table .grade-input {
+        min-width: 115px;
+        text-align: left;
+        font-weight: 700;
+    }
+
+    .production-table .remarks-input {
+        min-width: 220px;
+        text-align: left;
+    }
+
+    .production-table .row-total {
+        background: #f1f3f5 !important;
+        color: var(--solb-maroon-dark);
+        font-weight: 800;
+    }
+
+
+    .grid-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .grid-toolbar-text {
+        color: var(--solb-muted);
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .btn-add-row {
+        border: 1px solid var(--solb-maroon);
+        border-radius: 8px;
+        padding: 7px 14px;
+        background: var(--solb-maroon);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+        .btn-add-row:hover,
+        .btn-add-row:focus {
+            background: var(--solb-maroon-dark);
+            border-color: var(--solb-maroon-dark);
+            color: #fff;
+        }
+
+    .btn-remove-row {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid #efc3cc;
+        border-radius: 7px;
+        background: #fff4f6;
+        color: var(--solb-maroon-dark);
+        font-size: 13px;
+    }
+
+        .btn-remove-row:hover {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+    .overall-remarks {
+        margin-top: 16px;
+        padding: 15px;
+        border: 1px solid var(--solb-border);
+        border-radius: 12px;
+        background: #fafbfc;
+    }
+
+        .overall-remarks label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--solb-text);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .overall-remarks textarea {
+            min-height: 90px;
+            resize: vertical;
+            background: #fff;
+        }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(170px, 1fr));
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    .summary-box {
+        padding: 13px 15px;
+        border: 1px solid var(--solb-border);
+        border-radius: 11px;
+        background: #fff;
+        border-left: 4px solid var(--solb-maroon);
+    }
+
+        .summary-box.good {
+            border-left-color: #198754;
+        }
+
+        .summary-box.nonprime {
+            border-left-color: #d28a00;
+        }
+
+        .summary-box.rows {
+            border-left-color: #64748b;
+        }
+
+        .summary-box span {
+            display: block;
+            color: var(--solb-muted);
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .35px;
+        }
+
+        .summary-box strong {
+            display: block;
+            margin-top: 3px;
+            color: var(--solb-text);
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+    .action-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 13px 16px;
+        border-top: 1px solid var(--solb-border);
+        background: rgba(255,255,255,.96);
+        backdrop-filter: blur(8px);
+    }
+
+    .action-note {
+        color: var(--solb-muted);
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .btn-solb {
+        min-width: 135px;
+        padding: 9px 20px;
+        border-radius: 8px;
+        border-color: var(--solb-maroon);
+        background: var(--solb-maroon);
+        color: #fff;
+        font-weight: 700;
+    }
+
+        .btn-solb:hover,
+        .btn-solb:focus {
+            border-color: var(--solb-maroon-dark);
+            background: var(--solb-maroon-dark);
+            color: #fff;
+        }
+
+    .validation-summary-errors {
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        border: 1px solid #f5c2c7;
+        border-radius: 9px;
+        background: #f8d7da;
+        color: #842029;
+        font-size: 12px;
+    }
+
+    .field-validation-error {
+        display: block;
+        margin-top: 3px;
+        color: #dc3545;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+
+    .production-card-list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .production-detail-card {
+        overflow: hidden;
+        border: 1px solid var(--solb-border);
+        border-radius: 13px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(15,23,42,.05);
+    }
+
+    .production-detail-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--solb-border);
+        background: linear-gradient(180deg,#fff,#fafbfc);
+    }
+
+    .production-card-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--solb-text);
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .production-card-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 29px;
+        height: 29px;
+        border-radius: 50%;
+        background: var(--solb-maroon-soft);
+        color: var(--solb-maroon-dark);
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .production-detail-card-body {
+        padding: 15px;
+    }
+
+    .production-card-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(130px, 1fr));
+        gap: 12px;
+    }
+
+        .production-card-grid .span-2 {
+            grid-column: span 2;
+        }
+
+        .production-card-grid .span-full {
+            grid-column: 1 / -1;
+        }
+
+    .length-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(90px, 1fr));
+        gap: 9px;
+        padding: 12px;
+        border: 1px solid var(--solb-border);
+        border-radius: 10px;
+        background: #fafbfc;
+    }
+
+    .length-grid-title {
+        grid-column: 1 / -1;
+        color: var(--solb-maroon-dark);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .35px;
+    }
+
+    .weight-field .form-control {
+        font-weight: 800;
+        color: var(--solb-maroon-dark);
+        background: #fffafb;
+    }
+
+    .calculated-field .form-control {
+        font-weight: 800;
+        color: #374151;
+        background: #f1f3f5;
+    }
+
+    .card-remove-button {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid #efc3cc;
+        border-radius: 7px;
+        background: #fff4f6;
+        color: var(--solb-maroon-dark);
+    }
+
+    @@media(max-width:1199px) {
+        .production-card-grid {
+            grid-template-columns: repeat(3, minmax(140px, 1fr));
+        }
+
+        .length-grid {
+            grid-template-columns: repeat(4, minmax(90px, 1fr));
+        }
+    }
+
+    @@media(max-width:767px) {
+        .production-card-grid,
+        .length-grid {
+            grid-template-columns: 1fr;
+        }
+
+            .production-card-grid .span-2 {
+                grid-column: span 1;
+            }
+    }
+
+    @@media(max-width:1199px) {
+        .header-grid {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+    @@media(max-width:767px) {
+        .grid-toolbar {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .btn-add-row {
+            width: 100%;
+        }
+
+        .ccm-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .header-grid,
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .ccm-card-body {
+            padding: 14px;
+        }
+
+        .action-bar {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+            .action-bar .btn {
+                width: 100%;
+            }
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            background: #fff !important;
+        }
+
+        .ccm-card, .ccm-header {
+            box-shadow: none !important;
+        }
+
+        .production-scroll {
+            overflow: visible !important;
+            max-height: none !important;
+        }
+
+        .production-table {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+
+            .production-table th,
+            .production-table td {
+                position: static !important;
+                padding: 3px !important;
+                font-size: 8px !important;
+            }
+
+            .production-table .form-control {
+                min-width: 0 !important;
+                height: auto !important;
+                padding: 0 !important;
+                border: 0 !important;
+                font-size: 8px !important;
+            }
+
+        @@page {
+            size: A4 landscape;
+            margin: 7mm;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h4 class="xp-page-title">@ViewBag.Title</h4>
+        </div>
+        <div class="col-md-4 text-right">
+            <a href="@Url.Action("List","CCMProduction")"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="ccm-shell">
+
+        <div class="ccm-header">
+            <div>
+                <h3>Billet Yard Report</h3>
+                <p>SOLB Steel Company · Meltshop / CCM Section</p>
+            </div>
+
+            <div class="ccm-doc-chip">
+                QMF-SM-969<br />
+                Rev. 0
+            </div>
+        </div>
+
+        @using (Html.BeginForm("Add", "CCMProduction", FormMethod.Post,
+            new { id = "ccmProductionForm", autocomplete = "off" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(x => x.ID)
+            @Html.HiddenFor(x => x.StatusID)
+
+            <div class="ccm-card">
+                <div class="ccm-card-title">
+                    <div>
+                        <h5>Report Information</h5>
+                        <small>Basic report details and responsible personnel</small>
+                    </div>
+                </div>
+
+                <div class="ccm-card-body">
+
+
+                    <div class="header-grid">
+                        <div class="form-group">
+                            <label class="required">Report No.</label>
+                            @Html.TextBoxFor(x => x.ReportNo,
+                                                                             new
+                                                                             {
+                                                                                 @class = "form-control",
+                                                                                 placeholder = "CCM-20260310",
+                                                                                 required = "required"
+                                                                             })
+                            @Html.ValidationMessageFor(x => x.ReportNo)
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Report Date</label>
+                            @Html.TextBoxFor(x => x.ReportDate, "{0:yyyy-MM-dd}",
+                                                                             new
+                                                                             {
+                                                                                 @class = "form-control",
+                                                                                 type = "date",
+                                                                                 required = "required"
+                                                                             })
+                            @Html.ValidationMessageFor(x => x.ReportDate)
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Shift</label>
+                            @Html.DropDownListFor(x => x.Shift,
+                                                                             (SelectList)ViewBag.Shifts,
+                                                                             "-- Select Shift --",
+                                                                             new
+                                                                             {
+                                                                                 @class = "form-control",
+                                                                                 required = "required"
+                                                                             })
+                            @Html.ValidationMessageFor(x => x.Shift)
+                        </div>
+
+                        <div class="form-group">
+                            <label>Team</label>
+                            @Html.TextBoxFor(x => x.Team,
+                                                                             new
+                                                                             {
+                                                                                 @class = "form-control",
+                                                                                 placeholder = "Team"
+                                                                             })
+                        </div>
+
+                        <div class="form-group">
+                            <label>CCM Foreman</label>
+                            @Html.TextBoxFor(x => x.CCMForeman,
+                                                                             new
+                                                                             {
+                                                                                 @class = "form-control",
+                                                                                 placeholder = "Foreman name"
+                                                                             })
+                        </div>
+
+                        <div class="form-group">
+                            <label>Billet Yard Operator</label>
+                            @Html.TextBoxFor(x => x.BilletYardOperator,
+                                                                             new
+                                                                             {
+                                                                                 @class = "form-control",
+                                                                                 placeholder = "Operator name"
+                                                                             })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ccm-card">
+                <div class="ccm-card-title">
+                    <div>
+                        <h5>Billet Production Details</h5>
+                        <small>Add or remove grade-wise production rows as required</small>
+                    </div>
+                </div>
+
+                <div class="ccm-card-body">
+
+                    <div class="grid-toolbar no-print">
+                        <div class="grid-toolbar-text">
+                            Use “Add Row” to enter another billet grade.
+                        </div>
+
+                        <button type="button"
+                                class="btn-add-row"
+                                id="btnAddProductionRow">
+                            <i class="fa fa-plus"></i>
+                            Add Row
+                        </button>
+                    </div>
+
+                    <div id="productionRows"
+                         class="production-card-list">
+
+                        @for (int i = 0; i < initialRowCount; i++)
+                        {
+                            <div class="production-detail-card production-row"
+                                 data-row-index="@i">
+
+                                <div class="production-detail-card-header">
+                                    <div class="production-card-title">
+                                        <span class="production-card-number row-sequence">
+                                            @(i + 1)
+                                        </span>
+                                        <span>Billet Production Entry</span>
+                                    </div>
+
+                                    <button type="button"
+                                            class="card-remove-button btn-remove-row no-print"
+                                            title="Remove entry">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
+
+                                <div class="production-detail-card-body">
+
+                                    @Html.HiddenFor(x => x.Details[i].ID, new { @class = "detail-id" })
+                                    @Html.HiddenFor(x => x.Details[i].ReportID, new { @class = "detail-report-id" })
+                                    @Html.HiddenFor(x => x.Details[i].SequenceNo, new { @class = "detail-sequence" })
+                                    @Html.HiddenFor(x => x.Details[i].Remarks, new { @class = "detail-remarks" })
+
+                                    <div class="production-card-grid">
+
+                                        <div class="form-group">
+                                            <label>Heat No.</label>
+
+                                            @Html.TextBoxFor(
+                                                                                                                 x => x.Details[i].HeatNo,
+                                                                                                                 new
+                                                                                                                 {
+                                                                                                                     @class = "form-control heat-no-input",
+                                                                                                                     placeholder = "Enter heat no.",
+                                                                                                                     autocomplete = "off"
+                                                                                                                 }
+                                                                                                             )
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Grade</label>
+                                            @Html.TextBoxFor(
+                                                                                                                      x => x.Details[i].Grade,
+                                                                                                                      new
+                                                                                                                      {
+                                                                                                                          @class = "form-control grade-input",
+                                                                                                                          placeholder = "Enter billet grade"
+                                                                                                                      }
+                                                                                                                  )
+                                        </div>
+
+                                        <div class="form-group calculated-field">
+                                            <label>Total Billets</label>
+                                            <input type="number"
+                                                   class="form-control row-total"
+                                                   value="@Model.Details[i].TotalBillets"
+                                                   readonly />
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Good / Prime Billets</label>
+                                            @Html.TextBoxFor(
+                                                                                                                      x => x.Details[i].GoodBillets,
+                                                                                                                      new
+                                                                                                                      {
+                                                                                                                          @class = "form-control good-billet-input",
+                                                                                                                          type = "number",
+                                                                                                                          min = "0",
+                                                                                                                          @readonly = "readonly"
+                                                                                                                      }
+                                                                                                                  )
+                                        </div>
+
+                                        @*<div class="form-group">
+                                                <label>Short Billets</label>
+                                                @Html.TextBoxFor(
+                                                                                  x => x.Details[i].ShortBillets,
+                                                                                  new
+                                                                                  {
+                                                                                      @class = "form-control short-billet-input",
+                                                                                      type = "number",
+                                                                                      min = "0",
+                                                                                      @readonly = "readonly"
+                                                                                  }
+                                                                              )
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label>Crop End / Start</label>
+                                                @Html.TextBoxFor(
+                                                                                  x => x.Details[i].CropEndStart,
+                                                                                  new
+                                                                                  {
+                                                                                      @class = "form-control billet-input",
+                                                                                      type = "number",
+                                                                                      min = "0"
+                                                                                  }
+                                                                              )
+                                            </div>*@
+
+                                        <div class="form-group">
+                                            <label>Bend</label>
+                                            @Html.TextBoxFor(
+                                                                                                                      x => x.Details[i].Bend,
+                                                                                                                      new
+                                                                                                                      {
+                                                                                                                          @class = "form-control billet-input",
+                                                                                                                          type = "number",
+                                                                                                                          min = "0"
+                                                                                                                      }
+                                                                                                                  )
+                                        </div>
+
+                                        <div class="form-group weight-field">
+                                            <label>Per Unit Weight</label>
+                                            @Html.TextBoxFor(
+                                                                                                                     x => x.Details[i].PerCoilBundleWeight,
+                                                                                                                     new
+                                                                                                                     {
+                                                                                                                         @class = "form-control coil-bundle-weight-input",
+                                                                                                                         type = "number",
+                                                                                                                         min = "0",
+                                                                                                                         step = "0.000001",
+                                                                                                                         placeholder = "0.00000"
+                                                                                                                     }
+                                                                                                                 )
+                                        </div>
+
+                                        <div class="form-group weight-field">
+                                            <label>Prime Billet Weight</label>
+                                            @Html.TextBoxFor(
+                                                                                                                     x => x.Details[i].PrimeBilletWeight,
+                                                                                                                     new
+                                                                                                                     {
+                                                                                                                         @class = "form-control prime-weight-input",
+                                                                                                                         type = "number",
+                                                                                                                         min = "0",
+                                                                                                                         step = "0.00001",
+                                                                                                                         placeholder = "0.00000",
+                                                                                                                         @readonly = "readonly"
+                                                                                                                     }
+                                                                                                                 )
+                                        </div>
+
+                                        <div class="form-group weight-field">
+                                            <label>Short Billet Weight</label>
+                                            @Html.TextBoxFor(
+                                                                                                                     x => x.Details[i].ShortBilletWeight,
+                                                                                                                     new
+                                                                                                                     {
+                                                                                                                         @class = "form-control short-weight-input",
+                                                                                                                         type = "number",
+                                                                                                                         min = "0",
+                                                                                                                         step = "0.00001",
+                                                                                                                         placeholder = "0.00000",
+                                                                                                                         @readonly = "readonly"
+                                                                                                                     }
+                                                                                                                 )
+                                        </div>
+
+                                        <div class="form-group calculated-field">
+                                            <label>Total Weight</label>
+                                            @Html.TextBoxFor(
+                                                                                                                     x => x.Details[i].TotalWeight,
+                                                                                                                     new
+                                                                                                                     {
+                                                                                                                         @class = "form-control total-weight-input",
+                                                                                                                         type = "number",
+                                                                                                                         step = "0.00001",
+                                                                                                                         @readonly = "readonly"
+                                                                                                                     }
+                                                                                                                 )
+                                        </div>
+
+                                        <div class="length-grid span-full">
+                                            <div class="length-grid-title">
+                                                No. of Billets for 150 × 150
+                                            </div>
+
+                                            <div class="form-group"><label>14m</label>@Html.TextBoxFor(x => x.Details[i].Billet14M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>13m</label>@Html.TextBoxFor(x => x.Details[i].Billet13M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>12m</label>@Html.TextBoxFor(x => x.Details[i].Billet12M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>11m</label>@Html.TextBoxFor(x => x.Details[i].Billet11M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                            <div class="form-group"><label>Total Lenght</label>@Html.TextBoxFor(x => x.Details[i].Billet11M, new { @class = "form-control billet-input", type = "number", min = "0", @readOnly = "readonly" })</div>
+                                            @*<div class="form-group"><label>10M</label>@Html.TextBoxFor(x => x.Details[i].Billet10M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                                <div class="form-group"><label>09M</label>@Html.TextBoxFor(x => x.Details[i].Billet09M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                                <div class="form-group"><label>08M</label>@Html.TextBoxFor(x => x.Details[i].Billet08M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                                <div class="form-group"><label>07M</label>@Html.TextBoxFor(x => x.Details[i].Billet07M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                                <div class="form-group"><label>06M</label>@Html.TextBoxFor(x => x.Details[i].Billet06M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                                <div class="form-group"><label>05M</label>@Html.TextBoxFor(x => x.Details[i].Billet05M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                                <div class="form-group"><label>04M</label>@Html.TextBoxFor(x => x.Details[i].Billet04M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>
+                                                <div class="form-group"><label>&lt; 4M</label>@Html.TextBoxFor(x => x.Details[i].BilletBelow4M, new { @class = "form-control billet-input", type = "number", min = "0" })</div>*@
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Short Billet Quantity</label>
+                                            @Html.TextBoxFor(
+                                                                     x => x.Details[i].ShortBillets,
+                                                                     new
+                                                                     {
+                                                                         @class = "form-control ",
+                                                                         type = "number",
+                                                                         step = "0.00001",
+                                                                     }
+                                                                 )
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Short Billet Total Length (m)</label>
+                                            @Html.TextBoxFor(
+                                                                    x => x.Details[i].ShortBillets,
+                                                                    new
+                                                                    {
+                                                                        @class = "form-control ",
+                                                                        type = "number",
+                                                                        step = "0.00001",
+                                                                    }
+                                                                )
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Short Billet Avg. Length (m)</label>
+                                            @Html.TextBoxFor(
+                                                                   x => x.Details[i].ShortBillets,
+                                                                   new
+                                                                   {
+                                                                       @class = "form-control ",
+                                                                       type = "number",
+                                                                       step = "0.00001",
+                                                                       @readOnly = "readonly"
+                                                                   }
+                                                               )
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="overall-remarks">
+                        <label for="overallRemarks">
+                            Overall Remarks
+                        </label>
+
+                        <textarea id="overallRemarks"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Enter overall production remarks...">@(initialRowCount > 0 ? Model.Details[0].Remarks : "")</textarea>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <span>Total Billets</span>
+                            <strong id="grandTotalBillets">0</strong>
+                        </div>
+
+                        <div class="summary-box good">
+                            <span>Good / Prime Billets</span>
+                            <strong id="grandGoodBillets">0</strong>
+                        </div>
+
+                        <div class="summary-box nonprime">
+                            <span>Non-Prime Billets</span>
+                            <strong id="grandNonPrimeBillets">0</strong>
+                        </div>
+
+                        <div class="summary-box rows">
+                            <span>Active Rows</span>
+                            <strong id="activeRows">0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-bar no-print">
+                    <div class="action-note">
+                        Row and report totals are calculated automatically.
+                    </div>
+
+                    <div>
+                        <a href="@Url.Action("List","CCMProduction")"
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+
+                        <button type="submit" class="btn btn-solb">
+                            <i class="fa fa-save"></i>
+                            @(Model != null && Model.ID > 0 ? "Update Report" : "Save Report")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        var productionRows =
+            document.getElementById("productionRows");
+
+        var addButton =
+            document.getElementById("btnAddProductionRow");
+
+        var overallRemarks =
+            document.getElementById("overallRemarks");
+
+        function toInt(value) {
+            var parsed = parseInt(value, 10);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function toDecimal(value) {
+            var parsed = parseFloat(value);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function inputHtml(index, property, cssClass, type) {
+            var inputType = type || "number";
+            var minAttribute =
+                inputType === "number" ? ' min="0"' : "";
+
+            return '<input type="' + inputType + '"' +
+                ' name="Details[' + index + '].' + property + '"' +
+                ' id="Details_' + index + '__' + property + '"' +
+                ' value="' + (inputType === "number" ? "0" : "") + '"' +
+                minAttribute +
+                ' class="form-control ' + cssClass + '" />';
+        }
+
+        function decimalInputHtml(
+            index,
+            property,
+            cssClass,
+            readOnly) {
+
+            return '<input type="number"' +
+                ' name="Details[' + index + '].' + property + '"' +
+                ' id="Details_' + index + '__' + property + '"' +
+                ' value="0.00000" min="0" step="0.00001"' +
+                (readOnly ? ' readonly' : '') +
+                ' class="form-control ' + cssClass + '" />';
+        }
+
+        function lengthInputHtml(index, property, label) {
+            return '<div class="form-group">' +
+                '<label>' + label + '</label>' +
+                inputHtml(index, property, "billet-input") +
+                '</div>';
+        }
+
+        function createProductionRow(index) {
+            var card =
+                document.createElement("div");
+
+            card.className =
+                "production-detail-card production-row";
+
+            card.setAttribute(
+                "data-row-index",
+                index
+            );
+
+            card.innerHTML =
+                '<div class="production-detail-card-header">' +
+                '<div class="production-card-title">' +
+                '<span class="production-card-number row-sequence">' +
+                (index + 1) +
+                '</span>' +
+                '<span>Billet Production Entry</span>' +
+                '</div>' +
+                '<button type="button"' +
+                ' class="card-remove-button btn-remove-row no-print"' +
+                ' title="Remove entry">' +
+                '<i class="fa fa-trash"></i>' +
+                '</button>' +
+                '</div>' +
+
+                '<div class="production-detail-card-body">' +
+
+                '<input type="hidden"' +
+                ' class="detail-id"' +
+                ' name="Details[' + index + '].ID"' +
+                ' id="Details_' + index + '__ID"' +
+                ' value="0" />' +
+
+                '<input type="hidden"' +
+                ' class="detail-report-id"' +
+                ' name="Details[' + index + '].ReportID"' +
+                ' id="Details_' + index + '__ReportID"' +
+                ' value="0" />' +
+
+                '<input type="hidden"' +
+                ' class="detail-sequence"' +
+                ' name="Details[' + index + '].SequenceNo"' +
+                ' id="Details_' + index + '__SequenceNo"' +
+                ' value="' + (index + 1) + '" />' +
+
+                '<input type="hidden"' +
+                ' class="detail-remarks"' +
+                ' name="Details[' + index + '].Remarks"' +
+                ' id="Details_' + index + '__Remarks"' +
+                ' value="" />' +
+
+                '<div class="production-card-grid">' +
+
+                '<div class="form-group">' +
+                '<label>Heat No.</label>' +
+                inputHtml(
+                    index,
+                    "HeatNo",
+                    "heat-no-input",
+                    "text"
+                ) +
+                '</div>' +
+
+                '<div class="form-group">' +
+                '<label>Grade</label>' +
+                inputHtml(
+                    index,
+                    "Grade",
+                    "grade-input",
+                    "text"
+                ) +
+                '</div>' +
+
+                '<div class="form-group calculated-field">' +
+                '<label>Total Billets</label>' +
+                '<input type="number"' +
+                ' class="form-control row-total"' +
+                ' value="0"' +
+                ' readonly />' +
+                '</div>' +
+
+                '<div class="form-group calculated-field">' +
+                '<label>Good / Prime Billets</label>' +
+                '<input type="number"' +
+                ' name="Details[' + index + '].GoodBillets"' +
+                ' id="Details_' + index + '__GoodBillets"' +
+                ' class="form-control good-billet-input"' +
+                ' value="0"' +
+                ' min="0"' +
+                ' readonly />' +
+                '</div>' +
+
+                '<div class="form-group calculated-field">' +
+                '<label>Short Billets</label>' +
+                '<input type="number"' +
+                ' name="Details[' + index + '].ShortBillets"' +
+                ' id="Details_' + index + '__ShortBillets"' +
+                ' class="form-control short-billet-input"' +
+                ' value="0"' +
+                ' min="0"' +
+                ' readonly />' +
+                '</div>' +
+
+                '<div class="form-group">' +
+                '<label>Crop End / Start</label>' +
+                inputHtml(
+                    index,
+                    "CropEndStart",
+                    "billet-input"
+                ) +
+                '</div>' +
+
+                '<div class="form-group">' +
+                '<label>Bend</label>' +
+                inputHtml(
+                    index,
+                    "Bend",
+                    "billet-input"
+                ) +
+                '</div>' +
+
+                '<div class="form-group weight-field">' +
+                '<label>Per Unit Weight</label>' +
+                decimalInputHtml(
+                    index,
+                    "PerCoilBundleWeight",
+                    "coil-bundle-weight-input",
+                    false
+                ) +
+                '</div>' +
+
+                '<div class="form-group calculated-field">' +
+                '<label>Prime Billet Weight</label>' +
+                decimalInputHtml(
+                    index,
+                    "PrimeBilletWeight",
+                    "prime-weight-input",
+                    true
+                ) +
+                '</div>' +
+
+                '<div class="form-group calculated-field">' +
+                '<label>Short Billet Weight</label>' +
+                decimalInputHtml(
+                    index,
+                    "ShortBilletWeight",
+                    "short-weight-input",
+                    true
+                ) +
+                '</div>' +
+
+                '<div class="form-group calculated-field">' +
+                '<label>Total Weight</label>' +
+                decimalInputHtml(
+                    index,
+                    "TotalWeight",
+                    "total-weight-input",
+                    true
+                ) +
+                '</div>' +
+
+                '<div class="length-grid span-full">' +
+                '<div class="length-grid-title">' +
+                'No. of Billets for 150 × 150' +
+                '</div>' +
+
+                lengthInputHtml(
+                    index,
+                    "Billet14M",
+                    "14M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet13M",
+                    "13M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet12M",
+                    "12M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet11M",
+                    "11M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet10M",
+                    "10M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet09M",
+                    "09M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet08M",
+                    "08M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet07M",
+                    "07M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet06M",
+                    "06M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet05M",
+                    "05M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "Billet04M",
+                    "04M"
+                ) +
+
+                lengthInputHtml(
+                    index,
+                    "BilletBelow4M",
+                    "&lt; 4M"
+                ) +
+                '</div>' +
+
+                '</div>' +
+                '</div>';
+
+            return card;
+        }
+
+        function calculateRow(row) {
+
+            function getBilletValue(propertyName) {
+                var input =
+                    row.querySelector(
+                        '[name$=".' +
+                        propertyName +
+                        '"]'
+                    );
+
+                if (!input) {
+                    return 0;
+                }
+
+                var value =
+                    toInt(input.value);
+
+                if (value < 0) {
+                    value = 0;
+                    input.value = 0;
+                }
+
+                return value;
+            }
+
+            var billet14 = getBilletValue("Billet14M");
+            var billet13 = getBilletValue("Billet13M");
+            var billet12 = getBilletValue("Billet12M");
+            var billet11 = getBilletValue("Billet11M");
+
+            var billet10 = getBilletValue("Billet10M");
+            var billet09 = getBilletValue("Billet09M");
+            var billet08 = getBilletValue("Billet08M");
+            var billet07 = getBilletValue("Billet07M");
+            var billet06 = getBilletValue("Billet06M");
+            var billet05 = getBilletValue("Billet05M");
+            var billet04 = getBilletValue("Billet04M");
+            var billetBelow4 =
+                getBilletValue("BilletBelow4M");
+
+            var cropEndStart =
+                getBilletValue("CropEndStart");
+
+            var bend =
+                getBilletValue("Bend");
+
+            /*
+                Prime billet count:
+                14M + 13M + 12M + 11M
+            */
+            var primeBillets =
+                billet14 +
+                billet13 +
+                billet12 +
+                billet11;
+
+            /*
+                Short billet count:
+                10M + 09M + 08M + 07M +
+                06M + 05M + 04M + Below 4M
+            */
+            var shortBillets =
+                billet10 +
+                billet09 +
+                billet08 +
+                billet07 +
+                billet06 +
+                billet05 +
+                billet04 +
+                billetBelow4;
+
+            /*
+                Total includes production lengths,
+                crop/end-start and bend.
+            */
+            var totalBillets =
+                primeBillets +
+                shortBillets +
+                cropEndStart +
+                bend;
+
+            var totalBilletInput =
+                row.querySelector(".row-total");
+
+            var primeBilletInput =
+                row.querySelector(
+                    ".good-billet-input"
+                );
+
+            var shortBilletInput =
+                row.querySelector(
+                    ".short-billet-input"
+                );
+
+            if (totalBilletInput) {
+                totalBilletInput.value =
+                    totalBillets;
+            }
+
+            if (primeBilletInput) {
+                primeBilletInput.value =
+                    primeBillets;
+            }
+
+            if (shortBilletInput) {
+                shortBilletInput.value =
+                    shortBillets;
+            }
+
+            var perUnitWeightInput =
+                row.querySelector(
+                    ".coil-bundle-weight-input"
+                );
+
+            var perUnitWeight =
+                perUnitWeightInput
+                    ? Math.max(
+                        0,
+                        toDecimal(
+                            perUnitWeightInput.value
+                        )
+                    )
+                    : 0;
+
+            var primeBilletWeight = 0;
+            var shortBilletWeight = 0;
+
+            if (perUnitWeight > 0) {
+
+                /*
+                    Same as:
+                    Qty / PerUnitWeight × Length
+                */
+                primeBilletWeight =
+                    (
+                        (billet14 / perUnitWeight) * 14 +
+                        (billet13 / perUnitWeight) * 13 +
+                        (billet12 / perUnitWeight) * 12 +
+                        (billet11 / perUnitWeight) * 11
+                    );
+
+                shortBilletWeight =
+                    (
+                        (billet10 / perUnitWeight) * 10 +
+                        (billet09 / perUnitWeight) * 9 +
+                        (billet08 / perUnitWeight) * 8 +
+                        (billet07 / perUnitWeight) * 7 +
+                        (billet06 / perUnitWeight) * 6 +
+                        (billet05 / perUnitWeight) * 5 +
+                        (billet04 / perUnitWeight) * 4 +
+                        (billetBelow4 / perUnitWeight) * 4
+                    );
+            }
+
+            var totalWeight =
+                primeBilletWeight +
+                shortBilletWeight;
+
+            var primeWeightInput =
+                row.querySelector(
+                    ".prime-weight-input"
+                );
+
+            var shortWeightInput =
+                row.querySelector(
+                    ".short-weight-input"
+                );
+
+            var totalWeightInput =
+                row.querySelector(
+                    ".total-weight-input"
+                );
+
+            if (primeWeightInput) {
+                primeWeightInput.value =
+                    primeBilletWeight
+                        .toFixed(5);
+            }
+
+            if (shortWeightInput) {
+                shortWeightInput.value =
+                    shortBilletWeight
+                        .toFixed(5);
+            }
+
+            if (totalWeightInput) {
+                totalWeightInput.value =
+                    totalWeight
+                        .toFixed(5);
+            }
+
+            return totalBillets;
+        }
+
+        function syncOverallRemarks() {
+            var remarkInputs =
+                productionRows.querySelectorAll(".detail-remarks");
+
+            remarkInputs.forEach(function (input, index) {
+                input.value =
+                    index === 0
+                        ? overallRemarks.value
+                        : "";
+            });
+        }
+
+        function reindexRows() {
+            var rows =
+                productionRows.querySelectorAll(".production-row");
+
+            rows.forEach(function (row, index) {
+                row.setAttribute("data-row-index", index);
+
+                var sequenceCell =
+                    row.querySelector(".row-sequence");
+
+                if (sequenceCell) {
+                    sequenceCell.textContent =
+                        (index + 1);
+                }
+
+                row.querySelectorAll(
+                    "input[name], select[name], textarea[name]"
+                ).forEach(function (input) {
+                    var propertyMatch =
+                        input.name.match(
+                            /^Details\[\d+\]\.(.+)$/
+                        );
+
+                    if (!propertyMatch) return;
+
+                    var property = propertyMatch[1];
+
+                    input.name =
+                        "Details[" + index + "]." + property;
+
+                    input.id =
+                        "Details_" + index + "__" + property;
+
+                    if (property === "SequenceNo") {
+                        input.value = index + 1;
+                    }
+                });
+            });
+
+            syncOverallRemarks();
+        }
+
+        function calculateSummary() {
+            var totalBillets = 0;
+            var goodBillets = 0;
+            var shortBillets = 0;
+            var activeRows = 0;
+
+            productionRows
+                .querySelectorAll(".production-row")
+                .forEach(function (row) {
+                    var rowTotal = calculateRow(row);
+
+                    var goodInput =
+                        row.querySelector(".good-billet-input");
+
+                    var shortInput =
+                        row.querySelector(".short-billet-input");
+
+                    var gradeInput =
+                        row.querySelector(".grade-input");
+
+                    var good =
+                        goodInput ? toInt(goodInput.value) : 0;
+
+                    var shortCount =
+                        shortInput ? toInt(shortInput.value) : 0;
+
+                    var hasGrade =
+                        gradeInput &&
+                        gradeInput.value.trim() !== "";
+
+                    totalBillets += rowTotal;
+                    goodBillets += good;
+                    shortBillets += shortCount;
+
+                    if (rowTotal > 0 || good > 0 || hasGrade) {
+                        activeRows++;
+                    }
+                });
+
+            document.getElementById(
+                "grandTotalBillets"
+            ).innerText = totalBillets;
+
+            document.getElementById(
+                "grandGoodBillets"
+            ).innerText = goodBillets;
+
+            document.getElementById(
+                "grandNonPrimeBillets"
+            ).innerText =
+                shortBillets;
+
+            document.getElementById(
+                "activeRows"
+            ).innerText = activeRows;
+
+            syncOverallRemarks();
+        }
+
+        function addRow() {
+            var index =
+                productionRows
+                    .querySelectorAll(".production-row")
+                    .length;
+
+            productionRows.appendChild(
+                createProductionRow(index)
+            );
+
+            reindexRows();
+            calculateSummary();
+
+            var newHeatNo =
+                productionRows.lastElementChild
+                    .querySelector(".heat-no-input");
+
+            if (newHeatNo) {
+                newHeatNo.focus();
+            }
+        }
+
+        function removeRow(button) {
+            var rows =
+                productionRows.querySelectorAll(".production-row");
+
+            if (rows.length <= 1) {
+                alert("At least one production row is required.");
+                return;
+            }
+
+            button.closest(".production-row").remove();
+
+            reindexRows();
+            calculateSummary();
+        }
+
+        addButton.addEventListener("click", addRow);
+
+        productionRows.addEventListener(
+            "click",
+            function (event) {
+                var removeButton =
+                    event.target.closest(".btn-remove-row");
+
+                if (removeButton) {
+                    removeRow(removeButton);
+                }
+            }
+        );
+
+        productionRows.addEventListener(
+            "input",
+            calculateSummary
+        );
+
+        productionRows.addEventListener(
+            "change",
+            calculateSummary
+        );
+
+        overallRemarks.addEventListener(
+            "input",
+            syncOverallRemarks
+        );
+
+        var form =
+            document.getElementById("ccmProductionForm");
+
+        if (form) {
+            form.addEventListener(
+                "submit",
+                function () {
+                    reindexRows();
+                    calculateSummary();
+                    syncOverallRemarks();
+                }
+            );
+        }
+
+        reindexRows();
+        calculateSummary();
+    });
+</script>

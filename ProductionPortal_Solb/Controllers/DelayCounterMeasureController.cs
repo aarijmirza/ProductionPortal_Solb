@@ -19,47 +19,44 @@ namespace ProductionPortal_Solb.Controllers
             DelayRespository maintenanceRepo =
                 new DelayRespository();
 
-        [HttpGet]
-        public ActionResult add(int plantDelayID)
+        public ActionResult Add(
+            int plantDelayID)
         {
-            var delay =
-                maintenanceRepo
-                    .GetDelayByID(
+            if (plantDelayID <= 0)
+            {
+                TempData["Error"] =
+                    "Invalid Plant Delay ID.";
+
+                return RedirectToAction(
+                    "list",
+                    "Maintenance"
+                );
+            }
+
+            DelayCounterMeasureVM model =
+                repo.GetPageData(
+                    plantDelayID
+                );
+
+            if (model == null)
+            {
+                TempData["Error"] =
+                    "Failure Analysis record not found.";
+
+                return RedirectToAction(
+                    "list",
+                    "Maintenance"
+                );
+            }
+
+            FailureAnalysisBLL analysis =
+                repo
+                    .GetFailureAnalysisByDelayID(
                         plantDelayID
                     );
 
-            if (delay == null)
-            {
-                return HttpNotFound();
-            }
-
-            var model =
-                new DelayCounterMeasureVM
-                {
-                    PlantDelayID =
-                        plantDelayID,
-
-                    DelayDetail =
-                        delay,
-
-                    ExistingCounterMeasures =
-                        repo.GetByPlantDelayID(
-                            plantDelayID
-                        ),
-
-                    CounterMeasures =
-                        new List<DelayCounterMeasureBLL>
-                        {
-                    new DelayCounterMeasureBLL
-                    {
-                        PlantDelayID =
-                            plantDelayID,
-
-                        CounterMeasureStatus =
-                            "Open"
-                    }
-                        }
-                };
+            ViewBag.Analysis =
+                analysis;
 
             return View(model);
         }
@@ -69,30 +66,26 @@ namespace ProductionPortal_Solb.Controllers
         public ActionResult SaveMultiple(
             DelayCounterMeasureVM model)
         {
-            if (model == null ||
-                model.PlantDelayID <= 0)
+            try
             {
-                TempData["Error"] =
-                    "Invalid delay record.";
+                string createdBy =
+                    Convert.ToString(
+                        Session["UserName"]
+                    );
+
+                int savedRecords =
+                    repo.SaveMultiple(
+                        model.PlantDelayID,
+                        model.CounterMeasures,
+                        createdBy
+                    );
+
+                TempData["Success"] =
+                    savedRecords +
+                    " countermeasure(s) saved successfully.";
 
                 return RedirectToAction(
-                    "Index",
-                    new
-                    {
-                        plantDelayID =
-                            model?.PlantDelayID ?? 0
-                    }
-                );
-            }
-
-            if (model.CounterMeasures == null ||
-                model.CounterMeasures.Count == 0)
-            {
-                TempData["Error"] =
-                    "Please add at least one countermeasure.";
-
-                return RedirectToAction(
-                    "Index",
+                    "Add",
                     new
                     {
                         plantDelayID =
@@ -100,113 +93,72 @@ namespace ProductionPortal_Solb.Controllers
                     }
                 );
             }
-
-            string createdBy =
-                Convert.ToString(
-                    Session["UserID"]
-                );
-
-            int savedCount = 0;
-
-            foreach (var item in
-                model.CounterMeasures)
+            catch (Exception ex)
             {
-                if (string.IsNullOrWhiteSpace(
-                    item.CounterMeasure))
-                {
-                    continue;
-                }
+                TempData["Error"] =
+                    ex.Message;
 
-                item.PlantDelayID =
-                    model.PlantDelayID;
-
-                item.CreatedBy =
-                    createdBy;
-
-                item.CounterMeasureStatus =
-                    string.IsNullOrWhiteSpace(
-                        item.CounterMeasureStatus
-                    )
-                        ? "Open"
-                        : item.CounterMeasureStatus;
-
-                int newID =
-                    repo.Insert(item);
-
-                if (newID > 0)
-                {
-                    savedCount++;
-                }
-            }
-
-            TempData[savedCount > 0
-                ? "Success"
-                : "Error"] =
-                savedCount > 0
-                    ? savedCount +
-                      " countermeasure(s) saved successfully."
-                    : "No countermeasure was saved.";
-
-            return RedirectToAction(
-                "Index",
-                new
-                {
-                    plantDelayID =
-                        model.PlantDelayID
-                }
-            );
-        }
-
-        [HttpGet]
-        public JsonResult GetByID(
-            int id)
-        {
-            DelayCounterMeasureBLL model =
-                repo.GetByID(id);
-
-            if (model == null)
-            {
-                return Json(
+                return RedirectToAction(
+                    "Add",
                     new
                     {
-                        success = false,
-                        message =
-                            "Record not found."
-                    },
-                    JsonRequestBehavior.AllowGet
+                        plantDelayID =
+                            model.PlantDelayID
+                    }
                 );
             }
-
-            return Json(
-                new
-                {
-                    success = true,
-                    data = new
-                    {
-                        model.ID,
-                        model.PlantDelayID,
-                        model.CounterMeasure,
-                        model.SAPOrderNo,
-                        model.Responsible,
-
-                        TargetDate =
-                            model.TargetDate
-                                .HasValue
-                                    ? model.TargetDate
-                                        .Value
-                                        .ToString(
-                                            "yyyy-MM-dd"
-                                        )
-                                    : "",
-
-                        model.EvidenceForCompletion,
-                        model.CounterMeasureStatus,
-                        model.ReasonForNotClosing
-                    }
-                },
-                JsonRequestBehavior.AllowGet
-            );
         }
+
+        //[HttpGet]
+        //public JsonResult GetByID(
+        //    int id)
+        //{
+        //    DelayCounterMeasureBLL model =
+        //        repo.GetByID(id);
+
+        //    if (model == null)
+        //    {
+        //        return Json(
+        //            new
+        //            {
+        //                success = false,
+        //                message =
+        //                    "Record not found."
+        //            },
+        //            JsonRequestBehavior.AllowGet
+        //        );
+        //    }
+
+        //    return Json(
+        //        new
+        //        {
+        //            success = true,
+        //            data = new
+        //            {
+        //                model.ID,
+        //                model.PlantDelayID,
+        //                model.CounterMeasure,
+        //                model.SAPOrderNo,
+        //                model.Responsible,
+
+        //                TargetDate =
+        //                    model.TargetDate
+        //                        .HasValue
+        //                            ? model.TargetDate
+        //                                .Value
+        //                                .ToString(
+        //                                    "yyyy-MM-dd"
+        //                                )
+        //                            : "",
+
+        //                model.EvidenceForCompletion,
+        //                model.CounterMeasureStatus,
+        //                model.ReasonForNotClosing
+        //            }
+        //        },
+        //        JsonRequestBehavior.AllowGet
+        //    );
+        //}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -238,30 +190,30 @@ namespace ProductionPortal_Solb.Controllers
             );
         }
 
-        [HttpPost]
-        public JsonResult Delete(
-            int id)
-        {
-            string updatedBy =
-                Convert.ToString(
-                    Session["UserID"]
-                );
+        //[HttpPost]
+        //public JsonResult Delete(
+        //    int id)
+        //{
+        //    string updatedBy =
+        //        Convert.ToString(
+        //            Session["UserID"]
+        //        );
 
-            bool result =
-                repo.Delete(
-                    id,
-                    updatedBy
-                );
+        //    bool result =
+        //        repo.Delete(
+        //            id,
+        //            updatedBy
+        //        );
 
-            return Json(
-                new
-                {
-                    success = result,
-                    message = result
-                        ? "Countermeasure deleted."
-                        : "Record could not be deleted."
-                }
-            );
-        }
+        //    return Json(
+        //        new
+        //        {
+        //            success = result,
+        //            message = result
+        //                ? "Countermeasure deleted."
+        //                : "Record could not be deleted."
+        //        }
+        //    );
+        //}
     }
 }
