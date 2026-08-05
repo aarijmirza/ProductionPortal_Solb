@@ -2,6 +2,9 @@
 @{
     ViewBag.Title = "list";
     var delay = Model as List<DAL.Models.PlantDelayBLL>;
+
+    string selectedPlant =
+        Convert.ToString(ViewBag.Plant);
 }
 <style>
     .kpi-box {
@@ -69,10 +72,25 @@
 
                             <div class="col-md-2">
                                 <label>Plant</label>
-                                <select id="plantFilter" class="form-control">
-                                    <option value="">All</option>
-                                    <option value="Rolling Mill 1">RM1</option>
-                                    <option value="Rolling Mill 2">RM2</option>
+                                <select id="plantFilter"
+                                        name="plant"
+                                        class="form-control">
+
+                                    <option value=""
+                                            @(string.IsNullOrWhiteSpace(selectedPlant) ? "selected" : "")>
+                                        All
+                                    </option>
+
+                                    <option value="Rolling Mill 1"
+                                            @(string.Equals(selectedPlant, "Rolling Mill 1", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>
+                                        RM1
+                                    </option>
+
+                                    <option value="Rolling Mill 2"
+                                            @(string.Equals(selectedPlant, "Rolling Mill 2", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>
+                                        RM2
+                                    </option>
+
                                 </select>
                             </div>
 
@@ -111,9 +129,22 @@
 
                         <div class="d-flex justify-content-end">
                             <div class="form-group d-flex align-items-end mr-3">
-                                <a id="addSampleBtn" class="btn btn-info text-white" href="@Url.Action("add", "Delay")">
-                                    <i class="fa fa-plus-circle"></i> Add Delay
+                                <a id="addSampleBtn"
+                                   class="btn btn-info text-white"
+                                   href="@Url.Action(
+                                            "add",
+                                            "Delay",
+                                            new
+                                            {
+                                                date = ViewBag.SelectedDate,
+                                                shift = ViewBag.Shift,
+                                                plant = ViewBag.Plant
+                                            }
+                                        )">
+                                    <i class="fa fa-plus-circle"></i>
+                                    Add Delay
                                 </a>
+
                             </div>
 
                             <div class="form-group d-flex align-items-end">
@@ -142,12 +173,12 @@
                                     <th>Date</th>
                                     <th>Area</th>
                                     <th>Shift</th>
+                                    <th>Agency</th>
                                     <th>Start Time</th>
                                     <th>End Time</th>
                                     <th>Total Duration</th>
                                     <th>Delay Code</th>
                                     <th>Equipment</th>
-                                    <th>Reason</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -163,12 +194,12 @@
                                             <td>@(item.Date?.ToString("dd-MM-yyyy", gregorian))</td>
                                             <td>@item.Area</td>
                                             <td>@item.Shift</td>
+                                            <td>@item.AgencyName</td>
                                             <td>@item.StartTime</td>
                                             <td>@item.EndTime</td>
                                             <td>@item.TotalDuration</td>
-                                            <td>@item.AgencyName</td>
+                                            <td>@item.Delaycode</td>
                                             <td>@item.Equipments</td>
-                                            <td>@item.Reason</td>
                                             <td>
                                                 @*<a href="javascript:void(0);"
                                                        onclick="openDelayPopup('@item.ID', '@(item.Date?.ToString("yyyy-MM-dd"))', '@item.Area' )"
@@ -182,9 +213,24 @@
                                                         <i class="mdi mdi-book-open-page-variant"></i>
                                                     </a>*@
 
+                                                <a href="@Url.Action(
+                                                        "add",
+                                                        "Delay",
+                                                        new
+                                                        {
+                                                            id = item.ID
+                                                        }
+                                                    )"
+                                                   class="btn btn-sm btn-primary"
+                                                   title="Edit Delay"
+                                                   onclick="event.stopPropagation();">
+                                                    <i class="mdi mdi-pencil"></i>
+                                                </a>
+
                                                 <a href="javascript:void(0);"
                                                    class="btn btn-sm btn-danger btn-delete"
-                                                   data-id="@item.ID">
+                                                   data-id="@item.ID"
+                                                   title="Delete Delay">
                                                     <i class="mdi mdi-trash-can"></i>
                                                 </a>
                                             </td>
@@ -194,7 +240,7 @@
                                 else
                                 {
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted font-italic">
+                                        <td colspan="9" class="text-center text-muted font-italic">
                                             No data available
                                         </td>
                                     </tr>
@@ -210,26 +256,6 @@
         </div>
     </div>
 </div>
-@*<div class="xp-contentbar">
-        <div class="row mb-3">
-
-            <div class="col-md-2">
-                <div class="kpi-box bg-primary">
-                    <div class="kpi-title">Total Records</div>
-                    <div class="kpi-value" id="totalRecordCount">0</div>
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="kpi-box bg-success">
-                    <div class="kpi-title">Total Delay Time</div>
-                    <div class="kpi-value" id="totalDelayTime">0 min</div>
-                </div>
-            </div>
-
-        </div>
-    </div>*@
-<!-- End XP Contentbar -->
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -287,6 +313,7 @@
 
             var selectedDate = $('#filterDate').val() || '';
             var shift = $('#shiftFilter').val() || '';
+            var plant = $('#plantFilter').val() || '';
 
             if (!selectedDate) {
                 Swal.fire({
@@ -300,7 +327,8 @@
             var url = '@Url.Action("GenerateDelayReportPDF", "RollingMill")'
                 + '?startdate=' + encodeURIComponent(selectedDate)
                 + '&enddate=' + encodeURIComponent(selectedDate)
-                + '&shift=' + encodeURIComponent(shift);
+                + '&shift=' + encodeURIComponent(shift)
+                + '&plant=' + encodeURIComponent(plant);
 
             window.open(url, '_blank');
         });
@@ -441,7 +469,16 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
 
-            <form action="/Delay/AddDelayPopupDetail" method="post" id="delayPopupForm">
+            @using (Html.BeginForm(
+                "AddDelayPopupDetail",
+                "Delay",
+                FormMethod.Post,
+                new
+                {
+                    id = "delayPopupForm"
+                }))
+            {
+                @Html.AntiForgeryToken()
 
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="delayPopupModalLabel">Failure Analysis Detail</h5>
@@ -489,17 +526,17 @@
                     <div class="form-row">
                         <div class="form-group col-md-4">
                             <label>SAP Breakdown Order</label>
-                            <input type="text" id="popupDate" name="SAPBreakdownOrder" class="form-control" />
+                            <input type="text" id="popupSAPBreakdownOrder" name="SAPBreakdownOrder" class="form-control" />
                         </div>
 
                         <div class="form-group col-md-4">
                             <label>Failure Category1 (Component)</label>
-                            <input type="text" id="popupDate" name="FailureCategory1Component" class="form-control" />
+                            <input type="text" id="popupFailureCategory1Component" name="FailureCategory1Component" class="form-control" />
                         </div>
 
                         <div class="form-group col-md-4">
                             <label>Failure Category2 (Root Cause)</label>
-                            <input type="text" id="popupDate" name="FailureCategory2RootCause" class="form-control" />
+                            <input type="text" id="popupFailureCategory2RootCause" name="FailureCategory2RootCause" class="form-control" />
                         </div>
                     </div>
                 </div>
@@ -514,7 +551,7 @@
                     </button>
                 </div>
 
-            </form>
+            }
 
         </div>
     </div>

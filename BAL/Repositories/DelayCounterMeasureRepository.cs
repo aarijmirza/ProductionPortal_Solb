@@ -672,83 +672,301 @@ namespace BAL.Repositories
 
             return list;
         }
-        public int SaveMultiple(int plantDelayID, List<DelayCounterMeasureBLL> counterMeasures, string createdBy)
+        public int SaveMultiple(
+            int plantDelayID,
+            List<DelayCounterMeasureBLL> counterMeasures,
+            string createdBy)
         {
             if (plantDelayID <= 0)
-                throw new ArgumentException("Invalid Plant Delay ID.");
+            {
+                throw new ArgumentException(
+                    "Invalid Plant Delay ID."
+                );
+            }
 
-            counterMeasures = (counterMeasures ?? new List<DelayCounterMeasureBLL>())
-                .Where(x => x != null &&
-                    (!string.IsNullOrWhiteSpace(x.CounterMeasure) ||
-                     !string.IsNullOrWhiteSpace(x.CounterMeasureA) ||
-                     !string.IsNullOrWhiteSpace(x.IncreaseMTBF) ||
-                     !string.IsNullOrWhiteSpace(x.DecreaseMTTR)))
+            counterMeasures =
+                (
+                    counterMeasures ??
+                    new List<DelayCounterMeasureBLL>()
+                )
+                .Where(x =>
+                    x != null &&
+                    (
+                        !string.IsNullOrWhiteSpace(
+                            x.CounterMeasure
+                        ) ||
+                        !string.IsNullOrWhiteSpace(
+                            x.CounterMeasureA
+                        ) ||
+                        !string.IsNullOrWhiteSpace(
+                            x.IncreaseMTBF
+                        ) ||
+                        !string.IsNullOrWhiteSpace(
+                            x.DecreaseMTTR
+                        )
+                    )
+                )
                 .ToList();
 
             if (counterMeasures.Count == 0)
-                throw new ArgumentException("At least one countermeasure is required.");
-
-            int savedRecords = 0;
-
-            foreach (var item in counterMeasures)
             {
-                item.PlantDelayID = plantDelayID;
+                throw new ArgumentException(
+                    "At least one countermeasure is required."
+                );
+            }
 
-                if (string.IsNullOrWhiteSpace(item.CounterMeasureStatus))
-                    item.CounterMeasureStatus = "Open";
+            int savedRecords =
+                0;
 
-                if (Save(item, createdBy) > 0)
+            foreach (
+                DelayCounterMeasureBLL item
+                in counterMeasures
+            )
+            {
+                item.PlantDelayID =
+                    plantDelayID;
+
+                if (string.IsNullOrWhiteSpace(
+                    item.CounterMeasureStatus
+                ))
+                {
+                    item.CounterMeasureStatus =
+                        "Open";
+                }
+
+                int result =
+                    Save(
+                        item,
+                        createdBy
+                    );
+
+                if (result > 0)
+                {
                     savedRecords++;
+                }
             }
 
             return savedRecords;
         }
-
-        public int Save(DelayCounterMeasureBLL model, string createdBy)
+        public int Save(
+            DelayCounterMeasureBLL model,
+            string createdBy)
         {
             if (model == null)
-                throw new ArgumentNullException("model");
+            {
+                throw new ArgumentNullException(
+                    "model"
+                );
+            }
 
             if (model.PlantDelayID <= 0)
-                throw new ArgumentException("Invalid Plant Delay ID.");
+            {
+                throw new ArgumentException(
+                    "Invalid Plant Delay ID."
+                );
+            }
 
             SqlParameter[] parameters =
             {
-                Param("@ID", SqlDbType.Int, model.ID),
-                Param("@PlantDelayID", SqlDbType.Int, model.PlantDelayID),
-                Param("@CounterMeasureCode", SqlDbType.NVarChar, DbValue(model.CounterMeasureCode), 50),
-                Param("@CounterMeasure", SqlDbType.NVarChar, DbValue(model.CounterMeasure), -1),
-                Param("@CounterMeasureA", SqlDbType.NVarChar, DbValue(model.CounterMeasureA), -1),
-                Param("@IncreaseMTBF", SqlDbType.NVarChar, DbValue(model.IncreaseMTBF), -1),
-                Param("@DecreaseMTTR", SqlDbType.NVarChar, DbValue(model.DecreaseMTTR), -1),
-                Param("@IncreaseMTBF1", SqlDbType.NVarChar, DbValue(model.IncreaseMTBF1), -1),
-                Param("@DecreaseMTTR1", SqlDbType.NVarChar, DbValue(model.DecreaseMTTR1), -1),
-                Param("@RootCause", SqlDbType.NVarChar, DbValue(model.RootCause), -1),
-                Param("@SAPBreakdownOrder", SqlDbType.NVarChar, DbValue(model.SAPBreakdownOrder), 100),
-                Param("@FailureReportStatus", SqlDbType.NVarChar, DbValue(model.FailureReportStatus), 50),
-                Param("@SAPOrderNo", SqlDbType.NVarChar, DbValue(model.SAPOrderNo), 100),
-                Param("@Responsible", SqlDbType.NVarChar, DbValue(model.Responsible), 150),
-                Param("@TargetDate", SqlDbType.Date,
-                    model.TargetDate.HasValue ? (object)model.TargetDate.Value.Date : DBNull.Value),
-                Param("@CounterMeasureStatus", SqlDbType.NVarChar,
-                    DbValue(string.IsNullOrWhiteSpace(model.CounterMeasureStatus) ? "Open" : model.CounterMeasureStatus), 50),
-                Param("@EvidenceForCompletion", SqlDbType.NVarChar, DbValue(model.EvidenceForCompletion), -1),
-                Param("@ReasonForNotClosing", SqlDbType.NVarChar, DbValue(model.ReasonForNotClosing), -1),
-                Param("@CreatedBy", SqlDbType.NVarChar, DbValue(createdBy), 100)
-            };
+        Param(
+            "@ID",
+            SqlDbType.Int,
+            model.ID
+        ),
 
-            DataTable dt = DBHelper.ExecuteDataTable(
-                "sp_SaveDelayCounterMeasure",
-                CommandType.StoredProcedure,
-                parameters
-            );
+        Param(
+            "@PlantDelayID",
+            SqlDbType.Int,
+            model.PlantDelayID
+        ),
 
-            if (dt == null || dt.Rows.Count == 0 || !dt.Columns.Contains("ID") || dt.Rows[0]["ID"] == DBNull.Value)
+        Param(
+            "@CounterMeasureCode",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.CounterMeasureCode
+            ),
+            50
+        ),
+
+        Param(
+            "@CounterMeasure",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.CounterMeasure
+            ),
+            -1
+        ),
+
+        Param(
+            "@CounterMeasureA",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.CounterMeasureA
+            ),
+            -1
+        ),
+
+        Param(
+            "@IncreaseMTBF",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.IncreaseMTBF
+            ),
+            -1
+        ),
+
+        Param(
+            "@DecreaseMTTR",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.DecreaseMTTR
+            ),
+            -1
+        ),
+
+        Param(
+            "@IncreaseMTBF1",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.IncreaseMTBF1
+            ),
+            -1
+        ),
+
+        Param(
+            "@DecreaseMTTR1",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.DecreaseMTTR1
+            ),
+            -1
+        ),
+
+        Param(
+            "@RootCause",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.RootCause
+            ),
+            -1
+        ),
+
+        Param(
+            "@SAPBreakdownOrder",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.SAPBreakdownOrder
+            ),
+            100
+        ),
+
+        Param(
+            "@FailureReportStatus",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.FailureReportStatus
+            ),
+            50
+        ),
+
+        Param(
+            "@SAPOrderNo",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.SAPOrderNo
+            ),
+            100
+        ),
+
+        Param(
+            "@SubOrderNumber",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.SubOrderNumber
+            ),
+            50
+        ),
+
+        Param(
+            "@Responsible",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.Responsible
+            ),
+            150
+        ),
+
+        Param(
+            "@TargetDate",
+            SqlDbType.Date,
+            model.TargetDate.HasValue
+                ? (object)model.TargetDate.Value.Date
+                : DBNull.Value
+        ),
+
+        Param(
+            "@CounterMeasureStatus",
+            SqlDbType.NVarChar,
+            DbValue(
+                string.IsNullOrWhiteSpace(
+                    model.CounterMeasureStatus
+                )
+                    ? "Open"
+                    : model.CounterMeasureStatus
+            ),
+            50
+        ),
+
+        Param(
+            "@EvidenceForCompletion",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.EvidenceForCompletion
+            ),
+            -1
+        ),
+
+        Param(
+            "@ReasonForNotClosing",
+            SqlDbType.NVarChar,
+            DbValue(
+                model.ReasonForNotClosing
+            ),
+            -1
+        ),
+
+        Param(
+            "@CreatedBy",
+            SqlDbType.NVarChar,
+            DbValue(
+                createdBy
+            ),
+            100
+        )
+    };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_SaveDelayCounterMeasure",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null ||
+                dt.Rows.Count == 0 ||
+                !dt.Columns.Contains("ID") ||
+                dt.Rows[0]["ID"] == DBNull.Value
+            )
+            {
                 return 0;
+            }
 
-            return Convert.ToInt32(dt.Rows[0]["ID"]);
+            return Convert.ToInt32(
+                dt.Rows[0]["ID"]
+            );
         }
-
         public DelayCounterMeasureVM GetPageData(int plantDelayID)
         {
             if (plantDelayID <= 0)

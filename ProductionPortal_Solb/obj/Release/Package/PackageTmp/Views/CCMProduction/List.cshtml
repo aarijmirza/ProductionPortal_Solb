@@ -228,17 +228,17 @@
         </div>
 
         @*<div class="col-md-4 text-right">
-            <a href="@Url.Action(
-                "Add",
-                "CCMProduction"
-            )"
-               class="btn btn-ccm">
+                <a href="@Url.Action(
+                    "Add",
+                    "CCMProduction"
+                )"
+                   class="btn btn-ccm">
 
-                <i class="fa fa-plus"></i>
-                Add New Report
+                    <i class="fa fa-plus"></i>
+                    Add New Report
 
-            </a>
-        </div>*@
+                </a>
+            </div>*@
 
     </div>
 </div>
@@ -261,16 +261,38 @@
                 </p>
             </div>
 
-            <a href="@Url.Action(
-                "Add",
-                "CCMProduction"
-            )"
-               class="btn btn-light">
+            <div class="d-flex flex-wrap" style="gap:8px; position:relative; z-index:2;">
 
-                <i class="fa fa-plus"></i>
-                New Entry
+                <a href="@Url.Action(
+                    "DownloadAllPdf",
+                    "CCMProduction",
+                    new
+                    {
+                        fromDate = ViewBag.FromDate,
+                        toDate = ViewBag.ToDate,
+                        shift = ViewBag.Shift
+                    }
+                )"
+                   class="btn btn-light"
+                   title="Download all filtered records using the same PDF template">
 
-            </a>
+                    <i class="fa fa-file-pdf-o"></i>
+                    Download All PDF
+
+                </a>
+
+                <a href="@Url.Action(
+                    "Add",
+                    "CCMProduction"
+                )"
+                   class="btn btn-light">
+
+                    <i class="fa fa-plus"></i>
+                    New Entry
+
+                </a>
+
+            </div>
 
         </div>
 
@@ -352,27 +374,27 @@
                                     </option>
 
                                     <option value="Morning"
-                                            @(Convert.ToString( ViewBag.Shift ) == "Morning" ? "selected" : "")>
+                                            @(Convert.ToString(ViewBag.Shift) == "Morning" ? "selected" : "")>
                                         Morning
                                     </option>
 
                                     <option value="Evening"
-                                            @(Convert.ToString( ViewBag.Shift ) == "Evening" ? "selected" : "")>
+                                            @(Convert.ToString(ViewBag.Shift) == "Evening" ? "selected" : "")>
                                         Evening
                                     </option>
 
                                     <option value="Night"
-                                            @(Convert.ToString( ViewBag.Shift ) == "Night" ? "selected" : "")>
+                                            @(Convert.ToString(ViewBag.Shift) == "Night" ? "selected" : "")>
                                         Night
                                     </option>
 
                                     <option value="Long Morning"
-                                            @(Convert.ToString( ViewBag.Shift ) == "Long Morning" ? "selected" : "")>
+                                            @(Convert.ToString(ViewBag.Shift) == "Long Morning" ? "selected" : "")>
                                         Long Morning
                                     </option>
 
                                     <option value="Long Night"
-                                            @(Convert.ToString( ViewBag.Shift ) == "Long Night" ? "selected" : "")>
+                                            @(Convert.ToString(ViewBag.Shift) == "Long Night" ? "selected" : "")>
                                         Long Night
                                     </option>
 
@@ -405,7 +427,6 @@
 
                     <thead>
                         <tr>
-                            <th>Report No.</th>
                             <th>Date</th>
                             <th>Shift</th>
                             <th>Team</th>
@@ -429,14 +450,10 @@
                             {
                                 <tr>
 
-                                    <td class="report-number">
-                                        @item.ReportNo
-                                    </td>
-
                                     <td>
                                         @item.ReportDate.ToString(
-                                            "dd-MMM-yyyy"
-                                        )
+                                                 "dd-MMM-yyyy"
+                                             )
                                     </td>
 
                                     <td>
@@ -478,50 +495,50 @@
                                         <div class="action-buttons">
 
                                             @*<a href="@Url.Action(
-                                                "Details",
-                                                "CCMProduction",
-                                                new
-                                                {
-                                                    id = item.ID
-                                                }
-                                            )"
-                                               class="btn btn-info btn-sm"
-                                               title="View">
+                                                    "Details",
+                                                    "CCMProduction",
+                                                    new
+                                                    {
+                                                        id = item.ID
+                                                    }
+                                                )"
+                                                   class="btn btn-info btn-sm"
+                                                   title="View">
 
-                                                <i class="fa fa-eye"></i>
+                                                    <i class="fa fa-eye"></i>
 
-                                            </a>
+                                                </a>
 
-                                            <a href="@Url.Action(
-                                                "Add",
-                                                "CCMProduction",
-                                                new
-                                                {
-                                                    id = item.ID
-                                                }
-                                            )"
-                                               class="btn btn-warning btn-sm"
-                                               title="Edit">
+                                                <a href="@Url.Action(
+                                                    "Add",
+                                                    "CCMProduction",
+                                                    new
+                                                    {
+                                                        id = item.ID
+                                                    }
+                                                )"
+                                                   class="btn btn-warning btn-sm"
+                                                   title="Edit">
 
-                                                <i class="fa fa-edit"></i>
+                                                    <i class="fa fa-edit"></i>
 
-                                            </a>
+                                                </a>
 
-                                            <a href="@Url.Action(
-                                                "PdfView",
-                                                "CCMProduction",
-                                                new
-                                                {
-                                                    id = item.ID
-                                                }
-                                            )"
-                                               target="_blank"
-                                               class="btn btn-secondary btn-sm"
-                                               title="Preview PDF">
+                                                <a href="@Url.Action(
+                                                    "PdfView",
+                                                    "CCMProduction",
+                                                    new
+                                                    {
+                                                        id = item.ID
+                                                    }
+                                                )"
+                                                   target="_blank"
+                                                   class="btn btn-secondary btn-sm"
+                                                   title="Preview PDF">
 
-                                                <i class="fa fa-print"></i>
+                                                    <i class="fa fa-print"></i>
 
-                                            </a>*@
+                                                </a>*@
 
                                             <a href="@Url.Action(
                                                 "DownloadPdf",

@@ -1,6 +1,7 @@
 ﻿@using System.Globalization
 @{
     ViewBag.Title = "add";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <style>
@@ -47,7 +48,8 @@
         </div>
     </div>
 
-    <form action="/RollingMill/AddDetails" id="addprofileform" method="post">
+    <form action="@Url.Action("AddDetails", "RollingMill")" id="addprofileform" method="post">
+        @Html.AntiForgeryToken()
         <input type="hidden" id="ID" name="ID" />
 
         <div class="card m-b-30">
@@ -176,15 +178,16 @@
                                        data-id="@item.ID">
                                         <i class="mdi mdi-trash-can"></i>
                                     </a>
-                                    <a href="javascript:void(0);"
-                                       class="btn btn-sm btn-success btn-load"
-                                       data-date="@item.Date.ToString("yyyy-MM-dd")"
-                                       data-plant="@item.Plant"
-                                       data-team="@item.Team"
-                                       data-shift="@item.Shift"
-                                       data-incharge="@item.ShiftIncharge">
+                                    <button type="button"
+                                            class="btn btn-primary btn-sm btn-load-shift"
+                                            data-id="@item.ID"
+                                            data-date="@item.Date.ToString("yyyy-MM-dd")"
+                                            data-shift="@item.Shift"
+                                            data-plant="@item.Plant"
+                                            data-team="@item.Team"
+                                            data-incharge="@item.ShiftIncharge">
                                         Load
-                                    </a>
+                                    </button>
 
                                 </td>
                             </tr>
@@ -197,7 +200,6 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -210,7 +212,7 @@
     $(document).on("click", ".record-row", function (e) {
 
         // Agar Load ya Delete button click hua ho to row click na chale
-        if ($(e.target).closest(".btn-load, .btn-delete").length > 0) {
+        if ($(e.target).closest(".btn-load-shift, .btn-delete").length > 0) {
             return;
         }
 
@@ -256,7 +258,7 @@
     // LOAD SHIFT FROM ACTION BUTTON
     // ==============================
 
-    $(document).on("click", ".btn-load", function (e) {
+    $(document).on("click", ".btn-load-shift", function (e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -282,7 +284,9 @@
         url: '@Url.Action("SetSelectedShift", "RollingMill")',
         type: 'POST',
         data: {
-            id: id,
+            __RequestVerificationToken:
+                $("#addprofileform input[name='__RequestVerificationToken']").val(),
+            shiftDetailID: id,
             date: date,
             shift: shift,
             plant: plant,
@@ -307,7 +311,11 @@
                     timer: 1200,
                     showConfirmButton: false
                 }).then(function () {
-                    window.location.href = '@Url.Action("AddCharge", "RollingMill")';
+                    window.location.href =
+                        '@Url.Action("list", "Delay")'
+                        + '?date=' + encodeURIComponent(res.date || date)
+                        + '&shift=' + encodeURIComponent(res.shift || shift)
+                        + '&plant=' + encodeURIComponent(res.plant || plant);
                 });
 
             } else {

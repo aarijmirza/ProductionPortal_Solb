@@ -1,19 +1,19 @@
 ﻿
 @{
-    ViewBag.Title = "KPIAdd";
+    ViewBag.Title = "EHSS KPI";
 }
 
 <!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
     <div class="row">
         <div class="col-md-6 col-lg-6">
-            <h4 class="xp-page-title">Security KPI</h4>
+            <h4 class="xp-page-title">EHSS KPI Form</h4>
         </div>
         <div class="col-md-6 col-lg-6">
             <div class="xp-breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
-                    <li class="breadcrumb-item"><a href="#">Security KPI</a></li>
+                    <li class="breadcrumb-item"><a href="#">EHSS KPI Form</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Add Record</li>
                 </ol>
             </div>
@@ -45,7 +45,103 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="cat" rowspan="15">Safety</td>
+                                        <td class="cat" rowspan="19">Safety</td>
+                                        <td class="desc">Safety Inductions Conducted</td>
+                                        <td><input name="Safety[Inductions].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inductions].Weekly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inductions].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inductions].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inductions].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">HSE Trainings Conducted</td>
+                                        <td><input name="Safety[Trainings].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Trainings].Weekly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Trainings].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Trainings].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Trainings].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">HSE Awareness Campaign</td>
+                                        <td><input name="Safety[Awareness].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Awareness].Weekly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Awareness].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Awareness].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Awareness].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Safety Walks</td>
+                                        <td><input name="Safety[Walks].Daily" class="form-control small-input" disabled /></td>
+                                        <td><input name="Safety[Walks].Weekly" class="form-control small-input" disabled /></td>
+                                        <td><input name="Safety[Walks].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Walks].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Walks].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Unsafe Act / Unsafe Condition</td>
+                                        <td><input name="Safety[Unsafe].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Unsafe].Weekly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Unsafe].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Unsafe].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Unsafe].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Safety Observation Reports (SOR)</td>
+                                        <td><input name="Safety[Inspections].Daily" class="form-control small-input" disabled /></td>
+                                        <td><input name="Safety[Inspections].Weekly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inspections].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inspections].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inspections].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Safety Patrols / Inspections</td>
+                                        <td><input name="Safety[Inspections].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inspections].Weekly" class="form-control small-input" disabled /></td>
+                                        <td><input name="Safety[Inspections].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inspections].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Inspections].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Toolbox Talks</td>
+                                        <td><input name="Safety[Toolbox].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Toolbox].Weekly" class="form-control small-input" disabled /></td>
+                                        <td><input name="Safety[Toolbox].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Toolbox].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Toolbox].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Safety Committee</td>
+                                        <td><input name="Safety[Committee].Daily" class="form-control small-input" disabled /></td>
+                                        <td><input name="Safety[Committee].Weekly" class="form-control small-input" disabled /></td>
+                                        <td><input name="Safety[Committee].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Committee].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Committee].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">HSE Meetings</td>
+                                        <td><input name="Safety[Committee].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Committee].Weekly" class="form-control small-input" disabled /></td>
+                                        <td><input name="Safety[Committee].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[Committee].YTD" class="form-control small-input" disabled /></td>
+                                        <td><input name="Safety[Committee].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">NCR Issued</td>
+                                        <td><input name="Safety[NCR].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NCR].Weekly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NCR].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NCR].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NCR].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    @*<tr>
+                                            <td class="desc">Property Damage</td>
+                                            <td><input name="Safety[PropertyDamage].Daily" class="form-control small-input" /></td>
+                                            <td><input name="Safety[PropertyDamage].Weekly" class="form-control small-input" /></td>
+                                            <td><input name="Safety[PropertyDamage].Monthly" class="form-control small-input" /></td>
+                                            <td><input name="Safety[PropertyDamage].YTD" class="form-control small-input" /></td>
+                                            <td><input name="Safety[PropertyDamage].Remarks" class="form-control small-input" /></td>
+                                        </tr>*@
+                                    <tr>
                                         <td class="desc">LTI</td>
                                         <td><input name="Safety[LTI].Daily" class="form-control small-input" /></td>
                                         <td><input name="Safety[LTI].Weekly" class="form-control small-input" /></td>
@@ -70,7 +166,7 @@
                                         <td><input name="Safety[TRIFR].Remarks" class="form-control small-input" /></td>
                                     </tr>
                                     <tr>
-                                        <td class="desc">Medical treatment Cases</td>
+                                        <td class="desc">Medical Treatment Cases (MTC)</td>
                                         <td><input name="Safety[MTC].Daily" class="form-control small-input" /></td>
                                         <td><input name="Safety[MTC].Weekly" class="form-control small-input" /></td>
                                         <td><input name="Safety[MTC].Monthly" class="form-control small-input" /></td>
@@ -78,85 +174,13 @@
                                         <td><input name="Safety[MTC].Remarks" class="form-control small-input" /></td>
                                     </tr>
                                     <tr>
-                                        <td class="desc">First aid cases</td>
+                                        <td class="desc">First Aid Cases (FAC)</td>
                                         <td><input name="Safety[FirstAid].Daily" class="form-control small-input" /></td>
                                         <td><input name="Safety[FirstAid].Weekly" class="form-control small-input" /></td>
                                         <td><input name="Safety[FirstAid].Monthly" class="form-control small-input" /></td>
                                         <td><input name="Safety[FirstAid].YTD" class="form-control small-input" /></td>
                                         <td><input name="Safety[FirstAid].Remarks" class="form-control small-input" /></td>
                                     </tr>
-                                    <tr>
-                                        <td class="desc">Safety Inductions Conducted</td>
-                                        <td><input name="Safety[Inductions].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Inductions].Weekly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Inductions].Monthly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Inductions].YTD" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Inductions].Remarks" class="form-control small-input" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="desc">HSE Trainings Conducted</td>
-                                        <td><input name="Safety[Trainings].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Trainings].Weekly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Trainings].Monthly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Trainings].YTD" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Trainings].Remarks" class="form-control small-input" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="desc">HSE Awareness Sessions</td>
-                                        <td><input name="Safety[Awareness].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Awareness].Weekly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Awareness].Monthly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Awareness].YTD" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Awareness].Remarks" class="form-control small-input" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="desc">Safety Walks</td>
-                                        <td><input name="Safety[Walks].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Walks].Weekly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Walks].Monthly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Walks].YTD" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Walks].Remarks" class="form-control small-input" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="desc">Safety Inspections</td>
-                                        <td><input name="Safety[Inspections].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Inspections].Weekly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Inspections].Monthly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Inspections].YTD" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Inspections].Remarks" class="form-control small-input" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="desc">Toolbox Talks</td>
-                                        <td><input name="Safety[Toolbox].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Toolbox].Weekly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Toolbox].Monthly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Toolbox].YTD" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Toolbox].Remarks" class="form-control small-input" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="desc">Safety Committee / HSE Meeting</td>
-                                        <td><input name="Safety[Committee].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Committee].Weekly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Committee].Monthly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Committee].YTD" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Committee].Remarks" class="form-control small-input" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="desc">NCR Issued</td>
-                                        <td><input name="Safety[NCR].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Safety[NCR].Weekly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[NCR].Monthly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[NCR].YTD" class="form-control small-input" /></td>
-                                        <td><input name="Safety[NCR].Remarks" class="form-control small-input" /></td>
-                                    </tr>
-                                    @*<tr>
-                                            <td class="desc">Property Damage</td>
-                                            <td><input name="Safety[PropertyDamage].Daily" class="form-control small-input" /></td>
-                                            <td><input name="Safety[PropertyDamage].Weekly" class="form-control small-input" /></td>
-                                            <td><input name="Safety[PropertyDamage].Monthly" class="form-control small-input" /></td>
-                                            <td><input name="Safety[PropertyDamage].YTD" class="form-control small-input" /></td>
-                                            <td><input name="Safety[PropertyDamage].Remarks" class="form-control small-input" /></td>
-                                        </tr>*@
                                     <tr>
                                         <td class="desc">Near Miss</td>
                                         <td><input name="Safety[NearMiss].Daily" class="form-control small-input" /></td>
@@ -166,17 +190,27 @@
                                         <td><input name="Safety[NearMiss].Remarks" class="form-control small-input" /></td>
                                     </tr>
                                     <tr>
-                                        <td class="desc">Unsafe Act / Unsafe Condition / Incident-Accident</td>
-                                        <td><input name="Safety[Unsafe].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Unsafe].Weekly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Unsafe].Monthly" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Unsafe].YTD" class="form-control small-input" /></td>
-                                        <td><input name="Safety[Unsafe].Remarks" class="form-control small-input" /></td>
+                                        <td class="desc">Restricted Work Days / Others</td>
+                                        <td><input name="Safety[NearMiss].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NearMiss].Weekly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NearMiss].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NearMiss].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NearMiss].Remarks" class="form-control small-input" /></td>
                                     </tr>
+                                    <tr>
+                                        <td class="desc">Total Number of Incidents / Accidents</td>
+                                        <td><input name="Safety[NearMiss].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NearMiss].Weekly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NearMiss].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NearMiss].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Safety[NearMiss].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+
+
 
                                     @* ===================== SECURITY ===================== *@
                                     <tr>
-                                        <td class="cat" rowspan="4">Security</td>
+                                        <td class="cat" rowspan="5">Security</td>
                                         <td class="desc">Visitor Entry</td>
                                         <td><input name="Security[VisitorEntry].Daily" class="form-control small-input" /></td>
                                         <td><input name="Security[VisitorEntry].Weekly" class="form-control small-input" /></td>
@@ -194,6 +228,14 @@
                                     </tr>
                                     <tr>
                                         <td class="desc">Truck Dispatched</td>
+                                        <td><input name="Security[TruckDispatched].Daily" class="form-control small-input" /></td>
+                                        <td><input name="Security[TruckDispatched].Weekly" class="form-control small-input" /></td>
+                                        <td><input name="Security[TruckDispatched].Monthly" class="form-control small-input" /></td>
+                                        <td><input name="Security[TruckDispatched].YTD" class="form-control small-input" /></td>
+                                        <td><input name="Security[TruckDispatched].Remarks" class="form-control small-input" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Traffic Incident</td>
                                         <td><input name="Security[TruckDispatched].Daily" class="form-control small-input" /></td>
                                         <td><input name="Security[TruckDispatched].Weekly" class="form-control small-input" /></td>
                                         <td><input name="Security[TruckDispatched].Monthly" class="form-control small-input" /></td>
@@ -282,7 +324,7 @@
 
                                     @* ===================== RISK / EMERGENCY RESPONSE ===================== *@
                                     <tr>
-                                        <td class="cat" rowspan="2">Risk / Emergency Response</td>
+                                        <td class="cat" rowspan="2">Emergency Services (Fire)</td>
                                         <td class="desc">Fire Drills / Mock Drills</td>
                                         <td><input name="Risk[FireDrills].Daily" class="form-control small-input" /></td>
                                         <td><input name="Risk[FireDrills].Weekly" class="form-control small-input" /></td>
@@ -301,10 +343,10 @@
 
                                     @* ===================== COMPLIANCE ===================== *@
                                     <tr>
-                                        <td class="cat" rowspan="1">Compliance Section</td>
-                                        <td class="desc">Audit (Internal / External)</td>
-                                        <td><input name="Compliance[Audit].Daily" class="form-control small-input" /></td>
-                                        <td><input name="Compliance[Audit].Weekly" class="form-control small-input" /></td>
+                                        <td class="cat" rowspan="1">HSE Audit</td>
+                                        <td class="desc">Safety Score Based Audit Quaterly (Internal)</td>
+                                        @*<td><input name="Compliance[Audit].Daily" class="form-control small-input" /></td>
+                                            <td><input name="Compliance[Audit].Weekly" class="form-control small-input" /></td>*@
                                         <td><input name="Compliance[Audit].Monthly" class="form-control small-input" /></td>
                                         <td><input name="Compliance[Audit].YTD" class="form-control small-input" /></td>
                                         <td><input name="Compliance[Audit].Remarks" class="form-control small-input" /></td>
@@ -327,7 +369,7 @@
                                         <td><input name="Dept[Operation].Open" class="form-control small-input" /></td>
                                     </tr>
                                     <tr>
-                                        <td class="desc">SHER</td>
+                                        <td class="desc">EHSS</td>
                                         <td colspan="2" class="center">200</td>
                                         <td><input name="Dept[SHEH].Reported" class="form-control small-input" /></td>
                                         <td><input name="Dept[SHEH].Closed" class="form-control small-input" /></td>
@@ -360,6 +402,55 @@
                                         <td><input name="Dept[RiyadhOffice].Reported" class="form-control small-input" /></td>
                                         <td><input name="Dept[RiyadhOffice].Closed" class="form-control small-input" /></td>
                                         <td><input name="Dept[RiyadhOffice].Open" class="form-control small-input" /></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="cat" rowspan="8">Safety Hours Detail</td>
+                                        <td class="subhead">Details</td>
+                                        <td class="subhead">Daily</td>
+                                        <td class="subhead">Monthly</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Number Of Employees</td>
+                                        <td><input name="Dept[RiyadhOffice].Reported" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Closed" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Open" class="form-control small-input" /></td>
+
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Total Working Hours</td>
+                                        <td><input name="Dept[RiyadhOffice].Reported" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Closed" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Open" class="form-control small-input" /></td>
+
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Safeman Hours</td>
+                                        <td><input name="Dept[RiyadhOffice].Reported" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Closed" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Open" class="form-control small-input" /></td>
+
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Total Number Of Contractor</td>
+                                        <td><input name="Dept[RiyadhOffice].Reported" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Closed" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Open" class="form-control small-input" /></td>
+
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Contractor Safeman Hours</td>
+                                        <td><input name="Dept[RiyadhOffice].Reported" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Closed" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Open" class="form-control small-input" /></td>
+
+                                    </tr>
+                                    <tr>
+                                        <td class="desc">Contractor Working Hours</td>
+                                        <td><input name="Dept[RiyadhOffice].Reported" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Closed" class="form-control small-input" /></td>
+                                        <td><input name="Dept[RiyadhOffice].Open" class="form-control small-input" /></td>
+
                                     </tr>
                                 </tbody>
                             </table>

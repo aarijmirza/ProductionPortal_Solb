@@ -85,15 +85,17 @@
 
                             <div class="form-group col-md-1">
                                 <label>Heat #  <br /> <br /></label>
+                                @Html.TextBoxFor(m => m.Master.HeatNo,
+                                    new { @class = "form-control", type = "text" })
 
-                                @Html.DropDownListFor(
+                                @*@Html.DropDownListFor(
                                          m => m.Master.HeatNo,
                                          (SelectList)ViewBag.HeatNo,
                                          "-- Select Heat # --",
                                          new { @class = "form-control" }
                                      )
 
-                                @Html.ValidationMessageFor(m => m.Master.HeatNo, "", new { @class = "text-danger" })
+                                @Html.ValidationMessageFor(m => m.Master.HeatNo, "", new { @class = "text-danger" })*@
                             </div>
 
 

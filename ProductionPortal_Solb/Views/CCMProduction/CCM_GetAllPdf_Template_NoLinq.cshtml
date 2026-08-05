@@ -1,0 +1,706 @@
+﻿@model IEnumerable<DAL.Models.CCMDailyProductionReportBLL>
+
+@using System
+@using System.Collections.Generic
+
+@{
+    Layout = null;
+
+    var reports =
+        Model != null
+            ? new List<DAL.Models.CCMDailyProductionReportBLL>(Model)
+            : new List<DAL.Models.CCMDailyProductionReportBLL>();
+
+    var firstReport =
+        reports.Count > 0
+            ? reports[0]
+            : null;
+
+    var allDetails =
+        new List<DAL.Models.CCMDailyProductionReportDetailBLL>();
+
+    foreach (var report in reports)
+    {
+        if (
+            report != null &&
+            report.Details != null
+        )
+        {
+            foreach (var detail in report.Details)
+            {
+                if (detail != null)
+                {
+                    allDetails.Add(detail);
+                }
+            }
+        }
+    }
+
+    allDetails.Sort(
+        delegate (
+            DAL.Models.CCMDailyProductionReportDetailBLL a,
+            DAL.Models.CCMDailyProductionReportDetailBLL b)
+        {
+            int aSequence =
+                a != null
+                    ? a.SequenceNo
+                    : 0;
+
+            int bSequence =
+                b != null
+                    ? b.SequenceNo
+                    : 0;
+
+            return aSequence.CompareTo(
+                bSequence
+            );
+        }
+    );
+
+    int total14M = 0;
+    int total13M = 0;
+    int total12M = 0;
+    int total11M = 0;
+    int totalPrimeBillets = 0;
+    int totalShortBillets = 0;
+    int totalBend = 0;
+    int totalBillets = 0;
+
+    decimal totalPrimeLength = 0M;
+    decimal totalShortLength = 0M;
+    decimal totalPrimeWeight = 0M;
+    decimal totalShortWeight = 0M;
+    decimal totalWeight = 0M;
+
+    string remarks =
+        string.Empty;
+
+    foreach (var detail in allDetails)
+    {
+        total14M += detail.Billet14M;
+        total13M += detail.Billet13M;
+        total12M += detail.Billet12M;
+        total11M += detail.Billet11M;
+        totalPrimeBillets += detail.GoodBillets;
+        totalShortBillets += detail.ShortBillets;
+        totalBend += detail.Bend;
+        totalBillets += detail.TotalBillets;
+
+        totalPrimeLength +=
+            detail.TotalLength ?? 0M;
+
+        totalShortLength +=
+            detail.ShortBilletTotalLength ?? 0M;
+
+        totalPrimeWeight +=
+            detail.PrimeBilletWeight ?? 0M;
+
+        totalShortWeight +=
+            detail.ShortBilletWeight ?? 0M;
+
+        totalWeight +=
+            detail.TotalWeight ?? 0M;
+
+        if (
+            string.IsNullOrWhiteSpace(remarks) &&
+            !string.IsNullOrWhiteSpace(detail.Remarks)
+        )
+        {
+            remarks =
+                detail.Remarks;
+        }
+    }
+
+    decimal overallShortAverageLength =
+        totalShortBillets > 0
+            ? totalShortLength /
+              totalShortBillets
+            : 0M;
+
+    DateTime? fromDate = null;
+    DateTime? toDate = null;
+
+    foreach (var report in reports)
+    {
+        if (report == null)
+        {
+            continue;
+        }
+
+        if (
+            !fromDate.HasValue ||
+            report.ReportDate < fromDate.Value
+        )
+        {
+            fromDate =
+                report.ReportDate;
+        }
+
+        if (
+            !toDate.HasValue ||
+            report.ReportDate > toDate.Value
+        )
+        {
+            toDate =
+                report.ReportDate;
+        }
+    }
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+
+    <title>
+        Billet Yard Daily Production Report
+    </title>
+
+    <style>
+        @@page {
+            size: A3 landscape;
+            margin: 4mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #ffffff;
+            color: #111111;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 6px;
+        }
+
+        .report-container {
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-table td {
+            border: 1px solid #111;
+            vertical-align: middle;
+        }
+
+        .logo-cell {
+            width: 15%;
+            padding: 3px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .title-cell {
+            width: 60%;
+            padding: 3px;
+            text-align: center;
+        }
+
+            .title-cell .company {
+                font-size: 15px;
+                font-weight: 800;
+            }
+
+            .title-cell .section {
+                margin-top: 2px;
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            .title-cell .report-title {
+                margin-top: 2px;
+                font-size: 12px;
+                font-weight: 800;
+            }
+
+        .document-cell {
+            width: 25%;
+            padding: 0;
+        }
+
+        .document-table td {
+            padding: 2px 3px;
+            border: 0;
+            border-bottom: 1px solid #111;
+            font-size: 6px;
+        }
+
+        .document-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .meta-table {
+            margin-top: 2px;
+        }
+
+            .meta-table td {
+                padding: 2px 3px;
+                border: 1px solid #111;
+                font-size: 6.5px;
+            }
+
+        .production-table {
+            margin-top: 2px;
+            table-layout: fixed;
+        }
+
+            .production-table th,
+            .production-table td {
+                padding: 1px;
+                border: 1px solid #111;
+                text-align: center;
+                vertical-align: middle;
+                overflow-wrap: anywhere;
+            }
+
+            .production-table thead th {
+                background: #e7e7e7;
+                font-weight: 800;
+                line-height: 1.1;
+            }
+
+            .production-table .sr {
+                width: 2.5%;
+            }
+
+            .production-table .report-no {
+                width: 5%;
+            }
+
+            .production-table .heat {
+                width: 5.5%;
+            }
+
+            .production-table .grade {
+                width: 4.5%;
+            }
+
+            .production-table .qty {
+                width: 2.8%;
+            }
+
+            .production-table .metric {
+                width: 4.8%;
+            }
+
+            .production-table .weight {
+                width: 5.2%;
+            }
+
+            .production-table .total-col {
+                width: 3.7%;
+            }
+
+        .number {
+            text-align: right !important;
+            padding-right: 2px !important;
+        }
+
+        .total-row td {
+            background: #ececec;
+            font-weight: 800;
+        }
+
+        .summary-table {
+            margin-top: 2px;
+        }
+
+            .summary-table td {
+                padding: 3px;
+                border: 1px solid #111;
+                text-align: center;
+            }
+
+        .summary-label {
+            background: #ededed;
+            font-weight: 800;
+        }
+
+        .remarks-container {
+            min-height: 20px;
+            margin-top: 2px;
+            padding: 3px;
+            border: 1px solid #111;
+        }
+
+        .remarks-title {
+            margin-bottom: 2px;
+            font-weight: 800;
+        }
+
+        .signature-table {
+            margin-top: 5px;
+        }
+
+            .signature-table td {
+                width: 50%;
+                padding: 2px 45px;
+                text-align: center;
+                vertical-align: bottom;
+            }
+
+        .signature-name {
+            min-height: 10px;
+            font-weight: 700;
+        }
+
+        .signature-line {
+            margin-top: 6px;
+            padding-top: 3px;
+            border-top: 1px solid #111;
+            font-weight: 800;
+        }
+
+        .footer-note {
+            margin-top: 2px;
+            color: #555;
+            font-size: 5.5px;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="report-container">
+
+        <!-- HEADER: rendered only once -->
+        <table class="header-table">
+            <tr>
+                <td class="logo-cell">
+                    <img src="@Url.Content("~/assets/images/logo.png")"
+                         alt="SOLB Steel"
+                         width="140"
+                         height="60"
+                         style="width:50%;" />
+                </td>
+
+                <td class="title-cell">
+                    <div class="company">
+                        SOLB STEEL COMPANY
+                    </div>
+
+                    <div class="section">
+                        MELTSHOP – CCM / BILLET YARD
+                    </div>
+
+                    <div class="report-title">
+                        BILLET YARD DAILY PRODUCTION REPORT
+                    </div>
+                </td>
+
+                <td class="document-cell">
+                    <table class="document-table">
+                        <tr>
+                            <td>
+                                <strong>Document No.</strong>
+                            </td>
+                            <td>
+                                QMF-SM-969
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <strong>Revision</strong>
+                            </td>
+                            <td>
+                                Rev. 0
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <strong>Page</strong>
+                            </td>
+                            <td>
+                                Page 1 of 1
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- META: rendered only once -->
+        <table class="meta-table">
+            <tr>
+                <td>
+                    <strong>From Date:</strong>
+                    @(fromDate.HasValue
+                        ? fromDate.Value.ToString("dd-MMM-yyyy")
+                        : "-")
+                </td>
+
+                <td>
+                    <strong>To Date:</strong>
+                    @(toDate.HasValue
+                        ? toDate.Value.ToString("dd-MMM-yyyy")
+                        : "-")
+                </td>
+
+                <td>
+                    <strong>Total Reports:</strong>
+                    @reports.Count
+                </td>
+
+                <td>
+                    <strong>Total Heats:</strong>
+                    @allDetails.Count
+                </td>
+
+                <td>
+                    <strong>Section:</strong>
+                    CCM / Billet Yard
+                </td>
+            </tr>
+        </table>
+
+        <!-- ALL HEATS: one combined table -->
+        <table class="production-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" class="sr">Sr.</th>
+                    <th rowspan="2" class="report-no">Report No.</th>
+                    <th rowspan="2" class="heat">Heat No.</th>
+                    <th rowspan="2" class="grade">Grade</th>
+
+                    <th colspan="4">
+                        PRIME BILLET QUANTITY
+                    </th>
+
+                    <th rowspan="2" class="total-col">
+                        Prime / Good Qty
+                    </th>
+
+                    <th rowspan="2" class="metric">
+                        Prime Total Length (m)
+                    </th>
+
+                    <th colspan="3">
+                        SHORT BILLET
+                    </th>
+
+                    <th rowspan="2" class="metric">
+                        Per Unit Weight
+                    </th>
+
+                    <th colspan="3">
+                        WEIGHT
+                    </th>
+
+                    <th rowspan="2" class="total-col">
+                        Bend
+                    </th>
+
+                    <th rowspan="2" class="total-col">
+                        Total Billets
+                    </th>
+                </tr>
+
+                <tr>
+                    <th class="qty">14M</th>
+                    <th class="qty">13M</th>
+                    <th class="qty">12M</th>
+                    <th class="qty">11M</th>
+
+                    <th class="total-col">Qty</th>
+                    <th class="metric">Total Length (m)</th>
+                    <th class="metric">Avg. Length (m)</th>
+
+                    <th class="weight">Prime</th>
+                    <th class="weight">Short</th>
+                    <th class="weight">Total</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @{
+                    int serialNo = 0;
+                }
+
+                @foreach (var report in reports)
+                {
+                    if (
+                        report == null ||
+                        report.Details == null
+                    )
+                    {
+                        continue;
+                    }
+
+                    foreach (var item in report.Details)
+                    {
+                        if (item == null)
+                        {
+                            continue;
+                        }
+
+                        serialNo++;
+
+                        <tr>
+                            <td>@serialNo</td>
+                            <td>@report.ReportNo</td>
+                            <td>@item.HeatNo</td>
+                            <td>@item.Grade</td>
+
+                            <td>@item.Billet14M</td>
+                            <td>@item.Billet13M</td>
+                            <td>@item.Billet12M</td>
+                            <td>@item.Billet11M</td>
+
+                            <td>@item.GoodBillets</td>
+
+                            <td class="number">
+                                @((item.TotalLength ?? 0M).ToString("0.000"))
+                            </td>
+
+                            <td>@item.ShortBillets</td>
+
+                            <td class="number">
+                                @((item.ShortBilletTotalLength ?? 0M).ToString("0.000"))
+                            </td>
+
+                            <td class="number">
+                                @((item.ShortBilletAvgLength ?? 0M).ToString("0.00000"))
+                            </td>
+
+                            <td class="number">
+                                @((item.PerCoilBundleWeight ?? 0M).ToString("0.00000"))
+                            </td>
+
+                            <td class="number">
+                                @((item.PrimeBilletWeight ?? 0M).ToString("0.000"))
+                            </td>
+
+                            <td class="number">
+                                @((item.ShortBilletWeight ?? 0M).ToString("0.000"))
+                            </td>
+
+                            <td class="number">
+                                @((item.TotalWeight ?? 0M).ToString("0.000"))
+                            </td>
+
+                            <td>@item.Bend</td>
+                            <td>@item.TotalBillets</td>
+                        </tr>
+                    }
+                }
+
+                @if (allDetails.Count == 0)
+                {
+                    <tr>
+                        <td colspan="19">
+                            No billet yard production details found.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="4">
+                        TOTAL
+                    </td>
+
+                    <td>@total14M</td>
+                    <td>@total13M</td>
+                    <td>@total12M</td>
+                    <td>@total11M</td>
+
+                    <td>@totalPrimeBillets</td>
+
+                    <td class="number">
+                        @totalPrimeLength.ToString("0.000")
+                    </td>
+
+                    <td>@totalShortBillets</td>
+
+                    <td class="number">
+                        @totalShortLength.ToString("0.000")
+                    </td>
+
+                    <td class="number">
+                        @overallShortAverageLength.ToString("0.00000")
+                    </td>
+
+                    <td>-</td>
+
+                    <td class="number">
+                        @totalPrimeWeight.ToString("0.000")
+                    </td>
+
+                    <td class="number">
+                        @totalShortWeight.ToString("0.000")
+                    </td>
+
+                    <td class="number">
+                        @totalWeight.ToString("0.000")
+                    </td>
+
+                    <td>@totalBend</td>
+                    <td>@totalBillets</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <table class="summary-table">
+            <tr>
+                <td class="summary-label">
+                    Prime / Good Billets
+                </td>
+                <td>
+                    @totalPrimeBillets
+                </td>
+
+                <td class="summary-label">
+                    Short Billets
+                </td>
+                <td>
+                    @totalShortBillets
+                </td>
+
+                <td class="summary-label">
+                    Total Billets
+                </td>
+                <td>
+                    @totalBillets
+                </td>
+
+                <td class="summary-label">
+                    Total Weight
+                </td>
+                <td>
+                    @totalWeight.ToString("0.000")
+                </td>
+            </tr>
+        </table>
+
+        <div class="remarks-container">
+            <div class="remarks-title">
+                REMARKS
+            </div>
+
+            <div>
+                @(string.IsNullOrWhiteSpace(remarks)
+                    ? "-"
+                    : remarks)
+            </div>
+        </div>
+
+        <div class="footer-note">
+            Generated from CCM Production Portal
+        </div>
+
+    </div>
+
+</body>
+</html>

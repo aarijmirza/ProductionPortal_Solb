@@ -45,7 +45,7 @@ namespace ProductionPortal_Solb.Controllers
             var vm = new DAL.Models.ViewModel.CCMMeltShopVM();
 
             var last24Hours = DateTime.Now.AddHours(-24);
-            var heatData = mr.GetAllLFRecord();
+            var heatData = mr.GetAllLFRecord(null,null);
             var grades = repo.GetAllGrade();
 
             if (id.HasValue)

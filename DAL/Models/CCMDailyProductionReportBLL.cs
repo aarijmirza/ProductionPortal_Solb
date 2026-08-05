@@ -28,6 +28,8 @@ namespace DAL.Models
         [StringLength(150)]
         public string BilletYardOperator { get; set; }
 
+        public string HeatNo { get; set; }
+
         public int TotalBillets { get; set; }
 
         public int PrimeBillets { get; set; }

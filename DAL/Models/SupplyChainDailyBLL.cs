@@ -31,8 +31,13 @@ namespace DAL.Models
 
         public decimal? WTDDispatch { get; set; }
         public decimal? WTDDispatchTarget { get; set; }
+        public decimal? WTDTruck { get; set; }
+        public decimal? WTDTruckTarget { get; set; }
+
         public decimal? MTDDispatch { get; set; }
         public decimal? MTDDispatchTarget { get; set; }
+        public decimal? MTDTruck { get; set; }
+        public decimal? MTDTruckTarget { get; set; }
 
         public decimal? RawMaterialsReceived { get; set; }
         public decimal? SubRawMaterialsReceived { get; set; }
@@ -50,5 +55,8 @@ namespace DAL.Models
         public DateTime? CreatedDate { get; set; }
         public string UpdatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
+
+        public List<SupplyChainReceivedMaterialBLL> ReceivedMaterials { get; set; }
+            = new List<SupplyChainReceivedMaterialBLL>();
     }
 }

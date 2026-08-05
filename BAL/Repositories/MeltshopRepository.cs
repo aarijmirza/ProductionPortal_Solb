@@ -178,24 +178,66 @@ namespace BAL.Repositories
                 return 0;
             }
         }
-        public List<LaddleFurnaceBLL> GetAllLFRecord()
+        public List<LaddleFurnaceBLL> GetAllLFRecord(
+            DateTime? fromDate,
+            DateTime? toDate)
         {
             try
             {
-                var lst = new List<LaddleFurnaceBLL>();
-                _dt = (new DBHelper().GetTableFromSP)("sp_GetAllLaddleFurnaceRecord");
-                if (_dt != null)
-                {
-                    if (_dt.Rows.Count > 0)
+                var parameters =
+                    new[]
                     {
-                        lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<LaddleFurnaceBLL>>();
-                    }
+                new SqlParameter(
+                    "@FromDate",
+                    SqlDbType.Date
+                )
+                {
+                    Value =
+                        fromDate.HasValue
+                            ? (object)fromDate.Value.Date
+                            : DBNull.Value
+                },
+
+                new SqlParameter(
+                    "@ToDate",
+                    SqlDbType.Date
+                )
+                {
+                    Value =
+                        toDate.HasValue
+                            ? (object)toDate.Value.Date
+                            : DBNull.Value
                 }
-                return lst;
+                    };
+
+                DataTable dt =
+                    DBHelper.ExecuteDataTable(
+                        "sp_GetAllLaddleFurnaceRecord",
+                        CommandType.StoredProcedure,
+                        parameters
+                    );
+
+                if (
+                    dt == null ||
+                    dt.Rows.Count == 0
+                )
+                {
+                    return new List<LaddleFurnaceBLL>();
+                }
+
+                return JArray
+                    .Parse(
+                        JsonConvert.SerializeObject(
+                            dt
+                        )
+                    )
+                    .ToObject<
+                        List<LaddleFurnaceBLL>
+                    >();
             }
-            catch (Exception ex)
+            catch
             {
-                return null;
+                return new List<LaddleFurnaceBLL>();
             }
         }
         public LaddleFurnaceBLL GetLFRecordByID(string heatno)

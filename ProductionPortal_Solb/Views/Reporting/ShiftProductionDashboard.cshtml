@@ -49,6 +49,20 @@
             .Distinct())
         : "-";
 
+    var selectedSizes = data
+        .Where(x => !string.IsNullOrWhiteSpace(x.Size))
+        .Select(x => x.Size.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    int selectedSizeCount = selectedSizes.Count;
+
+    var selectedProfiles = data
+        .Where(x => !string.IsNullOrWhiteSpace(x.Profile))
+        .Select(x => x.Profile.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
     string profiles = data.Any()
         ? string.Join(", ", data
             .Where(x => !string.IsNullOrWhiteSpace(x.Profile))
@@ -620,13 +634,63 @@
         ? (actualRollingTime / plannedRollingTime) * 100
         : 0;
 
-    // Yield and RRR targets should be supplied from the controller.
-    // Approved Yield target is fixed at 105%.
-    decimal yieldTarget = 105;
+    // =========================================================
+    // TARGET VALUES FROM DATABASE
+    // Model.RollingMillTarget controller se database record receive karta hai.
+    // Multiple size target averaging controller/repository side par honi chahiye,
+    // aur final averaged object Model.RollingMillTarget mein pass hoga.
+    // =========================================================
 
-    decimal rrrTarget = ViewBag.RRRTarget != null
-        ? Convert.ToDecimal(ViewBag.RRRTarget)
-        : 0;
+    var profileYieldTargets =
+        new List<decimal>();
+
+    foreach (string profile in selectedProfiles)
+    {
+        if (profile.Equals(
+                "WR",
+                StringComparison.OrdinalIgnoreCase) ||
+            profile.IndexOf(
+                "WIRE",
+                StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            profileYieldTargets.Add(
+                rollingMillTarget.YeildPercentageWRTarget
+            );
+        }
+        else if (profile.Equals(
+                    "PB",
+                    StringComparison.OrdinalIgnoreCase) ||
+                 profile.IndexOf(
+                    "PLAIN",
+                    StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            profileYieldTargets.Add(
+                rollingMillTarget.YeildPercentagePBTarget
+            );
+        }
+        else if (profile.Equals(
+                    "RIC",
+                    StringComparison.OrdinalIgnoreCase))
+        {
+            profileYieldTargets.Add(
+                rollingMillTarget.YeildPercentageRICTarget
+            );
+        }
+        else
+        {
+            profileYieldTargets.Add(
+                rollingMillTarget.YeildPercentageRBTarget
+            );
+        }
+    }
+
+    decimal yieldTarget =
+        profileYieldTargets.Any()
+            ? profileYieldTargets.Average()
+            : rollingMillTarget.YeildPercentageRBTarget;
+
+    decimal rrrTarget =
+        rollingMillTarget.RRRPercentageTarget;
 
     // Favorable variance:
     // Higher is better: Production, Yield, RRR => Actual - Target
@@ -666,9 +730,7 @@
             : 0;
 
     decimal productivityTarget =
-        ViewBag.ProductivityTarget != null
-            ? Convert.ToDecimal(ViewBag.ProductivityTarget)
-            : 0;
+        rollingMillTarget.TonperhourTarget;
 
     decimal productivityVariance =
         productivityTonsHr - productivityTarget;
@@ -926,6 +988,25 @@
             font-size: 11px;
             font-weight: 600;
         }
+
+    .comparison-bar-box {
+        position: relative;
+        height: 245px;
+        width: 100%;
+        padding: 8px 4px 0;
+    }
+
+    .double-gauge-card,
+    .gauge-card,
+    .secondary-kpi-row .gauge-card {
+        min-height: 410px;
+    }
+
+    @@media (max-width: 767px) {
+        .comparison-bar-box {
+            height: 225px;
+        }
+    }
 
 
 
@@ -1295,8 +1376,6 @@
         line-height: 1.7;
     }
 
-    }
-
     @@media (max-width: 767px) {
         .dashboard-header {
             padding: 20px;
@@ -1419,7 +1498,7 @@
                         <div class="kpi-value">@totalFinishedProd.ToString("0")</div>
                         <div class="kpi-sub">Metric tons</div>
                     </div>
-                    <div class="kpi-icon bg-blue">FP</div>
+                    <div class="kpi-icon bg-green">MT</div>
                 </div>
             </div>
         </div>
@@ -1430,7 +1509,13 @@
                     <div>
                         <div class="kpi-title">FINISHED PRODUCT SIZE</div>
                         <div class="kpi-value">@sizes</div>
-                        <div class="kpi-sub">Product size</div>
+                        <div class="kpi-sub">
+                            @(selectedSizeCount > 1
+                                ? selectedSizeCount + " sizes — size-based targets applied"
+                                : selectedSizeCount == 1
+                                    ? "Single size target"
+                                    : "No product size")
+                        </div>
                     </div>
                     <div class="kpi-icon bg-orange">SZ</div>
                 </div>
@@ -1450,7 +1535,7 @@
                         </div>
 
                         <div class="kpi-sub">
-                           Accumulated Production
+                            Accumulated Production
                         </div>
                     </div>
 
@@ -1521,23 +1606,8 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="double-gauge-box">
+                    <div class="comparison-bar-box">
                         <canvas id="productionDoubleGaugeChart"></canvas>
-
-                        <div class="double-gauge-actual">
-                            <strong>@dailyProductionActual.ToString("0.00")</strong>
-                            <span>Actual MT</span>
-                        </div>
-
-                        <div class="double-gauge-target">
-                            <span>Target</span>
-                            <strong>@dailyProductionTarget.ToString("0.00")</strong>
-                        </div>
-                    </div>
-
-                    <div class="double-gauge-scale">
-                        <span>0</span>
-                        <span>@Math.Max(dailyProductionTarget, dailyProductionActual).ToString("0.00") MT</span>
                     </div>
 
                     <div class="chart-metric-row">
@@ -1578,23 +1648,8 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="double-gauge-box">
+                    <div class="comparison-bar-box">
                         <canvas id="yieldDoubleGaugeChart"></canvas>
-
-                        <div class="double-gauge-actual">
-                            <strong>@yieldValue.ToString("0.00")%</strong>
-                            <span>Actual Yield</span>
-                        </div>
-
-                        <div class="double-gauge-target">
-                            <span>Target</span>
-                            <strong>@yieldTarget.ToString("0.00")%</strong>
-                        </div>
-                    </div>
-
-                    <div class="double-gauge-scale">
-                        <span>0%</span>
-                        <span>@Math.Max(yieldTarget, yieldValue).ToString("0.00")%</span>
                     </div>
 
                     <div class="chart-metric-row">
@@ -1635,23 +1690,8 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="double-gauge-box">
+                    <div class="comparison-bar-box">
                         <canvas id="rrrDoubleGaugeChart"></canvas>
-
-                        <div class="double-gauge-actual">
-                            <strong>@rrrValue.ToString("0.00")%</strong>
-                            <span>Actual RRR</span>
-                        </div>
-
-                        <div class="double-gauge-target">
-                            <span>Target</span>
-                            <strong>@rrrTarget.ToString("0.00")%</strong>
-                        </div>
-                    </div>
-
-                    <div class="double-gauge-scale">
-                        <span>0%</span>
-                        <span>@Math.Max(rrrTarget, rrrValue).ToString("0.00")%</span>
                     </div>
 
                     <div class="chart-metric-row">
@@ -1692,23 +1732,8 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="double-gauge-box">
+                    <div class="comparison-bar-box">
                         <canvas id="productivityDoubleGaugeChart"></canvas>
-
-                        <div class="double-gauge-actual">
-                            <strong>@productivityTonsHr.ToString("0.00")</strong>
-                            <span>Actual MT/Hr</span>
-                        </div>
-
-                        <div class="double-gauge-target">
-                            <span>Target</span>
-                            <strong>@productivityTarget.ToString("0.00")</strong>
-                        </div>
-                    </div>
-
-                    <div class="double-gauge-scale">
-                        <span>0</span>
-                        <span>@Math.Max(productivityTarget, productivityTonsHr).ToString("0.00") MT/Hr</span>
                     </div>
 
                     <div class="chart-metric-row">
@@ -1754,18 +1779,8 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="gauge-chart-box">
+                    <div class="comparison-bar-box">
                         <canvas id="fuelGaugeChart"></canvas>
-
-                        <div class="gauge-value">
-                            <strong>@fuelConsumptionActual.ToString("0.00")</strong>
-                            <span>Lit/MT Actual</span>
-                        </div>
-                    </div>
-
-                    <div class="gauge-scale-row">
-                        <span>0</span>
-                        <span>@Math.Max(fuelConsumptionTarget, fuelConsumptionActual).ToString("0.00") Lit/MT</span>
                     </div>
 
                     <div class="chart-metric-row">
@@ -1806,18 +1821,8 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="gauge-chart-box">
+                    <div class="comparison-bar-box">
                         <canvas id="electricityGaugeChart"></canvas>
-
-                        <div class="gauge-value">
-                            <strong>@electricityConsumptionActual.ToString("0.00")</strong>
-                            <span>KWh/MT Actual</span>
-                        </div>
-                    </div>
-
-                    <div class="gauge-scale-row">
-                        <span>0</span>
-                        <span>@Math.Max(electricityConsumptionTarget, electricityConsumptionActual).ToString("0.00") KWh/MT</span>
                     </div>
 
                     <div class="chart-metric-row">
@@ -1858,18 +1863,8 @@
                 </div>
 
                 <div class="card-body">
-                    <div class="gauge-chart-box">
+                    <div class="comparison-bar-box">
                         <canvas id="waterGaugeChart"></canvas>
-
-                        <div class="gauge-value">
-                            <strong>@waterConsumptionActual.ToString("0.00")</strong>
-                            <span>m³/MT Actual</span>
-                        </div>
-                    </div>
-
-                    <div class="gauge-scale-row">
-                        <span>0</span>
-                        <span>@Math.Max(waterConsumptionTarget, waterConsumptionActual).ToString("0.00") m³/MT</span>
                     </div>
 
                     <div class="chart-metric-row">
@@ -2720,61 +2715,235 @@
             });
         }
 
-        function createKpiComparisonChart(canvasId, targetValue, actualValue, unitLabel) {
-            var canvas = document.getElementById(canvasId);
+        function createKpiComparisonChart(
+            canvasId,
+            targetValue,
+            actualValue,
+            unitLabel
+        ) {
+            var canvas =
+                document.getElementById(canvasId);
+
             if (!canvas) return;
+
+            var target =
+                Number(targetValue || 0);
+
+            var actual =
+                Number(actualValue || 0);
+
+            var maximumValue =
+                Math.max(target, actual, 1);
+
+            var topPadding =
+                maximumValue * 0.22;
 
             new Chart(canvas, {
                 type: "bar",
+
                 data: {
-                    labels: ["Target", "Actual"],
-                    datasets: [{
-                        data: [targetValue, actualValue],
-                        backgroundColor: ["#a6173f", "#6c757d"],
-                        borderColor: ["#8f1236", "#545b62"],
-                        borderWidth: 1,
-                        borderRadius: 4,
-                        barPercentage: 0.72,
-                        categoryPercentage: 0.78,
-                        datalabels: {
-                            display: function (context) {
-                                return Number(context.dataset.data[context.dataIndex] || 0) > 0;
-                            },
-                            formatter: function (value) {
-                                return Number(value || 0).toFixed(2);
-                            },
-                            color: "#ffffff",
-                            font: { weight: "bold", size: 9 },
-                            anchor: "center",
-                            align: "center",
-                            rotation: -90,
-                            clamp: true
+                    labels: [
+                        "Performance"
+                    ],
+
+                    datasets: [
+                        {
+                            label: "Target",
+                            data: [
+                                target
+                            ],
+                            backgroundColor:
+                                "#a6173f",
+                            borderColor:
+                                "#7f1230",
+                            borderWidth:
+                                1,
+                            borderRadius:
+                                7,
+                            barPercentage:
+                                0.72,
+                            categoryPercentage:
+                                0.68
+                        },
+                        {
+                            label: "Actual",
+                            data: [
+                                actual
+                            ],
+                            backgroundColor:
+                                "#9ca3af",
+                            borderColor:
+                                "#6b7280",
+                            borderWidth:
+                                1,
+                            borderRadius:
+                                7,
+                            barPercentage:
+                                0.72,
+                            categoryPercentage:
+                                0.68
                         }
-                    }]
+                    ]
                 },
+
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    return context.label + ": " + Number(context.raw || 0).toFixed(2) + " " + unitLabel;
-                                }
-                            }
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    animation:
+                        false,
+
+                    layout: {
+                        padding: {
+                            top: 26,
+                            right: 8,
+                            left: 8,
+                            bottom: 0
                         }
                     },
+
+                    interaction: {
+                        mode:
+                            "index",
+                        intersect:
+                            false
+                    },
+
+                    plugins: {
+                        legend: {
+                            display:
+                                true,
+                            position:
+                                "top",
+                            align:
+                                "center",
+
+                            labels: {
+                                usePointStyle:
+                                    true,
+                                pointStyle:
+                                    "rectRounded",
+                                boxWidth:
+                                    10,
+                                boxHeight:
+                                    10,
+                                padding:
+                                    18,
+                                color:
+                                    "#374151",
+
+                                font: {
+                                    size:
+                                        11,
+                                    weight:
+                                        "700"
+                                }
+                            }
+                        },
+
+                        tooltip: {
+                            callbacks: {
+                                label: function (
+                                    context
+                                ) {
+                                    return (
+                                        context.dataset.label +
+                                        ": " +
+                                        Number(
+                                            context.raw || 0
+                                        ).toFixed(2) +
+                                        " " +
+                                        unitLabel
+                                    );
+                                }
+                            }
+                        },
+
+                        datalabels: {
+                            display:
+                                true,
+
+                            formatter: function (
+                                value
+                            ) {
+                                return (
+                                    Number(
+                                        value || 0
+                                    ).toFixed(2) +
+                                    " " +
+                                    unitLabel
+                                );
+                            },
+
+                            color: function (
+                                context
+                            ) {
+                                return context.datasetIndex === 0
+                                    ? "#7f1230"
+                                    : "#4b5563";
+                            },
+
+                            font: {
+                                weight:
+                                    "bold",
+                                size:
+                                    11
+                            },
+
+                            anchor:
+                                "end",
+                            align:
+                                "top",
+                            offset:
+                                4,
+                            clamp:
+                                true,
+                            clip:
+                                false
+                        }
+                    },
+
                     scales: {
                         x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 9, weight: "bold" } }
+                            grid: {
+                                display:
+                                    false
+                            },
+
+                            ticks: {
+                                display:
+                                    false
+                            }
                         },
+
                         y: {
-                            beginAtZero: true,
-                            display: false,
-                            grid: { display: false }
+                            beginAtZero:
+                                true,
+
+                            suggestedMax:
+                                maximumValue +
+                                topPadding,
+
+                            grace:
+                                "20%",
+
+                            grid: {
+                                color:
+                                    "rgba(0,0,0,0.07)"
+                            },
+
+                            ticks: {
+                                callback: function (
+                                    value
+                                ) {
+                                    return numberLabel(
+                                        value
+                                    );
+                                }
+                            }
                         }
                     }
                 }
@@ -3353,29 +3522,31 @@
                         categoryPercentage: 0.75,
 
                         datalabels: {
-                            display: function (context) {
-                                return Number(
-                                    context.dataset.data[context.dataIndex] || 0
-                                ) > 0;
-                            },
+                            display: true,
                             formatter: function (value) {
-                                return Number(value || 0).toFixed(2);
+                                return Number(value || 0).toFixed(2) + " MT";
                             },
-                            color: "#ffffff",
+                            color: "#7f1230",
                             font: {
                                 weight: "bold",
                                 size: 11
                             },
-                            anchor: "center",
-                            align: "center",
-                            rotation: -90,
-                            clamp: true
+                            anchor: "end",
+                            align: "top",
+                            offset: 4,
+                            clamp: true,
+                            clip: false
                         }
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 28
+                        }
+                    },
                     interaction: {
                         mode: "index",
                         intersect: false
@@ -3417,6 +3588,7 @@
                         },
                         y: {
                             beginAtZero: true,
+                            grace: "20%",
                             grid: {
                                 color: "rgba(0,0,0,0.08)"
                             },
@@ -3434,71 +3606,53 @@
                 }
             });
         }
-
-        createDoubleSemiGaugeChart(
+        createKpiComparisonChart(
             "productionDoubleGaugeChart",
             dailyProductionTargetValue,
             dailyProductionActualValue,
-            "MT",
-            "#dfe8f3",
-            "#f3d6df"
+            "MT"
         );
 
-        createDoubleSemiGaugeChart(
+        createKpiComparisonChart(
             "yieldDoubleGaugeChart",
             yieldTargetValue,
             yieldActualValue,
-            "%",
-            "#deeee4",
-            "#f2d9e1"
+            "%"
         );
 
-        createDoubleSemiGaugeChart(
+        createKpiComparisonChart(
             "rrrDoubleGaugeChart",
             rrrTargetValue,
             rrrActualValue,
-            "%",
-            "#e9e1f2",
-            "#f3d6df"
+            "%"
         );
 
-        createDoubleSemiGaugeChart(
+        createKpiComparisonChart(
             "productivityDoubleGaugeChart",
             productivityTargetValue,
             productivityActualValue,
-            "MT/Hr",
-            "#f3e6d7",
-            "#f2d9e1"
+            "MT/Hr"
         );
 
-        createGaugeChart(
+        createKpiComparisonChart(
             "fuelGaugeChart",
             fuelConsumptionTargetValue,
             fuelConsumptionActualValue,
-            "Lit/MT",
-            true,
-            "#9ca3af",
-            "#f3e8d7"
+            "Lit/MT"
         );
 
-        createGaugeChart(
+        createKpiComparisonChart(
             "electricityGaugeChart",
             electricityConsumptionTargetValue,
             electricityConsumptionActualValue,
-            "KWh/MT",
-            true,
-            "#9ca3af",
-            "#dfeaf4"
+            "KWh/MT"
         );
 
-        createGaugeChart(
+        createKpiComparisonChart(
             "waterGaugeChart",
             waterConsumptionTargetValue,
             waterConsumptionActualValue,
-            "m³/MT",
-            true,
-            "#9ca3af",
-            "#dff1ee"
+            "m³/MT"
         );
 
         createDowntimeChart();

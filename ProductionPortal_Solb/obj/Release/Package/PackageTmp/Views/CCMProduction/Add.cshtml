@@ -695,15 +695,17 @@
 
 
                     <div class="header-grid">
-                        <div class="form-group">
+                        <div class="form-group" hidden>
                             <label class="required">Report No.</label>
                             @Html.TextBoxFor(x => x.ReportNo,
-                                                                                                 new
-                                                                                                 {
-                                                                                                     @class = "form-control",
-                                                                                                     placeholder = "CCM-20260310",
-                                                                                                     required = "required"
-                                                                                                 })
+                                 new
+                                 {
+                                     @class = "form-control",
+                                     placeholder = "CCM-20260310",
+                                     required = "required",
+                                     hidden = "hidden",
+                                     value = "00000"
+                                 })
                             @Html.ValidationMessageFor(x => x.ReportNo)
                         </div>
 

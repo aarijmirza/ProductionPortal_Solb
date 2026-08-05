@@ -5,6 +5,16 @@
     ViewBag.Title = "Billet Boarding Detail";
     var gregorian = new CultureInfo("en-US");
     gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+
+    decimal totalChemistryBillets =
+        Model != null &&
+        Model.Chemistry != null
+            ? Model.Chemistry.Sum(
+                x => Convert.ToDecimal(
+                    x.NoOfBillets
+                )
+            )
+            : 0;
 }
 
 
@@ -296,6 +306,18 @@
                                             chemSr++;
                                         }
                                     </tbody>
+
+                                    <tfoot>
+                                        <tr class="font-weight-bold bg-light">
+                                            <td colspan="2" class="text-right">
+                                                Total Billets
+                                            </td>
+                                            <td>
+                                                @totalChemistryBillets.ToString("0.##")
+                                            </td>
+                                            <td colspan="7"></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         }
@@ -487,6 +509,18 @@
                     pSr++;
                 }
             </tbody>
+
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="text-align:right; font-weight:bold;">
+                        Total Billets
+                    </td>
+                    <td style="font-weight:bold;">
+                        @totalChemistryBillets.ToString("0.##")
+                    </td>
+                    <td colspan="7"></td>
+                </tr>
+            </tfoot>
         </table>
     }
 

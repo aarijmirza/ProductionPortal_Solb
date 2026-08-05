@@ -822,67 +822,90 @@ namespace ProductionPortal_Solb.Controllers
             // DATE FILTER
             // =========================================================
 
-            DateTime fromDate = (fromdate ?? DateTime.Today).Date;
-            DateTime toDate = (todate ?? fromDate).Date;
+            DateTime fromDate =
+                (fromdate ?? DateTime.Today).Date;
+
+            DateTime toDate =
+                (todate ?? fromDate).Date;
 
             if (fromDate > toDate)
             {
-                DateTime tempDate = fromDate;
-                fromDate = toDate;
-                toDate = tempDate;
+                DateTime tempDate =
+                    fromDate;
+
+                fromDate =
+                    toDate;
+
+                toDate =
+                    tempDate;
             }
 
-            string selectedPlant = string.IsNullOrWhiteSpace(plant)
-                ? string.Empty
-                : plant.Trim();
+            string selectedPlant =
+                string.IsNullOrWhiteSpace(plant)
+                    ? string.Empty
+                    : plant.Trim();
 
-            string selectedShift = string.IsNullOrWhiteSpace(shift)
-                ? string.Empty
-                : shift.Trim();
+            string selectedShift =
+                string.IsNullOrWhiteSpace(shift)
+                    ? string.Empty
+                    : shift.Trim();
 
             // =========================================================
-            // MONTHLY TARGET
-            // Selected To Date ke month/year ka target load hoga
+            // TARGET MONTH / YEAR
             // =========================================================
 
-            string targetMonth = toDate.ToString(
-                "MMMM",
-                System.Globalization.CultureInfo.InvariantCulture
-            );
-
-            string targetYear = toDate.Year.ToString();
-
-            RollingMillTargetsBLL monthlyTarget =
-                targetRepo.GetByMonthYear(
-                    targetMonth,
-                    targetYear
+            string targetMonth =
+                toDate.ToString(
+                    "MMMM",
+                    System.Globalization.CultureInfo.InvariantCulture
                 );
+
+            string targetYear =
+                toDate.Year.ToString();
 
             // =========================================================
             // SELECTED FILTER PRODUCTION DATA
-            // KPI aur detail table ke liye
             // =========================================================
 
-            var dischargedData = rm.GetDichargedHeats(
-                fromDate,
-                toDate,
-                selectedPlant,
-                selectedShift
-            ) ?? new List<BilletDischargingBLL>();
+            var dischargedData =
+                rm.GetDichargedHeats(
+                    fromDate,
+                    toDate,
+                    selectedPlant,
+                    selectedShift
+                ) ??
+                new List<BilletDischargingBLL>();
 
             // =========================================================
-            // ACCUMULATED MONTH-TO-DATE PRODUCTION DATA
-            // Is data mein koi downtime deduction nahi hogi
+            // MONTH-TO-DATE PRODUCTION DATA
             // =========================================================
 
-            DateTime monthStartDate = new DateTime(
-                toDate.Year,
-                toDate.Month,
-                1
-            );
+            DateTime monthStartDate =
+                new DateTime(
+                    toDate.Year,
+                    toDate.Month,
+                    1
+                );
+
+            var monthlyChartData =
+                rm.GetDichargedHeats(
+                    monthStartDate,
+                    toDate,
+                    selectedPlant,
+                    selectedShift
+                ) ??
+                new List<BilletDischargingBLL>();
+
+            // =========================================================
+            // DAILY INPUT DATA
+            // Production Target aur Fuel Consumption daily target table se aayenge.
+            // Production Target ka size-wise average nahi nikala jayega.
+            // =========================================================
 
             var dailyTarget =
-    dailyTargetRepo.GetByDate(toDate);
+                dailyTargetRepo.GetByDate(
+                    toDate
+                );
 
             ViewBag.DailyProductionTarget =
                 dailyTarget != null
@@ -894,188 +917,672 @@ namespace ProductionPortal_Solb.Controllers
                     ? dailyTarget.FuelConsumption
                     : 0;
 
-            var monthlyChartData = rm.GetDichargedHeats(
-                monthStartDate,
-                toDate,
-                selectedPlant,
-                selectedShift
-            ) ?? new List<BilletDischargingBLL>();
-
             // =========================================================
             // DELAY DATA
-            // Sirf downtime calculations/chart ke liye
             // =========================================================
 
-            var delayData = repo.GetAllRMDelay(
-                fromDate,
-                toDate,
-                selectedShift
-            ) ?? new List<PlantDelayBLL>();
+            var delayData =
+                repo.GetAllRMDelay(
+                    fromDate,
+                    toDate,
+                    selectedShift
+                ) ??
+                new List<PlantDelayBLL>();
 
             // =========================================================
             // SAFE PLANT FILTER
             // =========================================================
 
-            if (!string.IsNullOrWhiteSpace(selectedPlant))
+            if (!string.IsNullOrWhiteSpace(
+                selectedPlant
+            ))
             {
-                dischargedData = dischargedData
-                    .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.Plant) &&
-                        x.Plant.Trim().Equals(
-                            selectedPlant,
-                            StringComparison.OrdinalIgnoreCase
+                dischargedData =
+                    dischargedData
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Plant
+                            ) &&
+                            x.Plant.Trim().Equals(
+                                selectedPlant,
+                                StringComparison.OrdinalIgnoreCase
+                            )
                         )
-                    )
-                    .ToList();
+                        .ToList();
 
-                monthlyChartData = monthlyChartData
-                    .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.Plant) &&
-                        x.Plant.Trim().Equals(
-                            selectedPlant,
-                            StringComparison.OrdinalIgnoreCase
+                monthlyChartData =
+                    monthlyChartData
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Plant
+                            ) &&
+                            x.Plant.Trim().Equals(
+                                selectedPlant,
+                                StringComparison.OrdinalIgnoreCase
+                            )
                         )
-                    )
-                    .ToList();
+                        .ToList();
 
-                delayData = delayData
-                    .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.Plant) &&
-                        x.Plant.Trim().Equals(
-                            selectedPlant,
-                            StringComparison.OrdinalIgnoreCase
+                delayData =
+                    delayData
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Plant
+                            ) &&
+                            x.Plant.Trim().Equals(
+                                selectedPlant,
+                                StringComparison.OrdinalIgnoreCase
+                            )
                         )
-                    )
-                    .ToList();
+                        .ToList();
             }
 
             // =========================================================
             // SAFE SHIFT FILTER
             // =========================================================
 
-            if (!string.IsNullOrWhiteSpace(selectedShift))
+            if (!string.IsNullOrWhiteSpace(
+                selectedShift
+            ))
             {
-                dischargedData = dischargedData
-                    .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.Shift) &&
-                        x.Shift.Trim().Equals(
-                            selectedShift,
-                            StringComparison.OrdinalIgnoreCase
+                dischargedData =
+                    dischargedData
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Shift
+                            ) &&
+                            x.Shift.Trim().Equals(
+                                selectedShift,
+                                StringComparison.OrdinalIgnoreCase
+                            )
                         )
-                    )
-                    .ToList();
+                        .ToList();
 
-                monthlyChartData = monthlyChartData
-                    .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.Shift) &&
-                        x.Shift.Trim().Equals(
-                            selectedShift,
-                            StringComparison.OrdinalIgnoreCase
+                monthlyChartData =
+                    monthlyChartData
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Shift
+                            ) &&
+                            x.Shift.Trim().Equals(
+                                selectedShift,
+                                StringComparison.OrdinalIgnoreCase
+                            )
                         )
-                    )
-                    .ToList();
+                        .ToList();
 
-                delayData = delayData
-                    .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.Shift) &&
-                        x.Shift.Trim().Equals(
-                            selectedShift,
-                            StringComparison.OrdinalIgnoreCase
+                delayData =
+                    delayData
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Shift
+                            ) &&
+                            x.Shift.Trim().Equals(
+                                selectedShift,
+                                StringComparison.OrdinalIgnoreCase
+                            )
                         )
-                    )
-                    .ToList();
+                        .ToList();
             }
+
+            // =========================================================
+            // SIZE NORMALIZATION
+            // 11 MM, 11mm, 11 mm ko same size treat karega.
+            // =========================================================
+
+            Func<string, string> normalizeSize =
+                sizeValue =>
+                {
+                    if (string.IsNullOrWhiteSpace(
+                        sizeValue
+                    ))
+                    {
+                        return string.Empty;
+                    }
+
+                    string value =
+                        sizeValue
+                            .Trim()
+                            .ToUpperInvariant()
+                            .Replace(" ", "");
+
+                    if (value.EndsWith("MM"))
+                    {
+                        string numericText =
+                            value.Substring(
+                                0,
+                                value.Length - 2
+                            );
+
+                        decimal numericSize;
+
+                        if (decimal.TryParse(
+                            numericText,
+                            System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out numericSize
+                        ))
+                        {
+                            return numericSize.ToString(
+                                "0.##",
+                                System.Globalization.CultureInfo.InvariantCulture
+                            ) + "MM";
+                        }
+                    }
+
+                    return value;
+                };
+
+            Func<string, string> normalizeProfile =
+                profileValue =>
+                    string.IsNullOrWhiteSpace(
+                        profileValue
+                    )
+                        ? string.Empty
+                        : profileValue
+                            .Trim()
+                            .ToUpperInvariant();
+
+            // =========================================================
+            // SELECTED FINISHED PRODUCT SIZES
+            // Har size sirf aik dafa count hoga.
+            // =========================================================
+
+            var selectedSizeProfiles =
+                dischargedData
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(
+                            x.Size
+                        )
+                    )
+                    .Select(x => new
+                    {
+                        Size =
+                            normalizeSize(
+                                x.Size
+                            ),
+
+                        Profile =
+                            normalizeProfile(
+                                x.Profile
+                            )
+                    })
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(
+                            x.Size
+                        )
+                    )
+                    .GroupBy(
+                        x => x.Size,
+                        StringComparer.OrdinalIgnoreCase
+                    )
+                    .Select(g => new
+                    {
+                        Size =
+                            g.Key,
+
+                        Profiles =
+                            g.Select(x => x.Profile)
+                                .Where(x =>
+                                    !string.IsNullOrWhiteSpace(
+                                        x
+                                    )
+                                )
+                                .Distinct(
+                                    StringComparer.OrdinalIgnoreCase
+                                )
+                                .ToList()
+                    })
+                    .ToList();
+
+            // =========================================================
+            // LOAD ALL TARGETS FROM DATABASE
+            // Repository mein GetAll() already available hai.
+            // =========================================================
+
+            var allTargetRecords =
+                targetRepo.GetAll() ??
+                new List<RollingMillTargetsBLL>();
+
+            var monthYearTargets =
+                allTargetRecords
+                    .Where(x =>
+                        x != null &&
+                        x.StatusID == 1 &&
+                        string.Equals(
+                            Convert.ToString(
+                                x.Month
+                            ).Trim(),
+                            targetMonth,
+                            StringComparison.OrdinalIgnoreCase
+                        ) &&
+                        string.Equals(
+                            Convert.ToString(
+                                x.Year
+                            ).Trim(),
+                            targetYear,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .ToList();
+
+            // =========================================================
+            // MATCH ONE TARGET RECORD PER FINISHED PRODUCT SIZE
+            // Profile match ko priority di jayegi.
+            // Agar same size/profile duplicate ho to latest ID use hoga.
+            // =========================================================
+
+            var matchedTargets =
+                new List<RollingMillTargetsBLL>();
+
+            foreach (
+                var selectedItem
+                in selectedSizeProfiles
+            )
+            {
+                var sizeTargets =
+                    monthYearTargets
+                        .Where(x =>
+                            string.Equals(
+                                normalizeSize(
+                                    x.Size
+                                ),
+                                selectedItem.Size,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        .ToList();
+
+                RollingMillTargetsBLL matchedTarget =
+                    null;
+
+                if (
+                    selectedItem.Profiles.Any()
+                )
+                {
+                    matchedTarget =
+                        sizeTargets
+                            .Where(x =>
+                                selectedItem.Profiles.Contains(
+                                    normalizeProfile(
+                                        x.Profile
+                                    ),
+                                    StringComparer.OrdinalIgnoreCase
+                                )
+                            )
+                            .OrderByDescending(
+                                x => x.ID
+                            )
+                            .FirstOrDefault();
+                }
+
+                // Profile target na mile to same size ka latest target use karo.
+                if (matchedTarget == null)
+                {
+                    matchedTarget =
+                        sizeTargets
+                            .OrderByDescending(
+                                x => x.ID
+                            )
+                            .FirstOrDefault();
+                }
+
+                if (matchedTarget != null)
+                {
+                    matchedTargets.Add(
+                        matchedTarget
+                    );
+                }
+            }
+
+            // =========================================================
+            // AVERAGE SIZE-WISE TARGETS
+            // Production Target is calculation mein include nahi hoga.
+            // Baqi matched size targets:
+            // Sum of matched targets / matched size count
+            // =========================================================
+
+            RollingMillTargetsBLL monthlyTarget =
+                new RollingMillTargetsBLL();
+
+            if (matchedTargets.Any())
+            {
+                decimal targetCount =
+                    matchedTargets.Count;
+
+                monthlyTarget.Month =
+                    targetMonth;
+
+                monthlyTarget.Year =
+                    targetYear;
+
+                monthlyTarget.Size =
+                    string.Join(
+                        ", ",
+                        selectedSizeProfiles
+                            .Select(x => x.Size)
+                    );
+
+                monthlyTarget.Profile =
+                    string.Join(
+                        ", ",
+                        selectedSizeProfiles
+                            .SelectMany(
+                                x => x.Profiles
+                            )
+                            .Distinct(
+                                StringComparer.OrdinalIgnoreCase
+                            )
+                    );
+
+                monthlyTarget.YeildPercentageRBTarget =
+                    matchedTargets.Sum(
+                        x => x.YeildPercentageRBTarget
+                    ) / targetCount;
+
+                monthlyTarget.YeildPercentageWRTarget =
+                    matchedTargets.Sum(
+                        x => x.YeildPercentageWRTarget
+                    ) / targetCount;
+
+                monthlyTarget.YeildPercentagePBTarget =
+                    matchedTargets.Sum(
+                        x => x.YeildPercentagePBTarget
+                    ) / targetCount;
+
+                monthlyTarget.YeildPercentageRICTarget =
+                    matchedTargets.Sum(
+                        x => x.YeildPercentageRICTarget
+                    ) / targetCount;
+
+                monthlyTarget.RRRPercentageTarget =
+                    matchedTargets.Sum(
+                        x => x.RRRPercentageTarget
+                    ) / targetCount;
+
+                monthlyTarget.TonperhourTarget =
+                    matchedTargets.Sum(
+                        x => x.TonperhourTarget
+                    ) / targetCount;
+
+                monthlyTarget.FuelOilTarget =
+                    matchedTargets.Sum(
+                        x => x.FuelOilTarget
+                    ) / targetCount;
+
+                monthlyTarget.ElectricityTarget =
+                    matchedTargets.Sum(
+                        x => x.ElectricityTarget
+                    ) / targetCount;
+
+                monthlyTarget.WaterTarget =
+                    matchedTargets.Sum(
+                        x => x.WaterTarget
+                    ) / targetCount;
+
+                monthlyTarget.GuidePassTarget =
+                    matchedTargets.Sum(
+                        x => x.GuidePassTarget
+                    ) / targetCount;
+
+                monthlyTarget.QualityTarget =
+                    matchedTargets.Sum(
+                        x => x.QualityTarget
+                    ) / targetCount;
+
+                monthlyTarget.DownDayTarget =
+                    matchedTargets.Sum(
+                        x => x.DownDayTarget
+                    ) / targetCount;
+
+                monthlyTarget.RollShopTarget =
+                    matchedTargets.Sum(
+                        x => x.RollShopTarget
+                    ) / targetCount;
+
+                monthlyTarget.ElectricalTarget =
+                    matchedTargets.Sum(
+                        x => x.ElectricalTarget
+                    ) / targetCount;
+
+                monthlyTarget.MechanicalTarget =
+                    matchedTargets.Sum(
+                        x => x.MechanicalTarget
+                    ) / targetCount;
+
+                monthlyTarget.CraneTarget =
+                    matchedTargets.Sum(
+                        x => x.CraneTarget
+                    ) / targetCount;
+
+                monthlyTarget.DispatchTarget =
+                    matchedTargets.Sum(
+                        x => x.DispatchTarget
+                    ) / targetCount;
+
+                monthlyTarget.UtilityTarget =
+                    matchedTargets.Sum(
+                        x => x.UtilityTarget
+                    ) / targetCount;
+
+                monthlyTarget.SizeChangeTarget =
+                    matchedTargets.Sum(
+                        x => x.SizeChangeTarget
+                    ) / targetCount;
+
+                monthlyTarget.PowerFailureTarget =
+                    matchedTargets.Sum(
+                        x => x.PowerFailureTarget
+                    ) / targetCount;
+
+                monthlyTarget.NoBilletTarget =
+                    matchedTargets.Sum(
+                        x => x.NoBilletTarget
+                    ) / targetCount;
+
+                monthlyTarget.AnnualShutdownTarget =
+                    matchedTargets.Sum(
+                        x => x.AnnualShutdownTarget
+                    ) / targetCount;
+
+                monthlyTarget.OthersTarget =
+                    matchedTargets.Sum(
+                        x => x.OthersTarget
+                    ) / targetCount;
+            }
+            else
+            {
+                /*
+                    Selected size ka target na mile to old monthly fallback use karo.
+                    Is se dashboard zero target par break nahi hoga.
+                */
+                monthlyTarget =
+                    targetRepo.GetByMonthYear(
+                        targetMonth,
+                        targetYear
+                    ) ??
+                    new RollingMillTargetsBLL();
+            }
+
+            ViewBag.TargetMatchedSizes =
+                matchedTargets.Any()
+                    ? string.Join(
+                        ", ",
+                        matchedTargets
+                            .Select(x => x.Size)
+                            .Where(x =>
+                                !string.IsNullOrWhiteSpace(
+                                    x
+                                )
+                            )
+                            .Distinct(
+                                StringComparer.OrdinalIgnoreCase
+                            )
+                    )
+                    : "-";
+
+            ViewBag.TargetSizeCount =
+                matchedTargets.Count;
 
             // =========================================================
             // SHIFT DETAILS
             // =========================================================
 
-            var shiftDetailsList = rm.RollingMillDetails()
-                .Where(x =>
-                    x.StatusID == 1 &&
-                    x.Date >= fromDate &&
-                    x.Date < toDate.AddDays(1)
-                )
-                .ToList();
-
-            if (!string.IsNullOrWhiteSpace(selectedPlant))
-            {
-                shiftDetailsList = shiftDetailsList
+            var shiftDetailsList =
+                rm.RollingMillDetails()
                     .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.Plant) &&
-                        x.Plant.Trim().Equals(
-                            selectedPlant,
+                        x.StatusID == 1 &&
+                        x.Date >= fromDate &&
+                        x.Date < toDate.AddDays(1)
+                    )
+                    .ToList();
+
+            if (!string.IsNullOrWhiteSpace(
+                selectedPlant
+            ))
+            {
+                shiftDetailsList =
+                    shiftDetailsList
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Plant
+                            ) &&
+                            x.Plant.Trim().Equals(
+                                selectedPlant,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        .ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(
+                selectedShift
+            ))
+            {
+                shiftDetailsList =
+                    shiftDetailsList
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Shift
+                            ) &&
+                            x.Shift.Trim().Equals(
+                                selectedShift,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        .ToList();
+            }
+
+            var shiftDetails =
+                shiftDetailsList
+                    .OrderByDescending(
+                        x => x.Date
+                    )
+                    .ThenByDescending(
+                        x => x.ID
+                    )
+                    .FirstOrDefault();
+
+            // =========================================================
+            // TOTAL SHIFT MINUTES
+            // =========================================================
+
+            Func<string, decimal> getShiftHours =
+                shiftName =>
+                {
+                    if (string.IsNullOrWhiteSpace(
+                        shiftName
+                    ))
+                    {
+                        return 0;
+                    }
+
+                    string value =
+                        shiftName.Trim();
+
+                    if (
+                        value.Equals(
+                            "Morning",
+                            StringComparison.OrdinalIgnoreCase
+                        ) ||
+                        value.Equals(
+                            "Evening",
+                            StringComparison.OrdinalIgnoreCase
+                        ) ||
+                        value.Equals(
+                            "Night",
                             StringComparison.OrdinalIgnoreCase
                         )
                     )
-                    .ToList();
-            }
+                    {
+                        return 8;
+                    }
 
-            if (!string.IsNullOrWhiteSpace(selectedShift))
-            {
-                shiftDetailsList = shiftDetailsList
-                    .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.Shift) &&
-                        x.Shift.Trim().Equals(
-                            selectedShift,
+                    if (
+                        value.Equals(
+                            "Long Morning",
+                            StringComparison.OrdinalIgnoreCase
+                        ) ||
+                        value.Equals(
+                            "Long Night",
                             StringComparison.OrdinalIgnoreCase
                         )
                     )
-                    .ToList();
-            }
+                    {
+                        return 12;
+                    }
 
-            var shiftDetails = shiftDetailsList
-                .OrderByDescending(x => x.Date)
-                .ThenByDescending(x => x.ID)
-                .FirstOrDefault();
-
-            // Total scheduled shift minutes for the complete selected period.
-            // Each shift-detail record is counted separately, so a monthly report
-            // does not incorrectly use only one day's 24 hours.
-            Func<string, decimal> getShiftHours = shiftName =>
-            {
-                if (string.IsNullOrWhiteSpace(shiftName))
                     return 0;
+                };
 
-                string value = shiftName.Trim();
+            decimal totalShiftMinutes =
+                shiftDetailsList
+                    .GroupBy(x => new
+                    {
+                        ShiftDate =
+                            x.Date.Date,
 
-                if (value.Equals("Morning", StringComparison.OrdinalIgnoreCase) ||
-                    value.Equals("Evening", StringComparison.OrdinalIgnoreCase) ||
-                    value.Equals("Night", StringComparison.OrdinalIgnoreCase))
-                {
-                    return 8;
-                }
+                        ShiftName =
+                            (
+                                x.Shift ??
+                                string.Empty
+                            )
+                            .Trim()
+                            .ToUpperInvariant()
+                    })
+                    .Select(
+                        g => g.First()
+                    )
+                    .Sum(
+                        x =>
+                            getShiftHours(
+                                x.Shift
+                            ) * 60
+                    );
 
-                if (value.Equals("Long Morning", StringComparison.OrdinalIgnoreCase) ||
-                    value.Equals("Long Night", StringComparison.OrdinalIgnoreCase))
-                {
-                    return 12;
-                }
-
-                return 0;
-            };
-
-            decimal totalShiftMinutes = shiftDetailsList
-                .GroupBy(x => new
-                {
-                    ShiftDate = x.Date.Date,
-                    ShiftName = (x.Shift ?? string.Empty).Trim().ToUpper()
-                })
-                .Select(g => g.First())
-                .Sum(x => getShiftHours(x.Shift) * 60);
-
-            // Fallback only when no shift-detail records are available.
             if (totalShiftMinutes <= 0)
             {
-                int totalDays = (toDate - fromDate).Days + 1;
+                int totalDays =
+                    (toDate - fromDate).Days +
+                    1;
 
-                if (!string.IsNullOrWhiteSpace(selectedShift))
+                if (!string.IsNullOrWhiteSpace(
+                    selectedShift
+                ))
                 {
-                    totalShiftMinutes = getShiftHours(selectedShift) * 60 * totalDays;
+                    totalShiftMinutes =
+                        getShiftHours(
+                            selectedShift
+                        ) *
+                        60 *
+                        totalDays;
                 }
                 else
                 {
-                    totalShiftMinutes = 24 * 60 * totalDays;
+                    totalShiftMinutes =
+                        24 *
+                        60 *
+                        totalDays;
                 }
             }
 
@@ -1083,65 +1590,113 @@ namespace ProductionPortal_Solb.Controllers
             // VIEW MODEL
             // =========================================================
 
-            var vm = new ShiftProductionReportVM
-            {
-                Delays = delayData,
-                DischargedHeats = dischargedData,
+            var vm =
+                new ShiftProductionReportVM
+                {
+                    Delays =
+                        delayData,
 
-                // Accumulated chart isi separate month-to-date list se banega
-                MonthlyProductionData = monthlyChartData,
+                    DischargedHeats =
+                        dischargedData,
 
-                RollingMillTarget = monthlyTarget
-            };
+                    MonthlyProductionData =
+                        monthlyChartData,
+
+                    RollingMillTarget =
+                        monthlyTarget
+                };
 
             // =========================================================
             // VIEWBAGS
             // =========================================================
 
-            ViewBag.FromDate = fromDate.ToString("yyyy-MM-dd");
-            ViewBag.ToDate = toDate.ToString("yyyy-MM-dd");
+            ViewBag.FromDate =
+                fromDate.ToString(
+                    "yyyy-MM-dd"
+                );
 
-            ViewBag.SelectedPlant = selectedPlant;
-            ViewBag.SelectedShift = selectedShift;
+            ViewBag.ToDate =
+                toDate.ToString(
+                    "yyyy-MM-dd"
+                );
 
-            ViewBag.TargetMonth = targetMonth;
-            ViewBag.TargetYear = targetYear;
-            ViewBag.TotalShiftMinutes = totalShiftMinutes;
+            ViewBag.SelectedPlant =
+                selectedPlant;
 
-            ViewBag.ReportDate = fromDate == toDate
-                ? fromDate.ToString("dd/MM/yyyy")
-                : fromDate.ToString("dd/MM/yyyy") +
-                  " - " +
-                  toDate.ToString("dd/MM/yyyy");
+            ViewBag.SelectedShift =
+                selectedShift;
+
+            ViewBag.TargetMonth =
+                targetMonth;
+
+            ViewBag.TargetYear =
+                targetYear;
+
+            ViewBag.TotalShiftMinutes =
+                totalShiftMinutes;
+
+            ViewBag.ReportDate =
+                fromDate == toDate
+                    ? fromDate.ToString(
+                        "dd/MM/yyyy"
+                    )
+                    : fromDate.ToString(
+                        "dd/MM/yyyy"
+                    ) +
+                      " - " +
+                      toDate.ToString(
+                          "dd/MM/yyyy"
+                      );
 
             ViewBag.ReportPlant =
-                !string.IsNullOrWhiteSpace(selectedPlant)
+                !string.IsNullOrWhiteSpace(
+                    selectedPlant
+                )
                     ? selectedPlant
                     : "All Plants";
 
-            var reportShifts = dischargedData
-                .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
-                .Select(x => x.Shift.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            var reportShifts =
+                dischargedData
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(
+                            x.Shift
+                        )
+                    )
+                    .Select(x =>
+                        x.Shift.Trim()
+                    )
+                    .Distinct(
+                        StringComparer.OrdinalIgnoreCase
+                    )
+                    .ToList();
 
-            ViewBag.ReportShift = reportShifts.Any()
-                ? string.Join(", ", reportShifts)
-                : !string.IsNullOrWhiteSpace(selectedShift)
-                    ? selectedShift
-                    : "All Shifts";
+            ViewBag.ReportShift =
+                reportShifts.Any()
+                    ? string.Join(
+                        ", ",
+                        reportShifts
+                    )
+                    : !string.IsNullOrWhiteSpace(
+                        selectedShift
+                    )
+                        ? selectedShift
+                        : "All Shifts";
 
             ViewBag.ReportTeam =
                 shiftDetails != null
-                    ? shiftDetails.Team ?? string.Empty
+                    ? shiftDetails.Team ??
+                      string.Empty
                     : string.Empty;
 
             ViewBag.ReportShiftIncharge =
                 shiftDetails != null
-                    ? shiftDetails.ShiftIncharge ?? string.Empty
+                    ? shiftDetails.ShiftIncharge ??
+                      string.Empty
                     : string.Empty;
 
-            return View(vm);
+            return View(
+                vm
+            );
         }
 
         public ActionResult UtilityDailyReport(DateTime? date)
@@ -1196,18 +1751,18 @@ namespace ProductionPortal_Solb.Controllers
         //    return View();
         //}
 
-        public ActionResult SupplyChainReport(DateTime? from, DateTime? to, bool download = false)
-        {
-            DateTime fromDate = from ?? DateTime.Today;
-            DateTime toDate = to ?? fromDate;
+        //public ActionResult SupplyChainReport(DateTime? from, DateTime? to, bool download = false)
+        //{
+        //    DateTime fromDate = from ?? DateTime.Today;
+        //    DateTime toDate = to ?? fromDate;
 
-            var model = srepo.GetSupplyChainDailyReport(fromDate, toDate);
+        //    var model = srepo.GetSupplyChainDailyReport(fromDate, toDate);
 
-            ViewBag.FromDate = fromDate.ToString("yyyy-MM-dd");
-            ViewBag.ToDate = toDate.ToString("yyyy-MM-dd");
+        //    ViewBag.FromDate = fromDate.ToString("yyyy-MM-dd");
+        //    ViewBag.ToDate = toDate.ToString("yyyy-MM-dd");
 
-            return View(model);
-        }
+        //    return View(model);
+        //}
 
         public ActionResult SupplyChainPrint(DateTime? from, DateTime? to)
         {
@@ -1217,6 +1772,87 @@ namespace ProductionPortal_Solb.Controllers
             var model = srepo.GetSupplyChainDailyReport(fromDate, toDate);
 
             return View(model);
+        }
+
+        public ActionResult SupplyChainReport(
+    DateTime? from,
+    DateTime? to,
+    bool download = false)
+        {
+            DateTime fromDate =
+                from ?? DateTime.Today;
+
+            DateTime toDate =
+                to ?? fromDate;
+
+            SupplyChainDailyBLL model =
+                srepo.GetSupplyChainDailyReport(
+                    fromDate,
+                    toDate
+                );
+
+            if (model == null)
+            {
+                model =
+                    new SupplyChainDailyBLL();
+            }
+
+            /*
+                Load dynamic Raw Material and Sub Raw Material item details
+                for the report record.
+            */
+            model.ReceivedMaterials =
+                model.ID > 0
+                    ? srepo.GetReceivedMaterials(
+                        model.ID
+                    )
+                    : new List<SupplyChainReceivedMaterialBLL>();
+
+            /*
+                Safety:
+                Recalculate totals from item details when child data exists.
+            */
+            if (
+                model.ReceivedMaterials != null &&
+                model.ReceivedMaterials.Count > 0
+            )
+            {
+                model.RawMaterialsReceived =
+                    model.ReceivedMaterials
+                        .Where(x =>
+                            x != null &&
+                            x.MaterialType ==
+                                "Raw Material"
+                        )
+                        .Sum(x =>
+                            x.Quantity
+                        );
+
+                model.SubRawMaterialsReceived =
+                    model.ReceivedMaterials
+                        .Where(x =>
+                            x != null &&
+                            x.MaterialType ==
+                                "Sub Raw Material"
+                        )
+                        .Sum(x =>
+                            x.Quantity
+                        );
+            }
+
+            ViewBag.FromDate =
+                fromDate.ToString(
+                    "yyyy-MM-dd"
+                );
+
+            ViewBag.ToDate =
+                toDate.ToString(
+                    "yyyy-MM-dd"
+                );
+
+            return View(
+                model
+            );
         }
     }
 }

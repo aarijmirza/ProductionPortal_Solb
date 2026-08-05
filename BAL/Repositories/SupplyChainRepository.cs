@@ -12,58 +12,346 @@ namespace BAL.Repositories
 {
     public class SupplyChainRepository
     {
-        public int SaveSupplyChainDaily(SupplyChainDailyBLL model)
+        public int SaveSupplyChainDaily(
+            SupplyChainDailyBLL model)
         {
-            try
-            {
-                SqlParameter[] p = new SqlParameter[33];
-
-                p[0] = new SqlParameter("@ID", model.ID);
-                p[1] = new SqlParameter("@ReportDate", model.ReportDate.HasValue ? (object)model.ReportDate.Value : DBNull.Value);
-
-                p[2] = new SqlParameter("@Scrap", model.Scrap.HasValue ? (object)model.Scrap.Value : DBNull.Value);
-                p[3] = new SqlParameter("@DRI", model.DRI.HasValue ? (object)model.DRI.Value : DBNull.Value);
-                p[4] = new SqlParameter("@HBI", model.HBI.HasValue ? (object)model.HBI.Value : DBNull.Value);
-
-                p[5] = new SqlParameter("@Billet", model.Billet.HasValue ? (object)model.Billet.Value : DBNull.Value);
-                p[6] = new SqlParameter("@Rebar", model.Rebar.HasValue ? (object)model.Rebar.Value : DBNull.Value);
-                p[7] = new SqlParameter("@WireRodCoil", model.WireRodCoil.HasValue ? (object)model.WireRodCoil.Value : DBNull.Value);
-                p[8] = new SqlParameter("@RebarInCoil", model.RebarInCoil.HasValue ? (object)model.RebarInCoil.Value : DBNull.Value);
-                p[9] = new SqlParameter("@EpoxyRebar", model.EpoxyRebar.HasValue ? (object)model.EpoxyRebar.Value : DBNull.Value);
-
-                p[10] = new SqlParameter("@DailyDispatch", model.DailyDispatch.HasValue ? (object)model.DailyDispatch.Value : DBNull.Value);
-                p[11] = new SqlParameter("@DailyDispatchTarget", model.DailyDispatchTarget.HasValue ? (object)model.DailyDispatchTarget.Value : DBNull.Value);
-                p[12] = new SqlParameter("@WTDDispatch", model.WTDDispatch.HasValue ? (object)model.WTDDispatch.Value : DBNull.Value);
-                p[13] = new SqlParameter("@WTDDispatchTarget", model.WTDDispatchTarget.HasValue ? (object)model.WTDDispatchTarget.Value : DBNull.Value);
-                p[14] = new SqlParameter("@MTDDispatch", model.MTDDispatch.HasValue ? (object)model.MTDDispatch.Value : DBNull.Value);
-                p[15] = new SqlParameter("@MTDDispatchTarget", model.MTDDispatchTarget.HasValue ? (object)model.MTDDispatchTarget.Value : DBNull.Value);
-
-                p[16] = new SqlParameter("@RawMaterialsReceived", model.RawMaterialsReceived.HasValue ? (object)model.RawMaterialsReceived.Value : DBNull.Value);
-                p[17] = new SqlParameter("@SubRawMaterialsReceived", model.SubRawMaterialsReceived.HasValue ? (object)model.SubRawMaterialsReceived.Value : DBNull.Value);
-                p[18] = new SqlParameter("@RefractoryMaterialsReceived", model.RefractoryMaterialsReceived.HasValue ? (object)model.RefractoryMaterialsReceived.Value : DBNull.Value);
-                p[19] = new SqlParameter("@FuelOilReceived", model.FuelOilReceived.HasValue ? (object)model.FuelOilReceived.Value : DBNull.Value);
-                p[20] = new SqlParameter("@OtherReceived", model.OtherReceived.HasValue ? (object)model.OtherReceived.Value : DBNull.Value);
-
-                p[21] = new SqlParameter("@MillScale", model.MillScale.HasValue ? (object)model.MillScale.Value : DBNull.Value);
-                p[22] = new SqlParameter("@Slag", model.Slag.HasValue ? (object)model.Slag.Value : DBNull.Value);
-                p[23] = new SqlParameter("@Dust", model.Dust.HasValue ? (object)model.Dust.Value : DBNull.Value);
-                p[24] = new SqlParameter("@Sludge", model.Sludge.HasValue ? (object)model.Sludge.Value : DBNull.Value);
-
-                p[25] = new SqlParameter("@StatusID", model.StatusID.HasValue ? (object)model.StatusID.Value : 1);
-                p[26] = new SqlParameter("@CreatedBy", string.IsNullOrWhiteSpace(model.CreatedBy) ? (object)DBNull.Value : model.CreatedBy);
-                p[27] = new SqlParameter("@CreatedDate", model.CreatedDate.HasValue ? (object)model.CreatedDate.Value : DateTime.Now);
-                p[28] = new SqlParameter("@UpdatedBy", string.IsNullOrWhiteSpace(model.UpdatedBy) ? (object)DBNull.Value : model.UpdatedBy);
-                p[29] = new SqlParameter("@UpdatedDate", model.UpdatedDate.HasValue ? (object)model.UpdatedDate.Value : DBNull.Value);
-
-                p[30] = new SqlParameter("@ShortBar", model.ShortBar.HasValue ? (object)model.ShortBar.Value : DBNull.Value);
-                p[31] = new SqlParameter("@DailyTruck", model.ShortBar.HasValue ? (object)model.DailyTruck.Value : DBNull.Value);
-                p[32] = new SqlParameter("@DailyTruckTarget", model.ShortBar.HasValue ? (object)model.DailyTruckTarget.Value : DBNull.Value);
-
-                return new DBHelper().ExecuteNonQueryReturn("sp_SaveSupplyChainDaily", p);
-            }
-            catch
+            if (model == null)
             {
                 return 0;
+            }
+
+            try
+            {
+                SqlParameter[] p =
+                    new SqlParameter[38];
+
+                p[0] =
+                    new SqlParameter(
+                        "@ID",
+                        model.ID
+                    );
+
+                p[1] =
+                    new SqlParameter(
+                        "@ReportDate",
+                        model.ReportDate.HasValue
+                            ? (object)model.ReportDate.Value
+                            : DBNull.Value
+                    );
+
+                p[2] =
+                    new SqlParameter(
+                        "@Scrap",
+                        model.Scrap.HasValue
+                            ? (object)model.Scrap.Value
+                            : DBNull.Value
+                    );
+
+                p[3] =
+                    new SqlParameter(
+                        "@DRI",
+                        model.DRI.HasValue
+                            ? (object)model.DRI.Value
+                            : DBNull.Value
+                    );
+
+                p[4] =
+                    new SqlParameter(
+                        "@HBI",
+                        model.HBI.HasValue
+                            ? (object)model.HBI.Value
+                            : DBNull.Value
+                    );
+
+                p[5] =
+                    new SqlParameter(
+                        "@Billet",
+                        model.Billet.HasValue
+                            ? (object)model.Billet.Value
+                            : DBNull.Value
+                    );
+
+                p[6] =
+                    new SqlParameter(
+                        "@Rebar",
+                        model.Rebar.HasValue
+                            ? (object)model.Rebar.Value
+                            : DBNull.Value
+                    );
+
+                p[7] =
+                    new SqlParameter(
+                        "@WireRodCoil",
+                        model.WireRodCoil.HasValue
+                            ? (object)model.WireRodCoil.Value
+                            : DBNull.Value
+                    );
+
+                p[8] =
+                    new SqlParameter(
+                        "@RebarInCoil",
+                        model.RebarInCoil.HasValue
+                            ? (object)model.RebarInCoil.Value
+                            : DBNull.Value
+                    );
+
+                p[9] =
+                    new SqlParameter(
+                        "@EpoxyRebar",
+                        model.EpoxyRebar.HasValue
+                            ? (object)model.EpoxyRebar.Value
+                            : DBNull.Value
+                    );
+
+                p[10] =
+                    new SqlParameter(
+                        "@DailyDispatch",
+                        model.DailyDispatch.HasValue
+                            ? (object)model.DailyDispatch.Value
+                            : DBNull.Value
+                    );
+
+                p[11] =
+                    new SqlParameter(
+                        "@DailyDispatchTarget",
+                        model.DailyDispatchTarget.HasValue
+                            ? (object)model.DailyDispatchTarget.Value
+                            : DBNull.Value
+                    );
+
+                p[12] =
+                    new SqlParameter(
+                        "@WTDDispatch",
+                        model.WTDDispatch.HasValue
+                            ? (object)model.WTDDispatch.Value
+                            : DBNull.Value
+                    );
+
+                p[13] =
+                    new SqlParameter(
+                        "@WTDDispatchTarget",
+                        model.WTDDispatchTarget.HasValue
+                            ? (object)model.WTDDispatchTarget.Value
+                            : DBNull.Value
+                    );
+
+                p[14] =
+                    new SqlParameter(
+                        "@MTDDispatch",
+                        model.MTDDispatch.HasValue
+                            ? (object)model.MTDDispatch.Value
+                            : DBNull.Value
+                    );
+
+                p[15] =
+                    new SqlParameter(
+                        "@MTDDispatchTarget",
+                        model.MTDDispatchTarget.HasValue
+                            ? (object)model.MTDDispatchTarget.Value
+                            : DBNull.Value
+                    );
+
+                p[16] =
+                    new SqlParameter(
+                        "@RawMaterialsReceived",
+                        model.RawMaterialsReceived.HasValue
+                            ? (object)model.RawMaterialsReceived.Value
+                            : DBNull.Value
+                    );
+
+                p[17] =
+                    new SqlParameter(
+                        "@SubRawMaterialsReceived",
+                        model.SubRawMaterialsReceived.HasValue
+                            ? (object)model.SubRawMaterialsReceived.Value
+                            : DBNull.Value
+                    );
+
+                p[18] =
+                    new SqlParameter(
+                        "@RefractoryMaterialsReceived",
+                        model.RefractoryMaterialsReceived.HasValue
+                            ? (object)model.RefractoryMaterialsReceived.Value
+                            : DBNull.Value
+                    );
+
+                p[19] =
+                    new SqlParameter(
+                        "@FuelOilReceived",
+                        model.FuelOilReceived.HasValue
+                            ? (object)model.FuelOilReceived.Value
+                            : DBNull.Value
+                    );
+
+                p[20] =
+                    new SqlParameter(
+                        "@OtherReceived",
+                        model.OtherReceived.HasValue
+                            ? (object)model.OtherReceived.Value
+                            : DBNull.Value
+                    );
+
+                p[21] =
+                    new SqlParameter(
+                        "@MillScale",
+                        model.MillScale.HasValue
+                            ? (object)model.MillScale.Value
+                            : DBNull.Value
+                    );
+
+                p[22] =
+                    new SqlParameter(
+                        "@Slag",
+                        model.Slag.HasValue
+                            ? (object)model.Slag.Value
+                            : DBNull.Value
+                    );
+
+                p[23] =
+                    new SqlParameter(
+                        "@Dust",
+                        model.Dust.HasValue
+                            ? (object)model.Dust.Value
+                            : DBNull.Value
+                    );
+
+                p[24] =
+                    new SqlParameter(
+                        "@Sludge",
+                        model.Sludge.HasValue
+                            ? (object)model.Sludge.Value
+                            : DBNull.Value
+                    );
+
+                p[25] =
+                    new SqlParameter(
+                        "@StatusID",
+                        model.StatusID.HasValue
+                            ? (object)model.StatusID.Value
+                            : 1
+                    );
+
+                p[26] =
+                    new SqlParameter(
+                        "@CreatedBy",
+                        string.IsNullOrWhiteSpace(
+                            model.CreatedBy
+                        )
+                            ? (object)DBNull.Value
+                            : model.CreatedBy
+                    );
+
+                p[27] =
+                    new SqlParameter(
+                        "@CreatedDate",
+                        model.CreatedDate.HasValue
+                            ? (object)model.CreatedDate.Value
+                            : DateTime.Now
+                    );
+
+                p[28] =
+                    new SqlParameter(
+                        "@UpdatedBy",
+                        string.IsNullOrWhiteSpace(
+                            model.UpdatedBy
+                        )
+                            ? (object)DBNull.Value
+                            : model.UpdatedBy
+                    );
+
+                p[29] =
+                    new SqlParameter(
+                        "@UpdatedDate",
+                        model.UpdatedDate.HasValue
+                            ? (object)model.UpdatedDate.Value
+                            : DBNull.Value
+                    );
+
+                p[30] =
+                    new SqlParameter(
+                        "@ShortBar",
+                        model.ShortBar.HasValue
+                            ? (object)model.ShortBar.Value
+                            : DBNull.Value
+                    );
+
+                p[31] =
+                    new SqlParameter(
+                        "@DailyTruck",
+                        model.DailyTruck.HasValue
+                            ? (object)model.DailyTruck.Value
+                            : DBNull.Value
+                    );
+
+                p[32] =
+                    new SqlParameter(
+                        "@DailyTruckTarget",
+                        model.DailyTruckTarget.HasValue
+                            ? (object)model.DailyTruckTarget.Value
+                            : DBNull.Value
+                    );
+
+                p[33] =
+                    new SqlParameter(
+                        "@WTDTruck",
+                        model.WTDTruck.HasValue
+                            ? (object)model.WTDTruck.Value
+                            : DBNull.Value
+                    );
+
+                p[34] =
+                    new SqlParameter(
+                        "@WTDTruckTarget",
+                        model.WTDTruckTarget.HasValue
+                            ? (object)model.WTDTruckTarget.Value
+                            : DBNull.Value
+                    );
+
+                p[35] =
+                    new SqlParameter(
+                        "@MTDTruck",
+                        model.MTDTruck.HasValue
+                            ? (object)model.MTDTruck.Value
+                            : DBNull.Value
+                    );
+
+                p[36] =
+                    new SqlParameter(
+                        "@MTDTruckTarget",
+                        model.MTDTruckTarget.HasValue
+                            ? (object)model.MTDTruckTarget.Value
+                            : DBNull.Value
+                    );
+
+                p[37] =
+    new SqlParameter(
+        "@Result",
+        SqlDbType.Int
+    )
+    {
+        Direction =
+            ParameterDirection.Output
+    };
+
+                new DBHelper()
+                    .ExecuteNonQueryReturn(
+                        "sp_SaveSupplyChainDaily",
+                        p
+                    );
+
+                return
+                    p[37].Value == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(
+                            p[37].Value
+                        );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    "Unable to save Supply Chain Daily record.",
+                    ex
+                );
             }
         }
 
@@ -105,8 +393,12 @@ namespace BAL.Repositories
                     DailyTruckTarget = r["DailyTruckTarget"] == DBNull.Value ? (int?)null : Convert.ToInt32(r["DailyTruckTarget"]),
                     WTDDispatch = r["WTDDispatch"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["WTDDispatch"]),
                     WTDDispatchTarget = r["WTDDispatchTarget"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["WTDDispatchTarget"]),
+                    WTDTruck = r["WTDTruck"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["WTDTruck"]),
+                    WTDTruckTarget = r["WTDTruckTarget"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["WTDTruckTarget"]),
                     MTDDispatch = r["MTDDispatch"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["MTDDispatch"]),
                     MTDDispatchTarget = r["MTDDispatchTarget"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["MTDDispatchTarget"]),
+                    MTDTruck = r["MTDTruck"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["MTDTruck"]),
+                    MTDTruckTarget = r["MTDTruckTarget"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["MTDTruckTarget"]),
 
                     RawMaterialsReceived = r["RawMaterialsReceived"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["RawMaterialsReceived"]),
                     SubRawMaterialsReceived = r["SubRawMaterialsReceived"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["SubRawMaterialsReceived"]),
@@ -153,10 +445,6 @@ namespace BAL.Repositories
                             ReportDate = r["ReportDate"] == DBNull.Value
                                 ? (DateTime?)null
                                 : Convert.ToDateTime(r["ReportDate"]),
-
-                            ReportTime = r["ReportTime"] == DBNull.Value
-                                ? (TimeSpan?)null
-                                : (TimeSpan)r["ReportTime"],
 
                             Scrap = r["Scrap"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["Scrap"]),
                             DRI = r["DRI"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["DRI"]),
@@ -269,5 +557,158 @@ namespace BAL.Repositories
             }
         }
 
+
+        public List<SupplyChainReceivedMaterialBLL>
+            GetReceivedMaterials(int supplyChainDailyID)
+        {
+            var list =
+                new List<SupplyChainReceivedMaterialBLL>();
+
+            if (supplyChainDailyID <= 0)
+            {
+                return list;
+            }
+
+            SqlParameter[] parameters =
+            {
+        new SqlParameter(
+            "@SupplyChainDailyID",
+            SqlDbType.Int
+        )
+        {
+            Value = supplyChainDailyID
+        }
+    };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_GetSupplyChainReceivedMaterials",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (dt == null || dt.Rows.Count == 0)
+            {
+                return list;
+            }
+
+            foreach (DataRow row in dt.Rows)
+            {
+                list.Add(
+                    new SupplyChainReceivedMaterialBLL
+                    {
+                        ID =
+                            row["ID"] == DBNull.Value
+                                ? 0
+                                : Convert.ToInt32(row["ID"]),
+
+                        SupplyChainDailyID =
+                            row["SupplyChainDailyID"] == DBNull.Value
+                                ? 0
+                                : Convert.ToInt32(
+                                    row["SupplyChainDailyID"]
+                                ),
+
+                        MaterialType =
+                            Convert.ToString(
+                                row["MaterialType"]
+                            ).Trim(),
+
+                        ItemName =
+                            Convert.ToString(
+                                row["ItemName"]
+                            ).Trim(),
+
+                        Quantity =
+                            row["Quantity"] == DBNull.Value
+                                ? 0M
+                                : Convert.ToDecimal(
+                                    row["Quantity"]
+                                ),
+
+                        StatusID =
+                            row["StatusID"] == DBNull.Value
+                                ? 0
+                                : Convert.ToInt32(
+                                    row["StatusID"]
+                                )
+                    }
+                );
+            }
+
+            return list;
+        }
+
+
+        public int InsertReceivedMaterial(
+            SupplyChainReceivedMaterialBLL item)
+        {
+            SqlParameter[] parameters =
+            {
+        new SqlParameter(
+            "@SupplyChainDailyID",
+            item.SupplyChainDailyID
+        ),
+
+        new SqlParameter(
+            "@MaterialType",
+            (object)item.MaterialType
+            ?? DBNull.Value
+        ),
+
+        new SqlParameter(
+            "@ItemName",
+            (object)item.ItemName
+            ?? DBNull.Value
+        ),
+
+        new SqlParameter(
+            "@Quantity",
+            item.Quantity
+        ),
+
+        new SqlParameter(
+            "@StatusID",
+            item.StatusID
+        ),
+
+        new SqlParameter(
+            "@CreatedBy",
+            (object)item.CreatedBy
+            ?? DBNull.Value
+        ),
+
+        new SqlParameter(
+            "@CreatedDate",
+            item.CreatedDate
+            ?? DateTime.Now
+        )
+    };
+
+            return DBHelper.ExecuteNonQuery(
+                "sp_InsertSupplyChainReceivedMaterial",
+                CommandType.StoredProcedure,
+                parameters
+            );
+        }
+
+
+        public int DeleteReceivedMaterials(
+            int supplyChainDailyID)
+        {
+            SqlParameter[] parameters =
+            {
+        new SqlParameter(
+            "@SupplyChainDailyID",
+            supplyChainDailyID
+        )
+    };
+
+            return DBHelper.ExecuteNonQuery(
+                "sp_DeleteSupplyChainReceivedMaterials",
+                CommandType.StoredProcedure,
+                parameters
+            );
+        }
     }
 }

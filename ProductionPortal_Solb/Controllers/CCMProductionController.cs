@@ -551,5 +551,159 @@ namespace ProductionPortal_Solb.Controllers
         }
 
         #endregion
+
+        [HttpGet]
+        public ActionResult DownloadAllPdf(
+    DateTime? fromDate,
+    DateTime? toDate,
+    string shift)
+        {
+            DateTime selectedFromDate =
+                fromDate ?? DateTime.Today;
+
+            DateTime selectedToDate =
+                toDate ?? selectedFromDate;
+
+            string selectedShift =
+                string.IsNullOrWhiteSpace(shift)
+                    ? null
+                    : shift.Trim();
+
+            /*
+                IMPORTANT:
+                Yahan wahi repository method use karo jo List action mein
+                records return kar raha hai.
+            */
+            List<CCMDailyProductionReportBLL> headerRecords =
+                repo.GetAll(
+                        selectedFromDate,
+                        selectedToDate,
+                        selectedShift
+                    )
+                    ?.ToList()
+                ?? new List<CCMDailyProductionReportBLL>();
+
+            if (headerRecords.Count == 0)
+            {
+                TempData["Error"] =
+                    "No CCM reports found for the selected filters.";
+
+                return RedirectToAction(
+                    "List",
+                    new
+                    {
+                        fromDate =
+                            selectedFromDate.ToString(
+                                "yyyy-MM-dd"
+                            ),
+
+                        toDate =
+                            selectedToDate.ToString(
+                                "yyyy-MM-dd"
+                            ),
+
+                        shift =
+                            selectedShift
+                    }
+                );
+            }
+
+            /*
+                List action aksar sirf report headers return karta hai.
+                Isliye har ID ka complete report dobara load kar rahe hain,
+                including Details.
+            */
+            var completeRecords =
+                new List<CCMDailyProductionReportBLL>();
+
+            foreach (var header in headerRecords)
+            {
+                if (header == null || header.ID <= 0)
+                {
+                    continue;
+                }
+
+                CCMDailyProductionReportBLL fullRecord =
+                    repo.GetByID(
+                        header.ID
+                    );
+
+                if (fullRecord == null)
+                {
+                    continue;
+                }
+
+                /*
+                    Safety:
+                    Details null hon to empty list set kar do.
+                */
+                if (fullRecord.Details == null)
+                {
+                    fullRecord.Details =
+                        new List<CCMDailyProductionReportDetailBLL>();
+                }
+
+                completeRecords.Add(
+                    fullRecord
+                );
+            }
+
+            if (completeRecords.Count == 0)
+            {
+                TempData["Error"] =
+                    "Report headers were found, but complete report data could not be loaded.";
+
+                return RedirectToAction(
+                    "List",
+                    new
+                    {
+                        fromDate =
+                            selectedFromDate.ToString(
+                                "yyyy-MM-dd"
+                            ),
+
+                        toDate =
+                            selectedToDate.ToString(
+                                "yyyy-MM-dd"
+                            ),
+
+                        shift =
+                            selectedShift
+                    }
+                );
+            }
+
+            return new Rotativa.ViewAsPdf(
+                "CCM_GetAllPdf_Template_NoLinq",
+                completeRecords
+            )
+            {
+                FileName =
+        "Billet_Yard_All_Heats_" +
+        selectedFromDate.ToString("yyyyMMdd") +
+        "_" +
+        selectedToDate.ToString("yyyyMMdd") +
+        ".pdf",
+
+                PageSize =
+        Rotativa.Options.Size.A3,
+
+                PageOrientation =
+        Rotativa.Options.Orientation.Landscape,
+
+                PageMargins =
+        new Rotativa.Options.Margins(
+            5,
+            5,
+            5,
+            5
+        ),
+
+                CustomSwitches =
+        "--print-media-type " +
+        "--encoding utf-8 " +
+        "--zoom 1.0"
+            };
+        }
     }
 }

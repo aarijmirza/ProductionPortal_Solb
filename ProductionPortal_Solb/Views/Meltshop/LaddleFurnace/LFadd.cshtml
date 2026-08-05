@@ -1,4 +1,4 @@
-﻿@model DAL.Models.ElectricArcFurnaceBLL 
+﻿@model DAL.Models.LaddleFurnaceBLL
 
 @{
     ViewBag.Title = "LFadd";
@@ -23,7 +23,17 @@
 </div>
 <!-- End XP Breadcrumbbar -->
 <div class="xp-contentbar">
-    <form action="/Meltshop/LFadd" id="addprofileform" method="post" enctype="multipart/form-data">
+    @using (Html.BeginForm(
+        "LFadd",
+        "Meltshop",
+        FormMethod.Post,
+        new
+        {
+            id = "addprofileform",
+            enctype = "multipart/form-data"
+        }))
+    {
+        @Html.AntiForgeryToken()
         <div class="row">
             <div class="col-lg-12">
                 <div class="card m-b-30">
@@ -34,23 +44,40 @@
                         <div class="form-row">
                             <div class="form-group col-md-2">
                                 <label for="Date">Date</label>
-                                <input type="date" class="form-control" id="date" name="Date" >
+                                <input type="date"
+                                       class="form-control"
+                                       id="date"
+                                       name="Date"
+                                       value="@(Model != null && Model.Date.HasValue ? Model.Date.Value.ToString("yyyy-MM-dd") : "")"
+                                       required>
                             </div>
 
                             <div class="form-group col-md-2">
                                 <label for="HeatNo">Heat No</label>
-                                @Html.DropDownListFor(model => model.HeatNo,
-                                    ViewBag.HeatNo as SelectList,
-                                     "-- Select Heat # --",
-                                     new { @class = "form-control", id = "ddlgrade" })
+                                @*@Html.DropDownListFor(model => model.HeatNo,
+                                        ViewBag.HeatNo as SelectList,
+                                         "-- Select Heat # --",
+                                         new { @class = "form-control", id = "ddlgrade" })
 
-                                @Html.ValidationMessageFor(model => model.HeatNo, "", new { @class = "text-danger" })
-                                @*<input type="text" class="form-control" id="HeatNo" name="HeatNo" placeholder="Enter Heat No" required>*@
+                                    @Html.ValidationMessageFor(model => model.HeatNo, "", new { @class = "text-danger" })*@
+                                <input type="text"
+                                       class="form-control"
+                                       id="HeatNo"
+                                       name="HeatNo"
+                                       value="@(Model != null ? Model.HeatNo : "")"
+                                       placeholder="Enter Heat No"
+                                       required>
                             </div>
 
                             <div class="form-group col-md-2">
-                                <label for="HeatNo">Grade</label>
-                                <input type="text" class="form-control" id="HeatNo" name="Grade" placeholder="Enter Grade" required>
+                                <label for="Grade">Grade</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="Grade"
+                                       name="Grade"
+                                       value="@(Model != null ? Model.Grade : "")"
+                                       placeholder="Enter Grade"
+                                       required>
                             </div>
 
                             <div class="form-group col-md-2">
@@ -161,14 +188,25 @@
                 </div>
             </div>
         </div>
-    </form>
+    }
 </div>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
     $("input[type='number']").attr("step", "any");
 
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById("date").value = today;
+    function getLocalDateValue(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return year + "-" + month + "-" + day;
+    }
+
+    const dateInput = document.getElementById("date");
+
+    if (dateInput && !dateInput.value) {
+        dateInput.value = getLocalDateValue(new Date());
+    }
 
     function calculateTotalAlloys() {
         // Get values from the input fields
@@ -198,9 +236,16 @@
         let isSubmitting = false;   // 🔐 double-submit lock
 
         $("#addprofileform").on("submit", function (e) {
-            e.preventDefault(); // ❗ pehle submit roko
+            e.preventDefault();
 
-            if (isSubmitting) return; // already submitting
+            if (isSubmitting) {
+                return;
+            }
+
+            if (!this.checkValidity()) {
+                this.reportValidity();
+                return;
+            }
 
             Swal.fire({
                 title: 'Confirm Submission',

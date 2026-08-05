@@ -507,6 +507,18 @@
 
                                 <div class="col-md-3">
                                     <div class="form-group">
+                                        <label>Sub Order Number</label>
+
+                                        <input type="text"
+                                               name="CounterMeasures[0].SubOrderNumber"
+                                               class="form-control"
+                                               maxlength="50"
+                                               placeholder="Enter Sub Order Number" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
                                         <label>Responsible</label>
 
                                         <input type="text"
@@ -607,6 +619,18 @@
 
                                 <div class="col-md-3">
                                     <div class="form-group">
+                                        <label>Sub Order Number</label>
+
+                                        <input type="text"
+                                               name="CounterMeasures[1].SubOrderNumber"
+                                               class="form-control"
+                                               maxlength="50"
+                                               placeholder="Enter Sub Order Number" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
                                         <label>Responsible</label>
 
                                         <input type="text"
@@ -701,6 +725,7 @@
                             <th>#</th>
                             <th>Countermeasure</th>
                             <th>SAP Order No.</th>
+                            <th>Sub Order Number</th>
                             <th>Responsible</th>
                             <th>Target Date</th>
                             <th>Evidence for Completion</th>
@@ -737,6 +762,10 @@
 
                                     <td>
                                         @item.SAPOrderNo
+                                    </td>
+
+                                    <td>
+                                        @item.SubOrderNumber
                                     </td>
 
                                     <td>
@@ -782,7 +811,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="9"
+                                <td colspan="10"
                                     class="text-center text-muted">
                                     No countermeasure entered against this delay.
                                 </td>
@@ -841,6 +870,18 @@
                                 <input type="text"
                                        name="CounterMeasures[${counterIndex}].SAPOrderNo"
                                        class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Sub Order Number</label>
+
+                                <input type="text"
+                                       name="CounterMeasures[${counterIndex}].SubOrderNumber"
+                                       class="form-control"
+                                       maxlength="50"
+                                       placeholder="Enter Sub Order Number" />
                             </div>
                         </div>
 

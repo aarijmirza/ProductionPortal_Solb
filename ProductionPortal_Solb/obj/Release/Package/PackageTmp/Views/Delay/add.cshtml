@@ -1,7 +1,16 @@
 ﻿@model DAL.Models.DelaysVM
 @using System.Linq
 @{
-    ViewBag.Title = "add";
+    ViewBag.Title = ViewBag.IsEdit == true ? "Edit Delay" : "Add Delay";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool isEdit =
+        ViewBag.IsEdit == true;
+
+    var equipmentItems =
+        ViewBag.EquipmentItems as
+            IEnumerable<SelectListItem>
+        ?? Enumerable.Empty<SelectListItem>();
 }
 
 
@@ -16,7 +25,9 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
                     <li class="breadcrumb-item"><a href="#">Delay</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        @(isEdit ? "Edit Record" : "Add Record")
+                    </li>
                 </ol>
             </div>
         </div>
@@ -25,13 +36,25 @@
 @*End XP Breadcrumbbar*@
 
 <div class="xp-contentbar">
-    <form action="/delay/add" id="addprofileform" method="post">
+    @using (Html.BeginForm(
+        "add",
+        "Delay",
+        FormMethod.Post,
+        new
+        {
+            id = "addprofileform"
+        }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ID)
 
         <div class="row">
             <div class="col-lg-12">
                 <div class="card m-b-30">
                     <div class="card-header bg-white text-right">
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="submit" class="btn btn-primary">
+                            @(isEdit ? "Update Delay" : "Save Delay")
+                        </button>
                     </div>
                     <div class="card-body">
                         <div class="form-row mb-4" hidden>
@@ -45,12 +68,22 @@
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label>Date</label>
-                                <input type="date" class="form-control" id="date" name="Date">
+                                @Html.TextBoxFor(
+                                                                  m => m.Date,
+                                                                  "{0:yyyy-MM-dd}",
+                                                                  new
+                                                                  {
+                                                                      @class = "form-control",
+                                                                      type = "date",
+                                                                      id = "date",
+                                                                      required = "required"
+                                                                  }
+                                                              )
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="date">Plant</label>
                                 @Html.DropDownListFor(m => m.Plant, new List<SelectListItem>
-                                {
+                                                                                                                                {
                                     new SelectListItem { Text = "-- please select --", Value = "" },
                                     new SelectListItem { Text = "Rolling Mill 1", Value = "Rolling Mill 1" },
                                     new SelectListItem { Text = "Rolling Mill 2", Value = "Rolling Mill 2" }
@@ -59,7 +92,7 @@
                             <div class="form-group col-md-3">
                                 <label for="date">Shift</label>
                                 @Html.DropDownListFor(m => m.Shift, new List<SelectListItem>
-                                {
+                                                                                                                                {
                                     new SelectListItem { Text = "-- please select --", Value = "" },
                                     new SelectListItem { Text = "Morning", Value = "Morning" },
                                     new SelectListItem { Text = "Afternoon", Value = "Evening" },
@@ -71,7 +104,7 @@
                             <div class="form-group col-md-3">
                                 <label for="date">Team</label>
                                 @Html.DropDownListFor(m => m.Team, new List<SelectListItem>
-                                {
+                                                                                                                                {
                                     new SelectListItem { Text = "-- please select --", Value = "" },
                                     new SelectListItem { Text = "Team A", Value = "Team A" },
                                     new SelectListItem { Text = "Team B", Value = "Team B" },
@@ -81,7 +114,7 @@
                             <div class="form-group col-md-3">
                                 <label for="date">Shift Incharge</label>
                                 @Html.DropDownListFor(m => m.ShiftIncharge, new List<SelectListItem>
-                                {
+                                                                                                                                {
                                     new SelectListItem { Text = "-- please select --", Value = "" },
                                     new SelectListItem { Text = "Muhammad Ali", Value = "Muhammad Ali" },
                                     new SelectListItem { Text = "Altaf Khan", Value = "Altaf Khan" },
@@ -91,23 +124,71 @@
 
                             <div class="form-group col-md-3">
                                 <label>Cobbles</label>
-                                <input type="text" class="form-control" name="Cobble" value="0"/>
+                                @Html.TextBoxFor(
+                                                                  m => m.Cobble,
+                                                                  new
+                                                                  {
+                                                                      @class = "form-control",
+                                                                      type = "number",
+                                                                      min = "0"
+                                                                  }
+                                                              )
                             </div>
                             <div class="form-group col-md-3">
                                 <label>Hot Out</label>
-                                <input type="text" class="form-control" name="HotOut" value="0"/>
+                                @Html.TextBoxFor(
+                                                                  m => m.HotOut,
+                                                                  new
+                                                                  {
+                                                                      @class = "form-control",
+                                                                      type = "number",
+                                                                      min = "0"
+                                                                  }
+                                                              )
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-2">
                                 <label>Agency</label>
-                                <select id="AgencyDropdown" name="AgencyName" class="form-control">
-                                    <option value="">-- Select Agency --</option>
-                                    @foreach (var a in (IEnumerable<DAL.Models.PlantDelayBLL>)ViewBag.Agencies)
+                                <select id="AgencyDropdown"
+                                        name="AgencyName"
+                                        class="form-control">
+                                    <option value=""
+                                            data-code="">
+                                        -- Select Agency --
+                                    </option>
+
+                                    @foreach (
+                                        var a in
+                                        (
+                                            ViewBag.Agencies as
+                                                IEnumerable<DAL.Models.PlantDelayBLL>
+                                            ?? Enumerable.Empty<DAL.Models.PlantDelayBLL>()
+                                        )
+                                    )
                                     {
-                                        <option value="@a.AgencyCode"
+                                        bool selectedAgency =
+                                            string.Equals(
+                                                Model != null
+                                                    ? Model.AgencyName
+                                                    : "",
+                                                a.AgencyName,
+                                                StringComparison.OrdinalIgnoreCase
+                                            )
+                                            ||
+                                            string.Equals(
+                                                Model != null
+                                                    ? Model.AgencyName
+                                                    : "",
+                                                a.AgencyCode,
+                                                StringComparison.OrdinalIgnoreCase
+                                            );
+
+                                        <option value="@a.AgencyName"
+                                                data-code="@a.AgencyCode"
                                                 data-department="@a.Area"
-                                                data-delaytype="@a.DelayType">
+                                                data-delaytype="@a.DelayType"
+                                                @(selectedAgency ? "selected" : "")>
                                             @a.AgencyName
                                         </option>
                                     }
@@ -115,56 +196,161 @@
                             </div>
                             <div class="form-group col-md-1">
                                 <label>Code</label>
-                                <input type="text" id="AgencyCodeInput" class="form-control" name="AgencyCode" readonly />
+                                <input type="text"
+                                       id="AgencyCodeInput"
+                                       class="form-control"
+                                       name="AgencyCode"
+                                       value=""
+                                       readonly />
                             </div>
                             <div class="form-group col-md-3">
                                 <label>Start Time</label>
-                                <input type="time" class="form-control" name="StartTime" />
+                                @Html.TextBox(
+                                                            "StartTime",
+                                                            Model != null && Model.StartTime.HasValue
+                                                            ? Model.StartTime.Value.ToString(@"hh\:mm")
+                                                            : "",
+                                                            new
+                                                            {
+                                                                @class = "form-control",
+                                                                type = "time",
+                                                                id = "StartTime",
+                                                                required = "required"
+                                                            }
+                                                            )
                             </div>
                             <div class="form-group col-md-3">
                                 <label>End Time</label>
-                                <input type="time" class="form-control" name="EndTime" />
+                                @Html.TextBox(
+                                                             "EndTime",
+                                                             Model != null && Model.EndTime.HasValue
+                                                             ? Model.EndTime.Value.ToString(@"hh\:mm")
+                                                             : "",
+                                                             new
+                                                             {
+                                                                 @class = "form-control",
+                                                                 type = "time",
+                                                                 id = "EndTime",
+                                                                 required = "required"
+                                                             }
+                                                             )
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label>Equipment</label>
-                                @Html.DropDownListFor(model => model.Equipments,
-                                 ViewBag.Equipment as SelectList,
-                                 "-- Select Equipments --",
-                                 new { @class = "form-control select2", id = "ddlEquipments", name = "Equipments" })
 
-                                @*@Html.DropDownListFor(model => model.Equipments,
-                                    ViewBag.Equipment as SelectList,
-                                    "-- Select Equipments --",
-                                    new { @class = "form-control select2", id = "ddlEquipments", name = "Equipments" })*@
+                                <select id="ddlEquipments"
+                                        name="EquipmentName"
+                                        class="form-control select2">
+
+                                    <option value="">
+                                        -- Select Equipment --
+                                    </option>
+
+                                    @foreach (var equipmentItem in equipmentItems)
+                                    {
+                                        bool selectedEquipment =
+                                            equipmentItem.Selected
+                                            ||
+                                            string.Equals(
+                                                Model != null
+                                                    ? Model.EquipmentName
+                                                    : "",
+                                                equipmentItem.Value,
+                                                StringComparison.OrdinalIgnoreCase
+                                            );
+
+                                        <option value="@equipmentItem.Value"
+                                                @(selectedEquipment ? "selected" : "")>
+                                            @equipmentItem.Text
+                                        </option>
+                                    }
+
+                                </select>
+
+                                <input type="hidden"
+                                       id="Equipments"
+                                       name="Equipments"
+                                       value="@(Model != null ? Model.EquipmentName : "")" />
                             </div>
+
                             <div class="form-group col-md-6">
                                 <label>Component</label>
-                                @Html.DropDownListFor(model => model.Components,
-                                    ViewBag.Component as SelectList,
-                                    "-- Select Components --",
-                                    new { @class = "form-control select2", id = "ddlComponents", @disabled = "disabled" })
+                                @Html.DropDownListFor(
+                                                   model => model.Component,
+                                                   ViewBag.Component as SelectList,
+                                                   "-- Select Component --",
+                                                   new
+                                                   {
+                                                       @class = "form-control select2",
+                                                       id = "ddlComponents",
+                                                       disabled = isEdit ? "disabled" : null
+                                                   }
+                                               )
+
+                                @if (isEdit)
+                                {
+                                    @Html.HiddenFor(
+                                                       model => model.Component,
+                                                       new
+                                                       {
+                                                           id = "ComponentHidden"
+                                                       }
+                                                   )
+                                }
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label>Reason</label>
-                                <textarea class="form-control" rows="1" name="Reason"></textarea>
+                                @Html.TextAreaFor(
+                                                                  m => m.Reason,
+                                                                  1,
+                                                                  1,
+                                                                  new
+                                                                  {
+                                                                      @class = "form-control"
+                                                                  }
+                                                              )
                             </div>
                             <div class="form-group col-md-6">
                                 <label>Delay Description</label>
-                                <textarea class="form-control" rows="1" name="DelayDescription"></textarea>
+                                @Html.TextAreaFor(
+                                                                  m => m.DelayDescription,
+                                                                  1,
+                                                                  1,
+                                                                  new
+                                                                  {
+                                                                      @class = "form-control"
+                                                                  }
+                                                              )
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label>Reason For Occurence</label>
-                                <textarea class="form-control" rows="3" name="ReasonForOccurence"></textarea>
+                                @Html.TextAreaFor(
+                                                                  m => m.ReasonForOccurence,
+                                                                  3,
+                                                                  1,
+                                                                  new
+                                                                  {
+                                                                      @class = "form-control"
+                                                                  }
+                                                              )
                             </div>
                             <div class="form-group col-md-6">
                                 <label>Action Taken</label>
-                                <textarea class="form-control" rows="3" name="ActionTaken"></textarea>
+                                @Html.TextAreaFor(
+                                                                  m => m.ActionTaken,
+                                                                  3,
+                                                                  1,
+                                                                  new
+                                                                  {
+                                                                      @class = "form-control"
+                                                                  }
+                                                              )
                             </div>
                         </div>
                     </div>
@@ -172,7 +358,7 @@
             </div>
         </div>
 
-    </form>
+    }
 </div>
 
 @*SCRIPTS*@
@@ -200,21 +386,42 @@
 <script>
     $(document).ready(function () {
 
-        // Set today date
-        $("#date").val(new Date().toISOString().split('T')[0]);
+        // Add mode mein hi today's local date set karo.
+        // Edit mode mein model se aane wali date preserve rahegi.
+        if (!$("#date").val()) {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, "0");
+            var day = String(now.getDate()).padStart(2, "0");
 
-        // Initial filter on page load
+            $("#date").val(
+                year + "-" + month + "-" + day
+            );
+        }
+
+        // Initial filter and edit-value binding on page load.
         filterAgenciesByArea();
+        bindAgencyCode();
 
         // When Area changes (future-proof)
         $("input[name='Area']").on("change", function () {
             filterAgenciesByArea();
         });
 
-        // When Agency selected → fill code
-        $("#AgencyDropdown").on("change", function () {
-            $("#AgencyCodeInput").val($(this).val());
-        });
+        // Agency select hone par Agency Name aur Code dono bind honge.
+        function bindAgencyCode() {
+            var selectedOption =
+                $("#AgencyDropdown option:selected");
+
+            $("#AgencyCodeInput").val(
+                selectedOption.data("code") || ""
+            );
+        }
+
+        $("#AgencyDropdown").on(
+            "change",
+            bindAgencyCode
+        );
 
         function filterAgenciesByArea() {
             var selectedDept = $("input[name='Area']:checked").val();
@@ -229,10 +436,27 @@
                 }
             });
 
-            // Reset selection
-            $("#AgencyDropdown").val("");
-            $("#AgencyCodeInput").val("");
+            // Add mode mein selection clear hogi.
+            // Edit mode mein existing Agency Name aur Code preserve rahenge.
+            if (!@isEdit.ToString().ToLower()) {
+                $("#AgencyDropdown").val("");
+            }
+
+            bindAgencyCode();
         }
+
+        window.bindEquipment = function () {
+            $("#Equipments").val(
+                $("#ddlEquipments").val() || ""
+            );
+        };
+
+        $("#ddlEquipments").on(
+            "change",
+            window.bindEquipment
+        );
+
+        window.bindEquipment();
 
     });
 </script>
@@ -243,16 +467,22 @@
         let isSubmitting = false;   // 🔐 double-submit lock
 
         $("#addprofileform").on("submit", function (e) {
-            e.preventDefault(); // ❗ pehle submit roko
+            e.preventDefault();
 
-            if (isSubmitting) return; // already submitting
+            window.bindEquipment();
+
+            if (isSubmitting) {
+                return;
+            }
 
             Swal.fire({
                 title: 'Confirm Submission',
-                text: 'Are you sure you want to submit this Heat Record?',
+                text: '@(isEdit
+                    ? "Are you sure you want to update this Delay Record?"
+                    : "Are you sure you want to save this Delay Record?")',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, Submit',
+                confirmButtonText: '@(isEdit ? "Yes, Update" : "Yes, Save")',
                 cancelButtonText: 'Cancel',
                 allowOutsideClick: false,
                 allowEscapeKey: false

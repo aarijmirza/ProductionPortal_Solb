@@ -374,64 +374,64 @@
     </div>
 
     <!-- DELAY CORRECTION / UPDATE FORM -->
-        <div class="main-card">
-            <div class="main-card-header">
-                Delay Correction / Additional Remarks
-            </div>
-
-            <div class="main-card-body">
-
-                @using (Html.BeginForm("UpdateDelayCorrection", "Maintenance", FormMethod.Post, new { id = "delayCorrectionForm" }))
-                {
-                    @Html.AntiForgeryToken()
-
-                    <input type="hidden" name="DelayID" value="@Model.ID" />
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Delay Description</label>
-                                <textarea class="form-control"
-                                          rows="4"
-                                          name="DelayDescription1"
-                                          placeholder="Enter delay description"
-                                          value="@Model.DelayDescription1">@Model.DelayDescription1</textarea>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Reason for Occurrence</label>
-                                <textarea class="form-control"
-                                          rows="4"
-                                          name="ReasonforOccurence1"
-                                          placeholder="Enter reason for occurrence"
-                                          value="@Model.ReasonForOccurence1">@Model.ReasonForOccurence1</textarea>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Action Taken</label>
-                                <textarea class="form-control"
-                                          rows="4"
-                                          name="ActionTaken1"
-                                          placeholder="Enter action taken"
-                                          value="@Model.ActionTaken1">@Model.ActionTaken1</textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="text-right mt-2">
-                        <button type="submit" class="btn btn-success">
-                            Update Delay Remarks
-                        </button>
-                    </div>
-                }
-
-            </div>
+    <div class="main-card">
+        <div class="main-card-header">
+            Delay Correction / Additional Remarks
         </div>
-  
+
+        <div class="main-card-body">
+
+            @using (Html.BeginForm("UpdateDelayCorrection", "Maintenance", FormMethod.Post, new { id = "delayCorrectionForm" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="DelayID" value="@Model.ID" />
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Delay Description</label>
+                            <textarea class="form-control"
+                                      rows="4"
+                                      name="DelayDescription1"
+                                      placeholder="Enter delay description"
+                                      value="@Model.DelayDescription1">@Model.DelayDescription1</textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Reason for Occurrence</label>
+                            <textarea class="form-control"
+                                      rows="4"
+                                      name="ReasonforOccurence1"
+                                      placeholder="Enter reason for occurrence"
+                                      value="@Model.ReasonForOccurence1">@Model.ReasonForOccurence1</textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Action Taken</label>
+                            <textarea class="form-control"
+                                      rows="4"
+                                      name="ActionTaken1"
+                                      placeholder="Enter action taken"
+                                      value="@Model.ActionTaken1">@Model.ActionTaken1</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-right mt-2">
+                    <button type="submit" class="btn btn-success">
+                        Update Delay Remarks
+                    </button>
+                </div>
+            }
+
+        </div>
+    </div>
+
 
 
 
@@ -468,7 +468,7 @@
                             <input type="date"
                                    name="LastPMDate"
                                    class="form-control"
-                                   value="@(hasLastPMDate ? analysis.LastPMDate.Value.ToString("yyyy-MM-dd") : "")"/>
+                                   value="@(hasLastPMDate ? analysis.LastPMDate.Value.ToString("yyyy-MM-dd") : "")" />
                         </div>
                     </div>
 
@@ -510,7 +510,7 @@
                                    class="form-control"
                                    maxlength="50"
                                    value="@(hasSAPBreakdownOrder ? analysis.SAPBreakdownOrder : "")"
-                                   placeholder="Enter SAP Breakdown Order"/>
+                                   placeholder="Enter SAP Breakdown Order" />
                         </div>
                     </div>
 
@@ -594,56 +594,56 @@
 
                 <!--<div class="row mtbf-mttr-row" id="mtbfMttrRows">
 
-        <div class="col-md-5">
-            <div class="form-group">
-                <label>Action Taken to Increase MTBF</label>
-                <textarea name="IncreaseMTBFAction[]"
-                          class="form-control"
-                          rows="2"
-                          placeholder="Enter MTBF improvement remarks"></textarea>
-            </div>
-        </div>
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label>Action Taken to Increase MTBF</label>
+                        <textarea name="IncreaseMTBFAction[]"
+                                  class="form-control"
+                                  rows="2"
+                                  placeholder="Enter MTBF improvement remarks"></textarea>
+                    </div>
+                </div>
 
-        <div class="col-md-5">
-            <div class="form-group">
-                <label>Action Taken Decrease MTTR</label>
-                <textarea name="DecreaseMTTRAction[]"
-                          class="form-control"
-                          rows="2"
-                          placeholder="Enter MTTR reduction details"></textarea>
-            </div>
-        </div>
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label>Action Taken Decrease MTTR</label>
+                        <textarea name="DecreaseMTTRAction[]"
+                                  class="form-control"
+                                  rows="2"
+                                  placeholder="Enter MTTR reduction details"></textarea>
+                    </div>
+                </div>
 
 
-        <div class="col-md-2" style=" align-content: center;">
-            <div class="col-md-12 text-right">
-                <button type="button" id="btnAddMtbfMttr" class="btn btn-sm btn-success">
-                    + Add More
-                </button>
-            </div>
-        </div>-->
+                <div class="col-md-2" style=" align-content: center;">
+                    <div class="col-md-12 text-right">
+                        <button type="button" id="btnAddMtbfMttr" class="btn btn-sm btn-success">
+                            + Add More
+                        </button>
+                    </div>
+                </div>-->
 
                 @*<div class="col-md-6">
-                <div class="form-group">
-                    <label>Action Taken to Increase MTBF</label>
-                    <textarea name="IncreaseMTBF1"
-                              class="form-control"
-                              rows="2"
-                              placeholder="Enter MTBF improvement remarks"
-                              @(hasIncreaseMTBF1 ? "readonly" : "")>@(hasIncreaseMTBF1 ? analysis.IncreaseMTBF1 : "")</textarea>
-                </div>
-            </div>
+                        <div class="form-group">
+                            <label>Action Taken to Increase MTBF</label>
+                            <textarea name="IncreaseMTBF1"
+                                      class="form-control"
+                                      rows="2"
+                                      placeholder="Enter MTBF improvement remarks"
+                                      @(hasIncreaseMTBF1 ? "readonly" : "")>@(hasIncreaseMTBF1 ? analysis.IncreaseMTBF1 : "")</textarea>
+                        </div>
+                    </div>
 
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Action Taken Decrease MTTR</label>
-                    <textarea name="DecreaseMTTR"
-                              class="form-control"
-                              rows="2"
-                              placeholder="Enter MTTR reduction details"
-                              @(hasDecreaseMTTR ? "readonly" : "")>@(hasDecreaseMTTR ? analysis.DecreaseMTTR : "")</textarea>
-                </div>
-            </div>*@
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Action Taken Decrease MTTR</label>
+                            <textarea name="DecreaseMTTR"
+                                      class="form-control"
+                                      rows="2"
+                                      placeholder="Enter MTTR reduction details"
+                                      @(hasDecreaseMTTR ? "readonly" : "")>@(hasDecreaseMTTR ? analysis.DecreaseMTTR : "")</textarea>
+                        </div>
+                    </div>*@
 
                 <!--</div>-->
 
@@ -662,30 +662,46 @@
                     <div class="col-md-3">
                         <div class="form-group">
                             <label>Failure Category 2 - Root Cause</label>
+                            <select class="form-control"
+                                    name="FailureCategory2RootCause"
+                                    id="FailureCategory2RootCause">
+                                <option value="">-- please select --</option>
 
-                            @if (hasFailureCategory2RootCause)
-                            {
-                                <input type="text"
-                                       class="form-control"
-                                       value="@analysis.FailureCategory2RootCause"/>
+                                <option value="Shortage of Spares"
+                                        @((analysis != null && string.Equals(analysis.FailureCategory2RootCause, "Shortage of Spares", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                    Shortage of Spares
+                                </option>
 
-                                <input type="hidden"
-                                       name="FailureCategory2RootCause"
-                                       value="@analysis.FailureCategory2RootCause" />
-                            }
-                            else
-                            {
-                                <select class="form-control" name="FailureCategory2RootCause">
-                                    <option value="">-- please select --</option>
-                                    <option value="Shortage of Spares">Shortage of Spares</option>
-                                    <option value="Can Be avoided">Can Be avoided</option>
-                                    <option value="Machine Poor Condition">Machine Poor Condition</option>
-                                    <option value="Undetectable failure">Undetectable failure</option>
-                                    <option value="Poor Operation Condition">Poor Operation Condition</option>
-                                    <option value="Human Mistake">Human Mistake</option>
-                                    <option value="Design issues">Design issues</option>
-                                </select>
-                            }
+                                <option value="Can Be avoided"
+                                        @((analysis != null && string.Equals(analysis.FailureCategory2RootCause, "Can Be avoided", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                    Can Be avoided
+                                </option>
+
+                                <option value="Machine Poor Condition"
+                                        @((analysis != null && string.Equals(analysis.FailureCategory2RootCause, "Machine Poor Condition", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                    Machine Poor Condition
+                                </option>
+
+                                <option value="Undetectable failure"
+                                        @((analysis != null && string.Equals(analysis.FailureCategory2RootCause, "Undetectable failure", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                    Undetectable failure
+                                </option>
+
+                                <option value="Poor Operation Condition"
+                                        @((analysis != null && string.Equals(analysis.FailureCategory2RootCause, "Poor Operation Condition", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                    Poor Operation Condition
+                                </option>
+
+                                <option value="Human Mistake"
+                                        @((analysis != null && string.Equals(analysis.FailureCategory2RootCause, "Human Mistake", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                    Human Mistake
+                                </option>
+
+                                <option value="Design issues"
+                                        @((analysis != null && string.Equals(analysis.FailureCategory2RootCause, "Design issues", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                    Design issues
+                                </option>
+                            </select>
                         </div>
                     </div>
 

@@ -1,21 +1,72 @@
-﻿@{
-    var selectedDate = Session["RM_Date"];
-    var selectedShift = Session["RM_Shift"];
+﻿@using System
 
-    bool isAdmin = User.IsInRole("Administrator");
-    bool isUser = User.IsInRole("User");
-    bool isRollingMill = User.IsInRole("Rolling Mill User");
-    bool isQC = User.IsInRole("QC User");
-    bool isSher = User.IsInRole("Sher");
-    bool isSupplyChain = User.IsInRole("Supply Chain");
-    bool isUtility = User.IsInRole("Utility");
+@{
+    string selectedDate = Convert.ToString(Session["RM_Date"]);
+    string selectedShift = Convert.ToString(Session["RM_Shift"]);
 
-    // Keep both names for safety because old code was using "Steel Making User"
-    // and role list shows "Steel Making".
-    bool isSteelMaking = User.IsInRole("Steel Making") || User.IsInRole("Steel Making User");
+    int selectedShiftDetailID = 0;
+    int.TryParse(
+        Convert.ToString(Session["RM_ShiftDetailID"]),
+        out selectedShiftDetailID
+    );
 
-    // Dashboard and Reports visible for all department roles
-    bool canViewDashboardReports = isAdmin || isUser || isRollingMill || isQC || isSher || isSupplyChain || isUtility || isSteelMaking;
+    bool hasRollingMillShift =
+        !string.IsNullOrWhiteSpace(selectedDate) &&
+        !string.IsNullOrWhiteSpace(selectedShift) &&
+        selectedShiftDetailID > 0;
+
+    /*
+        This application already resolves roles through User.IsInRole().
+        Do not use Roles.GetRolesForUser() because ASP.NET Role Manager
+        is not enabled in Web.config.
+    */
+    bool isAdmin =
+        User != null &&
+        User.IsInRole("Administrator");
+
+    bool isUser =
+        User != null &&
+        User.IsInRole("User");
+
+    bool isRollingMill =
+        User != null &&
+        (
+            User.IsInRole("Rolling Mill User") ||
+            User.IsInRole("Rolling Mill")
+        );
+
+    bool isQC =
+        User != null &&
+        User.IsInRole("QC User");
+
+    bool isSher =
+        User != null &&
+        User.IsInRole("Sher");
+
+    bool isSupplyChain =
+        User != null &&
+        User.IsInRole("Supply Chain");
+
+    bool isUtility =
+        User != null &&
+        User.IsInRole("Utility");
+
+    bool isSteelMaking =
+        User != null &&
+        (
+            User.IsInRole("Steel Making") ||
+            User.IsInRole("Steel Making User")
+        );
+
+    bool canViewDashboardReports =
+        isAdmin ||
+        isUser ||
+        isRollingMill ||
+        isQC ||
+        isSher ||
+        isSupplyChain ||
+        isUtility ||
+        isSteelMaking;
 }
 
 <!DOCTYPE html>
@@ -26,7 +77,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Production Portal - Solb Steel</title>
+    <title>@(ViewBag.Title ?? "Production Portal") - Solb Steel</title>
 
     <link rel="shortcut icon" href="@Url.Content("~/assets/images/favicon.png")">
 
@@ -38,6 +89,7 @@
     @Styles.Render("~/bundles/plugin-css")
 
     @RenderSection("styles", required: false)
+    @RenderSection("vendorStyles", required: false)
 
     @* Keep only one jQuery reference because some existing pages may use
         inline jQuery before the closing body tag. *@
@@ -115,7 +167,7 @@
                 <!-- Start XP Logobar -->
                 <div class="xp-logobar text-center">
                     <a href="@Url.Action("Index", "Home")" class="xp-logo">
-                        <img src="~/assets/images/logo.png" class="img-fluid" alt="logo" style="width:50%;">
+                        <img src="@Url.Content("~/assets/images/logo.png")" class="img-fluid" alt="SOLB Steel" width="140" height="60" decoding="async" style="width:50%;">
                     </a>
                 </div>
                 <!-- End XP Logobar -->
@@ -223,36 +275,68 @@
                                 }
                             </li>
                         }
-
-                        @* ROLLING MILL - Only Admin and Rolling Mill User *@
+                        @* ROLLING MILL - Only Admin and Rolling Mill users *@
                         @if (isAdmin || isRollingMill)
                         {
                             <li>
                                 <a href="javascript:void(0);">
-                                    <span>ROLLING MILL</span><i class="icon-arrow-right pull-right"></i>
+                                    <span>ROLLING MILL</span>
+                                    <i class="icon-arrow-right pull-right"></i>
                                 </a>
 
-                                @if (selectedDate != null && selectedShift != null)
-                                {
-                                    <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("AddDetails", "RollingMill")">DETAILS</a></li>
-                                        <li><a href="@Url.Action("AddCharge", "RollingMill")">BILLET CHARGING</a></li>
-                                        <li><a href="@Url.Action("AddDischarge", "RollingMill")">FURNACE DISCHARGE</a></li>
-                                        <li><a href="@Url.Action("RMHourlyDischarge", "RollingMill")">HOURLY DATA BREAKDOWN</a></li>
-                                        <li><a href="@Url.Action("AddBundleSection", "RollingMill")">BUNDLE SECTION</a></li>
-                                        <li><a href="@Url.Action("add", "Target")">ROLLING MILL TARGETS</a></li>
-                                        <li><a href="@Url.Action("list", "Delay")">DELAY RECORD</a></li>
-                                    </ul>
-                                }
-                                else
-                                {
-                                    <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("AddDetails", "RollingMill")">ROLLING MILL DETAILS</a></li>
-                                        <li style="color:red; padding:10px;">
-                                            ⚠ Please select shift first
+                                <ul class="xp-vertical-submenu">
+
+                                    <li>
+                                        <a href="@Url.Action("AddDetails", "RollingMill")">
+                                            ROLLING MILL DETAILS
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a href="@Url.Action("add", "Target")">
+                                            ROLLING MILL TARGETS
+                                        </a>
+                                    </li>
+
+                                    @if (hasRollingMillShift)
+                                    {
+                                        <li>
+                                            <a href="@Url.Action("AddCharge", "RollingMill")">
+                                                BILLET CHARGING
+                                            </a>
                                         </li>
-                                    </ul>
-                                }
+
+                                        <li>
+                                            <a href="@Url.Action("AddDischarge", "RollingMill")">
+                                                FURNACE DISCHARGE
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a href="@Url.Action("RMHourlyDischarge", "RollingMill")">
+                                                HOURLY DATA BREAKDOWN
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a href="@Url.Action("AddBundleSection", "RollingMill")">
+                                                BUNDLE SECTION
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a href="@Url.Action("list", "Delay")">
+                                                DELAY RECORD
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li style="color:#dc3545; padding:10px 20px; font-size:12px; font-weight:700;">
+                                            ⚠ Please select Rolling Mill shift first
+                                        </li>
+                                    }
+                                </ul>
                             </li>
                         }
 
@@ -309,10 +393,10 @@
                         {
                             <li>
                                 <a href="javascript:void(0);">
-                                    <span>SHER</span><i class="icon-arrow-right pull-right"></i>
+                                    <span>EHSS</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
-                                    <li><a href="@Url.Action("KPIAdd", "Security")">SHER DETAIL</a></li>
+                                    <li><a href="@Url.Action("KPIAdd", "Security")">EHSS DETAIL</a></li>
                                 </ul>
                             </li>
                         }
@@ -382,10 +466,7 @@
 
     <!-- Plugin JavaScript -->
     @Scripts.Render("~/bundles/plugin-js")
-
-    <!-- Select2 is currently loaded from CDN because no local Select2 folder
-         was shown in the project structure. -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+    @RenderSection("vendorScripts", required: false)
 
     @RenderSection("scripts", required: false)
 

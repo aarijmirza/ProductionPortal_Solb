@@ -221,7 +221,7 @@
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>Action</th>
+                        @*<th>Action</th>*@
                         <th>Date</th>
 
 
@@ -254,18 +254,18 @@
                         foreach (var item in Model)
                         {
                             <tr>
-                                <td>
-                                    <a href="@Url.Action("Add", "SupplyChain", new { id = item.ID })"
+                                <!--<td>-->
+                                    @*<a href="@Url.Action("Add", "SupplyChain", new { id = item.ID })"
                                        class="btn btn-sm btn-primary">
                                         Edit
-                                    </a>
+                                    </a>*@
 
                                     @*<a href="@Url.Action("SupplyChainReport", "Reporting", new { from = item.ReportDate.HasValue ? item.ReportDate.Value.ToString("yyyy-MM-dd") : "", to = item.ReportDate.HasValue ? item.ReportDate.Value.ToString("yyyy-MM-dd") : "" })"
                                        target="_blank"
                                        class="btn btn-sm btn-danger">
                                         Report
                                     </a>*@
-                                </td>
+                                <!--</td>-->
 
                                 <td>@(item.ReportDate.HasValue ? item.ReportDate.Value.ToString("dd-MMM-yyyy", gregorian) : "-")</td>
 

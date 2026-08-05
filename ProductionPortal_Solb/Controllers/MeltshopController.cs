@@ -1,65 +1,89 @@
 ﻿using BAL.Repositories;
 using DAL.Models;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
-using Rotativa;
-using Rotativa.Options;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 using System.Web.SessionState;
-using System.Web.UI.WebControls;
-using System.Windows.Media.Imaging;
 using static DAL.Models.ViewModel;
-using Image = iTextSharp.text.Image;
-
 
 namespace ProductionPortal_Solb.Controllers
 {
-    [SessionState(
-    SessionStateBehavior.ReadOnly
-    )]
+    [SessionState(SessionStateBehavior.ReadOnly)]
     public class MeltshopController : Controller
     {
-        MeltshopRepository repo;
-        DelayRespository delay;
+        private readonly MeltshopRepository repo;
+        private readonly DelayRespository delay;
+
         public MeltshopController()
         {
             repo = new MeltshopRepository();
             delay = new DelayRespository();
         }
-        // Electric Arc Furnace
+
+        // =========================================================
+        // ELECTRIC ARC FURNACE
+        // =========================================================
+
         public ActionResult EAFlist()
         {
-            var requests = repo.GetAllEAFRecord();
-            return View("~/Views/Meltshop/ElectricArcFurnace/EAFlist.cshtml", requests);
+            var requests =
+                repo.GetAllEAFRecord() ??
+                new List<ElectricArcFurnaceBLL>();
+
+            return View(
+                "~/Views/Meltshop/ElectricArcFurnace/EAFlist.cshtml",
+                requests
+            );
         }
 
-        public ActionResult DailyHeatSummary(DateTime? from, DateTime? to)
+        public ActionResult DailyHeatSummary(
+            DateTime? from,
+            DateTime? to)
         {
-            DateTime fromDate = from ?? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-            DateTime toDate = to ?? DateTime.Now;
+            DateTime fromDate =
+                from ??
+                new DateTime(
+                    DateTime.Now.Year,
+                    DateTime.Now.Month,
+                    1
+                );
 
-            // ✅ include full day
-            DateTime toInclusive = toDate.Date.AddDays(1);
+            DateTime toDate =
+                to ?? DateTime.Now;
 
-            var list = repo.GetEAFListByDate(fromDate.Date, toInclusive);
-
-            var vm = new EAFReportVM
+            if (fromDate.Date > toDate.Date)
             {
-                EAFdata = list,
-                FromDate = fromDate.Date,
-                ToDate = toDate.Date,
-                Shift = "ALL",
-                Group = "ALL"
-            };
+                DateTime temp =
+                    fromDate;
+
+                fromDate =
+                    toDate;
+
+                toDate =
+                    temp;
+            }
+
+            DateTime toExclusive =
+                toDate.Date.AddDays(1);
+
+            var list =
+                repo.GetEAFListByDate(
+                    fromDate.Date,
+                    toExclusive
+                ) ??
+                new List<ElectricArcFurnaceBLL>();
+
+            var vm =
+                new EAFReportVM
+                {
+                    EAFdata = list,
+                    FromDate = fromDate.Date,
+                    ToDate = toDate.Date,
+                    Shift = "ALL",
+                    Group = "ALL"
+                };
 
             return View(
                 "~/Views/Meltshop/ElectricArcFurnace/DailyHeatSummary.cshtml",
@@ -69,191 +93,428 @@ namespace ProductionPortal_Solb.Controllers
 
         public ActionResult EAFadd()
         {
-            return View("~/Views/Meltshop/ElectricArcFurnace/EAFadd.cshtml");
+            return View(
+                "~/Views/Meltshop/ElectricArcFurnace/EAFadd.cshtml"
+            );
         }
+
         [HttpPost]
-        public ActionResult EAFadd(ElectricArcFurnaceBLL model)
+        [ValidateAntiForgeryToken]
+        public ActionResult EAFadd(
+            ElectricArcFurnaceBLL model)
         {
-            if (model != null)
+            try
             {
-                model.StatusID = 1;
-                model.CreatedDate = DateTime.Now;
-                model.CreatedBy = User.Identity.Name;
-                int rtn = repo.InsertEAF(model);
-                if (rtn > 0)
+                if (model == null)
                 {
-                    TempData["SuccessMessage"] = "Data saved successfully";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Data not saved. Please try again.";
-                    return RedirectToAction("EAFlist"); // 👈 back to form
-                }
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Invalid data submitted.";
-                return RedirectToAction("EAFlist");
-            }
+                    TempData["ErrorMessage"] =
+                        "Invalid data submitted.";
 
-            return RedirectToAction("EAFlist");
+                    return RedirectToAction(
+                        "EAFadd"
+                    );
+                }
+
+                model.StatusID =
+                    1;
+
+                model.CreatedDate =
+                    DateTime.Now;
+
+                model.CreatedBy =
+                    User.Identity.Name;
+
+                int result =
+                    repo.InsertEAF(
+                        model
+                    );
+
+                if (result > 0)
+                {
+                    TempData["SuccessMessage"] =
+                        "Data saved successfully.";
+
+                    return RedirectToAction(
+                        "EAFlist"
+                    );
+                }
+
+                TempData["ErrorMessage"] =
+                    "Data not saved. Please try again.";
+
+                return RedirectToAction(
+                    "EAFadd"
+                );
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] =
+                    "Error: " +
+                    ex.Message;
+
+                return RedirectToAction(
+                    "EAFadd"
+                );
+            }
         }
-        public ActionResult EAFdetails(string heatNo)
+
+        public ActionResult EAFdetails(
+            string heatNo)
         {
-            if (string.IsNullOrEmpty(heatNo))
+            if (string.IsNullOrWhiteSpace(
+                heatNo
+            ))
             {
-                // Handle case where no Heat Number is provided
-                return RedirectToAction("list");
+                TempData["ErrorMessage"] =
+                    "Heat number is required.";
+
+                return RedirectToAction(
+                    "EAFlist"
+                );
             }
 
-            // Call the corrected repository method to fetch all bucket records for the heat
-            var data = repo.GetEAFRecordByID(heatNo);
+            var data =
+                repo.GetEAFRecordByID(
+                    heatNo.Trim()
+                );
 
             if (data == null)
             {
-                TempData["Error"] = $"No records found for Heat # {heatNo}.";
-                return RedirectToAction("list");
+                TempData["ErrorMessage"] =
+                    "No records found for Heat # " +
+                    heatNo.Trim() +
+                    ".";
+
+                return RedirectToAction(
+                    "EAFlist"
+                );
             }
 
-            // Pass the list of ScrapyardBLL objects to the view
-            return View("~/Views/Meltshop/ElectricArcFurnace/EAFdetails.cshtml", data);
+            return View(
+                "~/Views/Meltshop/ElectricArcFurnace/EAFdetails.cshtml",
+                data
+            );
         }
-        // Electric Arc Furnace
 
-        // Laddle Furnace
-        public ActionResult LFlist()
+        public ActionResult EAFdelete(
+            string heatNo)
         {
-            var LFlist = repo.GetAllLFRecord();
-            return View("~/Views/Meltshop/LaddleFurnace/LFlist.cshtml", LFlist);
+            try
+            {
+                if (string.IsNullOrWhiteSpace(
+                    heatNo
+                ))
+                {
+                    TempData["ErrorMessage"] =
+                        "Heat number is required.";
+
+                    return RedirectToAction(
+                        "EAFlist"
+                    );
+                }
+
+                string updatedBy =
+                    User.Identity.Name;
+
+                int result =
+                    repo.DeleteEAFHeat(
+                        heatNo.Trim(),
+                        updatedBy
+                    );
+
+                if (result > 0)
+                {
+                    TempData["SuccessMessage"] =
+                        "Data deleted successfully.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] =
+                        "Data could not be deleted.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] =
+                    "Error: " +
+                    ex.Message;
+            }
+
+            return RedirectToAction(
+                "EAFlist"
+            );
         }
+
+        // =========================================================
+        // LADDLE FURNACE
+        // =========================================================
+
+        public ActionResult LFlist(
+            DateTime? fromDate,
+            DateTime? toDate)
+        {
+            DateTime startDate =
+                fromDate ??
+                new DateTime(
+                    DateTime.Today.Year,
+                    DateTime.Today.Month,
+                    1
+                );
+
+            DateTime endDate =
+                toDate ??
+                DateTime.Today;
+
+            if (startDate.Date > endDate.Date)
+            {
+                DateTime temp =
+                    startDate;
+
+                startDate =
+                    endDate;
+
+                endDate =
+                    temp;
+            }
+
+            List<LaddleFurnaceBLL> list =
+                repo.GetAllLFRecord(
+                    startDate.Date,
+                    endDate.Date
+                ) ??
+                new List<LaddleFurnaceBLL>();
+
+            ViewBag.FromDate =
+                startDate.ToString("yyyy-MM-dd");
+
+            ViewBag.ToDate =
+                endDate.ToString("yyyy-MM-dd");
+
+            return View(
+                "~/Views/Meltshop/LaddleFurnace/LFlist.cshtml",
+                list
+            );
+        }
+
         public ActionResult LFadd()
         {
-            var last24Hours = DateTime.Now.AddHours(-24);
-            var data = repo.GetAllEAFRecord();
+            /*
+                Existing repository currently returns all EAF records.
+                For better performance, replace this with a filtered
+                repository method that only returns recent/open Heat Nos.
+            */
+            var data =
+                repo.GetAllEAFRecord() ??
+                new List<ElectricArcFurnaceBLL>();
 
-            //var data = repo.GetAllEAFRecord().ToList();
-            ViewBag.HeatNo = new SelectList(data, "HeatNo", "HeatNo");
+            ViewBag.HeatNo =
+                new SelectList(
+                    data,
+                    "HeatNo",
+                    "HeatNo"
+                );
 
-            return View("~/Views/Meltshop/LaddleFurnace/LFadd.cshtml");
+            return View(
+                "~/Views/Meltshop/LaddleFurnace/LFadd.cshtml"
+            );
         }
+
         [HttpPost]
-        public ActionResult LFadd(LaddleFurnaceBLL model)
+        [ValidateAntiForgeryToken]
+        public ActionResult LFadd(
+            LaddleFurnaceBLL model)
         {
-            if (model != null)
+            try
             {
-                model.StatusID = 1;
-                model.CreatedDate = DateTime.Now;
-                model.CreatedBy = User.Identity.Name;
-                model.Date = DateTime.Now;
-                int rtn = repo.InsertLF(model);
-                if (rtn > 0)
+                if (model == null)
                 {
-                    TempData["SuccessMessage"] = "Data saved successfully";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Data not saved. Please try again.";
-                    return RedirectToAction("LFlist"); // 👈 back to form
-                }
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Invalid data submitted.";
-                return RedirectToAction("LFlist");
-            }
+                    TempData["ErrorMessage"] =
+                        "Invalid data submitted.";
 
-            return RedirectToAction("LFlist");
+                    return RedirectToAction(
+                        "LFadd"
+                    );
+                }
+
+                model.StatusID =
+                    1;
+
+                model.CreatedDate =
+                    DateTime.Now;
+
+                model.CreatedBy =
+                    User.Identity.Name;
+
+                model.Date =
+                    DateTime.Now;
+
+                int result =
+                    repo.InsertLF(
+                        model
+                    );
+
+                if (result < 0)
+                {
+                    TempData["SuccessMessage"] =
+                        "Data saved successfully.";
+
+                    return RedirectToAction(
+                        "LFlist"
+                    );
+                }
+
+                TempData["ErrorMessage"] =
+                    "Data not saved. Please try again.";
+
+                return RedirectToAction(
+                    "LFadd"
+                );
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] =
+                    "Error: " +
+                    ex.Message;
+
+                return RedirectToAction(
+                    "LFadd"
+                );
+            }
         }
 
-        public ActionResult LFdetails(string heatNo)
+        public ActionResult LFdetails(
+            string heatNo)
         {
-            if (string.IsNullOrEmpty(heatNo))
+            if (string.IsNullOrWhiteSpace(
+                heatNo
+            ))
             {
-                // Handle case where no Heat Number is provided
-                return RedirectToAction("LFlist");
+                TempData["ErrorMessage"] =
+                    "Heat number is required.";
+
+                return RedirectToAction(
+                    "LFlist"
+                );
             }
 
-            // Call the corrected repository method to fetch all bucket records for the heat
-            var data = repo.GetLFRecordByID(heatNo);
+            var data =
+                repo.GetLFRecordByID(
+                    heatNo.Trim()
+                );
 
             if (data == null)
             {
-                TempData["Error"] = $"No records found for Heat # {heatNo}.";
-                return RedirectToAction("LFlist");
+                TempData["ErrorMessage"] =
+                    "No records found for Heat # " +
+                    heatNo.Trim() +
+                    ".";
+
+                return RedirectToAction(
+                    "LFlist"
+                );
             }
 
-            // Pass the list of ScrapyardBLL objects to the view
-            return View("~/Views/Meltshop/LaddleFurnace/LFdetails.cshtml", data);
+            return View(
+                "~/Views/Meltshop/LaddleFurnace/LFdetails.cshtml",
+                data
+            );
         }
-        private List<ElectricArcFurnaceBLL> GetFilteredData(string from, string to)
-        {
-            DateTime? fromDate = null;
-            DateTime? toDate = null;
-            // The view uses 'yyyy-MM-dd' format for date inputs
-            const string format = "yyyy-MM-dd";
-            var culture = CultureInfo.InvariantCulture;
 
-            // 1. Parse From Date
-            if (DateTime.TryParseExact(from, format, culture, DateTimeStyles.None, out DateTime tempFrom))
+        public ActionResult LFdelete(
+            string heatNo)
+        {
+            try
             {
-                fromDate = tempFrom.Date;
+                if (string.IsNullOrWhiteSpace(
+                    heatNo
+                ))
+                {
+                    TempData["ErrorMessage"] =
+                        "Heat number is required.";
+
+                    return RedirectToAction(
+                        "LFlist"
+                    );
+                }
+
+                string updatedBy =
+                    User.Identity.Name;
+
+                int result =
+                    repo.DeleteLFHeat(
+                        heatNo.Trim(),
+                        updatedBy
+                    );
+
+                if (result > 0)
+                {
+                    TempData["SuccessMessage"] =
+                        "Data deleted successfully.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] =
+                        "Data could not be deleted.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] =
+                    "Error: " +
+                    ex.Message;
             }
 
-            // 2. Parse To Date
-            if (DateTime.TryParseExact(to, format, culture, DateTimeStyles.None, out DateTime tempTo))
+            return RedirectToAction(
+                "LFlist"
+            );
+        }
+
+        public ActionResult LFDailyHeatSummary(
+            DateTime? from,
+            DateTime? to)
+        {
+            DateTime fromDate =
+                from ??
+                new DateTime(
+                    DateTime.Now.Year,
+                    DateTime.Now.Month,
+                    1
+                );
+
+            DateTime toDate =
+                to ?? DateTime.Now;
+
+            if (fromDate.Date > toDate.Date)
             {
-                // Set the ToDate to the end of the day (23:59:59.999) to include all records created on that date
-                toDate = tempTo.Date.AddDays(1).AddTicks(-1);
+                DateTime temp =
+                    fromDate;
+
+                fromDate =
+                    toDate;
+
+                toDate =
+                    temp;
             }
 
-            var allRecords = repo.GetAllEAFRecord() ?? new List<ElectricArcFurnaceBLL>();
+            DateTime toExclusive =
+                toDate.Date.AddDays(1);
 
-            // 3. Apply Filtering using LINQ
-            var filteredRecords = allRecords.Where(r =>
-                r.CreatedDate.HasValue && // Ensure date is not null
-                (!fromDate.HasValue || r.CreatedDate.Value.Date >= fromDate.Value.Date) && // Filter by start date
-                (!toDate.HasValue || r.CreatedDate.Value <= toDate.Value) // Filter by end date (inclusive of the whole day)
-            )
-            .OrderByDescending(r => r.CreatedDate) // Sort by date descending
-            .ToList();
-            return filteredRecords;
-        }
+            var list =
+                repo.GetLFListByDate(
+                    fromDate.Date,
+                    toExclusive
+                ) ??
+                new List<LaddleFurnaceBLL>();
 
-        public ActionResult EAFdelete(string heatNo)
-        {
-            var UpdatedBy = User.Identity.Name;
-            int rtn = repo.DeleteEAFHeat(heatNo, UpdatedBy);
-            TempData["SuccessMessage"] = "Data Delete Successfully";
-
-            return RedirectToAction("EAFlist");
-        }
-        public ActionResult LFdelete(string heatNo)
-        {
-            var UpdatedBy = User.Identity.Name;
-            int rtn = repo.DeleteLFHeat(heatNo, UpdatedBy);
-            TempData["SuccessMessage"] = "Data Delete Successfully";
-
-            return RedirectToAction("LFlist");
-        }
-
-        public ActionResult LFDailyHeatSummary(DateTime? from, DateTime? to)
-        {
-            DateTime fromDate = from ?? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-            DateTime toDate = to ?? DateTime.Now;
-
-            // ✅ include full day
-            DateTime toInclusive = toDate.Date.AddDays(1);
-
-            var list = repo.GetLFListByDate(fromDate.Date, toInclusive);
-
-            var vm = new LFReportVM
-            {
-                LFdata = list,
-                FromDate = fromDate.Date,
-                ToDate = toDate.Date,
-                Shift = "ALL",
-                Group = "ALL"
-            };
+            var vm =
+                new LFReportVM
+                {
+                    LFdata = list,
+                    FromDate = fromDate.Date,
+                    ToDate = toDate.Date,
+                    Shift = "ALL",
+                    Group = "ALL"
+                };
 
             return View(
                 "~/Views/Meltshop/LaddleFurnace/LFDailyHeatSummary.cshtml",
@@ -261,27 +522,172 @@ namespace ProductionPortal_Solb.Controllers
             );
         }
 
-        public ActionResult SMPDelayReport(DateTime? startdate, DateTime? enddate)
+        // =========================================================
+        // SMP DELAY REPORT
+        // =========================================================
+
+        //public ActionResult SMPDelayReport(
+        //    DateTime? startdate,
+        //    DateTime? enddate)
+        //{
+        //    try
+        //    {
+        //        DateTime fromDate =
+        //            startdate ??
+        //            DateTime.Today;
+
+        //        DateTime toDate =
+        //            enddate ??
+        //            DateTime.Today;
+
+        //        if (fromDate.Date > toDate.Date)
+        //        {
+        //            DateTime temp =
+        //                fromDate;
+
+        //            fromDate =
+        //                toDate;
+
+        //            toDate =
+        //                temp;
+        //        }
+
+        //        DateTime toExclusive =
+        //            toDate.Date.AddDays(1);
+
+        //        /*
+        //            IMPORTANT:
+        //            Filtering must happen inside SQL/repository.
+        //            Do not call GetAllDelay() and then apply LINQ,
+        //            because it loads the entire delay table first.
+        //        */
+        //        var result =
+        //            delay.GetSMPDelayByDate(
+        //                fromDate.Date,
+        //                toExclusive
+        //            ) ??
+        //            new List<PlantDelayBLL>();
+
+        //        ViewBag.FromDate =
+        //            fromDate.ToString(
+        //                "yyyy-MM-dd"
+        //            );
+
+        //        ViewBag.ToDate =
+        //            toDate.ToString(
+        //                "yyyy-MM-dd"
+        //            );
+
+        //        return View(
+        //            "SMPDelayReport",
+        //            result
+        //        );
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        TempData["ErrorMessage"] =
+        //            "Unable to load SMP delay report. Error: " +
+        //            ex.Message;
+
+        //        ViewBag.FromDate =
+        //            (
+        //                startdate ??
+        //                DateTime.Today
+        //            ).ToString(
+        //                "yyyy-MM-dd"
+        //            );
+
+        //        ViewBag.ToDate =
+        //            (
+        //                enddate ??
+        //                DateTime.Today
+        //            ).ToString(
+        //                "yyyy-MM-dd"
+        //            );
+
+        //        return View(
+        //            "SMPDelayReport",
+        //            new List<PlantDelayBLL>()
+        //        );
+        //    }
+        //}
+
+        // =========================================================
+        // PRIVATE HELPERS
+        // =========================================================
+
+        private List<ElectricArcFurnaceBLL>
+            GetFilteredData(
+                string from,
+                string to)
         {
-            DateTime? sDate = startdate?.Date;
-            DateTime? eDate = enddate?.Date.AddDays(1).AddTicks(-1); // inclusive
+            DateTime? fromDate =
+                null;
 
-            var data = delay.GetAllDelay().AsQueryable();
+            DateTime? toDateExclusive =
+                null;
 
-            if (sDate.HasValue)
-                data = data.Where(x => x.Date >= sDate.Value);
+            const string format =
+                "yyyy-MM-dd";
 
-            if (eDate.HasValue)
-                data = data.Where(x => x.Date <= eDate.Value);
+            CultureInfo culture =
+                CultureInfo.InvariantCulture;
 
-            var result = data.ToList();
+            DateTime parsedFrom;
 
-            // ✅ PASS FILTER DATES TO VIEW
-            ViewBag.FromDate = startdate;
-            ViewBag.ToDate = enddate;
+            if (DateTime.TryParseExact(
+                from,
+                format,
+                culture,
+                DateTimeStyles.None,
+                out parsedFrom
+            ))
+            {
+                fromDate =
+                    parsedFrom.Date;
+            }
 
-            return View("SMPDelayReport", result);
+            DateTime parsedTo;
+
+            if (DateTime.TryParseExact(
+                to,
+                format,
+                culture,
+                DateTimeStyles.None,
+                out parsedTo
+            ))
+            {
+                toDateExclusive =
+                    parsedTo.Date.AddDays(1);
+            }
+
+            /*
+                This helper is retained for compatibility.
+                For best performance, replace it with a repository method
+                that accepts FromDate and ToDate and filters in SQL.
+            */
+            var allRecords =
+                repo.GetAllEAFRecord() ??
+                new List<ElectricArcFurnaceBLL>();
+
+            return allRecords
+                .Where(x =>
+                    x.CreatedDate.HasValue &&
+                    (
+                        !fromDate.HasValue ||
+                        x.CreatedDate.Value >=
+                        fromDate.Value
+                    ) &&
+                    (
+                        !toDateExclusive.HasValue ||
+                        x.CreatedDate.Value <
+                        toDateExclusive.Value
+                    )
+                )
+                .OrderByDescending(
+                    x => x.CreatedDate
+                )
+                .ToList();
         }
-
     }
 }

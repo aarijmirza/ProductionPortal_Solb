@@ -26,6 +26,17 @@
                 .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => x.Trim())
                 .ToList();
+
+    string selectedPlantsCsv =
+        Convert.ToString(ViewBag.Plant);
+
+    var selectedPlants =
+        string.IsNullOrWhiteSpace(selectedPlantsCsv)
+            ? new List<string>()
+            : selectedPlantsCsv
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .ToList();
 }
 <!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
@@ -116,22 +127,136 @@
 
     .select2-container {
         width: 100% !important;
+        display: block;
     }
 
     .select2-container--default .select2-selection--multiple {
-        min-height: 40px;
+        min-height: 44px;
         border: 1px solid #d1d5db;
-        border-radius: 9px;
-        padding: 3px 5px;
+        border-radius: 10px;
+        padding: 5px 8px;
+        background: #ffffff;
+        box-shadow: none;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        overflow: visible;
     }
 
-        .select2-container--default .select2-selection--multiple .select2-selection__choice {
-            border: 1px solid #d7a7b6;
-            border-radius: 16px;
-            background: #faeef2;
-            color: #75102d;
-            font-size: 11px;
-            font-weight: 700;
+    .select2-container--default.select2-container--focus
+    .select2-selection--multiple {
+        border-color: #a6173f;
+        box-shadow: 0 0 0 3px rgba(166, 23, 63, .10);
+    }
+
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-selection__rendered {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+        width: 100%;
+        min-height: 32px;
+        padding: 0;
+        margin: 0;
+        line-height: normal;
+    }
+
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-search--inline {
+        flex: 1 1 120px;
+        margin: 0;
+    }
+
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-search__field {
+        width: 100% !important;
+        height: 30px;
+        min-width: 120px;
+        margin: 0;
+        padding: 4px 2px;
+        border: 0 !important;
+        outline: 0;
+        color: #374151;
+        font-size: 13px;
+        line-height: 22px;
+    }
+
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-selection__choice {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        margin: 0;
+        padding: 4px 9px 4px 25px;
+        border: 1px solid #d7a7b6;
+        border-radius: 16px;
+        background: #faeef2;
+        color: #75102d;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 18px;
+    }
+
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-selection__choice__remove {
+        top: 50%;
+        left: 7px;
+        transform: translateY(-50%);
+        border-right: 0;
+        color: #a6173f;
+        font-size: 16px;
+        line-height: 1;
+    }
+
+        .select2-container--default
+        .select2-selection--multiple
+        .select2-selection__choice__remove:hover {
+            background: transparent;
+            color: #7f1230;
+        }
+
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-selection__clear {
+        margin-top: 0;
+        margin-right: 3px;
+        color: #6b7280;
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    .select2-dropdown {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, .12);
+    }
+
+    .select2-container--default
+    .select2-results__option--highlighted[aria-selected] {
+        background: #a6173f;
+        color: #ffffff;
+    }
+
+    .select2-container--default
+    .select2-results__option[aria-selected=true] {
+        background: #faeef2;
+        color: #75102d;
+    }
+
+    .filter-select-group {
+        margin-bottom: 12px;
+    }
+
+        .filter-select-group label {
+            display: block;
+            margin-bottom: 7px;
         }
 
     .filter-actions {
@@ -209,51 +334,48 @@
                                 </div>
                             </div>
 
-                            <div class="col-xl-2 col-md-4">
-                                <div class="form-group">
+                            <div class="col-xl-3 col-md-6">
+                                <div class="form-group filter-select-group">
                                     <label for="plant">
                                         Plant
                                     </label>
 
                                     <select id="plant"
                                             name="plant"
-                                            class="form-control">
-
-                                        <option value=""
-                                                @(string.IsNullOrWhiteSpace(ViewBag.Plant as string) ? "selected" : "")>
-                                            All Plants
-                                        </option>
+                                            class="form-control multi-select"
+                                            multiple="multiple"
+                                            data-placeholder="Select plants">
 
                                         <option value="Rolling Mill 1"
-                                                @((ViewBag.Plant as string) == "Rolling Mill 1" ? "selected" : "")>
+                                                @(selectedPlants.Any(x => x.Equals("Rolling Mill 1", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             Rolling Mill 1
                                         </option>
 
                                         <option value="Rolling Mill 2"
-                                                @((ViewBag.Plant as string) == "Rolling Mill 2" ? "selected" : "")>
+                                                @(selectedPlants.Any(x => x.Equals("Rolling Mill 2", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             Rolling Mill 2
                                         </option>
 
                                         <option value="EAF"
-                                                @((ViewBag.Plant as string) == "EAF" ? "selected" : "")>
+                                                @(selectedPlants.Any(x => x.Equals("EAF", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             EAF
                                         </option>
 
                                         <option value="LF"
-                                                @((ViewBag.Plant as string) == "LF" ? "selected" : "")>
+                                                @(selectedPlants.Any(x => x.Equals("LF", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             LF
                                         </option>
 
                                         <option value="CCM"
-                                                @((ViewBag.Plant as string) == "CCM" ? "selected" : "")>
+                                                @(selectedPlants.Any(x => x.Equals("CCM", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             CCM
                                         </option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div class="col-xl-2 col-md-4">
-                                <div class="form-group">
+                            <div class="col-xl-3 col-md-6">
+                                <div class="form-group filter-select-group">
                                     <label for="agency">
                                         Agency
                                     </label>
@@ -453,10 +575,17 @@
 <script>
     $(document).ready(function () {
 
-        $(".multi-select").select2({
-            width: "100%",
-            closeOnSelect: false,
-            allowClear: true
+        $(".multi-select").each(function () {
+            var $select = $(this);
+
+            $select.select2({
+                width: "100%",
+                closeOnSelect: false,
+                allowClear: true,
+                placeholder:
+                    $select.data("placeholder") ||
+                    "Select options"
+            });
         });
 
         // ==============================

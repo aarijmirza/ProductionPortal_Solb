@@ -4,6 +4,7 @@ using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -29,193 +30,775 @@ namespace ProductionPortal_Solb.Controllers
             rm = new RollingMillRepository();
         }
 
-        public ActionResult list(DateTime? date, string shift, string plant)
+        public ActionResult list(
+            DateTime? date,
+            string shift,
+            string plant)
         {
-            DateTime selectedDate = date ?? DateTime.Today;
+            DateTime selectedDate;
 
-            //var data = repo.GetAllRMDelay(selectedDate, selectedDate, shift);
+            /*
+                Priority:
+                1. User-selected filter date
+                2. Initially selected RM Detail date
+                3. Today's date
+            */
+            if (date.HasValue)
+            {
+                selectedDate =
+                    date.Value.Date;
+            }
+            else
+            {
+                DateTime rmSelectedDate;
 
-            var data = repo.GetAllRMDelay(selectedDate, selectedDate, shift)
-                                ?? new List<PlantDelayBLL>();
+                bool hasRMSelectedDate =
+                    DateTime.TryParse(
+                        Convert.ToString(
+                            Session["RM_SelectedDate"]
+                        ),
+                        out rmSelectedDate
+                    );
+
+                selectedDate =
+                    hasRMSelectedDate
+                        ? rmSelectedDate.Date
+                        : DateTime.Today;
+            }
+
+            /*
+                When the page is first opened, use the shift and plant
+                of the initially selected RM Detail.
+            */
+            if (string.IsNullOrWhiteSpace(shift))
+            {
+                shift =
+                    Convert.ToString(
+                        Session["RM_SelectedShift"]
+                    );
+            }
+
+            if (string.IsNullOrWhiteSpace(plant))
+            {
+                plant =
+                    Convert.ToString(
+                        Session["RM_SelectedPlant"]
+                    );
+            }
+
+            List<PlantDelayBLL> data =
+                repo.GetAllRMDelay(
+                    selectedDate.Date,
+                    selectedDate.Date,
+                    shift
+                ) ??
+                new List<PlantDelayBLL>();
 
             if (!string.IsNullOrWhiteSpace(plant))
             {
+                string selectedPlant =
+                    plant.Trim();
 
-                data = data
-                    .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.Plant) &&
-                        x.Plant.Trim().Equals(plant, StringComparison.OrdinalIgnoreCase)
-                    )
-                    .ToList();
+                data =
+                    data
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Plant
+                            ) &&
+                            x.Plant
+                                .Trim()
+                                .Equals(
+                                    selectedPlant,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                        )
+                        .ToList();
             }
 
-            ViewBag.SelectedDate = selectedDate.ToString("yyyy-MM-dd");
-            ViewBag.Shift = shift ?? "";
+            ViewBag.SelectedDate =
+                selectedDate.ToString(
+                    "yyyy-MM-dd"
+                );
 
-            return View(data);
+            ViewBag.Shift =
+                shift ?? "";
+
+            ViewBag.Plant =
+                plant ?? "";
+
+            return View(
+                data
+            );
         }
 
         public ActionResult SMPdelaydetails()
         {
             return View();
         }
-
-        public ActionResult add()
+        [HttpGet]
+        public ActionResult add(
+                   int? id,
+                   DateTime? date,
+                   string shift,
+                   string plant)
         {
-            var agencyList = repo.GetAllAgency().ToList();
-            ViewBag.Agencies = agencyList;
+            PrepareDelayDropdowns();
 
-            DateTime selectedDate = Session["RM_Date"] != null
-                ? Convert.ToDateTime(Session["RM_Date"])
-                : DateTime.Today;
-
-            string selectedPlant = Session["RM_Plant"] != null
-                ? Convert.ToString(Session["RM_Plant"])
-                : "";
-
-            string selectedShift = Session["RM_Shift"] != null
-                ? Convert.ToString(Session["RM_Shift"])
-                : "";
-
-            var nextDate = selectedDate.AddDays(1);
-
-            var todayShiftDetails = rm.RollingMillDetails()
-                .Where(x =>
-                    x.Date >= selectedDate &&
-                    x.Date < nextDate &&
-                    x.Plant == selectedPlant &&
-                    x.Shift == selectedShift
-                )
-                .OrderByDescending(x => x.ID)
-                .FirstOrDefault();
-
-            if (todayShiftDetails == null)
+            /*
+                EDIT MODE
+            */
+            if (id.HasValue && id.Value > 0)
             {
-                TempData["ErrorMessage"] = "Please select Rolling Mill Details first.";
-                return RedirectToAction("AddDetails", "RollingMill");
+                PlantDelayBLL existing =
+                    repo.GetDelayByID(
+                        id.Value
+                    );
+
+                if (existing == null)
+                {
+                    TempData["ErrorMessage"] =
+                        "Delay record was not found.";
+
+                    return RedirectToAction(
+                        "list"
+                    );
+                }
+
+                string selectedEquipment =
+                    ResolveEquipmentValue(
+                        existing.Equipments
+                    );
+
+                var editVM =
+                    new DelaysVM
+                    {
+                        ID =
+                            existing.ID,
+
+                        Date =
+                            existing.Date,
+
+                        Plant =
+                            existing.Plant,
+
+                        Area =
+                            existing.Area,
+
+                        Shift =
+                            existing.Shift,
+
+                        Team =
+                            existing.Team,
+
+                        ShiftIncharge =
+                            existing.ShiftIncharge,
+
+                        StartTime =
+                            existing.StartTime,
+
+                        EndTime =
+                            existing.EndTime,
+
+                        TotalDuration =
+                            existing.TotalDuration,
+
+                        Cobble =
+                            existing.Cobble,
+
+                        HotOut =
+                            existing.HotOut,
+
+                        DelayType =
+                            existing.DelayType,
+
+                        Delaycode =
+                            existing.Delaycode,
+
+                        Reason =
+                            existing.Reason,
+
+                        DelayDescription =
+                            existing.DelayDescription,
+
+                        ReasonForOccurence =
+                            existing.ReasonForOccurence,
+
+                        ActionTaken =
+                            existing.ActionTaken,
+
+                        AgencyName =
+                            existing.AgencyName,
+
+                        AgencyCode =
+                            existing.AgencyCode,
+
+                        EquipmentName =
+                            selectedEquipment,
+
+                        Component =
+                            existing.Component
+                    };
+
+                /*
+                    Recreate dropdowns with selected values.
+                */
+                PrepareDelayDropdowns(
+                    selectedEquipment,
+                    existing.Component
+                );
+
+                ViewBag.IsEdit =
+                    true;
+
+                return View(
+                    editVM
+                );
             }
 
-            var vm = new DelaysVM
+            /*
+                ADD MODE
+            */
+            DateTime selectedDate =
+                date ??
+                ParseSessionDate(
+                    Session["RM_SelectedDate"]
+                ) ??
+                ParseSessionDate(
+                    Session["RM_Date"]
+                ) ??
+                DateTime.Today;
+
+            string selectedShift =
+                !string.IsNullOrWhiteSpace(shift)
+                    ? shift.Trim()
+                    : FirstNotEmpty(
+                        Convert.ToString(
+                            Session["RM_SelectedShift"]
+                        ),
+                        Convert.ToString(
+                            Session["RM_Shift"]
+                        )
+                    );
+
+            string selectedPlant =
+                !string.IsNullOrWhiteSpace(plant)
+                    ? plant.Trim()
+                    : FirstNotEmpty(
+                        Convert.ToString(
+                            Session["RM_SelectedPlant"]
+                        ),
+                        Convert.ToString(
+                            Session["RM_Plant"]
+                        )
+                    );
+
+            int selectedShiftDetailID =
+                ParseInt(
+                    Session["RM_ShiftDetailID"]
+                );
+
+            RMShiftDetailsBLL selectedRMDetail =
+                null;
+
+            if (selectedShiftDetailID > 0)
             {
-                Date = todayShiftDetails.Date,
-                Shift = todayShiftDetails.Shift,
-                Plant = todayShiftDetails.Plant,
-                Team = todayShiftDetails.Team,
-                ShiftIncharge = todayShiftDetails.ShiftIncharge
-            };
+                selectedRMDetail =
+                    rm.RollingMillDetails()
+                        .FirstOrDefault(x =>
+                            x.ID ==
+                                selectedShiftDetailID &&
+                            x.StatusID == 1
+                        );
+            }
 
-            var equipment = repo.GetAllRMEquipments()
-                .Select(x => new
+            /*
+                Fallback by Date + Plant + Shift.
+            */
+            if (
+                selectedRMDetail == null &&
+                !string.IsNullOrWhiteSpace(
+                    selectedPlant
+                ) &&
+                !string.IsNullOrWhiteSpace(
+                    selectedShift
+                )
+            )
+            {
+                DateTime nextDate =
+                    selectedDate.Date.AddDays(1);
+
+                selectedRMDetail =
+                    rm.RollingMillDetails()
+                        .Where(x =>
+                            x.Date >=
+                                selectedDate.Date &&
+                            x.Date <
+                                nextDate &&
+                            x.Plant ==
+                                selectedPlant &&
+                            x.Shift ==
+                                selectedShift &&
+                            x.StatusID == 1
+                        )
+                        .OrderByDescending(
+                            x => x.ID
+                        )
+                        .FirstOrDefault();
+            }
+
+            if (selectedRMDetail == null)
+            {
+                TempData["ErrorMessage"] =
+                    "Please select Rolling Mill Details first.";
+
+                return RedirectToAction(
+                    "AddDetails",
+                    "RollingMill"
+                );
+            }
+
+            /*
+                Keep Rolling Mill session aligned.
+            */
+            Session["RM_ShiftDetailID"] =
+                selectedRMDetail.ID;
+
+            Session["RM_SelectedDate"] =
+                selectedRMDetail.Date.ToString(
+                    "yyyy-MM-dd"
+                );
+
+            Session["RM_SelectedShift"] =
+                selectedRMDetail.Shift;
+
+            Session["RM_SelectedPlant"] =
+                selectedRMDetail.Plant;
+
+            var vm =
+                new DelaysVM
                 {
-                    Code = x.Code,
-                    Text = x.Description + " - " + x.LocationName
-                })
-                .ToList();
+                    Date =
+                        selectedRMDetail.Date,
 
-            ViewBag.Equipment = new SelectList(equipment, "Text", "Text");
+                    Shift =
+                        selectedRMDetail.Shift,
 
-            var component = repo.GetAllComponent();
-            ViewBag.Component = new SelectList(component, "Code", "Description");
+                    Plant =
+                        selectedRMDetail.Plant,
 
-            return View(vm);
+                    Team =
+                        selectedRMDetail.Team,
+
+                    ShiftIncharge =
+                        selectedRMDetail.ShiftIncharge,
+
+                    Area =
+                        "Rolling Mill",
+
+                    Cobble =
+                        0,
+
+                    HotOut =
+                        0
+                };
+
+            ViewBag.IsEdit =
+                false;
+
+            return View(
+                vm
+            );
         }
 
-        //public ActionResult add()
-        //{
-        //    var agencyList = repo.GetAllAgency().ToList(); // ensure it's a List
-        //    ViewBag.Agencies = agencyList;
-
-        //    var today = DateTime.Today;
-        //    var tomorrow = today.AddDays(1);
-
-        //    // ✅ Aaj ki Shift Details uthao
-        //    var todayShiftDetails = rm.RollingMillDetails()
-        //        .Where(x => x.Date >= today && x.Date < tomorrow)
-        //        .OrderByDescending(x => x.ID)
-        //        .FirstOrDefault();
-
-        //    if (todayShiftDetails == null)
-        //    {
-        //        TempData["ErrorMessage"] = "Please add Rolling Mill Details for today first.";
-        //        return RedirectToAction("AddDetails", "RollingMill");
-        //    }
-
-        //    var vm = new DelaysVM
-        //    {
-        //        Date = todayShiftDetails.Date,
-        //        Shift = todayShiftDetails.Shift,
-        //        Plant = todayShiftDetails.Plant,
-        //        Team = todayShiftDetails?.Team,
-        //        ShiftIncharge = todayShiftDetails?.ShiftIncharge
-        //    };
-
-        //    var equipment = repo.GetAllEquipments()
-        //      .Select(x => new
-        //      {
-        //          Code = x.Code,
-        //          Text = x.Description + " - " + x.LocationName
-        //      })
-        //      .ToList();
-
-        //    ViewBag.Equipment = new SelectList(equipment, "Text", "Text");
-        //    //var equipment = repo.GetAllEquipments();
-        //    //ViewBag.Equipment = new SelectList(equipment, "Code", "Description");
-
-        //    var component = repo.GetAllComponent();
-        //    ViewBag.Component = new SelectList(component, "Code", "Description");
-
-        //    return View(vm);
-        //}
-
         [HttpPost]
-        public ActionResult add(PlantDelayBLL data)
+        [ValidateAntiForgeryToken]
+        public ActionResult add(
+            PlantDelayBLL data)
         {
-            if (data != null)
+            if (data == null)
             {
-                var agencies = repo.GetAllAgency().ToList();
+                TempData["ErrorMessage"] =
+                    "Invalid data submitted.";
 
-                var agencyname = repo.GetAllAgency().ToList(); // ensure it's a List
+                return RedirectToAction(
+                    "list"
+                );
+            }
 
-                var selectedAgency = agencies
-                    .Where(a => a.AgencyCode == data.AgencyCode)
-                    .FirstOrDefault();
+            try
+            {
+                /*
+                    Resolve Agency Name, Code and Delay Type.
+                */
+                var agencies =
+                    repo.GetAllAgency()
+                        ?.ToList()
+                    ?? new List<PlantDelayBLL>();
+
+                PlantDelayBLL selectedAgency =
+                    agencies.FirstOrDefault(a =>
+                        string.Equals(
+                            a.AgencyCode,
+                            data.AgencyCode,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                        ||
+                        string.Equals(
+                            a.AgencyName,
+                            data.AgencyName,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    );
 
                 if (selectedAgency != null)
                 {
-                    data.AgencyName = selectedAgency.AgencyName;  // Agency ka Name
-                    data.AgencyCode = selectedAgency.AgencyCode;  // Agency ka Code
-                    data.DelayType = selectedAgency.DelayType;
+                    data.AgencyName =
+                        selectedAgency.AgencyName;
+
+                    data.AgencyCode =
+                        selectedAgency.AgencyCode;
+
+                    data.DelayType =
+                        selectedAgency.DelayType;
                 }
 
-                // Delay Code Auto Generate
-                data.Delaycode = repo.GenerateDelayCode();
+                /*
+                    Recalculate duration for both Insert and Update.
+                    Overnight delays are supported.
+                */
+                data.TotalDuration =
+                    CalculateDurationMinutes(
+                        data.StartTime,
+                        data.EndTime
+                    );
 
-                //data.Date = DateTime.Now;
-                data.StatusID = 1;
-                data.CreatedDate = DateTime.Now;
-                data.CreatedBy = User.Identity.Name;
-                // int rtn1 = AddEntry(data);
-                int rtn = repo.Insert(data);
-                if (rtn > 0)
+                data.StatusID =
+                    1;
+
+                int result;
+
+                if (data.ID > 0)
                 {
-                    TempData["SuccessMessage"] = "Data saved successfully";
-                }
-                //else
-                //{
-                //    TempData["ErrorMessage"] = "Data not saved. Please try again.";
-                //    return RedirectToAction("list"); // 👈 back to form
-                //}
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Invalid data submitted.";
-                return RedirectToAction("list");
-            }
+                    data.UpdatedDate =
+                        DateTime.Now;
 
-            return RedirectToAction("list");
+                    data.UpdatedBy =
+                        User != null &&
+                        User.Identity != null
+                            ? User.Identity.Name
+                            : "";
+
+                    result =
+                        repo.Update(
+                            data
+                        );
+
+                    TempData[
+                        result > 0
+                            ? "SuccessMessage"
+                            : "ErrorMessage"
+                    ] =
+                        result > 0
+                            ? "Delay record updated successfully."
+                            : "Delay record was not updated.";
+                }
+                else
+                {
+                    data.Delaycode =
+                        repo.GenerateDelayCode();
+
+                    data.CreatedDate =
+                        DateTime.Now;
+
+                    data.CreatedBy =
+                        User != null &&
+                        User.Identity != null
+                            ? User.Identity.Name
+                            : "";
+
+                    result =
+                        repo.Insert(
+                            data
+                        );
+
+                    TempData[
+                        result > 0
+                            ? "SuccessMessage"
+                            : "ErrorMessage"
+                    ] =
+                        result > 0
+                            ? "Delay record saved successfully."
+                            : "Delay record was not saved.";
+                }
+
+                /*
+                    Return to the same selected date/shift/plant.
+                */
+                return RedirectToAction(
+                    "list",
+                    new
+                    {
+                        date =
+                            data.Date.HasValue
+                                ? data.Date.Value.ToString(
+                                    "yyyy-MM-dd"
+                                )
+                                : DateTime.Today.ToString(
+                                    "yyyy-MM-dd"
+                                ),
+
+                        shift =
+                            data.Shift,
+
+                        plant =
+                            data.Plant
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] =
+                    "Unable to save delay record. " +
+                    ex.Message;
+
+                return RedirectToAction(
+                    "add",
+                    new
+                    {
+                        id =
+                            data.ID > 0
+                                ? (int?)data.ID
+                                : null,
+
+                        date =
+                            data.Date.HasValue
+                                ? data.Date.Value.ToString(
+                                    "yyyy-MM-dd"
+                                )
+                                : null,
+
+                        shift =
+                            data.Shift,
+
+                        plant =
+                            data.Plant
+                    }
+                );
+            }
         }
 
+        private void PrepareDelayDropdowns(
+            string selectedEquipment = null,
+            string selectedComponent = null)
+        {
+            ViewBag.Agencies =
+                repo.GetAllAgency()
+                ?? new List<PlantDelayBLL>();
 
+            var equipmentSource =
+                repo.GetAllRMEquipments()
+                ?? new List<DelayEquipmentBLL>();
+
+            var equipmentItems =
+                equipmentSource
+                    .Where(x => x != null)
+                    .Select(x => new SelectListItem
+                    {
+                        Value =
+                            BuildEquipmentText(x),
+
+                        Text =
+                            BuildEquipmentText(x),
+
+                        Selected =
+                            EquipmentMatches(
+                                x,
+                                selectedEquipment
+                            )
+                    })
+                    .ToList();
+
+            ViewBag.EquipmentItems =
+                equipmentItems;
+
+            var componentSource =
+                repo.GetAllComponent()
+                ?? new List<DelayComponentBLL>();
+
+            ViewBag.Component =
+                new SelectList(
+                    componentSource,
+                    "Code",
+                    "Description",
+                    selectedComponent
+                );
+        }
+
+        private string ResolveEquipmentValue(
+            string storedValue)
+        {
+            string value =
+                (storedValue ?? string.Empty)
+                    .Trim();
+
+            var equipmentSource =
+                repo.GetAllRMEquipments()
+                ?? new List<DelayEquipmentBLL>();
+
+            DelayEquipmentBLL matched =
+                equipmentSource.FirstOrDefault(x =>
+                    EquipmentMatches(
+                        x,
+                        value
+                    )
+                );
+
+            return matched != null
+                ? BuildEquipmentText(
+                    matched
+                )
+                : value;
+        }
+
+        private bool EquipmentMatches(
+            DelayEquipmentBLL equipment,
+            string storedValue)
+        {
+            if (equipment == null)
+            {
+                return false;
+            }
+
+            string value =
+                (storedValue ?? string.Empty)
+                    .Trim();
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            string code =
+                (equipment.Code ?? string.Empty)
+                    .Trim();
+
+            string equipmentText =
+                BuildEquipmentText(
+                    equipment
+                );
+
+            return
+                string.Equals(
+                    code,
+                    value,
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                string.Equals(
+                    equipmentText,
+                    value,
+                    StringComparison.OrdinalIgnoreCase
+                );
+        }
+
+        private string BuildEquipmentText(
+            DelayEquipmentBLL equipment)
+        {
+            if (equipment == null)
+            {
+                return string.Empty;
+            }
+
+            string description =
+                (equipment.Description ?? string.Empty)
+                    .Trim();
+
+            string location =
+                (equipment.LocationName ?? string.Empty)
+                    .Trim();
+
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                return location;
+            }
+
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                return description;
+            }
+
+            return
+                description +
+                " - " +
+                location;
+        }
+
+        private int CalculateDurationMinutes(
+            TimeSpan? startTime,
+            TimeSpan? endTime)
+        {
+            if (
+                !startTime.HasValue ||
+                !endTime.HasValue
+            )
+            {
+                return 0;
+            }
+
+            TimeSpan start =
+                startTime.Value;
+
+            TimeSpan end =
+                endTime.Value;
+
+            if (end < start)
+            {
+                end =
+                    end.Add(
+                        TimeSpan.FromDays(1)
+                    );
+            }
+
+            return Convert.ToInt32(
+                (end - start).TotalMinutes
+            );
+        }
+
+        private DateTime? ParseSessionDate(
+            object value)
+        {
+            DateTime parsedDate;
+
+            return DateTime.TryParse(
+                Convert.ToString(value),
+                out parsedDate
+            )
+                ? parsedDate.Date
+                : (DateTime?)null;
+        }
+
+        private int ParseInt(
+            object value)
+        {
+            int parsedValue;
+
+            return int.TryParse(
+                Convert.ToString(value),
+                out parsedValue
+            )
+                ? parsedValue
+                : 0;
+        }
+
+        private string FirstNotEmpty(
+            params string[] values)
+        {
+            return values
+                .FirstOrDefault(x =>
+                    !string.IsNullOrWhiteSpace(x)
+                )
+                ?? "";
+        }
 
         public ActionResult AddEntry()
         {
@@ -486,27 +1069,111 @@ namespace ProductionPortal_Solb.Controllers
             return View("~/Views/Meltshop/Delay/list.cshtml", data);
         }
 
+        [HttpGet]
         public ActionResult SMPadd()
         {
-            var agencyList = repo.GetAllAgency().ToList(); // ensure it's a List
-            ViewBag.Agencies = agencyList;
+            var agencyList =
+                repo.GetAllAgency()
+                ?? new List<PlantDelayBLL>();
 
-            var equipment = repo.GetAllEquipments()
-              .Select(x => new
-              {
-                  Code = x.Code,
-                  Text = x.Description + " - " + x.LocationName
-              })
-              .ToList();
+            ViewBag.Agencies =
+                agencyList;
 
-            ViewBag.Equipment = new SelectList(equipment, "Text", "Text");
-            //var equipment = repo.GetAllEquipments();
-            //ViewBag.Equipment = new SelectList(equipment, "Code", "Description");
+            // Equipment area select hone ke baad AJAX se load hoga.
+            ViewBag.Equipment =
+                new SelectList(
+                    Enumerable.Empty<SelectListItem>(),
+                    "Value",
+                    "Text"
+                );
 
-            var component = repo.GetAllComponent();
-            ViewBag.Component = new SelectList(component, "Code", "Description");
+            var component =
+                repo.GetAllComponent()
+                ?? new List<DelayComponentBLL>();
 
-            return View("~/Views/Meltshop/Delay/add.cshtml");
+            ViewBag.Component =
+                new SelectList(
+                    component,
+                    "Code",
+                    "Description"
+                );
+
+            return View(
+                "~/Views/Meltshop/Delay/add.cshtml",
+                new DelaysVM()
+            );
+        }
+
+        [HttpGet]
+        public JsonResult GetEquipmentByArea(
+    string areaId)
+        {
+            try
+            {
+                var equipmentSource =
+                    repo.GetAllEquipments()
+                    ?? new List<DelayEquipmentBLL>();
+
+                var equipment =
+                    equipmentSource
+                        .Where(x =>
+                            x != null &&
+                            x.PlantArea == areaId
+                        )
+                        .Select(x => new
+                        {
+                            Value =
+                                !string.IsNullOrWhiteSpace(x.Code)
+                                    ? x.Code
+                                    : (
+                                        (x.Description ?? "") +
+                                        " - " +
+                                        (x.LocationName ?? "")
+                                    ).Trim(' ', '-'),
+
+                            Text =
+                                (
+                                    (x.Description ?? "") +
+                                    (
+                                        string.IsNullOrWhiteSpace(
+                                            x.LocationName
+                                        )
+                                            ? ""
+                                            : " - " +
+                                              x.LocationName
+                                    )
+                                ).Trim()
+                        })
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(
+                                x.Text
+                            )
+                        )
+                        .OrderBy(x =>
+                            x.Text
+                        )
+                        .ToList();
+
+                return Json(
+                    equipment,
+                    JsonRequestBehavior.AllowGet
+                );
+            }
+            catch (Exception ex)
+            {
+                Response.StatusCode =
+                    500;
+
+                return Json(
+                    new
+                    {
+                        message =
+                            "Unable to load equipment. " +
+                            ex.Message
+                    },
+                    JsonRequestBehavior.AllowGet
+                );
+            }
         }
 
         [HttpPost]
@@ -584,19 +1251,19 @@ namespace ProductionPortal_Solb.Controllers
             }
         }
 
-        [HttpGet]
-        public JsonResult GetEquipmentByArea(int areaId)
-        {
-            var equipment = repo.GetEquipmentByArea(areaId)
-                .Select(x => new
-                {
-                    Value = x.Description,
-                    Text = x.Description
-                })
-                .ToList();
+        //[HttpGet]
+        //public JsonResult GetEquipmentByArea(int areaId)
+        //{
+        //    var equipment = repo.GetEquipmentByArea(areaId)
+        //        .Select(x => new
+        //        {
+        //            Value = x.Description,
+        //            Text = x.Description
+        //        })
+        //        .ToList();
 
-            return Json(equipment, JsonRequestBehavior.AllowGet);
-        }
+        //    return Json(equipment, JsonRequestBehavior.AllowGet);
+        //}
 
         public ActionResult SMPdetails(int id)
         {

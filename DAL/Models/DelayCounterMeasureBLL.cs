@@ -28,6 +28,8 @@ namespace DAL.Models
 
         public string ReasonForNotClosing { get; set; }
 
+        public string SubOrderNumber { get; set; }
+
         public int StatusID { get; set; }
 
         public string CreatedBy { get; set; }

@@ -68,7 +68,7 @@
                             <div class="form-group col-md-3">
                                 <label for="date">Plant</label>
                                 @Html.DropDownListFor(m => m.Plant, new List<SelectListItem>
-                                {
+                                                                        {
                                     new SelectListItem { Text = "-- please select --", Value = "" },
                                     new SelectListItem { Text = "Electric Arc Furnace (EAF)", Value = "EAF" },
                                     new SelectListItem { Text = "Laddle Furnace (LF)", Value = "LF" },
@@ -78,7 +78,7 @@
                             <div class="form-group col-md-3">
                                 <label for="date">Shift</label>
                                 @Html.DropDownListFor(m => m.Shift, new List<SelectListItem>
-                                {
+                                                                        {
                                     new SelectListItem { Text = "-- please select --", Value = "" },
                                     new SelectListItem { Text = "Morning", Value = "Morning" },
                                     new SelectListItem { Text = "Afternoon", Value = "Afternoon" },
@@ -90,7 +90,7 @@
                             <div class="form-group col-md-3">
                                 <label for="date">Team</label>
                                 @Html.DropDownListFor(m => m.Team, new List<SelectListItem>
-                                {
+                                                                        {
                                     new SelectListItem { Text = "-- please select --", Value = "" },
                                     new SelectListItem { Text = "Team A", Value = "Team A" },
                                     new SelectListItem { Text = "Team B", Value = "Team B" },
@@ -99,13 +99,24 @@
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="date">Shift Incharge</label>
-                                @Html.DropDownListFor(m => m.ShiftIncharge, new List<SelectListItem>
-                                {
-                                    new SelectListItem { Text = "-- please select --", Value = "" },
-                                    new SelectListItem { Text = "Muhammad Ali", Value = "Muhammad Ali" },
-                                    new SelectListItem { Text = "Altaf Khan", Value = "Altaf Khan" },
-                                    new SelectListItem { Text = "Waseem Akram", Value = "Waseem Akram" }
-                                }, new { @class = "form-control" })
+                                @Html.DropDownListFor(
+                                              m => m.ShiftIncharge,
+                                              new List<SelectListItem>
+                                              {
+                                        new SelectListItem { Text = "-- please select --", Value = "" },
+                                        new SelectListItem { Text = "Syed Ali", Value = "Syed Ali" },
+                                        new SelectListItem { Text = "Mamdoh Saleem", Value = "Mamdoh Saleem" },
+                                        new SelectListItem { Text = "Sooban Wahidi", Value = "Sooban Wahidi" },
+                                        new SelectListItem { Text = "Saad Saady", Value = "Saad Saady" },
+                                        new SelectListItem { Text = "Ekrami Al Baraka", Value = "Ekrami Al Baraka" },
+                                        new SelectListItem { Text = "Emad Abdul Maqsood", Value = "Emad Abdul Maqsood" },
+                                        new SelectListItem { Text = "Heny Munir", Value = "Heny Munir" }
+      },
+                                              new
+                                              {
+                                                  @class = "form-control"
+                                              }
+                                          )
                             </div>
                             <div class="form-group col-md-3">
                                 <label>Break Out</label>
@@ -143,8 +154,14 @@
                         <div class="form-row">
                             <div class="form-group col-md-2">
                                 <label>Area</label>
-                                <select class="form-control" name="Area" id="ddlArea">
-                                    <option value="" selected>-- please select --</option>
+                                <select class="form-control"
+                                        name="Area"
+                                        id="ddlArea">
+
+                                    <option value="">
+                                        -- please select --
+                                    </option>
+
                                     <option value="2">EAF</option>
                                     <option value="3">LF</option>
                                     <option value="4">CCM</option>
@@ -152,10 +169,15 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label>Equipment</label>
-                                @Html.DropDownListFor(model => model.Equipments,
-                                    new SelectList(Enumerable.Empty<SelectListItem>()),
-                                    "-- Select Equipments --",
-                                    new { @class = "form-control select2", id = "ddlEquipments", name = "Equipments" })
+                                <select id="ddlEquipments"
+                                        name="Equipments"
+                                        class="form-control select2"
+                                        disabled>
+
+                                    <option value="">
+                                        -- Select Equipment --
+                                    </option>
+                                </select>
                             </div>
                             <div class="form-group col-md-6">
                                 <label>Component Failed</label>
@@ -197,107 +219,271 @@
 
 @*SCRIPTS*@
 <!-- 1️⃣ jQuery (ONLY ONE, no duplicates) -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet" />
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function () {
 
-        $("#date").val(new Date().toISOString().split('T')[0]);
+        // Set current date
+        if (!$("#date").val()) {
+            var today =
+                new Date()
+                    .toISOString()
+                    .split("T")[0];
 
-        // Equipment searchable dropdown
+            $("#date").val(today);
+        }
+
+        // Initialize Equipment Select2
         $("#ddlEquipments").select2({
-            placeholder: "-- Select Equipments --",
-            allowClear: true,
-            width: "100%"
+            placeholder:
+                "-- Select Equipment --",
+
+            allowClear:
+                true,
+
+            width:
+                "100%"
         });
 
-        // Component searchable dropdown
-        $("#ddlComponents").select2({
-            placeholder: "-- Select Components --",
-            allowClear: true,
-            width: "100%"
-        });
+        // Area change → load Equipment
+        $("#ddlArea").on(
+            "change",
+            function () {
 
-        $("#ddlArea").on("change", function () {
+                var areaId =
+                    $(this).val();
 
-            var areaId = $(this).val();
+                var equipmentDropdown =
+                    $("#ddlEquipments");
 
-            $("#ddlEquipments").empty().append('<option value="">-- Select Equipments --</option>');
-            $("#ddlComponents").empty().append('<option value="">-- Select Components --</option>');
-            $("#ddlComponents").prop("disabled", true);
+                equipmentDropdown
+                    .empty()
+                    .append(
+                        new Option(
+                            "-- Select Equipment --",
+                            "",
+                            true,
+                            true
+                        )
+                    )
+                    .prop(
+                        "disabled",
+                        true
+                    )
+                    .trigger(
+                        "change"
+                    );
 
-            // Select2 refresh
-            $("#ddlEquipments").trigger("change");
-            $("#ddlComponents").trigger("change");
+                if (!areaId) {
+                    return;
+                }
 
-            if (!areaId) {
-                return;
+                $.ajax({
+                    url:
+                        '@Url.Action(
+                            "GetEquipmentByArea",
+                            "Delay"
+                        )',
+
+                    type:
+                        "GET",
+
+                    data:
+                    {
+                        areaId:
+                            areaId
+                    },
+
+                    cache:
+                        false,
+
+                    success:
+                        function (response) {
+
+                            var items =
+                                response &&
+                                response.data
+                                    ? response.data
+                                    : response;
+
+                            equipmentDropdown
+                                .empty()
+                                .append(
+                                    new Option(
+                                        "-- Select Equipment --",
+                                        "",
+                                        true,
+                                        true
+                                    )
+                                );
+
+                            if (
+                                items &&
+                                items.length > 0
+                            ) {
+                                $.each(
+                                    items,
+                                    function (
+                                        index,
+                                        item
+                                    ) {
+
+                                        var text =
+                                            item.Text ||
+                                            item.text ||
+                                            item.Description ||
+                                            "";
+
+                                        var value =
+                                            item.Value ||
+                                            item.value ||
+                                            item.Code ||
+                                            text;
+
+                                        equipmentDropdown.append(
+                                            new Option(
+                                                text,
+                                                value,
+                                                false,
+                                                false
+                                            )
+                                        );
+                                    }
+                                );
+                            }
+
+                            equipmentDropdown
+                                .prop(
+                                    "disabled",
+                                    false
+                                )
+                                .trigger(
+                                    "change"
+                                );
+                        },
+
+                    error:
+                        function (xhr) {
+
+                            equipmentDropdown
+                                .prop(
+                                    "disabled",
+                                    true
+                                )
+                                .trigger(
+                                    "change"
+                                );
+
+                            var errorMessage =
+                                "Unable to load equipment.";
+
+                            if (
+                                xhr.responseJSON &&
+                                xhr.responseJSON.message
+                            ) {
+                                errorMessage =
+                                    xhr.responseJSON.message;
+                            }
+
+                            Swal.fire({
+                                icon:
+                                    "error",
+
+                                title:
+                                    "Error",
+
+                                text:
+                                    errorMessage
+                            });
+                        }
+                });
             }
+        );
 
-            $.ajax({
-                url: '@Url.Action("GetEquipmentByArea", "Delay")',
-                type: 'GET',
-                data: { areaId: areaId },
-                success: function (res) {
+        // Agency select → set Agency Code
+        $("#AgencyDropdown").on(
+            "change",
+            function () {
 
-                    if (res && res.length > 0) {
-                        $.each(res, function (i, item) {
-                            $("#ddlEquipments").append(
-                                new Option(item.Text, item.Value, false, false)
+                $("#AgencyCodeInput").val(
+                    $(this).val() || ""
+                );
+            }
+        );
+
+        let isSubmitting =
+            false;
+
+        $("#addprofileform").on(
+            "submit",
+            function (e) {
+
+                e.preventDefault();
+
+                if (isSubmitting) {
+                    return;
+                }
+
+                Swal.fire({
+                    title:
+                        "Confirm Submission",
+
+                    text:
+                        "Are you sure you want to submit this delay record?",
+
+                    icon:
+                        "warning",
+
+                    showCancelButton:
+                        true,
+
+                    confirmButtonText:
+                        "Yes, Submit",
+
+                    cancelButtonText:
+                        "Cancel",
+
+                    allowOutsideClick:
+                        false,
+
+                    allowEscapeKey:
+                        false
+                })
+                .then(
+                    function (result) {
+
+                        if (!result.isConfirmed) {
+                            return;
+                        }
+
+                        isSubmitting =
+                            true;
+
+                        $("#addprofileform")
+                            .find(
+                                "button[type='submit']"
+                            )
+                            .prop(
+                                "disabled",
+                                true
+                            )
+                            .text(
+                                "Submitting..."
                             );
-                        });
+
+                        $("#addprofileform")[0]
+                            .submit();
                     }
-
-                    // Select2 refresh after adding options
-                    $("#ddlEquipments").trigger("change");
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Unable to load equipment.'
-                    });
-                }
-            });
-        });
-
-        $("#AgencyDropdown").on("change", function () {
-            $("#AgencyCodeInput").val($(this).val());
-        });
-
-        let isSubmitting = false;
-
-        $("#addprofileform").on("submit", function (e) {
-            e.preventDefault();
-
-            if (isSubmitting) return;
-
-            Swal.fire({
-                title: 'Confirm Submission',
-                text: 'Are you sure you want to submit this delay record?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Submit',
-                cancelButtonText: 'Cancel',
-                allowOutsideClick: false,
-                allowEscapeKey: false
-            }).then((result) => {
-
-                if (result.isConfirmed) {
-                    isSubmitting = true;
-
-                    $("#addprofileform")
-                        .find("button[type='submit']")
-                        .prop("disabled", true)
-                        .text("Submitting...");
-
-                    $("#addprofileform")[0].submit();
-                }
-            });
-        });
+                );
+            }
+        );
 
     });
 </script>

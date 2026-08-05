@@ -7,6 +7,34 @@
 
     var report = Model ?? new DAL.Models.SupplyChainDailyBLL();
 
+    var receivedMaterials =
+        report.ReceivedMaterials
+        ?? new List<DAL.Models.SupplyChainReceivedMaterialBLL>();
+
+    var rawReceivedItems =
+        receivedMaterials
+            .Where(x =>
+                x != null &&
+                string.Equals(
+                    (x.MaterialType ?? string.Empty).Trim(),
+                    "Raw Material",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .ToList();
+
+    var subRawReceivedItems =
+        receivedMaterials
+            .Where(x =>
+                x != null &&
+                string.Equals(
+                    (x.MaterialType ?? string.Empty).Trim(),
+                    "Sub Raw Material",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .ToList();
+
     var gregorian = new CultureInfo("en-US");
     gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
 
@@ -535,6 +563,41 @@
         font-weight: 800;
     }
 
+    .received-detail-list {
+        margin-top: 5px;
+        padding-top: 4px;
+        border-top: 1px dashed #cfcfcf;
+    }
+
+    .received-detail-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 2px;
+        font-size: 8.5px;
+        line-height: 1.2;
+    }
+
+    .received-detail-name {
+        color: #222;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .received-detail-qty {
+        color: var(--solb-red);
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .received-empty {
+        margin-top: 4px;
+        color: #777;
+        font-size: 8px;
+        font-style: italic;
+    }
+
     .no-print {
         margin-bottom: 12px;
     }
@@ -819,8 +882,22 @@
                     </div>
                     <div style="padding-left: 20px;">
                         <div class="dispatch-title">WTD Dispatch</div>
-                        <div class="dispatch-value">@F0(report.WTDDispatch) <span>MT</span></div>
-                        <div class="target-text">vs Target (@F0(report.WTDDispatchTarget) MT)</div>
+
+                        <div class="dispatch-value">
+                            @F0(report.WTDDispatch)
+                            <span>MT</span>
+
+                            @F0(report.WTDTruck)
+                            <span>Trucks</span>
+                        </div>
+
+                        <div class="target-text">
+                            vs Target (@F0(report.WTDDispatchTarget) MT)
+                        </div>
+
+                        <div class="target-text">
+                            vs Target Truck (@F0(report.WTDTruckTarget))
+                        </div>
                     </div>
                     <div class="percent">@wtdPercent.ToString("0")%</div>
                 </div>
@@ -831,8 +908,22 @@
                     </div>
                     <div style="padding-left: 20px;">
                         <div class="dispatch-title">MTD Dispatch</div>
-                        <div class="dispatch-value">@F0(report.MTDDispatch) <span>MT</span></div>
-                        <div class="target-text">vs Target (@F0(report.MTDDispatchTarget) MT)</div>
+
+                        <div class="dispatch-value">
+                            @F0(report.MTDDispatch)
+                            <span>MT</span>
+
+                            @F0(report.MTDTruck)
+                            <span>Trucks</span>
+                        </div>
+
+                        <div class="target-text">
+                            vs Target (@F0(report.MTDDispatchTarget) MT)
+                        </div>
+
+                        <div class="target-text">
+                            vs Target Truck (@F0(report.MTDTruckTarget))
+                        </div>
                     </div>
                     <div class="percent">@mtdPercent.ToString("0")%</div>
                 </div>
@@ -884,23 +975,95 @@
 
                 <div class="small-card">
                     <div class="small-icon">
-                        <img src="@Url.Content("~/assets/images/supply/raw-material.png")" class="material-img" />
+                        <img src="@Url.Content("~/assets/images/supply/raw-material.png")"
+                             class="material-img" />
                     </div>
+
                     <div style="padding-left: 20px;">
-                        <div class="small-title">Raw Materials</div>
-                        <div class="small-value">@F2(report.RawMaterialsReceived)</div>
-                        <div class="small-unit">MT</div>
+                        <div class="small-title">
+                            Raw Materials
+                        </div>
+
+                        <div class="small-value">
+                            @F3(report.RawMaterialsReceived)
+                        </div>
+
+                        <div class="small-unit">
+                            MT
+                        </div>
+
+                        <div class="received-detail-list">
+
+                            @if (rawReceivedItems.Count > 0)
+                            {
+                                foreach (var item in rawReceivedItems)
+                                {
+                                    <div class="received-detail-row">
+                                        <span class="received-detail-name">
+                                            @item.ItemName
+                                        </span>
+
+                                        <span class="received-detail-qty">
+                                            @item.Quantity.ToString("N3") MT
+                                        </span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="received-empty">
+                                    No item details for report ID @report.ID
+                                </div>
+                            }
+
+                        </div>
                     </div>
                 </div>
 
                 <div class="small-card">
                     <div class="small-icon">
-                        <img src="@Url.Content("~/assets/images/supply/sub-raw-material.png")" class="material-img" />
+                        <img src="@Url.Content("~/assets/images/supply/sub-raw-material.png")"
+                             class="material-img" />
                     </div>
+
                     <div style="padding-left: 20px;">
-                        <div class="small-title">Sub Raw Materials</div>
-                        <div class="small-value">@F2(report.SubRawMaterialsReceived)</div>
-                        <div class="small-unit">MT</div>
+                        <div class="small-title">
+                            Sub Raw Materials
+                        </div>
+
+                        <div class="small-value">
+                            @F3(report.SubRawMaterialsReceived)
+                        </div>
+
+                        <div class="small-unit">
+                            MT
+                        </div>
+
+                        <div class="received-detail-list">
+
+                            @if (subRawReceivedItems.Count > 0)
+                            {
+                                foreach (var item in subRawReceivedItems)
+                                {
+                                    <div class="received-detail-row">
+                                        <span class="received-detail-name">
+                                            @item.ItemName
+                                        </span>
+
+                                        <span class="received-detail-qty">
+                                            @item.Quantity.ToString("N3") MT
+                                        </span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="received-empty">
+                                    No item details for report ID @report.ID
+                                </div>
+                            }
+
+                        </div>
                     </div>
                 </div>
 

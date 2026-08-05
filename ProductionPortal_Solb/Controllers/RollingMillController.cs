@@ -18,7 +18,7 @@ using static iTextSharp.text.pdf.AcroFields;
 namespace ProductionPortal_Solb.Controllers
 {
     [SessionState(
-    SessionStateBehavior.ReadOnly
+    SessionStateBehavior.Required
     )]
     public class RollingMillController : BaseController
     {
@@ -85,6 +85,33 @@ namespace ProductionPortal_Solb.Controllers
             return Json(data, JsonRequestBehavior.AllowGet);
         }
 
+        private void SetRollingMillSession(
+            RMShiftDetailsBLL shiftDetail)
+        {
+            if (shiftDetail == null)
+            {
+                return;
+            }
+
+            Session["RM_ShiftDetailID"] =
+                shiftDetail.ID;
+
+            Session["RM_Date"] =
+                shiftDetail.Date;
+
+            Session["RM_Shift"] =
+                shiftDetail.Shift;
+
+            Session["RM_Plant"] =
+                shiftDetail.Plant;
+
+            Session["RM_Team"] =
+                shiftDetail.Team;
+
+            Session["RM_ShiftIncharge"] =
+                shiftDetail.ShiftIncharge;
+        }
+
         private string GetDefaultShift()
         {
             var hour = DateTime.Now.Hour;
@@ -106,7 +133,7 @@ namespace ProductionPortal_Solb.Controllers
 
 
 
-            if (Session["RM_Date"] == null || Session["RM_Shift"] == null || Session["RM_Plant"] == null)
+            if (Session["RM_Date"] == null || Session["RM_Shift"] == null || Session["RM_Plant"] == null || Session["RM_ShiftDetailID"] == null)
             {
                 TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
                 return RedirectToAction("AddDetails", "RollingMill");
@@ -509,7 +536,7 @@ namespace ProductionPortal_Solb.Controllers
             var chargedHeatsAll = repo.GetAllCharging();
             var dischargedAll = rm.GetDichargedHeat2();
 
-            if (Session["RM_Date"] == null || Session["RM_Plant"] == null || Session["RM_Shift"] == null)
+            if (Session["RM_Date"] == null || Session["RM_Plant"] == null || Session["RM_Shift"] == null || Session["RM_ShiftDetailID"] == null)
             {
                 TempData["ErrorMessage"] = "Please select Rolling Mill Details first.";
                 return RedirectToAction("AddDetails", "RollingMill");
@@ -663,7 +690,7 @@ namespace ProductionPortal_Solb.Controllers
         {
             try
             {
-                if (Session["RM_Date"] == null || Session["RM_Plant"] == null || Session["RM_Shift"] == null)
+                if (Session["RM_Date"] == null || Session["RM_Plant"] == null || Session["RM_Shift"] == null || Session["RM_ShiftDetailID"] == null)
                 {
                     TempData["ErrorMessage"] = "Please select Rolling Mill Details first.";
                     return RedirectToAction("AddDetails", "RollingMill");
@@ -860,7 +887,7 @@ namespace ProductionPortal_Solb.Controllers
         [Route("AddBundleSection")]
         public ActionResult AddBundleSection()
         {
-            if (Session["RM_Date"] == null || Session["RM_Shift"] == null)
+            if (Session["RM_Date"] == null || Session["RM_Shift"] == null || Session["RM_ShiftDetailID"] == null)
             {
                 TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
                 return RedirectToAction("AddDetails", "RollingMill");
@@ -951,7 +978,7 @@ namespace ProductionPortal_Solb.Controllers
         {
             try
             {
-                if (Session["RM_Date"] == null || Session["RM_Shift"] == null)
+                if (Session["RM_Date"] == null || Session["RM_Shift"] == null || Session["RM_ShiftDetailID"] == null)
                 {
                     TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
                     return RedirectToAction("AddDetails", "RollingMill");
@@ -1013,134 +1040,6 @@ namespace ProductionPortal_Solb.Controllers
             {
                 TempData["ErrorMessage"] = "Error: " + ex.Message;
                 return RedirectToAction("AddBundleSection");
-            }
-        }
-
-        public ActionResult AddDetails(DateTime? date)
-        {
-            DateTime selectedDate = date ?? DateTime.Today;
-            DateTime start = selectedDate.Date;
-            DateTime end = start.AddDays(1);
-
-            var allDetails = rm.RollingMillDetails()
-                .Where(x =>
-                    x.Date >= start &&
-                    x.Date < end &&
-                    x.StatusID == 1
-                )
-                .OrderByDescending(x => x.ID)
-                .ToList();
-
-            // ✅ Agar session empty hai aur current selected date par entry hai,
-            // to latest entry auto load kar do
-            if ((Session["RM_Date"] == null || Session["RM_Shift"] == null) && allDetails.Any())
-            {
-                var latest = allDetails.FirstOrDefault();
-
-                Session["RM_Date"] = latest.Date;
-                Session["RM_Shift"] = latest.Shift;
-                Session["RM_Plant"] = latest.Plant;
-                Session["RM_Team"] = latest.Team;
-                Session["RM_ShiftIncharge"] = latest.ShiftIncharge;
-            }
-
-            var vm = new RMShiftDetailsVM
-            {
-                List = allDetails
-            };
-
-            ViewBag.SelectedDate = selectedDate.ToString("yyyy-MM-dd");
-
-            ViewBag.LoadedDate = Session["RM_Date"] != null
-                ? Convert.ToDateTime(Session["RM_Date"]).ToString("dd-MM-yyyy")
-                : "-";
-
-            ViewBag.LoadedPlant = Session["RM_Plant"] ?? "-";
-            ViewBag.LoadedShift = Session["RM_Shift"] ?? "-";
-            ViewBag.LoadedTeam = Session["RM_Team"] ?? "-";
-            ViewBag.LoadedIncharge = Session["RM_ShiftIncharge"] ?? "-";
-
-            return View(vm);
-        }
-
-        [HttpPost]
-        public ActionResult AddDetails(RMShiftDetailsBLL data)
-        {
-            try
-            {
-                if (data == null)
-                {
-                    TempData["ErrorMessage"] = "Invalid data.";
-                    return RedirectToAction("AddDetails");
-                }
-
-                if (data.Date == null)
-                {
-                    TempData["ErrorMessage"] = "Date is required.";
-                    return RedirectToAction("AddDetails");
-                }
-
-                if (string.IsNullOrWhiteSpace(data.Plant))
-                {
-                    TempData["ErrorMessage"] = "Plant is required.";
-                    return RedirectToAction("AddDetails");
-                }
-
-                if (string.IsNullOrWhiteSpace(data.Team))
-                {
-                    TempData["ErrorMessage"] = "Team is required.";
-                    return RedirectToAction("AddDetails");
-                }
-
-                if (string.IsNullOrWhiteSpace(data.Shift))
-                {
-                    TempData["ErrorMessage"] = "Shift is required.";
-                    return RedirectToAction("AddDetails");
-                }
-
-                if (string.IsNullOrWhiteSpace(data.ShiftIncharge))
-                {
-                    TempData["ErrorMessage"] = "Shift Incharge is required.";
-                    return RedirectToAction("AddDetails");
-                }
-
-                data.Plant = data.Plant.Trim();
-                data.Team = data.Team.Trim();
-                data.Shift = data.Shift.Trim();
-                data.ShiftIncharge = data.ShiftIncharge.Trim();
-
-                data.StatusID = 1;
-                data.CreatedBy = User.Identity.Name;
-                data.CreatedDate = DateTime.Now;
-
-                int result = rm.AddRMShiftDetails(data);
-
-                if (result > 0 || result < 0)
-                {
-                    // ✅ Save ke baad selected shift session main load
-                    Session["RM_Date"] = data.Date;
-                    Session["RM_Shift"] = data.Shift;
-                    Session["RM_Plant"] = data.Plant;
-                    Session["RM_Team"] = data.Team;
-                    Session["RM_ShiftIncharge"] = data.ShiftIncharge;
-
-                    TempData["SuccessMessage"] = "Shift details saved and loaded successfully.";
-
-                    return RedirectToAction("AddDetails", new
-                    {
-                        date = Convert.ToDateTime(data.Date).ToString("yyyy-MM-dd")
-                    });
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Shift details could not be saved.";
-                    return RedirectToAction("AddDetails");
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = "Error: " + ex.Message;
-                return RedirectToAction("AddDetails");
             }
         }
         public ActionResult delete(int? id)
@@ -1216,24 +1115,274 @@ namespace ProductionPortal_Solb.Controllers
         //    return Json(new { success = true });
         //}
 
+        //[HttpPost]
+        //public JsonResult SetSelectedShift(int id, DateTime date, string shift, string plant, string team, string shiftincharge)
+        //{
+        //    if (id <= 0)
+        //    {
+        //        return Json(new { success = false, message = "Invalid shift detail ID." });
+        //    }
+
+        //    Session["RM_ShiftDetailID"] = id;
+        //    Session["RM_Date"] = date;
+        //    Session["RM_Shift"] = shift;
+        //    Session["RM_Plant"] = plant;
+        //    Session["RM_Team"] = team;
+        //    Session["RM_ShiftIncharge"] = shiftincharge;
+
+        //    return Json(new { success = true });
+        //}
+
         [HttpPost]
-        public JsonResult SetSelectedShift(int id, DateTime date, string shift, string plant, string team, string shiftincharge)
+        public JsonResult SetSelectedShift(
+            int shiftDetailID,
+            string date,
+            string shift,
+            string plant,
+            string team,
+            string shiftincharge)
         {
-            if (id <= 0)
+            try
             {
-                return Json(new { success = false, message = "Invalid shift detail ID." });
+                if (shiftDetailID <= 0)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Invalid shift detail ID."
+                    });
+                }
+
+                RMShiftDetailsBLL selectedShift =
+                    rm.RollingMillDetails()
+                        .FirstOrDefault(x =>
+                            x.ID == shiftDetailID &&
+                            x.StatusID == 1
+                        );
+
+                if (selectedShift == null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Selected shift details were not found."
+                    });
+                }
+
+                SetRollingMillSession(
+                    selectedShift
+                );
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Shift loaded successfully."
+                });
             }
-
-            Session["RM_ShiftDetailID"] = id;
-            Session["RM_Date"] = date;
-            Session["RM_Shift"] = shift;
-            Session["RM_Plant"] = plant;
-            Session["RM_Team"] = team;
-            Session["RM_ShiftIncharge"] = shiftincharge;
-
-            return Json(new { success = true });
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
+        public ActionResult AddDetails(DateTime? date)
+        {
+            DateTime selectedDate =
+                date ?? DateTime.Today;
+
+            DateTime start =
+                selectedDate.Date;
+
+            DateTime end =
+                start.AddDays(1);
+
+            var allDetails =
+                rm.RollingMillDetails()
+                    .Where(x =>
+                        x.Date >= start &&
+                        x.Date < end &&
+                        x.StatusID == 1
+                    )
+                    .OrderByDescending(x => x.ID)
+                    .ToList();
+
+            /*
+                Agar session empty hai aur selected date par
+                shift detail available hai, latest shift load karo.
+            */
+            bool sessionIsEmpty =
+                Session["RM_ShiftDetailID"] == null ||
+                Session["RM_Date"] == null ||
+                Session["RM_Shift"] == null;
+
+            if (
+                sessionIsEmpty &&
+                allDetails.Any()
+            )
+            {
+                var latest =
+                    allDetails.FirstOrDefault();
+
+                SetRollingMillSession(
+                    latest
+                );
+            }
+
+            var vm =
+                new RMShiftDetailsVM
+                {
+                    List = allDetails
+                };
+
+            ViewBag.SelectedDate =
+                selectedDate.ToString(
+                    "yyyy-MM-dd"
+                );
+
+            ViewBag.LoadedShiftDetailID =
+                Session["RM_ShiftDetailID"] ??
+                0;
+
+            ViewBag.LoadedDate =
+                Session["RM_Date"] != null
+                    ? Convert.ToDateTime(
+                        Session["RM_Date"]
+                    ).ToString(
+                        "dd-MM-yyyy"
+                    )
+                    : "-";
+
+            ViewBag.LoadedPlant =
+                Session["RM_Plant"] ??
+                "-";
+
+            ViewBag.LoadedShift =
+                Session["RM_Shift"] ??
+                "-";
+
+            ViewBag.LoadedTeam =
+                Session["RM_Team"] ??
+                "-";
+
+            ViewBag.LoadedIncharge =
+                Session["RM_ShiftIncharge"] ??
+                "-";
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        public ActionResult AddDetails(RMShiftDetailsBLL data)
+        {
+            try
+            {
+                if (data == null)
+                {
+                    TempData["ErrorMessage"] = "Invalid data.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                if (data.Date == null)
+                {
+                    TempData["ErrorMessage"] = "Date is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                if (string.IsNullOrWhiteSpace(data.Plant))
+                {
+                    TempData["ErrorMessage"] = "Plant is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                if (string.IsNullOrWhiteSpace(data.Team))
+                {
+                    TempData["ErrorMessage"] = "Team is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                if (string.IsNullOrWhiteSpace(data.Shift))
+                {
+                    TempData["ErrorMessage"] = "Shift is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                if (string.IsNullOrWhiteSpace(data.ShiftIncharge))
+                {
+                    TempData["ErrorMessage"] = "Shift Incharge is required.";
+                    return RedirectToAction("AddDetails");
+                }
+
+                data.Plant = data.Plant.Trim();
+                data.Team = data.Team.Trim();
+                data.Shift = data.Shift.Trim();
+                data.ShiftIncharge = data.ShiftIncharge.Trim();
+
+                data.StatusID = 1;
+                data.CreatedBy = User.Identity.Name;
+                data.CreatedDate = DateTime.Now;
+
+                int result = rm.AddRMShiftDetails(data);
+
+                if (result > 0 || result < 0)
+                {
+                    DateTime savedDate =
+                        Convert.ToDateTime(
+                            data.Date
+                        ).Date;
+
+                    RMShiftDetailsBLL savedShift =
+                        rm.RollingMillDetails()
+                            .Where(x =>
+                                x.StatusID == 1 &&
+                                x.Date >= savedDate &&
+                                x.Date < savedDate.AddDays(1) &&
+                                !string.IsNullOrWhiteSpace(x.Plant) &&
+                                x.Plant.Trim().Equals(
+                                    data.Plant,
+                                    StringComparison.OrdinalIgnoreCase
+                                ) &&
+                                !string.IsNullOrWhiteSpace(x.Shift) &&
+                                x.Shift.Trim().Equals(
+                                    data.Shift,
+                                    StringComparison.OrdinalIgnoreCase
+                                ) &&
+                                !string.IsNullOrWhiteSpace(x.Team) &&
+                                x.Team.Trim().Equals(
+                                    data.Team,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                            )
+                            .OrderByDescending(x => x.ID)
+                            .FirstOrDefault();
+
+                    SetRollingMillSession(
+                        savedShift
+                    );
+
+                    TempData["SuccessMessage"] =
+                        "Shift details saved and loaded successfully.";
+
+                    return RedirectToAction("AddDetails", new
+                    {
+                        date = Convert.ToDateTime(data.Date).ToString("yyyy-MM-dd")
+                    });
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Shift details could not be saved.";
+                    return RedirectToAction("AddDetails");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error: " + ex.Message;
+                return RedirectToAction("AddDetails");
+            }
+        }
 
         [HttpPost]
         public JsonResult SetSelectedDateAjax(DateTime date)
@@ -1248,7 +1397,7 @@ namespace ProductionPortal_Solb.Controllers
 
         public ActionResult RMHourlyDischarge()
         {
-            if (Session["RM_Date"] == null || Session["RM_Shift"] == null)
+            if (Session["RM_Date"] == null || Session["RM_Shift"] == null || Session["RM_ShiftDetailID"] == null)
             {
                 TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
                 return RedirectToAction("AddDetails", "RollingMill");
@@ -1301,7 +1450,7 @@ namespace ProductionPortal_Solb.Controllers
         {
             try
             {
-                if (Session["RM_Date"] == null || Session["RM_Shift"] == null)
+                if (Session["RM_Date"] == null || Session["RM_Shift"] == null || Session["RM_ShiftDetailID"] == null)
                 {
                     TempData["ErrorMessage"] = "Please select Rolling Mill Shift first.";
                     return RedirectToAction("AddDetails", "RollingMill");

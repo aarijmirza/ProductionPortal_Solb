@@ -39,6 +39,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -588,6 +589,7 @@
     <Content Include="assets\css\bootstrap.min.css" />
     <Content Include="assets\css\icons.css" />
     <Content Include="assets\css\style.css" />
+    <Content Include="assets\fonts\creato_display\SIL OPEN FONT LICENSE.txt" />
     <Content Include="assets\fonts\dripicons-v2.svg" />
     <Content Include="assets\fonts\fontawesome-webfont.svg" />
     <Content Include="assets\fonts\ionicons.svg" />
@@ -2491,6 +2493,20 @@
     <Content Include="assets\fonts\offside-latin-ext-400-normal.ttf" />
     <Content Include="assets\fonts\offside-latin-ext-400-normal.woff" />
     <Content Include="assets\fonts\offside-latin-ext-400-normal.woff2" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-Black.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-BlackItalic.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-Bold.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-BoldItalic.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-ExtraBold.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-ExtraBoldItalic.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-Light.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-LightItalic.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-Medium.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-MediumItalic.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-Regular.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-RegularItalic.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-Thin.otf" />
+    <Content Include="assets\fonts\creato_display\CreatoDisplay-ThinItalic.otf" />
     <None Include="packages.config" />
     <Content Include="Views\Login\login.cshtml" />
     <Content Include="Views\UserRole\add.cshtml" />
@@ -2593,6 +2609,7 @@
     <Content Include="Views\CCMProduction\PdfReport.cshtml" />
     <Content Include="Views\DelayCounterMeasure\add.cshtml" />
     <Content Include="Views\CCMProduction\Add - Copy.cshtml" />
+    <Content Include="Views\CCMProduction\CCM_GetAllPdf_Template_NoLinq.cshtml" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
