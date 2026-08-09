@@ -341,7 +341,7 @@
                         }
 
                         @* CMD MAINTENANCE - No separate CMD role available, so kept Admin/User *@
-                        @if (isAdmin || isUser)
+                        @if (isAdmin || isUser )
                         {
                             <li>
                                 <a href="javascript:void(0);">
@@ -376,14 +376,14 @@
                         }
 
                         @* UTILITY - Only Admin and Utility *@
-                        @if (isAdmin || isUtility)
+                        @if (isAdmin || isUtility || isUser)
                         {
                             <li>
                                 <a href="javascript:void(0);">
                                     <span>UTILITY CONSUMPTION</span><i class="icon-arrow-right pull-right"></i>
                                 </a>
                                 <ul class="xp-vertical-submenu">
-                                    <li><a href="@Url.Action("add", "Consumption")">CONSUMPTIONS</a></li>
+                                    <li><a href="@Url.Action("list", "Consumption")">CONSUMPTIONS</a></li>
                                 </ul>
                             </li>
                         }

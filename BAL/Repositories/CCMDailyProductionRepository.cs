@@ -12,66 +12,189 @@ namespace BAL.Repositories
 {
     public class CCMDailyProductionRepository
     {
+        //public int Save(
+        //    CCMDailyProductionReportBLL model)
+        //{
+        //    if (model == null)
+        //    {
+        //        throw new ArgumentNullException(
+        //            "model"
+        //        );
+        //    }
+
+        //    if (string.IsNullOrEmpty(
+        //        model.ReportNo))
+
+        //    if (model.ReportDate ==
+        //        DateTime.MinValue)
+        //    {
+        //        throw new ArgumentException(
+        //            "Report date is required."
+        //        );
+        //    }
+
+        //    if (string.IsNullOrWhiteSpace(
+        //        model.Shift))
+        //    {
+        //        throw new ArgumentException(
+        //            "Shift is required."
+        //        );
+        //    }
+
+        //    if (model.Details == null)
+        //    {
+        //        model.Details =
+        //            new List<
+        //                CCMDailyProductionReportDetailBLL
+        //            >();
+        //    }
+
+        //    model.Details =
+        //        model.Details
+        //            .Where(IsValidDetail)
+        //            .ToList();
+
+        //    if (model.Details.Count == 0)
+        //    {
+        //        throw new ArgumentException(
+        //            "At least one billet production entry is required."
+        //        );
+        //    }
+
+        //    for (int i = 0;
+        //         i < model.Details.Count;
+        //         i++)
+        //    {
+        //        model.Details[i].SequenceNo =
+        //            i + 1;
+        //    }
+
+        //    string detailsXml =
+        //        BuildDetailsXml(
+        //            model.Details
+        //        );
+
+        //    SqlParameter[] parameters =
+        //    {
+        //        new SqlParameter(
+        //            "@ID",
+        //            SqlDbType.Int
+        //        )
+        //        {
+        //            Value = model.ID
+        //        },
+
+        //        new SqlParameter(
+        //            "@ReportNo",
+        //            SqlDbType.NVarChar,
+        //            50
+        //        )
+        //        {
+        //            Value = model.ReportNo.Trim()
+        //        },
+
+        //        new SqlParameter(
+        //            "@ReportDate",
+        //            SqlDbType.Date
+        //        )
+        //        {
+        //            Value = model.ReportDate.Date
+        //        },
+
+        //        new SqlParameter(
+        //            "@Shift",
+        //            SqlDbType.NVarChar,
+        //            50
+        //        )
+        //        {
+        //            Value = DbValue(model.Shift)
+        //        },
+
+        //        new SqlParameter(
+        //            "@Team",
+        //            SqlDbType.NVarChar,
+        //            100
+        //        )
+        //        {
+        //            Value = DbValue(model.Team)
+        //        },
+
+        //        new SqlParameter(
+        //            "@CCMForeman",
+        //            SqlDbType.NVarChar,
+        //            150
+        //        )
+        //        {
+        //            Value =
+        //                DbValue(
+        //                    model.CCMForeman
+        //                )
+        //        },
+
+        //        new SqlParameter(
+        //            "@BilletYardOperator",
+        //            SqlDbType.NVarChar,
+        //            150
+        //        )
+        //        {
+        //            Value =
+        //                DbValue(
+        //                    model.BilletYardOperator
+        //                )
+        //        },
+
+        //        new SqlParameter(
+        //            "@CreatedBy",
+        //            SqlDbType.NVarChar,
+        //            100
+        //        )
+        //        {
+        //            Value =
+        //                DbValue(
+        //                    model.CreatedBy
+        //                )
+        //        },
+
+        //        new SqlParameter(
+        //            "@DetailsXml",
+        //            SqlDbType.Xml
+        //        )
+        //        {
+        //            Value = detailsXml
+        //        }
+        //    };
+
+        //    DataTable dt =
+        //        DBHelper.ExecuteDataTable(
+        //            "dbo.sp_SaveCCMDailyProductionReport",
+        //            CommandType.StoredProcedure,
+        //            parameters
+        //        );
+
+        //    if (dt == null ||
+        //        dt.Rows.Count == 0 ||
+        //        !dt.Columns.Contains("ID") ||
+        //        dt.Rows[0]["ID"] ==
+        //            DBNull.Value)
+        //    {
+        //        throw new DataException(
+        //            "Saved report ID was not returned."
+        //        );
+        //    }
+
+        //    return Convert.ToInt32(
+        //        dt.Rows[0]["ID"]
+        //    );
+        //}
+
         public int Save(
-            CCMDailyProductionReportBLL model)
+         CCMDailyProductionReportBLL model)
         {
             if (model == null)
             {
                 throw new ArgumentNullException(
                     "model"
                 );
-            }
-
-            if (string.IsNullOrWhiteSpace(
-                model.ReportNo))
-            {
-                throw new ArgumentException(
-                    "Report number is required."
-                );
-            }
-
-            if (model.ReportDate ==
-                DateTime.MinValue)
-            {
-                throw new ArgumentException(
-                    "Report date is required."
-                );
-            }
-
-            if (string.IsNullOrWhiteSpace(
-                model.Shift))
-            {
-                throw new ArgumentException(
-                    "Shift is required."
-                );
-            }
-
-            if (model.Details == null)
-            {
-                model.Details =
-                    new List<
-                        CCMDailyProductionReportDetailBLL
-                    >();
-            }
-
-            model.Details =
-                model.Details
-                    .Where(IsValidDetail)
-                    .ToList();
-
-            if (model.Details.Count == 0)
-            {
-                throw new ArgumentException(
-                    "At least one billet production entry is required."
-                );
-            }
-
-            for (int i = 0;
-                 i < model.Details.Count;
-                 i++)
-            {
-                model.Details[i].SequenceNo =
-                    i + 1;
             }
 
             string detailsXml =
@@ -81,21 +204,161 @@ namespace BAL.Repositories
 
             SqlParameter[] parameters =
             {
+        new SqlParameter(
+            "@ID",
+            SqlDbType.Int
+        )
+        {
+            Value = model.ID
+        },
+
+        new SqlParameter(
+            "@ReportNo",
+            SqlDbType.NVarChar,
+            50
+        )
+        {
+            Value =
+                string.IsNullOrWhiteSpace(
+                    model.ReportNo
+                )
+                    ? (object)DBNull.Value
+                    : model.ReportNo.Trim()
+        },
+
+        new SqlParameter(
+            "@ReportDate",
+            SqlDbType.Date
+        )
+        {
+            Value = model.ReportDate.Date
+        },
+
+        new SqlParameter(
+            "@Shift",
+            SqlDbType.NVarChar,
+            50
+        )
+        {
+            Value =
+                string.IsNullOrWhiteSpace(
+                    model.Shift
+                )
+                    ? (object)DBNull.Value
+                    : model.Shift.Trim()
+        },
+
+        new SqlParameter(
+            "@Team",
+            SqlDbType.NVarChar,
+            100
+        )
+        {
+            Value =
+                string.IsNullOrWhiteSpace(
+                    model.Team
+                )
+                    ? (object)DBNull.Value
+                    : model.Team.Trim()
+        },
+
+        new SqlParameter(
+            "@CCMForeman",
+            SqlDbType.NVarChar,
+            150
+        )
+        {
+            Value =
+                string.IsNullOrWhiteSpace(
+                    model.CCMForeman
+                )
+                    ? (object)DBNull.Value
+                    : model.CCMForeman.Trim()
+        },
+
+        new SqlParameter(
+            "@BilletYardOperator",
+            SqlDbType.NVarChar,
+            150
+        )
+        {
+            Value =
+                string.IsNullOrWhiteSpace(
+                    model.BilletYardOperator
+                )
+                    ? (object)DBNull.Value
+                    : model.BilletYardOperator.Trim()
+        },
+
+        new SqlParameter(
+            "@CreatedBy",
+            SqlDbType.NVarChar,
+            100
+        )
+        {
+            Value =
+                string.IsNullOrWhiteSpace(
+                    model.CreatedBy
+                )
+                    ? (object)DBNull.Value
+                    : model.CreatedBy.Trim()
+        },
+
+        new SqlParameter(
+            "@DetailsXml",
+            SqlDbType.Xml
+        )
+        {
+            Value = detailsXml
+        }
+    };
+
+            DataTable result =
+                DBHelper.ExecuteDataTable(
+                    "sp_SaveCCMDailyProductionReport",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                result == null ||
+                result.Rows.Count == 0 ||
+                !result.Columns.Contains("ID") ||
+                result.Rows[0]["ID"] == DBNull.Value
+            )
+            {
+                throw new Exception(
+                    "Stored procedure did not return the saved report ID."
+                );
+            }
+
+            return Convert.ToInt32(
+                result.Rows[0]["ID"]
+            );
+        }
+        private int InsertReport(
+            CCMDailyProductionReportBLL model)
+        {
+            SqlParameter outputID =
                 new SqlParameter(
                     "@ID",
                     SqlDbType.Int
-                )
-                {
-                    Value = model.ID
-                },
+                );
 
+            outputID.Direction =
+                ParameterDirection.Output;
+
+            SqlParameter[] parameters =
+            {
                 new SqlParameter(
                     "@ReportNo",
                     SqlDbType.NVarChar,
                     50
                 )
                 {
-                    Value = model.ReportNo.Trim()
+                    Value = DbValue(
+                        model.ReportNo
+                    )
                 },
 
                 new SqlParameter(
@@ -103,7 +366,7 @@ namespace BAL.Repositories
                     SqlDbType.Date
                 )
                 {
-                    Value = model.ReportDate.Date
+                    Value = model.ReportDate
                 },
 
                 new SqlParameter(
@@ -112,7 +375,9 @@ namespace BAL.Repositories
                     50
                 )
                 {
-                    Value = DbValue(model.Shift)
+                    Value = DbValue(
+                        model.Shift
+                    )
                 },
 
                 new SqlParameter(
@@ -121,7 +386,9 @@ namespace BAL.Repositories
                     100
                 )
                 {
-                    Value = DbValue(model.Team)
+                    Value = DbValue(
+                        model.Team
+                    )
                 },
 
                 new SqlParameter(
@@ -130,10 +397,9 @@ namespace BAL.Repositories
                     150
                 )
                 {
-                    Value =
-                        DbValue(
-                            model.CCMForeman
-                        )
+                    Value = DbValue(
+                        model.CCMForeman
+                    )
                 },
 
                 new SqlParameter(
@@ -142,10 +408,52 @@ namespace BAL.Repositories
                     150
                 )
                 {
-                    Value =
-                        DbValue(
-                            model.BilletYardOperator
-                        )
+                    Value = DbValue(
+                        model.BilletYardOperator
+                    )
+                },
+
+                new SqlParameter(
+                    "@HeatNo",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value = DbValue(
+                        model.HeatNo
+                    )
+                },
+
+                new SqlParameter(
+                    "@TotalBillets",
+                    SqlDbType.Int
+                )
+                {
+                    Value = model.TotalBillets
+                },
+
+                new SqlParameter(
+                    "@PrimeBillets",
+                    SqlDbType.Int
+                )
+                {
+                    Value = model.PrimeBillets
+                },
+
+                new SqlParameter(
+                    "@ShortBillets",
+                    SqlDbType.Int
+                )
+                {
+                    Value = model.ShortBillets
+                },
+
+                new SqlParameter(
+                    "@StatusID",
+                    SqlDbType.Int
+                )
+                {
+                    Value = model.StatusID
                 },
 
                 new SqlParameter(
@@ -154,46 +462,280 @@ namespace BAL.Repositories
                     100
                 )
                 {
-                    Value =
-                        DbValue(
-                            model.CreatedBy
-                        )
+                    Value = DbValue(
+                        model.CreatedBy
+                    )
                 },
 
                 new SqlParameter(
-                    "@DetailsXml",
-                    SqlDbType.Xml
+                    "@CreatedDate",
+                    SqlDbType.DateTime
                 )
                 {
-                    Value = detailsXml
-                }
+                    Value =
+                        model.CreatedDate
+                        ?? DateTime.Now
+                },
+
+                outputID
             };
 
-            DataTable dt =
-                DBHelper.ExecuteDataTable(
-                    "dbo.sp_SaveCCMDailyProductionReport",
-                    CommandType.StoredProcedure,
-                    parameters
-                );
+            DBHelper.ExecuteNonQuery(
+                "sp_SaveCCMDailyProductionReport",
+                CommandType.StoredProcedure,
+                parameters
+            );
 
-            if (dt == null ||
-                dt.Rows.Count == 0 ||
-                !dt.Columns.Contains("ID") ||
-                dt.Rows[0]["ID"] ==
-                    DBNull.Value)
+            if (
+                outputID.Value == null ||
+                outputID.Value == DBNull.Value
+            )
             {
-                throw new DataException(
-                    "Saved report ID was not returned."
-                );
+                return 0;
             }
 
             return Convert.ToInt32(
-                dt.Rows[0]["ID"]
+                outputID.Value
             );
         }
 
+        private void InsertDetail(
+            CCMDailyProductionReportDetailBLL detail)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@ReportID",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.ReportID
+                },
+
+                new SqlParameter(
+                    "@SequenceNo",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.SequenceNo
+                },
+
+                new SqlParameter(
+                    "@HeatNo",
+                    SqlDbType.NVarChar,
+                    50
+                )
+                {
+                    Value = DbValue(
+                        detail.HeatNo
+                    )
+                },
+
+                new SqlParameter(
+                    "@Grade",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value = DbValue(
+                        detail.Grade
+                    )
+                },
+
+                new SqlParameter(
+                    "@Billet14M",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.Billet14M
+                },
+
+                new SqlParameter(
+                    "@Billet13M",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.Billet13M
+                },
+
+                new SqlParameter(
+                    "@Billet12M",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.Billet12M
+                },
+
+                new SqlParameter(
+                    "@Billet11M",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.Billet11M
+                },
+
+                new SqlParameter(
+                    "@GoodBillets",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.GoodBillets
+                },
+
+                new SqlParameter(
+                    "@ShortBillets",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.ShortBillets
+                },
+
+                new SqlParameter(
+                    "@Bend",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.Bend
+                },
+
+                new SqlParameter(
+                    "@TotalBillets",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.TotalBillets
+                },
+
+                DecimalParameter(
+                    "@TotalLength",
+                    detail.TotalLength
+                ),
+
+                DecimalParameter(
+                    "@ShortBilletTotalLength",
+                    detail.ShortBilletTotalLength
+                ),
+
+                DecimalParameter(
+                    "@ShortBilletAvgLength",
+                    detail.ShortBilletAvgLength
+                ),
+
+                DecimalParameter(
+                    "@PerCoilBundleWeight",
+                    detail.PerCoilBundleWeight
+                ),
+
+                DecimalParameter(
+                    "@PrimeBilletWeight",
+                    detail.PrimeBilletWeight
+                ),
+
+                DecimalParameter(
+                    "@ShortBilletWeight",
+                    detail.ShortBilletWeight
+                ),
+
+                DecimalParameter(
+                    "@TotalWeight",
+                    detail.TotalWeight
+                ),
+
+                new SqlParameter(
+                    "@Remarks",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value = DbValue(
+                        detail.Remarks
+                    )
+                },
+
+                new SqlParameter(
+                    "@StatusID",
+                    SqlDbType.Int
+                )
+                {
+                    Value = detail.StatusID
+                },
+
+                new SqlParameter(
+                    "@CreatedBy",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value = DbValue(
+                        detail.CreatedBy
+                    )
+                },
+
+                new SqlParameter(
+                    "@CreatedDate",
+                    SqlDbType.DateTime
+                )
+                {
+                    Value =
+                        detail.CreatedDate
+                        ?? DateTime.Now
+                }
+            };
+
+            DBHelper.ExecuteNonQuery(
+                "sp_InsertCCMDailyProductionReportDetail",
+                CommandType.StoredProcedure,
+                parameters
+            );
+        }
+
+        private static SqlParameter DecimalParameter(
+            string parameterName,
+            decimal? value)
+        {
+            SqlParameter parameter =
+                new SqlParameter(
+                    parameterName,
+                    SqlDbType.Decimal
+                );
+
+            parameter.Precision = 18;
+            parameter.Scale = 3;
+
+            parameter.Value =
+                value.HasValue
+                    ? (object)value.Value
+                    : DBNull.Value;
+
+            return parameter;
+        }
+
+        private static object DbValue(
+            object value)
+        {
+            if (value == null)
+            {
+                return DBNull.Value;
+            }
+
+            string text =
+                value as string;
+
+            if (
+                text != null &&
+                string.IsNullOrWhiteSpace(
+                    text
+                )
+            )
+            {
+                return DBNull.Value;
+            }
+
+            return value;
+        }
+
         public CCMDailyProductionReportBLL
-            GetByID(int id)
+                    GetByID(int id)
         {
             SqlParameter[] parameters =
             {
@@ -361,133 +903,142 @@ namespace BAL.Repositories
         }
 
         private string BuildDetailsXml(
-            List<
-                CCMDailyProductionReportDetailBLL
-            > details)
+    List<CCMDailyProductionReportDetailBLL> details)
         {
             XElement root =
-                new XElement("Details");
+                new XElement(
+                    "Details"
+                );
+
+            if (details == null)
+            {
+                return root.ToString(
+                    SaveOptions.DisableFormatting
+                );
+            }
 
             foreach (
-                CCMDailyProductionReportDetailBLL item
-                in details)
+                CCMDailyProductionReportDetailBLL detail
+                in details
+            )
             {
+                if (detail == null)
+                {
+                    continue;
+                }
+
                 root.Add(
                     new XElement(
                         "Detail",
 
                         new XElement(
                             "ID",
-                            item.ID
+                            detail.ID
                         ),
 
                         new XElement(
                             "SequenceNo",
-                            item.SequenceNo
+                            detail.SequenceNo
                         ),
 
                         new XElement(
                             "HeatNo",
-                            item.HeatNo ?? ""
+                            detail.HeatNo ?? ""
                         ),
 
                         new XElement(
                             "Grade",
-                            item.Grade ?? ""
+                            detail.Grade ?? ""
                         ),
 
                         new XElement(
                             "Billet14M",
-                            item.Billet14M
+                            detail.Billet14M
                         ),
 
                         new XElement(
                             "Billet13M",
-                            item.Billet13M
+                            detail.Billet13M
                         ),
 
                         new XElement(
                             "Billet12M",
-                            item.Billet12M
+                            detail.Billet12M
                         ),
 
                         new XElement(
                             "Billet11M",
-                            item.Billet11M
+                            detail.Billet11M
                         ),
 
                         new XElement(
                             "GoodBillets",
-                            item.GoodBillets
+                            detail.GoodBillets
                         ),
 
                         new XElement(
                             "ShortBillets",
-                            item.ShortBillets
+                            detail.ShortBillets
                         ),
 
                         new XElement(
                             "Bend",
-                            item.Bend
+                            detail.Bend
                         ),
 
                         new XElement(
                             "TotalBillets",
-                            item.TotalBillets
+                            detail.TotalBillets
                         ),
 
                         new XElement(
                             "TotalLength",
-                            DecimalText(
-                                item.TotalLength
-                            )
+                            detail.TotalLength ?? 0M
                         ),
 
                         new XElement(
                             "ShortBilletTotalLength",
-                            DecimalText(
-                                item.ShortBilletTotalLength
-                            )
+                            detail.ShortBilletTotalLength
+                            ?? 0M
                         ),
 
                         new XElement(
                             "ShortBilletAvgLength",
-                            DecimalText(
-                                item.ShortBilletAvgLength
-                            )
+                            detail.ShortBilletAvgLength
+                            ?? 0M
                         ),
 
+                        /*
+                         * SP element name: PerUnitWeight
+                         * BLL property: PerCoilBundleWeight
+                         */
                         new XElement(
                             "PerUnitWeight",
-                            DecimalText(
-                                item.PerCoilBundleWeight
-                            )
+                            detail.PerCoilBundleWeight
+                            ?? 0M
                         ),
 
                         new XElement(
                             "PrimeBilletWeight",
-                            DecimalText(
-                                item.PrimeBilletWeight
-                            )
+                            detail.PrimeBilletWeight
+                            ?? 0M
                         ),
 
                         new XElement(
                             "ShortBilletWeight",
-                            DecimalText(
-                                item.ShortBilletWeight
-                            )
+                            detail.ShortBilletWeight
+                            ?? 0M
                         ),
 
                         new XElement(
                             "TotalWeight",
-                            DecimalText(
-                                item.TotalWeight
-                            )
+                            detail.TotalWeight
+                            ?? 0M
                         ),
 
                         new XElement(
                             "Remarks",
-                            item.Remarks ?? ""
+                            detail.Remarks ?? ""
                         )
                     )
                 );

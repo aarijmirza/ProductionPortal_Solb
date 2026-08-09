@@ -112,9 +112,20 @@
                                         <td>@item.BilletLength</td>
                                         <td>@item.Size</td>
                                         <td>
-                                            <a href="@Url.Action("Boardingdetails", "Quality", new { ID = item.ID })" class="btn btn-sm btn-info" onclick="event.stopPropagation();">
+                                            <a href="@Url.Action("Boardingdetails", "Quality", new { ID = item.ID })"
+                                               class="btn btn-sm btn-info"
+                                               onclick="event.stopPropagation();">
                                                 <i class="mdi mdi-book-open-page-variant"></i> Detail
                                             </a>
+
+                                            @if (User.IsInRole("Administrator") || User.IsInRole("QC User"))
+                                            {
+                                                <a href="@Url.Action("AddBillet", "Quality", new { id = item.ID })"
+                                                   class="btn btn-sm btn-warning"
+                                                   onclick="event.stopPropagation();">
+                                                    <i class="mdi mdi-pencil"></i> Edit
+                                                </a>
+                                            }
                                         </td>
                                     </tr>
                                 }
@@ -225,12 +236,23 @@
 <script>
     $(document).ready(function () {
         var msg = '@TempData["SuccessMessage"]';
+        var errorMsg = '@TempData["ErrorMessage"]';
+
         if (msg) {
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
                 text: msg,
                 confirmButtonColor: '#3085d6'
+            });
+        }
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMsg,
+                confirmButtonColor: '#d33'
             });
         }
     });

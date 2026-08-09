@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using System.Web.SessionState;
+using System.Xml.Linq;
 
 namespace ProductionPortal_Solb.Controllers
 {
@@ -67,10 +68,11 @@ namespace ProductionPortal_Solb.Controllers
             return View(model);
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Add(
-            CCMDailyProductionReportBLL model)
+    CCMDailyProductionReportBLL model)
         {
             if (model == null)
             {
@@ -78,14 +80,58 @@ namespace ProductionPortal_Solb.Controllers
                     new CCMDailyProductionReportBLL();
             }
 
-            LoadDropdowns(
-                model.Shift
-            );
-
             try
             {
-                NormalizeDetailRows(model);
-                ValidateReport(model);
+                /*
+                 * Report number View se na aaye to generate karo.
+                 */
+                if (string.IsNullOrWhiteSpace(model.ReportNo))
+                {
+                    model.ReportNo =
+                        "CCM-" +
+                        DateTime.Now.ToString(
+                            "yyyyMMddHHmmss"
+                        );
+                }
+
+                if (model.ReportDate == DateTime.MinValue)
+                {
+                    model.ReportDate =
+                        DateTime.Today;
+                }
+
+                /*
+                 * Empty rows remove aur calculated fields set karo.
+                 */
+                NormalizeDetailRows(
+                    model
+                );
+
+                CalculateReportValues(
+                    model
+                );
+
+                /*
+                 * MVC ModelState mein posted old values aur removed-row
+                 * errors rehti hain. Isliye model normalize karne ke baad
+                 * fresh validation karni zaroori hai.
+                 */
+                ModelState.Clear();
+
+                TryValidateModel(
+                    model
+                );
+
+                if (
+                    model.Details == null ||
+                    model.Details.Count == 0
+                )
+                {
+                    ModelState.AddModelError(
+                        "Details",
+                        "At least one detail entry is required."
+                    );
+                }
 
                 if (!ModelState.IsValid)
                 {
@@ -93,19 +139,42 @@ namespace ProductionPortal_Solb.Controllers
                         model
                     );
 
-                    return View(model);
+                    LoadDropdowns(
+                        model.Shift
+                    );
+
+                    return View(
+                        model
+                    );
                 }
 
+                model.StatusID = 1;
                 model.CreatedBy =
                     GetCurrentUser();
 
+                model.CreatedDate =
+                    DateTime.Now;
+
+                /*
+                 * Simple insert ke liye ID zero rakho.
+                 * SP @ID = 0 par insert karega.
+                 */
+                model.ID = 0;
+
                 int savedID =
-                    repo.Save(model);
+                    repo.Save(
+                        model
+                    );
+
+                if (savedID <= 0)
+                {
+                    throw new Exception(
+                        "Billet Yard report could not be saved."
+                    );
+                }
 
                 TempData["Success"] =
-                    model.ID > 0
-                        ? "Billet Yard report updated successfully."
-                        : "Billet Yard report saved successfully.";
+                    "Billet Yard report saved successfully.";
 
                 return RedirectToAction(
                     "Add",
@@ -130,9 +199,309 @@ namespace ProductionPortal_Solb.Controllers
                     model.Shift
                 );
 
-                return View(model);
+                return RedirectToAction(
+                    "Add",
+                    new
+                    {
+                        model
+                    }
+                );
             }
         }
+        private void NormalizeDetailRows(
+    CCMDailyProductionReportBLL model)
+        {
+            if (model.Details == null)
+            {
+                model.Details =
+                    new List<
+                        CCMDailyProductionReportDetailBLL
+                    >();
+
+                return;
+            }
+
+            model.Details =
+                model.Details
+                    .Where(
+                        x =>
+                            x != null &&
+                            (
+                                !string.IsNullOrWhiteSpace(
+                                    x.HeatNo
+                                )
+                                ||
+                                !string.IsNullOrWhiteSpace(
+                                    x.Grade
+                                )
+                                ||
+                                x.Billet14M > 0
+                                ||
+                                x.Billet13M > 0
+                                ||
+                                x.Billet12M > 0
+                                ||
+                                x.Billet11M > 0
+                                ||
+                                x.ShortBillets > 0
+                                ||
+                                x.Bend > 0
+                            )
+                    )
+                    .ToList();
+
+            for (
+                int i = 0;
+                i < model.Details.Count;
+                i++
+            )
+            {
+                model.Details[i].SequenceNo =
+                    i + 1;
+            }
+        }
+
+        private void CalculateReportValues(
+    CCMDailyProductionReportBLL model)
+        {
+            int sequenceNo = 1;
+
+            foreach (
+                CCMDailyProductionReportDetailBLL detail
+                in model.Details
+            )
+            {
+                detail.SequenceNo =
+                    sequenceNo++;
+
+                detail.GoodBillets =
+                    detail.Billet14M
+                    + detail.Billet13M
+                    + detail.Billet12M
+                    + detail.Billet11M;
+
+                detail.TotalBillets =
+                    detail.GoodBillets
+                    + detail.ShortBillets
+                    + detail.Bend;
+
+                detail.TotalLength =
+                    (detail.Billet14M * 14M)
+                    + (detail.Billet13M * 13M)
+                    + (detail.Billet12M * 12M)
+                    + (detail.Billet11M * 11M);
+
+                if (
+                    detail.ShortBillets > 0 &&
+                    detail.ShortBilletTotalLength.HasValue
+                )
+                {
+                    detail.ShortBilletAvgLength =
+                        detail.ShortBilletTotalLength.Value
+                        /
+                        detail.ShortBillets;
+                }
+                else
+                {
+                    detail.ShortBilletAvgLength = 0;
+                }
+
+                decimal perUnitWeight =
+                    detail.PerCoilBundleWeight ?? 0M;
+
+                detail.PrimeBilletWeight =
+                    (detail.TotalLength ?? 0M)
+                    * perUnitWeight;
+
+                detail.ShortBilletWeight =
+                    (
+                        detail.ShortBilletTotalLength
+                        ?? 0M
+                    )
+                    * perUnitWeight;
+
+                detail.TotalWeight =
+                    (
+                        detail.PrimeBilletWeight
+                        ?? 0M
+                    )
+                    +
+                    (
+                        detail.ShortBilletWeight
+                        ?? 0M
+                    );
+
+                detail.StatusID = 1;
+                detail.CreatedBy =
+                    model.CreatedBy;
+
+                detail.CreatedDate =
+                    DateTime.Now;
+            }
+
+            model.TotalBillets =
+                model.Details.Sum(
+                    x => x.TotalBillets
+                );
+
+            model.PrimeBillets =
+                model.Details.Sum(
+                    x => x.GoodBillets
+                );
+
+            model.ShortBillets =
+                model.Details.Sum(
+                    x => x.ShortBillets
+                );
+
+            model.HeatNo =
+                string.Join(
+                    ", ",
+                    model.Details
+                        .Where(
+                            x =>
+                                !string.IsNullOrWhiteSpace(
+                                    x.HeatNo
+                                )
+                        )
+                        .Select(
+                            x => x.HeatNo.Trim()
+                        )
+                        .Distinct()
+                );
+        }
+
+        private string BuildDetailsXml(
+    List<CCMDailyProductionReportDetailBLL> details)
+        {
+            XElement root =
+                new XElement(
+                    "Details"
+                );
+
+            foreach (
+                CCMDailyProductionReportDetailBLL detail
+                in details
+            )
+            {
+                root.Add(
+                    new XElement(
+                        "Detail",
+
+                        new XElement(
+                            "ID",
+                            detail.ID
+                        ),
+
+                        new XElement(
+                            "SequenceNo",
+                            detail.SequenceNo
+                        ),
+
+                        new XElement(
+                            "HeatNo",
+                            detail.HeatNo ?? ""
+                        ),
+
+                        new XElement(
+                            "Grade",
+                            detail.Grade ?? ""
+                        ),
+
+                        new XElement(
+                            "Billet14M",
+                            detail.Billet14M
+                        ),
+
+                        new XElement(
+                            "Billet13M",
+                            detail.Billet13M
+                        ),
+
+                        new XElement(
+                            "Billet12M",
+                            detail.Billet12M
+                        ),
+
+                        new XElement(
+                            "Billet11M",
+                            detail.Billet11M
+                        ),
+
+                        new XElement(
+                            "GoodBillets",
+                            detail.GoodBillets
+                        ),
+
+                        new XElement(
+                            "ShortBillets",
+                            detail.ShortBillets
+                        ),
+
+                        new XElement(
+                            "Bend",
+                            detail.Bend
+                        ),
+
+                        new XElement(
+                            "TotalBillets",
+                            detail.TotalBillets
+                        ),
+
+                        new XElement(
+                            "TotalLength",
+                            detail.TotalLength ?? 0M
+                        ),
+
+                        new XElement(
+                            "ShortBilletTotalLength",
+                            detail.ShortBilletTotalLength
+                            ?? 0M
+                        ),
+
+                        new XElement(
+                            "ShortBilletAvgLength",
+                            detail.ShortBilletAvgLength
+                            ?? 0M
+                        ),
+
+                        new XElement(
+                            "PerUnitWeight",
+                            detail.PerCoilBundleWeight
+                            ?? 0M
+                        ),
+
+                        new XElement(
+                            "PrimeBilletWeight",
+                            detail.PrimeBilletWeight
+                            ?? 0M
+                        ),
+
+                        new XElement(
+                            "ShortBilletWeight",
+                            detail.ShortBilletWeight
+                            ?? 0M
+                        ),
+
+                        new XElement(
+                            "TotalWeight",
+                            detail.TotalWeight
+                            ?? 0M
+                        ),
+
+                        new XElement(
+                            "Remarks",
+                            detail.Remarks ?? ""
+                        )
+                    )
+                );
+            }
+
+            return root.ToString(
+                SaveOptions.DisableFormatting
+            );
+        }
+
 
         #endregion
 
@@ -311,38 +680,6 @@ namespace ProductionPortal_Solb.Controllers
 
         #region Private Methods
 
-        private void NormalizeDetailRows(
-            CCMDailyProductionReportBLL model)
-        {
-            if (model.Details == null)
-            {
-                model.Details =
-                    new List<
-                        CCMDailyProductionReportDetailBLL
-                    >();
-
-                return;
-            }
-
-            model.Details =
-                model.Details
-                    .Where(
-                        x =>
-                            x != null &&
-                            IsDetailRowEntered(x)
-                    )
-                    .ToList();
-
-            for (
-                int index = 0;
-                index < model.Details.Count;
-                index++)
-            {
-                model.Details[index]
-                    .SequenceNo =
-                        index + 1;
-            }
-        }
 
         private bool IsDetailRowEntered(
             CCMDailyProductionReportDetailBLL row)
@@ -386,14 +723,8 @@ namespace ProductionPortal_Solb.Controllers
                 );
             }
 
-            if (string.IsNullOrWhiteSpace(
+            if (string.IsNullOrEmpty(
                 model.ReportNo))
-            {
-                ModelState.AddModelError(
-                    "ReportNo",
-                    "Report number is required."
-                );
-            }
 
             if (string.IsNullOrWhiteSpace(
                 model.Shift))

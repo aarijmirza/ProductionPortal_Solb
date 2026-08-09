@@ -1,0 +1,452 @@
+﻿@using System.Globalization
+
+@model IEnumerable<DAL.Models.PlantConsumptionBLL>
+
+@{
+    ViewBag.Title =
+        "Utility Consumption";
+
+    var consumptions =
+        Model != null
+            ? Model.ToList()
+            : new List<DAL.Models.PlantConsumptionBLL>();
+
+    var gregorian =
+        new CultureInfo(
+            "en-US"
+        );
+
+    gregorian.DateTimeFormat.Calendar =
+        new GregorianCalendar();
+}
+
+
+<div class="xp-breadcrumbbar">
+
+    <div class="row">
+
+        <div class="col-md-6">
+
+            <h4 class="xp-page-title">
+                Utility Consumption Record
+            </h4>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <div class="xp-breadcrumb">
+
+                <ol class="breadcrumb">
+
+                    <li class="breadcrumb-item">
+
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        Utility Consumption
+                    </li>
+
+                    <li class="breadcrumb-item active">
+                        Records
+                    </li>
+
+                </ol>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- FILTER -->
+
+<div class="xp-breadcrumbbar"
+     style="padding:50px 30px 0 30px;">
+
+    <div class="row">
+
+        <div class="col-lg-12">
+
+            <div class="card mb-3">
+
+                <div class="card-body">
+
+                    <form method="get"
+                          action="@Url.Action("list", "Consumption")"
+                          id="filterForm"
+                          class="d-flex justify-content-between">
+
+
+                        <div class="d-flex">
+
+
+                            <div class="form-group mr-3">
+
+                                <label>
+                                    From
+                                </label>
+
+                                <input type="date"
+                                       id="fromDate"
+                                       name="fromDate"
+                                       class="form-control"
+                                       value="@ViewBag.FromDate" />
+
+                            </div>
+
+
+                            <div class="form-group mr-3">
+
+                                <label>
+                                    To
+                                </label>
+
+                                <input type="date"
+                                       id="toDate"
+                                       name="toDate"
+                                       class="form-control"
+                                       value="@ViewBag.ToDate" />
+
+                            </div>
+
+
+                            <div class="form-group
+                                        d-flex
+                                        align-items-end">
+
+                                <button type="submit"
+                                        class="btn btn-primary mr-2">
+
+                                    <i class="fa fa-filter"></i>
+                                    Filter
+
+                                </button>
+
+
+                                <a href="@Url.Action("list", "Consumption")"
+                                   class="btn btn-secondary">
+
+                                    Clear
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="d-flex">
+
+                            <div class="form-group
+                                        d-flex
+                                        align-items-end">
+
+                                <a href="@Url.Action("add", "Consumption")"
+                                   class="btn btn-info text-white">
+
+                                    <i class="fa fa-plus-circle"></i>
+                                    Add Record
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- TABLE -->
+
+<div class="xp-contentbar">
+
+    <div class="row">
+
+        <div class="col-lg-12">
+
+            <div class="card m-b-30">
+
+                <div class="card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table
+                                      table-bordered
+                                      table-hover"
+                               id="consumptionTable">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Date</th>
+
+                                    <th>Plant</th>
+
+                                    <th>
+                                        Total Production
+                                    </th>
+
+                                    <th>
+                                        Power Consumption
+                                    </th>
+
+                                    <th>
+                                        Water Consumption
+                                    </th>
+
+                                    <th>
+                                        Fuel Consumption
+                                    </th>
+
+                                    <th>
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                @foreach (
+                                    var item
+                                    in consumptions
+                                )
+                                {
+                                    <tr>
+
+                                        <td>
+                                            @(item.Date.HasValue
+                                                ? item.Date.Value.ToString(
+                                                    "dd-MM-yyyy",
+                                                    gregorian
+                                                )
+                                                : "")
+                                        </td>
+
+                                        <td>
+                                            @item.Plant
+                                        </td>
+
+                                        <td>
+                                            @item.TotalProductBillet
+                                        </td>
+
+                                        <td>
+                                            @item.PowerConsumption
+                                        </td>
+
+                                        <td>
+                                            @item.WaterConsumption
+                                        </td>
+
+                                        <td>
+                                            @item.FuelConsumption
+                                        </td>
+
+
+                                        <td>
+
+                                            <a href="@Url.Action(
+                                                        "add",
+                                                        "Consumption",
+                                                        new
+                                                        {
+                                                            ID = item.ID
+                                                        }
+                                                    )"
+                                               class="btn
+                                                      btn-sm
+                                                      btn-warning">
+
+                                                <i class="mdi
+                                                          mdi-calendar-edit">
+                                                </i>
+
+                                            </a>
+
+
+                                            <a href="javascript:void(0);"
+                                               onclick="confirmDelete('@item.ID')"
+                                               class="btn
+                                                      btn-sm
+                                                      btn-danger">
+
+                                                <i class="mdi
+                                                          mdi-trash-can">
+                                                </i>
+
+                                            </a>
+
+                                        </td>
+
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+
+    $(document).ready(function () {
+
+        $('#filterForm').on(
+            'submit',
+            function () {
+
+                var from =
+                    $('#fromDate').val();
+
+                var to =
+                    $('#toDate').val();
+
+
+                if (
+                    from &&
+                    to &&
+                    from > to
+                ) {
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Date Range',
+                        text:
+                            'From Date cannot be greater than To Date.'
+                    });
+
+                    return false;
+                }
+
+                return true;
+            }
+        );
+
+
+        var successMessage =
+            '@Html.Raw(
+                HttpUtility.JavaScriptStringEncode(
+                    Convert.ToString(
+                        TempData["SuccessMessage"]
+                    )
+                )
+            )';
+
+
+        var errorMessage =
+            '@Html.Raw(
+                HttpUtility.JavaScriptStringEncode(
+                    Convert.ToString(
+                        TempData["ErrorMessage"]
+                    )
+                )
+            )';
+
+
+        if (successMessage) {
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: successMessage
+            });
+        }
+
+
+        if (errorMessage) {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMessage
+            });
+        }
+
+    });
+
+
+    function confirmDelete(ID) {
+
+        Swal.fire({
+
+            title:
+                'Are you sure?',
+
+            text:
+                'Selected consumption record will be deleted.',
+
+            icon:
+                'warning',
+
+            showCancelButton:
+                true,
+
+            confirmButtonColor:
+                '#d33',
+
+            cancelButtonColor:
+                '#3085d6',
+
+            confirmButtonText:
+                'Yes, Delete'
+
+        }).then(
+            function (result) {
+
+                if (
+                    result.isConfirmed
+                ) {
+
+                    window.location.href =
+                        '@Url.Action("delete", "Consumption")'
+                        +
+                        '?ID='
+                        +
+                        encodeURIComponent(
+                            ID
+                        );
+                }
+            }
+        );
+    }
+
+</script>

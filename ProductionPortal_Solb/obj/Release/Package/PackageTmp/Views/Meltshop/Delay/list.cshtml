@@ -28,38 +28,88 @@
         <div class="col-lg-12">
             <div class="card mb-3">
                 <div class="card-body">
-                    <form id="filterForm" class="d-flex justify-content-between">
+                    <form method="get"
+                          action="@Url.Action("SMPlist", "Delay")"
+                          id="filterForm"
+                          class="d-flex justify-content-between">
 
                         <div class="d-flex">
+
                             <div class="form-group mr-3">
-                                <label for="fromDate" class="mr-2">From</label>
-                                <input type="date" id="fromDate" class="form-control" />
+
+                                <label for="fromDate"
+                                       class="mr-2">
+                                    From
+                                </label>
+
+                                <input type="date"
+                                       id="fromDate"
+                                       name="fromDate"
+                                       class="form-control"
+                                       value="@ViewBag.FromDate" />
+
                             </div>
 
                             <div class="form-group mr-3">
-                                <label for="toDate" class="mr-2">To</label>
-                                <input type="date" id="toDate" class="form-control" />
+
+                                <label for="toDate"
+                                       class="mr-2">
+                                    To
+                                </label>
+
+                                <input type="date"
+                                       id="toDate"
+                                       name="toDate"
+                                       class="form-control"
+                                       value="@ViewBag.ToDate" />
+
                             </div>
 
                             <div class="form-group d-flex align-items-end mr-3">
-                                <button type="button" id="filterBtn" class="btn btn-primary mr-2">Filter</button>
-                                <button type="button" id="clearBtn" class="btn btn-secondary">Clear</button>
+
+                                <button type="submit"
+                                        class="btn btn-primary mr-2">
+                                    Filter
+                                </button>
+
+                                <a href="@Url.Action("SMPlist", "Delay")"
+                                   class="btn btn-secondary">
+                                    Clear
+                                </a>
+
                             </div>
+
                         </div>
 
                         <div class="d-flex justify-content-end">
+
                             <div class="form-group d-flex align-items-end mr-3">
-                                <a id="addSampleBtn" class="btn btn-info text-white" href="@Url.Action("SMPadd", "Delay")">
-                                    <i class="fa fa-plus-circle"></i> Add Delay
+
+                                <a class="btn btn-info text-white"
+                                   href="@Url.Action("SMPadd", "Delay")">
+
+                                    <i class="fa fa-plus-circle"></i>
+                                    Add Delay
+
                                 </a>
+
                             </div>
+
                             <div class="form-group d-flex align-items-end">
-                                <button type="button" id="exportPdf" class="btn btn-danger mr-2">
-                                    <i class="fa fa-file-pdf-o"></i> Export PDF
+
+                                <button type="button"
+                                        id="exportPdf"
+                                        class="btn btn-danger mr-2">
+
+                                    <i class="fa fa-file-pdf-o"></i>
+                                    Export PDF
+
                                 </button>
+
                             </div>
 
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -102,10 +152,10 @@
                                         <td>@item.Reason</td>
                                         <td>
                                             @*<a href="javascript:void(0);"
-                                               onclick="openDelayPopup('@item.ID', '@(item.Date?.ToString(" yyyy-MM-dd"))', '@item.Area' )"
-                                               class="btn btn-sm btn-success">
-                                                <i class="mdi mdi-plus"></i>
-                                            </a>*@
+                                                   onclick="openDelayPopup('@item.ID', '@(item.Date?.ToString(" yyyy-MM-dd"))', '@item.Area' )"
+                                                   class="btn btn-sm btn-success">
+                                                    <i class="mdi mdi-plus"></i>
+                                                </a>*@
 
                                             <a href="@Url.Action("SMPdetails", "Delay", new { ID = item.ID })" class="btn btn-sm btn-info" onclick="event.stopPropagation();">
                                                 <i class="mdi mdi-book-open-page-variant"></i>
@@ -117,112 +167,159 @@
                                             </a>
                                         </td>
                                     </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- End XP Contentbar -->
+</div>
+<!-- End XP Contentbar -->
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <script>
+<script>
     $(document).ready(function () {
 
-        function parseDateFlexible(dateStr) {
-            // supports: dd-MM-yyyy OR dd/MM/yyyy
-            if (!dateStr) return null;
+        /*
+         * Controller/ViewBag se jo date already aayi hai
+         * usko preserve karenge.
+         */
 
-            dateStr = dateStr.trim();
-            var sep = dateStr.includes('-') ? '-' : (dateStr.includes('/') ? '/' : null);
-            if (!sep) return null;
+        var from =
+            $('#fromDate').val();
 
-            var parts = dateStr.split(sep);
-            if (parts.length !== 3) return null;
+        var to =
+            $('#toDate').val();
 
-            var dd = parseInt(parts[0], 10);
-            var mm = parseInt(parts[1], 10);
-            var yy = parseInt(parts[2], 10);
 
-            if (!yy || !mm || !dd) return null;
+        /*
+         * First load par agar controller ne
+         * dates nahi di hain, tab today set karo.
+         */
+        if (!from && !to) {
 
-            return new Date(yy, mm - 1, dd); // midnight
+            var today =
+                new Date();
+
+            var year =
+                today.getFullYear();
+
+            var month =
+                String(
+                    today.getMonth() + 1
+                ).padStart(
+                    2,
+                    '0'
+                );
+
+            var day =
+                String(
+                    today.getDate()
+                ).padStart(
+                    2,
+                    '0'
+                );
+
+            var todayText =
+                year +
+                '-' +
+                month +
+                '-' +
+                day;
+
+            $('#fromDate').val(
+                todayText
+            );
+
+            $('#toDate').val(
+                todayText
+            );
         }
 
-        function filterTable() {
 
-            var from = $('#fromDate').val();
-            var to = $('#toDate').val();
+        /*
+         * Filter button form submit karega.
+         * Controller DB se filtered data reload karega.
+         */
+        $('#filterForm').on(
+            'submit',
+            function () {
 
-            if (!from || !to) {
-                $('#delayListTable tbody tr').show();
-                return;
-            }
+                var fromDate =
+                    $('#fromDate').val();
 
-            // 🔧 normalize input dates (LOCAL midnight)
-            var fromParts = from.split('-'); // yyyy-MM-dd
-            var toParts = to.split('-');
+                var toDate =
+                    $('#toDate').val();
 
-            var fromDate = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], 0, 0, 0);
-            var toDate = new Date(toParts[0], toParts[1] - 1, toParts[2], 23, 59, 59);
+                if (
+                    fromDate &&
+                    toDate &&
+                    fromDate > toDate
+                ) {
 
-            $('#delayListTable tbody tr').each(function () {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Date Range',
+                        text:
+                            'From Date cannot be greater than To Date.',
+                        confirmButtonColor:
+                            '#3085d6'
+                    });
 
-                var rowDateText = $(this).find('td:first').text().trim(); // dd-MM-yyyy
-                var rowDate = parseDateFlexible(rowDateText);
-
-                if (!rowDate) {
-                    $(this).hide();
-                    return;
+                    return false;
                 }
 
-                // 🔧 normalize row date
-                rowDate.setHours(0, 0, 0, 0);
-
-                var show = rowDate >= fromDate && rowDate <= toDate;
-                $(this).toggle(show);
-            });
-        }
+                return true;
+            }
+        );
 
 
-        // ✅ Default today & AUTO FILTER
-        var today = new Date().toISOString().split('T')[0];
-        $('#fromDate').val(today);
-        $('#toDate').val(today);
+        /*
+         * Export PDF
+         */
+        $('#exportPdf').on(
+            'click',
+            function () {
 
-        filterTable(); // ✅ THIS LINE is the main fix
+                var from =
+                    $('#fromDate').val() ||
+                    '';
 
-        // Buttons
-        $('#filterBtn').on('click', filterTable);
+                var to =
+                    $('#toDate').val() ||
+                    '';
 
-        $('#clearBtn').on('click', function () {
-            $('#fromDate').val('');
-            $('#toDate').val('');
-            $('#delayListTable tbody tr').show();
-        });
+                var url =
+                    '@Url.Action("SMPDelayReport", "Meltshop")'
+                    +
+                    '?startdate='
+                    +
+                    encodeURIComponent(
+                        from
+                    )
+                    +
+                    '&enddate='
+                    +
+                    encodeURIComponent(
+                        to
+                    );
 
-        $('#exportPdf').click(function () {
-
-        var from = $('#fromDate').val();
-        var to = $('#toDate').val();
-
-        var url = '@Url.Action("SMPDelayReport", "Meltshop")'
-        + '?startdate=' + encodeURIComponent(from)
-        + '&enddate=' + encodeURIComponent(to);
-
-            window.open(url, '_blank');
-        });
+                window.open(
+                    url,
+                    '_blank'
+                );
+            }
+        );
 
     });
-    </script>
+</script>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script>
+<script>
     $(document).ready(function () {
         var msg = '@TempData["SuccessMessage"]';
         if (msg) {
@@ -249,125 +346,125 @@
 
             if (result.isConfirmed) {
                 // Redirect to delete action
-                window.location.href = '/delay/delete?ID=' + ID;
+                window.location.href = '/delay/smpdelaydelete?ID=' + ID;
             }
         });
     }
-    </script>
+</script>
 
-    <script>
-        function openDelayPopup(id, date, area) {
-            $("#popupDelayID").val(id);
-            $("#popupDate").val(date);
-            $("#popupArea").val(area);
-            $("#popupDuration").val('');
+<script>
+    function openDelayPopup(id, date, area) {
+        $("#popupDelayID").val(id);
+        $("#popupDate").val(date);
+        $("#popupArea").val(area);
+        $("#popupDuration").val('');
 
-            $("#delayPopupModal").modal("show");
-        }
+        $("#delayPopupModal").modal("show");
+    }
 
-        $(document).on("change keyup", "input[name='StartTime'], input[name='EndTime']", function () {
-            var start = $("input[name='StartTime']").val();
-            var end = $("input[name='EndTime']").val();
+    $(document).on("change keyup", "input[name='StartTime'], input[name='EndTime']", function () {
+        var start = $("input[name='StartTime']").val();
+        var end = $("input[name='EndTime']").val();
 
-            if (start && end) {
-                var startDate = new Date("2000-01-01T" + start);
-                var endDate = new Date("2000-01-01T" + end);
+        if (start && end) {
+            var startDate = new Date("2000-01-01T" + start);
+            var endDate = new Date("2000-01-01T" + end);
 
-                if (endDate < startDate) {
-                    endDate.setDate(endDate.getDate() + 1);
-                }
-
-                var diffMs = endDate - startDate;
-                var diffMins = Math.floor(diffMs / 60000);
-
-                var hours = Math.floor(diffMins / 60);
-                var minutes = diffMins % 60;
-
-                $("#popupDuration").val(hours + "h " + minutes + "m");
+            if (endDate < startDate) {
+                endDate.setDate(endDate.getDate() + 1);
             }
-        });
-    </script>
 
-    <!-- Add Extra Delay Detail Modal -->
-    <div class="modal fade" id="delayPopupModal" tabindex="-1" role="dialog" aria-labelledby="delayPopupModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
+            var diffMs = endDate - startDate;
+            var diffMins = Math.floor(diffMs / 60000);
 
-                <form action="/Delay/AddDelayPopupDetail" method="post" id="delayPopupForm">
+            var hours = Math.floor(diffMins / 60);
+            var minutes = diffMins % 60;
 
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="delayPopupModalLabel">Failure Analysis Detail</h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
+            $("#popupDuration").val(hours + "h " + minutes + "m");
+        }
+    });
+</script>
 
-                    <div class="modal-body">
+<!-- Add Extra Delay Detail Modal -->
+<div class="modal fade" id="delayPopupModal" tabindex="-1" role="dialog" aria-labelledby="delayPopupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
 
-                        <input type="hidden" id="popupDelayID" name="DelayID" />
+            <form action="/Delay/AddDelayPopupDetail" method="post" id="delayPopupForm">
 
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label>Last P.M Date</label>
-                                <input type="date" id="popupDate" name="LastPMDate" class="form-control" />
-                            </div>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="delayPopupModalLabel">Failure Analysis Detail</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
 
-                            <div class="form-group col-md-4">
-                                <label>Failure Report Status</label>
-                                <select class="form-control" name="FailureReportStatus">
-                                    <option selected disabled>-- please select --</option>
-                                    <option value="Done">Done</option>
-                                    <option value="Not Done">Not Done</option>
-                                </select>
-                            </div>
+                <div class="modal-body">
+
+                    <input type="hidden" id="popupDelayID" name="DelayID" />
+
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Last P.M Date</label>
+                            <input type="date" id="popupDate" name="LastPMDate" class="form-control" />
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label>
-                                    Long term Action To increase MTBF
-                                </label>
-                                <textarea class="form-control" rows="3" name="IncreaseMTBF"></textarea>
-                            </div>
-
-                            <div class="form-group col-md-6">
-                                <label>
-                                    Long term Action To decrease MTTR
-                                </label>
-                                <textarea class="form-control" rows="3" name="DecreaseMTTR"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label>SAP Breakdown Order</label>
-                                <input type="text" id="popupDate" name="SAPBreakdownOrder" class="form-control" />
-                            </div>
-
-                            <div class="form-group col-md-4">
-                                <label>Failure Category1 (Component)</label>
-                                <input type="text" id="popupDate" name="FailureCategory1Component" class="form-control" />
-                            </div>
-
-                            <div class="form-group col-md-4">
-                                <label>Failure Category2 (Root Cause)</label>
-                                <input type="text" id="popupDate" name="FailureCategory2RootCause" class="form-control" />
-                            </div>
+                        <div class="form-group col-md-4">
+                            <label>Failure Report Status</label>
+                            <select class="form-control" name="FailureReportStatus">
+                                <option selected disabled>-- please select --</option>
+                                <option value="Done">Done</option>
+                                <option value="Not Done">Not Done</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            Close
-                        </button>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>
+                                Long term Action To increase MTBF
+                            </label>
+                            <textarea class="form-control" rows="3" name="IncreaseMTBF"></textarea>
+                        </div>
 
-                        <button type="submit" class="btn btn-primary">
-                            Save
-                        </button>
+                        <div class="form-group col-md-6">
+                            <label>
+                                Long term Action To decrease MTTR
+                            </label>
+                            <textarea class="form-control" rows="3" name="DecreaseMTTR"></textarea>
+                        </div>
                     </div>
 
-                </form>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>SAP Breakdown Order</label>
+                            <input type="text" id="popupDate" name="SAPBreakdownOrder" class="form-control" />
+                        </div>
 
-            </div>
+                        <div class="form-group col-md-4">
+                            <label>Failure Category1 (Component)</label>
+                            <input type="text" id="popupDate" name="FailureCategory1Component" class="form-control" />
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Failure Category2 (Root Cause)</label>
+                            <input type="text" id="popupDate" name="FailureCategory2RootCause" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        Close
+                    </button>
+
+                    <button type="submit" class="btn btn-primary">
+                        Save
+                    </button>
+                </div>
+
+            </form>
+
         </div>
     </div>
+</div>

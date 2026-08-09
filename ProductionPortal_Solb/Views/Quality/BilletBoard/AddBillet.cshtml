@@ -1,6 +1,16 @@
-﻿@*@model DAL.Models.BilletBoardBLL*@
+﻿@model DAL.Models.BilletBoardBLL
 @{
-    ViewBag.Title = "add";
+    ViewBag.Title =
+        Model != null && Model.ID > 0
+            ? "Edit Billet"
+            : "Add Billet";
+
+    var billet =
+        Model ?? new DAL.Models.BilletBoardBLL();
+
+    var chemistryRows =
+        billet.Chemistry ??
+        new List<DAL.Models.RMChemicalAnalysisBLL>();
 }
 
 <div class="xp-breadcrumbbar">
@@ -13,7 +23,7 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="@Url.Action("Index" ,"Home")"><i class="icon-home"></i></a></li>
                     <li class="breadcrumb-item"><a href="#">Billet Board</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Add Billet Boarding</li>
+                    <li class="breadcrumb-item active" aria-current="page">@(billet.ID > 0 ? "Edit Billet Boarding" : "Add Billet Boarding")</li>
                 </ol>
             </div>
         </div>
@@ -91,40 +101,54 @@
 
 <div class="xp-contentbar">
     <form action="/Quality/addbillet" id="addprofileform" method="post" enctype="multipart/form-data">
+        <input type="hidden"
+               id="ID"
+               name="ID"
+               value="@billet.ID" />
+        @Html.AntiForgeryToken()
 
         <div class="row">
             <div class="col-lg-12">
                 <div class="card m-b-30">
                     <div class="card-header bg-white" style="ALIGN-SELF: end;">
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="submit"
+                                class="btn btn-success">
+
+                            <i class="fa fa-save"></i>
+
+                            @(billet.ID > 0
+                                ? "Update Billet"
+                                : "Save Billet")
+
+                        </button>
                     </div>
                     <div class="card-body">
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label for="date">Date</label>
-                                <input type="date" class="form-control" id="date" name="date" placeholder="Date">
+                                <input type="date" class="form-control" id="date" name="date" placeholder="Date" value="@(billet.Date.HasValue ? billet.Date.Value.ToString("yyyy-MM-dd") : "")">
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="billetboarding">Billet Boarding #</label>
-                                <input type="text" class="form-control" id="billetboarding" name="billetboarding" placeholder="">
+                                <input type="text" class="form-control" id="billetboarding" name="billetboarding" placeholder="" value="@billet.BilletBoarding">
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="plantname">Plant</label>
                                 <select class="form-control" id="plantname" name="plantname">
-                                    <option disabled selected>Please Select</option>
-                                    <option value="RM1">RM1</option>
-                                    <option value="RM2">RM2</option>
+                                    <option value="">Please Select</option>
+                                    <option value="RM1" @(billet.PlantName == "RM1" ? "selected" : "")>RM1</option>
+                                    <option value="RM2" @(billet.PlantName == "RM2" ? "selected" : "")>RM2</option>
                                 </select>
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="shift">Shift</label>
                                 <select class="form-control" id="shift" name="shift">
-                                    <option disabled selected>Please Select</option>
-                                    <option value="Morning">Morning</option>
-                                    <option value="Long Morning">Long Morning</option>
-                                    <option value="Evening">Evening</option>
-                                    <option value="Night">Night</option>
-                                    <option value="Long Night">Long Night</option>
+                                    <option value="">Please Select</option>
+                                    <option value="Morning" @(billet.Shift == "Morning" ? "selected" : "")>Morning</option>
+                                    <option value="Long Morning" @(billet.Shift == "Long Morning" ? "selected" : "")>Long Morning</option>
+                                    <option value="Evening" @(billet.Shift == "Evening" ? "selected" : "")>Evening</option>
+                                    <option value="Night" @(billet.Shift == "Night" ? "selected" : "")>Night</option>
+                                    <option value="Long Night" @(billet.Shift == "Long Night" ? "selected" : "")>Long Night</option>
                                 </select>
                             </div>
                         </div>
@@ -139,7 +163,7 @@
                                            class="form-control"
                                            placeholder="-- Select Product Grade --"
                                            readonly
-                                           name="productspecs">
+                                           name="productspecs" value="@billet.ProductSpecs">
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary" type="button" id="toggleDropdownBtn">
                                             <i class="fa fa-caret-down"></i>
@@ -168,56 +192,56 @@
                             @* 4. ASSOCIATED FIELDS (Billet Length) *@
                             <div class="form-group col-md-3">
                                 <label for="billetLength">Billet Length (m)</label>
-                                <input type="text" id="billetLength" class="form-control" name="billetlength" readonly>
+                                <input type="text" id="billetLength" class="form-control" name="billetlength" value="@billet.BilletLength" readonly>
                             </div>
                             @* Add other associated fields here (L, W, Steel Grade) *@
                             <div class="form-group col-md-3">
                                 <label for="crosssection">Cross Section (mm)</label>
-                                <input type="text" id="crosssection" class="form-control" name="crosssection" readonly>
+                                <input type="text" id="crosssection" class="form-control" name="crosssection" value="@billet.CrossSection" readonly>
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="steelGrade">Grade</label>
-                                <input type="text" id="steelGrade" class="form-control" name="steelGrade" readonly>
+                                <input type="text" id="steelGrade" class="form-control" name="steelGrade" value="@billet.Grade" readonly>
                             </div>
                         </div>
 
                         <div class="form-row">
-                            
+
                             <div class="form-group col-md-3">
                                 <label for="size">Size</label>
                                 <select class="form-control" id="size" name="size">
-                                    <option disabled selected>Please Select</option>
-                                    <option value="08mm">08mm</option>
-                                    <option value="10mm">10mm</option>
-                                    <option value="12mm">12mm</option>
-                                    <option value="14mm">14mm</option>
-                                    <option value="16mm">16mm</option>
-                                    <option value="18mm">18mm</option>
-                                    <option value="20mm">20mm</option>
-                                    <option value="22mm">22mm</option>
-                                    <option value="25mm">25mm</option>
-                                    <option value="28mm">28mm</option>
-                                    <option value="30mm">30mm</option>
-                                    <option value="32mm">32mm</option>
-                                    <option value="40mm">40mm</option>
-                                    <option value="09mm">09mm</option>
-                                    <option value="5.5mm">5.5mm</option>
-                                    <option value="6.5mm">6.5mm</option>
-                                    <option value="07mm">07mm</option>
-                                    <option value="11mm">11mm</option>
-                                    <option value="7.5mm">7.5mm</option>
-                                    <option value="36mm">36mm</option>
+                                    <option value="">Please Select</option>
+                                    <option value="08mm" @(billet.Size == "08mm" ? "selected" : "")>08mm</option>
+                                    <option value="10mm" @(billet.Size == "10mm" ? "selected" : "")>10mm</option>
+                                    <option value="12mm" @(billet.Size == "12mm" ? "selected" : "")>12mm</option>
+                                    <option value="14mm" @(billet.Size == "14mm" ? "selected" : "")>14mm</option>
+                                    <option value="16mm" @(billet.Size == "16mm" ? "selected" : "")>16mm</option>
+                                    <option value="18mm" @(billet.Size == "18mm" ? "selected" : "")>18mm</option>
+                                    <option value="20mm" @(billet.Size == "20mm" ? "selected" : "")>20mm</option>
+                                    <option value="22mm" @(billet.Size == "22mm" ? "selected" : "")>22mm</option>
+                                    <option value="25mm" @(billet.Size == "25mm" ? "selected" : "")>25mm</option>
+                                    <option value="28mm" @(billet.Size == "28mm" ? "selected" : "")>28mm</option>
+                                    <option value="30mm" @(billet.Size == "30mm" ? "selected" : "")>30mm</option>
+                                    <option value="32mm" @(billet.Size == "32mm" ? "selected" : "")>32mm</option>
+                                    <option value="40mm" @(billet.Size == "40mm" ? "selected" : "")>40mm</option>
+                                    <option value="09mm" @(billet.Size == "09mm" ? "selected" : "")>09mm</option>
+                                    <option value="5.5mm" @(billet.Size == "5.5mm" ? "selected" : "")>5.5mm</option>
+                                    <option value="6.5mm" @(billet.Size == "6.5mm" ? "selected" : "")>6.5mm</option>
+                                    <option value="07mm" @(billet.Size == "07mm" ? "selected" : "")>07mm</option>
+                                    <option value="11mm" @(billet.Size == "11mm" ? "selected" : "")>11mm</option>
+                                    <option value="7.5mm" @(billet.Size == "7.5mm" ? "selected" : "")>7.5mm</option>
+                                    <option value="36mm" @(billet.Size == "36mm" ? "selected" : "")>36mm</option>
                                 </select>
                             </div>
 
                             <div class="form-group col-md-3">
                                 <label for="profile">Profile</label>
                                 <select class="form-control" id="profile" name="profile">
-                                    <option disabled selected>-- please select --</option>
-                                    <option value="RB">RB</option>
-                                    <option value="WR">WR</option>
-                                    <option value="RC">RC</option>
-                                    <option value="PB">PB</option>
+                                    <option value="">-- please select --</option>
+                                    <option value="RB" @(billet.Profile == "RB" ? "selected" : "")>RB</option>
+                                    <option value="WR" @(billet.Profile == "WR" ? "selected" : "")>WR</option>
+                                    <option value="RC" @(billet.Profile == "RC" ? "selected" : "")>RC</option>
+                                    <option value="PB" @(billet.Profile == "PB" ? "selected" : "")>PB</option>
                                 </select>
                             </div>
                         </div>
@@ -225,7 +249,7 @@
                         <div class="form-row">
                             <div class="form-group col-md-6 dropdown-container">
                                 <label for="productSpec">Remarks</label>
-                                <textarea class="form-control" rows="2" name="Remarks"></textarea>
+                                <textarea class="form-control" rows="2" name="Remarks">@billet.Remarks</textarea>
                             </div>
                         </div>
                     </div>
@@ -259,48 +283,100 @@
                                     </tr>
                                 </thead>
                                 <tbody id="chemBody">
-                                    <!-- Dynamic rows will be added here -->
-                                </tbody>
-                                @*<tbody id="chemBody">
-                                        @if (Model.Chemistry == null || !Model.chem.Any())
+                                    @if (chemistryRows.Count > 0)
+                                    {
+                                        for (int i = 0; i < chemistryRows.Count; i++)
                                         {
-                                            // default one row
-                                            Model. = new List<DAL.Models.RMChemicalAnalysisBLL> { new DAL.Models.RMChemicalAnalysisBLL() };
-                                        }
+                                            var chem = chemistryRows[i];
+                                            string heatStatus = Convert.ToString(chem.HeatStatus);
 
-                                        @for (int i = 0; i < Model.Chemistry.Count; i++)
-                                        {
                                             <tr>
-                                                <td class="text-center">@(i + 1)</td>
-
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].NoOfBillets" value="@Model.Chemistry[i].NoOfBillets" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].C" step="0.01" value="@Model.Chemistry[i].C" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].Si" step="0.01" value="@Model.Chemistry[i].Si" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].Mn" step="0.01" value="@Model.Chemistry[i].Mn" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].S" step="0.01" value="@Model.Chemistry[i].S" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].P" step="0.01" value="@Model.Chemistry[i].P" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].N" step="0.01" value="@Model.Chemistry[i].N" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].Ceq" step="0.01" value="@Model.Chemistry[i].Ceq" /></td>
+                                                <td class="text-center">
+                                                    <input type="text"
+                                                           class="form-control"
+                                                           name="Chemistry[@i].HeatNo"
+                                                           value="@chem.HeatNo" />
+                                                </td>
 
                                                 <td>
-                                                    <select class="form-control" name="Chemistry[@i].HeatStatus">
-                                                        <option disabled selected>-- select --</option>
-                                                        <option value="Cancelled">Cancelled</option>
-                                                        <option value="Charging">Charging</option>
-                                                        <option value="Complete">Complete</option>
-                                                        <option value="In Process">In-Process</option>
-                                                        <option value="New">New</option>
-                                                        <option value="Rolled">Rolled</option>
-                                                        <option value="Rolling">Rolling</option>
+                                                    <input type="text"
+                                                           class="form-control"
+                                                           name="Chemistry[@i].NoOfBillets"
+                                                           value="@chem.NoOfBillets" />
+                                                </td>
+
+                                                <td><input type="text" class="form-control" name="Chemistry[@i].C" value="@chem.C" /></td>
+                                                <td><input type="text" class="form-control" name="Chemistry[@i].Si" value="@chem.Si" /></td>
+                                                <td><input type="text" class="form-control" name="Chemistry[@i].Mn" value="@chem.Mn" /></td>
+                                                <td><input type="text" class="form-control" name="Chemistry[@i].S" value="@chem.S" /></td>
+                                                <td><input type="text" class="form-control" name="Chemistry[@i].P" value="@chem.P" /></td>
+                                                <td><input type="text" class="form-control" name="Chemistry[@i].N" value="@chem.N" /></td>
+                                                <td><input type="text" class="form-control" name="Chemistry[@i].Ceq" value="@chem.Ceq" /></td>
+
+                                                <td>
+                                                    <select class="form-control"
+                                                            name="Chemistry[@i].HeatStatus">
+                                                        <option value="">-- select --</option>
+                                                        <option value="100" @(heatStatus == "100" || heatStatus == "Complete" ? "selected" : "")>Complete</option>
+                                                        <option value="101" @(heatStatus == "101" || heatStatus == "Cancelled" ? "selected" : "")>Cancelled</option>
+                                                        <option value="102" @(heatStatus == "102" || heatStatus == "Charging" ? "selected" : "")>Charging</option>
+                                                        <option value="103" @(heatStatus == "103" || heatStatus == "In Process" || heatStatus == "In-Process" ? "selected" : "")>In Process</option>
+                                                        <option value="104" @(heatStatus == "104" || heatStatus == "New" ? "selected" : "")>New</option>
+                                                        <option value="105" @(heatStatus == "105" || heatStatus == "Rolled" ? "selected" : "")>Rolled</option>
+                                                        <option value="106" @(heatStatus == "106" || heatStatus == "Rolling" ? "selected" : "")>Rolling</option>
                                                     </select>
                                                 </td>
 
                                                 <td class="text-center">
-                                                    <button type="button" class="btn btn-sm btn-danger removeRow">X</button>
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-danger removeRow">
+                                                        X
+                                                    </button>
                                                 </td>
                                             </tr>
                                         }
-                                    </tbody>*@
+                                    }
+                                </tbody>
+                                @*<tbody id="chemBody">
+                                    @if (Model.Chemistry == null || !Model.chem.Any())
+                                    {
+                                        // default one row
+                                        Model. = new List<DAL.Models.RMChemicalAnalysisBLL> { new DAL.Models.RMChemicalAnalysisBLL() };
+                                    }
+
+                                    @for (int i = 0; i < Model.Chemistry.Count; i++)
+                                    {
+                                        <tr>
+                                            <td class="text-center">@(i + 1)</td>
+
+                                            <td><input type="number" class="form-control" name="Chemistry[@i].NoOfBillets" value="@Model.Chemistry[i].NoOfBillets" /></td>
+                                            <td><input type="number" class="form-control" name="Chemistry[@i].C" step="0.01" value="@Model.Chemistry[i].C" /></td>
+                                            <td><input type="number" class="form-control" name="Chemistry[@i].Si" step="0.01" value="@Model.Chemistry[i].Si" /></td>
+                                            <td><input type="number" class="form-control" name="Chemistry[@i].Mn" step="0.01" value="@Model.Chemistry[i].Mn" /></td>
+                                            <td><input type="number" class="form-control" name="Chemistry[@i].S" step="0.01" value="@Model.Chemistry[i].S" /></td>
+                                            <td><input type="number" class="form-control" name="Chemistry[@i].P" step="0.01" value="@Model.Chemistry[i].P" /></td>
+                                            <td><input type="number" class="form-control" name="Chemistry[@i].N" step="0.01" value="@Model.Chemistry[i].N" /></td>
+                                            <td><input type="number" class="form-control" name="Chemistry[@i].Ceq" step="0.01" value="@Model.Chemistry[i].Ceq" /></td>
+
+                                            <td>
+                                                <select class="form-control" name="Chemistry[@i].HeatStatus">
+                                                    <option disabled selected>-- select --</option>
+                                                    <option value="Cancelled">Cancelled</option>
+                                                    <option value="Charging">Charging</option>
+                                                    <option value="Complete">Complete</option>
+                                                    <option value="In Process">In-Process</option>
+                                                    <option value="New">New</option>
+                                                    <option value="Rolled">Rolled</option>
+                                                    <option value="Rolling">Rolling</option>
+                                                </select>
+                                            </td>
+
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger removeRow">X</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>*@
                             </table>
                             <button type="button" class="btn btn-sm btn-success" id="addChemRow">
                                 + Add Row
@@ -316,9 +392,13 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-    // Set current date
+    // Add mode mein hi current date set karo.
+    // Edit mode mein DB wali date preserve hogi.
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById("date").value = today;
+
+    if (!document.getElementById("date").value) {
+        document.getElementById("date").value = today;
+    }
 
     // JAVASCRIPT FOR MULTI-COLUMN DROPDOWN
     $(document).ready(function () {
@@ -414,10 +494,13 @@
 <script>
     $(document).ready(function () {
 
-        let rowIndex = 0;
+        let rowIndex =
+            $('#chemBody tr').length;
 
-        // Add first row by default
-        addChemRow();
+        // Sirf tab blank row add karo jab existing chemistry na ho.
+        if (rowIndex === 0) {
+            addChemRow();
+        }
 
         // Add new row
         $('#addChemRow').click(function () {
@@ -471,9 +554,37 @@
         }
 
         function reindexRows() {
-            $('#chemBody tr').each(function (i) {
-                $(this).find('.sr').text(i + 1);
-            });
+
+            $('#chemBody tr').each(
+                function (i) {
+
+                    $(this)
+                        .find('input, select')
+                        .each(function () {
+
+                            var name =
+                                $(this).attr('name');
+
+                            if (!name) {
+                                return;
+                            }
+
+                            name =
+                                name.replace(
+                                    /Chemistry\[\d+\]/,
+                                    'Chemistry[' + i + ']'
+                                );
+
+                            $(this).attr(
+                                'name',
+                                name
+                            );
+                        });
+                }
+            );
+
+            rowIndex =
+                $('#chemBody tr').length;
         }
 
     });
@@ -591,41 +702,41 @@
 </script>
 
 @*<script>
-    $(document).ready(function () {
+        $(document).ready(function () {
 
-        let isSubmitting = false;   // 🔐 double-submit lock
+            let isSubmitting = false;   // 🔐 double-submit lock
 
-        $("#addprofileform").on("submit", function (e) {
-            e.preventDefault(); // ❗ pehle submit roko
+            $("#addprofileform").on("submit", function (e) {
+                e.preventDefault(); // ❗ pehle submit roko
 
-            if (isSubmitting) return; // already submitting
+                if (isSubmitting) return; // already submitting
 
-            Swal.fire({
-                title: 'Confirm Submission',
-                text: 'Are you sure you want to submit this Heat Record?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Submit',
-                cancelButtonText: 'Cancel',
-                allowOutsideClick: false,
-                allowEscapeKey: false
-            }).then((result) => {
+                Swal.fire({
+                    title: 'Confirm Submission',
+                    text: 'Are you sure you want to submit this Heat Record?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Submit',
+                    cancelButtonText: 'Cancel',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
 
-                if (result.isConfirmed) {
+                    if (result.isConfirmed) {
 
-                    isSubmitting = true; // 🔒 lock
+                        isSubmitting = true; // 🔒 lock
 
-                    // Disable submit button
-                    $("#addprofileform")
-                        .find("button[type='submit']")
-                        .prop("disabled", true)
-                        .text("Submitting...");
+                        // Disable submit button
+                        $("#addprofileform")
+                            .find("button[type='submit']")
+                            .prop("disabled", true)
+                            .text("Submitting...");
 
-                    // Finally submit form
-                    $("#addprofileform")[0].submit();
-                }
+                        // Finally submit form
+                        $("#addprofileform")[0].submit();
+                    }
+                });
             });
-        });
 
-    });
-</script>*@
+        });
+    </script>*@

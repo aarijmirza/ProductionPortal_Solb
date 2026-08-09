@@ -2610,6 +2610,8 @@
     <Content Include="Views\DelayCounterMeasure\add.cshtml" />
     <Content Include="Views\CCMProduction\Add - Copy.cshtml" />
     <Content Include="Views\CCMProduction\CCM_GetAllPdf_Template_NoLinq.cshtml" />
+    <Content Include="Templates\MTCTemplate.xlsx" />
+    <Content Include="Views\Consumption\list.cshtml" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

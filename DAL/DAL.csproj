@@ -111,9 +111,11 @@
     <Compile Include="Models\QCHBIDRIAnalysisBLL.cs" />
     <Compile Include="Models\QCInspectionDataBLL.cs" />
     <Compile Include="Models\QCInspectionDataRMBLL.cs" />
+    <Compile Include="Models\QCInspectionRMPageVM.cs" />
     <Compile Include="Models\RawStockBLL.cs" />
     <Compile Include="Models\RMChemicalAnalysisBLL.cs" />
     <Compile Include="Models\RMHourlyDischargeBLL.cs" />
+    <Compile Include="Models\RMMechanicalTestBLL.cs" />
     <Compile Include="Models\RMQCInspectionBLL.cs" />
     <Compile Include="Models\RMShiftDetailsBLL.cs" />
     <Compile Include="Models\RollingMillDailyTargetBLL.cs" />
@@ -129,6 +131,8 @@
     <Compile Include="Models\ShiftEntryBLL.cs" />
     <Compile Include="Models\SlagSampleAnalysisBLL.cs" />
     <Compile Include="Models\SlagByProductAnalysisBLL.cs" />
+    <Compile Include="Models\SMPDailyPerformanceReportBLL.cs" />
+    <Compile Include="Models\SMPDashboardVM.cs" />
     <Compile Include="Models\SupplyChainDailyBLL.cs" />
     <Compile Include="Models\SupplyChainReceivedMaterialBLL.cs" />
     <Compile Include="Models\UserBLL.cs" />

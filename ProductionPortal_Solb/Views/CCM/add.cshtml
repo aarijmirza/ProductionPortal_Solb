@@ -54,7 +54,7 @@
                                 @Html.DropDownListFor(
                                     m => m.Master.Shift,
                                     new SelectList(
-                                        new[] { "Morning", "Evening", "Night" },
+                                        new[] { "Morning", "Evening", "Night", "Long Morning", "Long Night" },
                                         Model.Master?.Shift
                                     ),
                                     "Choose...",
@@ -75,7 +75,7 @@
                                 @Html.DropDownListFor(
                                     m => m.Master.Grade,
                                     new SelectList(
-                                        new[] { "BS-4449", "GR-60", "SAE-1008", "SAE-1006", "A-706" },
+                                        new[] { "BS-4449", "GR-40", "GR-60", "SAE-1008", "SAE-1006", "A-706" },
                                         Model.Master?.Grade   // ✅ selected value
                                     ),
                                     "-- Select Grade --",

@@ -702,7 +702,6 @@
                                  {
                                      @class = "form-control",
                                      placeholder = "CCM-20260310",
-                                     required = "required",
                                      hidden = "hidden",
                                      value = "00000"
                                  })
@@ -826,26 +825,27 @@
                                             <label>Heat No.</label>
 
                                             @Html.TextBoxFor(
-                                                                                                                                     x => x.Details[i].HeatNo,
-                                                                                                                                     new
-                                                                                                                                     {
-                                                                                                                                         @class = "form-control heat-no-input",
-                                                                                                                                         placeholder = "Enter heat no.",
-                                                                                                                                         autocomplete = "off"
-                                                                                                                                     }
-                                                                                                                                 )
+                                            x => x.Details[i].HeatNo,
+                                            new
+                                            {
+                                                name = "HeatNo",
+                                                @class = "form-control",
+                                                placeholder = "Enter heat no.",
+                                            }
+                                        )
                                         </div>
 
                                         <div class="form-group">
                                             <label>Grade</label>
                                             @Html.TextBoxFor(
-                                                                                                                                          x => x.Details[i].Grade,
-                                                                                                                                          new
-                                                                                                                                          {
-                                                                                                                                              @class = "form-control grade-input",
-                                                                                                                                              placeholder = "Enter billet grade"
-                                                                                                                                          }
-                                                                                                                                      )
+                                            x => x.Details[i].Grade,
+                                            new
+                                            {
+                                                name="Grade",
+                                                @class = "form-control grade-input",
+                                                placeholder = "Enter billet grade"
+                                            }
+                                        )
                                         </div>
 
                                         <div class="form-group calculated-field">

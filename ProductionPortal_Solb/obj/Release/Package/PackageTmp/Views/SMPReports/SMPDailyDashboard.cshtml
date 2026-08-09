@@ -1,5 +1,84 @@
-﻿@{
+﻿@model DAL.Models.SMPDashboardVM
+
+@{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var m =
+        Model ?? new DAL.Models.SMPDashboardVM
+        {
+            FromDate = DateTime.Today,
+            ToDate = DateTime.Today
+        };
+
+    var topDelays =
+        m.TopDelays ?? new List<DAL.Models.SMPDelayItemBLL>();
+
+    var dailyProduction =
+        m.DailyProduction ?? new List<DAL.Models.SMPDailyProductionPointBLL>();
+
+    decimal dailyVariance =
+        m.DailyActual - m.DailyTarget;
+
+    decimal mtdVariance =
+        m.MTDActual - m.MTDTarget;
+
+    decimal ytdVariance =
+        m.YTDActual - m.YTDTarget;
+
+    decimal maxDelay = 0;
+
+    for (int i = 0; i < topDelays.Count; i++)
+    {
+        if (topDelays[i].Minutes > maxDelay)
+        {
+            maxDelay = topDelays[i].Minutes;
+        }
+    }
+
+    var dayLabels =
+        new List<string>();
+
+    var actualValues =
+        new List<string>();
+
+    var planValues =
+        new List<string>();
+
+    for (int i = 0; i < dailyProduction.Count; i++)
+    {
+        dayLabels.Add(
+            "\"" +
+            (
+                string.IsNullOrWhiteSpace(
+                    dailyProduction[i].DateLabel
+                )
+                    ? dailyProduction[i].ProductionDate.ToString("dd-MMM")
+                    : dailyProduction[i].DateLabel
+            ) +
+            "\""
+        );
+
+        actualValues.Add(
+            dailyProduction[i].Actual.ToString(
+                System.Globalization.CultureInfo.InvariantCulture
+            )
+        );
+
+        planValues.Add(
+            dailyProduction[i].Plan.ToString(
+                System.Globalization.CultureInfo.InvariantCulture
+            )
+        );
+    }
+
+    string dayLabelsJson =
+        "[" + string.Join(",", dayLabels.ToArray()) + "]";
+
+    string actualValuesJson =
+        "[" + string.Join(",", actualValues.ToArray()) + "]";
+
+    string planValuesJson =
+        "[" + string.Join(",", planValues.ToArray()) + "]";
 }
 
 <link rel="stylesheet"
@@ -567,6 +646,43 @@
             color: var(--brand);
         }
 
+
+    .header-filter {
+        margin-top: 9px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 7px;
+    }
+
+        .header-filter input {
+            height: 34px;
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #fff;
+            font-size: 12px;
+        }
+
+        .header-filter button {
+            height: 34px;
+            padding: 5px 12px;
+            border: 0;
+            border-radius: 7px;
+            background: var(--brand);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+    .empty-delay {
+        padding: 18px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
     /* ============================
        RESPONSIVE
     ============================ */
@@ -832,9 +948,26 @@
                 <div class="header-meta">
                     <strong>
                         <i class="fa-regular fa-calendar-days"></i>
-                        Date: 10-Jun-2026
+                        From: @m.FromDate.ToString("dd-MMM-yyyy")
+                        &nbsp; To: @m.ToDate.ToString("dd-MMM-yyyy")
                     </strong>
-                    Daily Management View
+
+                    <form method="get"
+                          action="@Url.Action("SMPDailyDashboard", "SMPReports")"
+                          class="header-filter no-print">
+
+                        <input type="date"
+                               name="fromDate"
+                               value="@m.FromDate.ToString("yyyy-MM-dd")" />
+
+                        <input type="date"
+                               name="toDate"
+                               value="@m.ToDate.ToString("yyyy-MM-dd")" />
+
+                        <button type="submit">Load</button>
+                    </form>
+
+                    Date Range Management View
                 </div>
             </header>
 
@@ -846,7 +979,7 @@
                         <div class="kpi-name">Heat Count</div>
                         <div class="kpi-badge">H</div>
                     </div>
-                    <div class="kpi-value">22</div>
+                    <div class="kpi-value">@m.HeatCount.ToString("N0")</div>
                     <div class="kpi-target">Target: 24 heats</div>
                 </div>
 
@@ -855,7 +988,7 @@
                         <div class="kpi-name">Billet Output (MT)</div>
                         <div class="kpi-badge">B</div>
                     </div>
-                    <div class="kpi-value">2,980</div>
+                    <div class="kpi-value">@m.BilletOutput.ToString("N0")</div>
                     <div class="kpi-target">Target: 3,000 MT</div>
                 </div>
 
@@ -864,7 +997,7 @@
                         <div class="kpi-name">Yield (%)</div>
                         <div class="kpi-badge">Y</div>
                     </div>
-                    <div class="kpi-value">86.9</div>
+                    <div class="kpi-value">@m.Yield.ToString("0.0")</div>
                     <div class="kpi-target">Target: 87%</div>
                 </div>
 
@@ -873,7 +1006,7 @@
                         <div class="kpi-name">Productivity (t/hr)</div>
                         <div class="kpi-badge">P</div>
                     </div>
-                    <div class="kpi-value">141</div>
+                    <div class="kpi-value">@m.Productivity.ToString("0.0")</div>
                     <div class="kpi-target">Target: 140 t/hr</div>
                 </div>
 
@@ -882,7 +1015,7 @@
                         <div class="kpi-name">Power Consumption</div>
                         <div class="kpi-badge">E</div>
                     </div>
-                    <div class="kpi-value">608</div>
+                    <div class="kpi-value">@m.PowerConsumption.ToString("0.0")</div>
                     <div class="kpi-target">Target: 602 kWh/t</div>
                 </div>
 
@@ -891,7 +1024,7 @@
                         <div class="kpi-name">TTT Time (min)</div>
                         <div class="kpi-badge">T</div>
                     </div>
-                    <div class="kpi-value">60.2</div>
+                    <div class="kpi-value">@m.TapToTap.ToString("0.0")</div>
                     <div class="kpi-target">Target: 60 min</div>
                 </div>
 
@@ -900,7 +1033,7 @@
                         <div class="kpi-name">Power-on Time (min)</div>
                         <div class="kpi-badge">O</div>
                     </div>
-                    <div class="kpi-value">60.2</div>
+                    <div class="kpi-value">@m.TapToTap.ToString("0.0")</div>
                     <div class="kpi-target">Target: 48 min</div>
                 </div>
 
@@ -909,7 +1042,7 @@
                         <div class="kpi-name">Heat Weight (t)</div>
                         <div class="kpi-badge">W</div>
                     </div>
-                    <div class="kpi-value">136</div>
+                    <div class="kpi-value">@m.HeatWeight.ToString("0.0")</div>
                     <div class="kpi-target">Target: 140 t</div>
                 </div>
 
@@ -940,21 +1073,27 @@
                             <tbody>
                                 <tr>
                                     <td>Actual</td>
-                                    <td>2,500</td>
-                                    <td>20,000</td>
-                                    <td>50,000</td>
+                                    <td>@m.DailyActual.ToString("N0")</td>
+                                    <td>@m.MTDActual.ToString("N0")</td>
+                                    <td>@m.YTDActual.ToString("N0")</td>
                                 </tr>
                                 <tr>
                                     <td>Target</td>
-                                    <td>2,510</td>
-                                    <td>21,000</td>
-                                    <td>60,000</td>
+                                    <td>@m.DailyTarget.ToString("N0")</td>
+                                    <td>@m.MTDTarget.ToString("N0")</td>
+                                    <td>@m.YTDTarget.ToString("N0")</td>
                                 </tr>
                                 <tr>
                                     <td>Variance</td>
-                                    <td class="positive">+10</td>
-                                    <td class="positive">+1,000</td>
-                                    <td class="negative">-10,000</td>
+                                    <td class="@(dailyVariance >= 0 ? "positive" : "negative")">
+                                        @dailyVariance.ToString("+#,##0;-#,##0;0")
+                                    </td>
+                                    <td class="@(mtdVariance >= 0 ? "positive" : "negative")">
+                                        @mtdVariance.ToString("+#,##0;-#,##0;0")
+                                    </td>
+                                    <td class="@(ytdVariance >= 0 ? "positive" : "negative")">
+                                        @ytdVariance.ToString("+#,##0;-#,##0;0")
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -969,7 +1108,7 @@
                     <div class="yearly-body">
                         <div class="single-donut-wrap">
                             <canvas id="yearlyChart"></canvas>
-                            <div class="donut-center">70%</div>
+                            <div class="donut-center">@m.YearlyAchievement.ToString("0")%</div>
                         </div>
                     </div>
                 </div>
@@ -1006,61 +1145,43 @@
 
                     <div class="card-body">
                         <div class="delay-list">
+                            @if (topDelays.Count > 0)
+                            {
+                                for (int i = 0; i < topDelays.Count; i++)
+                                {
+                                    var delay = topDelays[i];
 
-                            <div class="delay-row">
-                                <div class="delay-rank orange">1</div>
-                                <div class="delay-name">Planned DT</div>
-                                <div class="delay-track orange">
-                                    <span style="width:100%;"></span>
+                                    decimal width =
+                                        maxDelay > 0
+                                            ? (delay.Minutes / maxDelay) * 100
+                                            : 0;
+
+                                    <div class="delay-row">
+                                        <div class="delay-rank @(i == 0 || i == 4 ? "orange" : "")">
+                                            @(i + 1)
+                                        </div>
+
+                                        <div class="delay-name">@delay.DelayName</div>
+
+                                        <div class="delay-track @(i == 0 || i == 4 ? "orange" : "")">
+                                            <span style="width:@width.ToString("0.##")%;"></span>
+                                        </div>
+
+                                        <div class="delay-min">@delay.Minutes.ToString("0")</div>
+                                        <div class="delay-area">@delay.Area</div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="empty-delay">
+                                    No delay records found for the selected date.
                                 </div>
-                                <div class="delay-min">480</div>
-                                <div class="delay-area">PM / planned stop</div>
-                            </div>
-
-                            <div class="delay-row">
-                                <div class="delay-rank">2</div>
-                                <div class="delay-name">CCM Downtime</div>
-                                <div class="delay-track">
-                                    <span style="width:20%;"></span>
-                                </div>
-                                <div class="delay-min">45</div>
-                                <div class="delay-area">Casting area</div>
-                            </div>
-
-                            <div class="delay-row">
-                                <div class="delay-rank">3</div>
-                                <div class="delay-name">Other Unplanned</div>
-                                <div class="delay-track">
-                                    <span style="width:12%;"></span>
-                                </div>
-                                <div class="delay-min">30</div>
-                                <div class="delay-area">Balance of DT</div>
-                            </div>
-
-                            <div class="delay-row">
-                                <div class="delay-rank">4</div>
-                                <div class="delay-name">EAF Downtime</div>
-                                <div class="delay-track">
-                                    <span style="width:8%;"></span>
-                                </div>
-                                <div class="delay-min">20</div>
-                                <div class="delay-area">Furnace area</div>
-                            </div>
-
-                            <div class="delay-row">
-                                <div class="delay-rank orange">5</div>
-                                <div class="delay-name">LRF Downtime</div>
-                                <div class="delay-track orange">
-                                    <span style="width:5%;"></span>
-                                </div>
-                                <div class="delay-min">16</div>
-                                <div class="delay-area">Refining area</div>
-                            </div>
-
+                            }
                         </div>
 
                         <div class="delay-note">
-                            Other unplanned represents the remaining downtime after the listed equipment delays.
+                            Top delays are grouped from PlantDelay against the selected report date.
                         </div>
                     </div>
                 </div>
@@ -1122,15 +1243,15 @@
                                 <div class="legend-list">
                                     <div class="legend-item">
                                         <span class="legend-color" style="background:#d60000;"></span>
-                                        DRI — 42%
+                                        DRI — @m.DRIShare.ToString("0.0")%
                                     </div>
                                     <div class="legend-item">
                                         <span class="legend-color" style="background:#245f96;"></span>
-                                        HBI — 32%
+                                        HBI — @m.HBIShare.ToString("0.0")%
                                     </div>
                                     <div class="legend-item">
                                         <span class="legend-color" style="background:#c7c7c7;"></span>
-                                        Scrap — 26%
+                                        Scrap — @m.ScrapShare.ToString("0.0")%
                                     </div>
                                 </div>
                             </div>
@@ -1140,29 +1261,29 @@
 
                                 <div class="mini-donut-wrap">
                                     <canvas id="availabilityChart"></canvas>
-                                    <div class="mini-center">90%</div>
+                                    <div class="mini-center">@m.Availability.ToString("0")%</div>
                                 </div>
 
                                 <div class="legend-list">
                                     <div class="legend-item">
                                         <span class="legend-color" style="background:#a91435;"></span>
-                                        Operation — 2%
+                                        Operation — @m.OperationShare.ToString("0.0")%
                                     </div>
                                     <div class="legend-item">
                                         <span class="legend-color" style="background:#245f96;"></span>
-                                        Mechanical — 3%
+                                        Mechanical — @m.MechanicalShare.ToString("0.0")%
                                     </div>
                                     <div class="legend-item">
                                         <span class="legend-color" style="background:#bfc5ce;"></span>
-                                        Electrical — 1%
+                                        Electrical — @m.ElectricalShare.ToString("0.0")%
                                     </div>
                                     <div class="legend-item">
                                         <span class="legend-color" style="background:#5d9138;"></span>
-                                        Refractory — 4%
+                                        Refractory — @m.RefractoryShare.ToString("0.0")%
                                     </div>
                                     <div class="legend-item">
                                         <span class="legend-color" style="background:#efa500;"></span>
-                                        Other — 4%
+                                        Other — @m.OtherShare.ToString("0.0")%
                                     </div>
                                 </div>
                             </div>
@@ -1177,7 +1298,7 @@
                             <i class="fa-solid fa-chart-line"></i>
                             Daily Production Actual Vs Plan
                         </h3>
-                        <span class="card-note">Current month</span>
+                        <span class="card-note">Selected date range</span>
                     </div>
 
                     <div class="card-body">
@@ -1249,7 +1370,10 @@
         data: {
             labels: ["Achievement", "Remaining"],
             datasets: [{
-                data: [70, 30],
+                data: [
+                    @m.YearlyAchievement.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @(Math.Max(0, 100 - m.YearlyAchievement).ToString(System.Globalization.CultureInfo.InvariantCulture))
+                ],
                 backgroundColor: [redColor, "#d8d8d8"],
                 borderWidth: 0
             }]
@@ -1277,14 +1401,18 @@
             datasets: [
                 {
                     label: "Target",
-                    data: [86, 87, 96],
+                    data: [85, 87, 99],
                     backgroundColor: grayColor,
                     borderRadius: 4,
                     barThickness: 25
                 },
                 {
                     label: "Actual",
-                    data: [76, 61, 100],
+                    data: [
+                        @m.Performance.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Availability.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.QualityYield.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    ],
                     backgroundColor: redColor,
                     borderRadius: 4,
                     barThickness: 25
@@ -1365,7 +1493,16 @@
             datasets: [
                 {
                     label: "Actual",
-                    data: [2.1, 10.4, 0.6, 11, 8.4, 0.7, 22, 31],
+                    data: [
+                        @m.FeSi.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.SiMn.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Fluorspar.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.CalcinedCarbon.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.ChargeCoal.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.RiceHusk.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Lime.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.DoloLime.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    ],
                     backgroundColor: redColor,
                     borderRadius: 3,
                     barThickness: 17
@@ -1456,7 +1593,12 @@
                 },
                 {
                     label: "Actual",
-                    data: [168, 89, 11, 410],
+                    data: [
+                        @m.LPG.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Oxygen.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Argon.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Nitrogen.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    ],
                     backgroundColor: redColor,
                     borderRadius: 3,
                     barThickness: 22
@@ -1525,7 +1667,11 @@
         data: {
             labels: ["DRI", "HBI", "Scrap"],
             datasets: [{
-                data: [42, 32, 26],
+                data: [
+                    @m.DRIShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.HBIShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.ScrapShare.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                ],
                 backgroundColor: [
                     redColor,
                     blueColor,
@@ -1559,7 +1705,14 @@
                 "Other"
             ],
             datasets: [{
-                data: [90, 2, 3, 1, 2, 2],
+                data: [
+                    @m.AvailableShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.OperationShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.MechanicalShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.ElectricalShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.RefractoryShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.OtherShare.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                ],
                 backgroundColor: [
                     "#d8d8d8",
                     "#a91435",
@@ -1587,32 +1740,18 @@
     new Chart(document.getElementById("dailyProductionChart"), {
         type: "bar",
         data: {
-            labels: [
-                "1", "2", "3", "4", "5", "6", "7",
-                "8", "9", "10", "11", "12", "13", "14",
-                "15", "16", "17", "18", "19", "20", "21"
-            ],
+            labels: @Html.Raw(dayLabelsJson),
             datasets: [
                 {
                     label: "Actual",
-                    data: [
-                        1800, 1600, 2000, 2100, 2200,
-                        1600, 1000, 600, 2400, 2000,
-                        1600, 2000, 2100, 2200, 1600,
-                        1000, 600, 2400, 1800, 1600, 2000
-                    ],
+                    data: @Html.Raw(actualValuesJson),
                     backgroundColor: redColor,
                     borderRadius: 3,
                     barThickness: 16
                 },
                 {
                     label: "Plan",
-                    data: [
-                        1800, 2000, 2000, 2100, 2200,
-                        2100, 2100, 2100, 4000, 2000,
-                        1600, 2100, 600, 2300, 1600,
-                        1000, 600, 2400, 1800, 1600, 2000
-                    ],
+                    data: @Html.Raw(planValuesJson),
                     type: "line",
                     borderColor: blueColor,
                     backgroundColor: blueColor,

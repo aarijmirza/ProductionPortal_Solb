@@ -37,6 +37,7 @@ namespace ProductionPortal_Solb.Controllers
         MaintenanceRepository mrepo;
         RollingMillTargetsRepository targetRepo;
         RollingMillDailyTargetRepository dailyTargetRepo;
+        SMPReportsRepository smprepo;
         public ReportingController()
         {
             repo = new DelayRespository();
@@ -46,6 +47,7 @@ namespace ProductionPortal_Solb.Controllers
             mrepo = new MaintenanceRepository();
             targetRepo = new RollingMillTargetsRepository();
             dailyTargetRepo = new RollingMillDailyTargetRepository();
+            smprepo = new SMPReportsRepository();
         }
 
         // GET: Reporting
@@ -721,12 +723,13 @@ namespace ProductionPortal_Solb.Controllers
             return View();
         }
 
-        public ActionResult SMPDailySummary()
-        {
-            return View();
-        }
+        //public ActionResult SMPProductionSummary(DateTime? reportDate)
+        //{
+        //    DateTime date = reportDate ?? DateTime.Today;
+        //    return View(smprepo.GetDailyPerformanceReport(date));
+        //}
 
-        public ActionResult SMPProductionSummary()
+        public ActionResult SMPDailySummary()
         {
             return View();
         }
@@ -1699,28 +1702,28 @@ namespace ProductionPortal_Solb.Controllers
             );
         }
 
-        public ActionResult UtilityDailyReport(DateTime? date)
-        {
-            try
-            {
-                DateTime reportDate = date ?? DateTime.Today;
+        //public ActionResult UtilityDailyReport(DateTime? date)
+        //{
+        //    try
+        //    {
+        //        DateTime reportDate = date ?? DateTime.Today;
 
-                var vm = crepo.GetUtilityDailyReport(reportDate);
+        //        var vm = crepo.GetUtilityDailyReport(reportDate);
 
-                if (vm == null)
-                {
-                    vm = new UtilityDailyReportVM();
-                    vm.ReportDate = reportDate;
-                }
+        //        if (vm == null)
+        //        {
+        //            vm = new UtilityDailyReportVM();
+        //            vm.ReportDate = reportDate;
+        //        }
 
-                return View(vm);
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = "Error: " + ex.Message;
-                return RedirectToAction("UtilityDailyReport", "Reporting");
-            }
-        }
+        //        return View(vm);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        TempData["ErrorMessage"] = "Error: " + ex.Message;
+        //        return RedirectToAction("UtilityDailyReport", "Reporting");
+        //    }
+        //}
 
 
         public ActionResult CMDDailyReport(
@@ -1775,15 +1778,15 @@ namespace ProductionPortal_Solb.Controllers
         }
 
         public ActionResult SupplyChainReport(
-    DateTime? from,
-    DateTime? to,
+    DateTime? fromDate,
+    DateTime? toDate,
     bool download = false)
         {
-            DateTime fromDate =
-                from ?? DateTime.Today;
+            DateTime selectedFromDate =
+                fromDate ?? DateTime.Today;
 
-            DateTime toDate =
-                to ?? fromDate;
+            DateTime selectedToDate =
+                toDate ?? DateTime.Today;
 
             SupplyChainDailyBLL model =
                 srepo.GetSupplyChainDailyReport(
@@ -1841,12 +1844,12 @@ namespace ProductionPortal_Solb.Controllers
             }
 
             ViewBag.FromDate =
-                fromDate.ToString(
+                fromDate?.ToString(
                     "yyyy-MM-dd"
                 );
 
             ViewBag.ToDate =
-                toDate.ToString(
+                toDate?.ToString(
                     "yyyy-MM-dd"
                 );
 

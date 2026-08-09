@@ -469,30 +469,30 @@ namespace BAL.Repositories
         //    }
         //}
 
-        public List<RMChemicalAnalysisBLL> GetChemicalAnalysisByHeatNo(string heatNo)
-        {
-            try
-            {
-                var lst = new List<RMChemicalAnalysisBLL>();
+        //public List<RMChemicalAnalysisBLL> GetChemicalAnalysisByHeatNo(string heatNo)
+        //{
+        //    try
+        //    {
+        //        var lst = new List<RMChemicalAnalysisBLL>();
 
-                SqlParameter[] p = new SqlParameter[1];
-                p[0] = new SqlParameter("@HeatNo", heatNo);
+        //        SqlParameter[] p = new SqlParameter[1];
+        //        p[0] = new SqlParameter("@HeatNo", heatNo);
 
-                _dt = (new DBHelper().GetTableFromSP)("sp_GetChemicalAnalysisByHeatNo", p);
+        //        _dt = (new DBHelper().GetTableFromSP)("sp_GetChemicalAnalysisByHeatNo", p);
 
-                if (_dt != null && _dt.Rows.Count > 0)
-                {
-                    lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt))
-                                .ToObject<List<RMChemicalAnalysisBLL>>();
-                }
+        //        if (_dt != null && _dt.Rows.Count > 0)
+        //        {
+        //            lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt))
+        //                        .ToObject<List<RMChemicalAnalysisBLL>>();
+        //        }
 
-                return lst;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
+        //        return lst;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return null;
+        //    }
+        //}
 
         public List<HeatChemistryBLL> GetHeatChemistryDatewise(DateTime from, DateTime to)
         {
@@ -1183,6 +1183,1813 @@ namespace BAL.Repositories
             {
                 return false;
             }
+        }
+
+
+
+        public List<QCBilletBoardingRowBLL>
+                    GetBilletBoardingRows(
+                        string rollingMill)
+        {
+            var list =
+                new List<QCBilletBoardingRowBLL>();
+
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@RollingMill",
+                    SqlDbType.NVarChar,
+                    20
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            rollingMill
+                        )
+                            ? "RM1"
+                            : rollingMill.Trim()
+                }
+            };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_QC_GetBilletBoardingRows",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (dt == null)
+            {
+                return list;
+            }
+
+            foreach (DataRow row in dt.Rows)
+            {
+                list.Add(
+                    new QCBilletBoardingRowBLL
+                    {
+                        ID =
+                            GetInt(
+                                row,
+                                "ID"
+                            ),
+
+                        Site =
+                            GetString(
+                                row,
+                                "Site"
+                            ),
+
+                        BoardingNo =
+                            GetString(
+                                row,
+                                "BoardingNo"
+                            ),
+
+                        SerialNo =
+                            GetInt(
+                                row,
+                                "SerialNo"
+                            ),
+
+                        HeatNo =
+                            GetString(
+                                row,
+                                "HeatNo"
+                            ),
+
+                        SteelGrade =
+                            GetString(
+                                row,
+                                "SteelGrade"
+                            ),
+
+                        BarSize =
+                            GetString(
+                                row,
+                                "BarSize"
+                            ),
+
+                        BarsPerBundle =
+                            GetInt(
+                                row,
+                                "BarsPerBundle"
+                            ),
+
+                        ActualBundleCount =
+                            GetInt(
+                                row,
+                                "ActualBundleCount"
+                            ),
+
+                        YardInspection =
+                            GetString(
+                                row,
+                                "YardInspection"
+                            ),
+
+                        YardInspectionRemarks =
+                            GetString(
+                                row,
+                                "YardInspectionRemarks"
+                            )
+                    }
+                );
+            }
+
+            return list;
+        }
+
+
+        public List<QCMTCRowBLL> GetMTCRows(
+            string heatNo = null)
+        {
+            var list =
+                new List<QCMTCRowBLL>();
+
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@HeatNo",
+                    SqlDbType.NVarChar,
+                    50
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            heatNo
+                        )
+                            ? (object)DBNull.Value
+                            : heatNo.Trim()
+                }
+            };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_QC_GetMTCRows",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (dt == null)
+            {
+                return list;
+            }
+
+            foreach (DataRow row in dt.Rows)
+            {
+                list.Add(
+                    new QCMTCRowBLL
+                    {
+                        ID =
+                            GetInt(
+                                row,
+                                "ID"
+                            ),
+
+                        HeatNo =
+                            GetString(
+                                row,
+                                "HeatNo"
+                            ),
+
+                        SteelGrade =
+                            GetString(
+                                row,
+                                "SteelGrade"
+                            ),
+
+                        BarSize =
+                            GetDecimal(
+                                row,
+                                "BarSize"
+                            ),
+
+                        YieldStress =
+                            GetDecimal(
+                                row,
+                                "YieldStress"
+                            ),
+
+                        TensileStress =
+                            GetDecimal(
+                                row,
+                                "TensileStress"
+                            ),
+
+                        NoOfBundles =
+                            GetInt(
+                                row,
+                                "NoOfBundles"
+                            ),
+
+                        YSTSRatio =
+                            GetDecimal(
+                                row,
+                                "YSTSRatio"
+                            )
+                    }
+                );
+            }
+
+            return list;
+        }
+
+
+        public QCInspectionRMDetailBLL
+            GetQCInspectionRMByID(
+                int id)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@ID",
+                    SqlDbType.Int
+                )
+                {
+                    Value =
+                        id
+                }
+            };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_QC_GetInspectionRMByID",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null ||
+                dt.Rows.Count == 0
+            )
+            {
+                return null;
+            }
+
+            return MapInspection(
+                dt.Rows[0]
+            );
+        }
+
+
+        public QCInspectionRMDetailBLL
+            GetQCInspectionRMFromBoarding(
+                int boardingID)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@BoardingID",
+                    SqlDbType.Int
+                )
+                {
+                    Value =
+                        boardingID
+                }
+            };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_QC_GetInspectionRMFromBoarding",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null ||
+                dt.Rows.Count == 0
+            )
+            {
+                return null;
+            }
+
+            return MapInspection(
+                dt.Rows[0]
+            );
+        }
+
+
+        public QCMTCDetailBLL GetMTCDetail(
+            string heatNo)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@HeatNo",
+                    SqlDbType.NVarChar,
+                    50
+                )
+                {
+                    Value =
+                        heatNo
+                }
+            };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_QC_GetMTCDetail",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null ||
+                dt.Rows.Count == 0
+            )
+            {
+                return null;
+            }
+
+            DataRow row =
+                dt.Rows[0];
+
+            return new QCMTCDetailBLL
+            {
+                HeatNo =
+                    GetString(
+                        row,
+                        "HeatNo"
+                    ),
+
+                YieldStrength =
+                    GetDecimal(
+                        row,
+                        "YieldStrength"
+                    ),
+
+                TensileStrength =
+                    GetDecimal(
+                        row,
+                        "TensileStrength"
+                    ),
+
+                TensileYieldRatio =
+                    GetDecimal(
+                        row,
+                        "TensileYieldRatio"
+                    ),
+
+                Elongation =
+                    GetDecimal(
+                        row,
+                        "Elongation"
+                    ),
+
+                GaugeLength =
+                    GetDecimal(
+                        row,
+                        "GaugeLength"
+                    ),
+
+                C =
+                    GetDecimal(
+                        row,
+                        "C"
+                    ),
+
+                Si =
+                    GetDecimal(
+                        row,
+                        "Si"
+                    ),
+
+                Mn =
+                    GetDecimal(
+                        row,
+                        "Mn"
+                    ),
+
+                P =
+                    GetDecimal(
+                        row,
+                        "P"
+                    ),
+
+                S =
+                    GetDecimal(
+                        row,
+                        "S"
+                    ),
+
+                N =
+                    GetDecimal(
+                        row,
+                        "N"
+                    ),
+
+                Ceq =
+                    GetDecimal(
+                        row,
+                        "Ceq"
+                    )
+            };
+        }
+
+
+        public int SaveQCInspectionRM(
+            QCInspectionRMDetailBLL model)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@ID",
+                    model.ID
+                ),
+
+                new SqlParameter(
+                    "@BilletBoardingID",
+                    model.BilletBoardingID
+                ),
+
+                new SqlParameter(
+                    "@MTCID",
+                    model.MTCID
+                ),
+
+                new SqlParameter(
+                    "@Site",
+                    DbValue(
+                        model.Site
+                    )
+                ),
+
+                new SqlParameter(
+                    "@ProductionShift",
+                    DbValue(
+                        model.ProductionShift
+                    )
+                ),
+
+                new SqlParameter(
+                    "@ProductionDate",
+                    model.ProductionDateValue.HasValue
+                        ? (object)model.ProductionDateValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@HeatNo",
+                    DbValue(
+                        model.HeatNo
+                    )
+                ),
+
+                new SqlParameter(
+                    "@Specification",
+                    DbValue(
+                        model.Specification
+                    )
+                ),
+
+                new SqlParameter(
+                    "@SteelGrade",
+                    DbValue(
+                        model.SteelGrade
+                    )
+                ),
+
+                new SqlParameter(
+                    "@Length",
+                    model.LengthValue.HasValue
+                        ? (object)model.LengthValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@NominalWeight",
+                    model.NominalWeightValue.HasValue
+                        ? (object)model.NominalWeightValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@CrossSectionArea",
+                    model.CrossSectionAreaValue.HasValue
+                        ? (object)model.CrossSectionAreaValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@BendTestObserved",
+                    model.BendTestObserved
+                ),
+
+                new SqlParameter(
+                    "@BarSize",
+                    model.BarSizeValue.HasValue
+                        ? (object)model.BarSizeValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@WeightPerBundle",
+                    model.WeightPerBundleValue.HasValue
+                        ? (object)model.WeightPerBundleValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@NoOfBarsPerBundle",
+                    model.NoOfBarsPerBundleValue.HasValue
+                        ? (object)model.NoOfBarsPerBundleValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@NoOfBundles",
+                    model.NoOfBundlesValue.HasValue
+                        ? (object)model.NoOfBundlesValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@IsWireRodOrCoil",
+                    model.IsWireRodOrCoil
+                ),
+
+                new SqlParameter(
+                    "@YieldStrength",
+                    model.YieldStrengthValue.HasValue
+                        ? (object)model.YieldStrengthValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@TensileStrength",
+                    model.TensileStrengthValue.HasValue
+                        ? (object)model.TensileStrengthValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@TensileYieldRatio",
+                    model.TensileYieldRatioValue.HasValue
+                        ? (object)model.TensileYieldRatioValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@Elongation",
+                    model.ElongationValue.HasValue
+                        ? (object)model.ElongationValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@GaugeLength",
+                    model.GaugeLengthValue.HasValue
+                        ? (object)model.GaugeLengthValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@C",
+                    model.CValue.HasValue
+                        ? (object)model.CValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@Si",
+                    model.SiValue.HasValue
+                        ? (object)model.SiValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@Mn",
+                    model.MnValue.HasValue
+                        ? (object)model.MnValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@P",
+                    model.PValue.HasValue
+                        ? (object)model.PValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@S",
+                    model.SValue.HasValue
+                        ? (object)model.SValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@N",
+                    model.NValue.HasValue
+                        ? (object)model.NValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@Ceq",
+                    model.CeqValue.HasValue
+                        ? (object)model.CeqValue.Value
+                        : DBNull.Value
+                ),
+
+                new SqlParameter(
+                    "@StatusID",
+                    1
+                ),
+
+                new SqlParameter(
+                    "@CreatedBy",
+                    DbValue(
+                        model.CreatedBy
+                    )
+                ),
+
+                new SqlParameter(
+                    "@CreatedDate",
+                    model.CreatedDate.HasValue
+                        ? (object)model.CreatedDate.Value
+                        : DateTime.Now
+                ),
+
+                new SqlParameter(
+                    "@Result",
+                    SqlDbType.Int
+                )
+                {
+                    Direction =
+                        ParameterDirection.Output
+                }
+            };
+
+            DBHelper.ExecuteNonQuery(
+                "sp_QC_SaveInspectionRM",
+                CommandType.StoredProcedure,
+                parameters
+            );
+
+            return parameters[
+                parameters.Length - 1
+            ].Value == DBNull.Value
+                ? 0
+                : Convert.ToInt32(
+                    parameters[
+                        parameters.Length - 1
+                    ].Value
+                );
+        }
+
+
+        public int DeleteQCInspectionRM(
+            int id,
+            string userName)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@ID",
+                    id
+                ),
+
+                new SqlParameter(
+                    "@UpdatedBy",
+                    DbValue(
+                        userName
+                    )
+                )
+            };
+
+            return DBHelper.ExecuteNonQuery(
+                "sp_QC_DeleteInspectionRM",
+                CommandType.StoredProcedure,
+                parameters
+            );
+        }
+
+
+        private QCInspectionRMDetailBLL
+            MapInspection(
+                DataRow row)
+        {
+            return new QCInspectionRMDetailBLL
+            {
+                ID =
+                    GetInt(
+                        row,
+                        "ID"
+                    ),
+
+                BilletBoardingID =
+                    GetInt(
+                        row,
+                        "BilletBoardingID"
+                    ),
+
+                MTCID =
+                    GetInt(
+                        row,
+                        "MTCID"
+                    ),
+
+                Site =
+                    GetString(
+                        row,
+                        "Site"
+                    ),
+
+                ProductionShift =
+                    GetString(
+                        row,
+                        "ProductionShift"
+                    ),
+
+                ProductionDateValue =
+                    GetNullableDate(
+                        row,
+                        "ProductionDate"
+                    ),
+
+                HeatNo =
+                    GetString(
+                        row,
+                        "HeatNo"
+                    ),
+
+                Specification =
+                    GetString(
+                        row,
+                        "Specification"
+                    ),
+
+                SteelGrade =
+                    GetString(
+                        row,
+                        "SteelGrade"
+                    ),
+
+                LengthValue =
+                    GetNullableDecimal(
+                        row,
+                        "Length"
+                    ),
+
+                NominalWeightValue =
+                    GetNullableDecimal(
+                        row,
+                        "NominalWeight"
+                    ),
+
+                CrossSectionAreaValue =
+                    GetNullableDecimal(
+                        row,
+                        "CrossSectionArea"
+                    ),
+
+                BendTestObserved =
+                    GetBool(
+                        row,
+                        "BendTestObserved"
+                    ),
+
+                BarSizeValue =
+                    GetNullableDecimal(
+                        row,
+                        "BarSize"
+                    ),
+
+                WeightPerBundleValue =
+                    GetNullableDecimal(
+                        row,
+                        "WeightPerBundle"
+                    ),
+
+                NoOfBarsPerBundleValue =
+                    GetNullableInt(
+                        row,
+                        "NoOfBarsPerBundle"
+                    ),
+
+                NoOfBundlesValue =
+                    GetNullableInt(
+                        row,
+                        "NoOfBundles"
+                    ),
+
+                IsWireRodOrCoil =
+                    GetBool(
+                        row,
+                        "IsWireRodOrCoil"
+                    ),
+
+                YieldStrengthValue =
+                    GetNullableDecimal(
+                        row,
+                        "YieldStrength"
+                    ),
+
+                TensileStrengthValue =
+                    GetNullableDecimal(
+                        row,
+                        "TensileStrength"
+                    ),
+
+                TensileYieldRatioValue =
+                    GetNullableDecimal(
+                        row,
+                        "TensileYieldRatio"
+                    ),
+
+                ElongationValue =
+                    GetNullableDecimal(
+                        row,
+                        "Elongation"
+                    ),
+
+                GaugeLengthValue =
+                    GetNullableDecimal(
+                        row,
+                        "GaugeLength"
+                    ),
+
+                CValue =
+                    GetNullableDecimal(
+                        row,
+                        "C"
+                    ),
+
+                SiValue =
+                    GetNullableDecimal(
+                        row,
+                        "Si"
+                    ),
+
+                MnValue =
+                    GetNullableDecimal(
+                        row,
+                        "Mn"
+                    ),
+
+                PValue =
+                    GetNullableDecimal(
+                        row,
+                        "P"
+                    ),
+
+                SValue =
+                    GetNullableDecimal(
+                        row,
+                        "S"
+                    ),
+
+                NValue =
+                    GetNullableDecimal(
+                        row,
+                        "N"
+                    ),
+
+                CeqValue =
+                    GetNullableDecimal(
+                        row,
+                        "Ceq"
+                    )
+            };
+        }
+
+
+        private static object DbValue(
+            string value)
+        {
+            return string.IsNullOrWhiteSpace(
+                value
+            )
+                ? (object)DBNull.Value
+                : value.Trim();
+        }
+
+
+        private static string GetString(
+            DataRow row,
+            string column)
+        {
+            if (
+                row == null ||
+                row.Table == null ||
+                !row.Table.Columns.Contains(column) ||
+                row[column] == DBNull.Value
+            )
+            {
+                return "";
+            }
+
+            return Convert.ToString(
+                row[column]
+            ).Trim();
+        }
+
+
+        private static int GetInt(
+            DataRow row,
+            string column)
+        {
+            if (
+                row == null ||
+                row.Table == null ||
+                !row.Table.Columns.Contains(column) ||
+                row[column] == DBNull.Value
+            )
+            {
+                return 0;
+            }
+
+            int result;
+
+            return int.TryParse(
+                Convert.ToString(
+                    row[column]
+                ).Trim(),
+                out result
+            )
+                ? result
+                : 0;
+        }
+
+
+        private static int? GetNullableInt(
+            DataRow row,
+            string column)
+        {
+            if (
+                row == null ||
+                row.Table == null ||
+                !row.Table.Columns.Contains(column) ||
+                row[column] == DBNull.Value
+            )
+            {
+                return null;
+            }
+
+            int result;
+
+            return int.TryParse(
+                Convert.ToString(
+                    row[column]
+                ).Trim(),
+                out result
+            )
+                ? (int?)result
+                : null;
+        }
+
+
+        private static decimal GetDecimal(
+            DataRow row,
+            string column)
+        {
+            decimal? value =
+                GetNullableDecimal(
+                    row,
+                    column
+                );
+
+            return value ?? 0M;
+        }
+
+
+        private static decimal? GetNullableDecimal(
+            DataRow row,
+            string column)
+        {
+            if (
+                row == null ||
+                row.Table == null ||
+                !row.Table.Columns.Contains(column) ||
+                row[column] == DBNull.Value
+            )
+            {
+                return null;
+            }
+
+            object rawValue =
+                row[column];
+
+            if (
+                rawValue is decimal ||
+                rawValue is double ||
+                rawValue is float ||
+                rawValue is int ||
+                rawValue is long ||
+                rawValue is short
+            )
+            {
+                try
+                {
+                    return Convert.ToDecimal(
+                        rawValue
+                    );
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            string value =
+                Convert.ToString(
+                    rawValue
+                )
+                .Trim();
+
+            if (
+                string.IsNullOrWhiteSpace(
+                    value
+                )
+            )
+            {
+                return null;
+            }
+
+            decimal result;
+
+            if (
+                decimal.TryParse(
+                    value,
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out result
+                )
+            )
+            {
+                return result;
+            }
+
+            if (
+                decimal.TryParse(
+                    value,
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    out result
+                )
+            )
+            {
+                return result;
+            }
+
+            value =
+                value
+                    .Replace("MM", "")
+                    .Replace("mm", "")
+                    .Replace("MT", "")
+                    .Replace("mt", "")
+                    .Replace("Meter", "")
+                    .Replace("meter", "")
+                    .Replace("Meters", "")
+                    .Replace("meters", "")
+                    .Replace("Kg/m", "")
+                    .Replace("kg/m", "")
+                    .Replace("KG/M", "")
+                    .Replace(",", "")
+                    .Trim();
+
+            if (
+                decimal.TryParse(
+                    value,
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out result
+                )
+            )
+            {
+                return result;
+            }
+
+            return null;
+        }
+
+
+        private static DateTime? GetNullableDate(
+            DataRow row,
+            string column)
+        {
+            if (
+                row == null ||
+                row.Table == null ||
+                !row.Table.Columns.Contains(column) ||
+                row[column] == DBNull.Value
+            )
+            {
+                return null;
+            }
+
+            DateTime result;
+
+            return DateTime.TryParse(
+                Convert.ToString(
+                    row[column]
+                ),
+                out result
+            )
+                ? (DateTime?)result
+                : null;
+        }
+
+
+        private static bool GetBool(
+            DataRow row,
+            string column)
+        {
+            if (
+                row == null ||
+                row.Table == null ||
+                !row.Table.Columns.Contains(column) ||
+                row[column] == DBNull.Value
+            )
+            {
+                return false;
+            }
+
+            bool boolResult;
+
+            if (
+                bool.TryParse(
+                    Convert.ToString(
+                        row[column]
+                    ),
+                    out boolResult
+                )
+            )
+            {
+                return boolResult;
+            }
+
+            int intResult;
+
+            return int.TryParse(
+                Convert.ToString(
+                    row[column]
+                ),
+                out intResult
+            )
+                && intResult == 1;
+        }
+
+
+        public RMChemicalAnalysisBLL GetChemicalAnalysisByHeatNo(
+    string heatNo)
+        {
+            if (string.IsNullOrWhiteSpace(heatNo))
+            {
+                return null;
+            }
+
+            SqlParameter[] parameters =
+            {
+        new SqlParameter(
+            "@HeatNo",
+            SqlDbType.NVarChar,
+            50
+        )
+        {
+            Value = heatNo.Trim()
+        }
+    };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_QC_GetChemicalAnalysisByHeat",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null ||
+                dt.Rows.Count == 0
+            )
+            {
+                return null;
+            }
+
+            DataRow row =
+                dt.Rows[0];
+
+            return new RMChemicalAnalysisBLL
+            {
+                ID =
+                    row["ID"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(
+                            row["ID"]
+                        ),
+
+                HeatNo =
+                    Convert.ToString(
+                        row["HeatNo"]
+                    ).Trim(),
+
+                NoOfBillets =
+                    row["NoOfBillets"] == DBNull.Value
+                        ? 0
+                        : Convert.ToInt32(
+                            row["NoOfBillets"]
+                        ),
+
+                C =
+                    GetNullableDecimal(
+                        row,
+                        "C"
+                    ),
+
+                Si =
+                    GetNullableDecimal(
+                        row,
+                        "Si"
+                    ),
+
+                Mn =
+                    GetNullableDecimal(
+                        row,
+                        "Mn"
+                    ),
+
+                S =
+                    GetNullableDecimal(
+                        row,
+                        "S"
+                    ),
+
+                P =
+                    GetNullableDecimal(
+                        row,
+                        "P"
+                    ),
+
+                N =
+                    GetNullableDecimal(
+                        row,
+                        "N"
+                    ),
+
+                Ceq =
+                    GetNullableDecimal(
+                        row,
+                        "Ceq"
+                    ),
+
+                HeatStatus =
+                    GetInt(
+                        row,
+                        "HeatStatus"
+                    )
+            };
+        }
+
+
+        // ============================================================
+        // BILLET BOARD - ADD / EDIT SUPPORT
+        // ============================================================
+
+        public BilletBoardBLL GetBilletForEdit(int id)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+                    new SqlParameter("@ID", SqlDbType.Int)
+                    {
+                        Value = id
+                    }
+                };
+
+                DataTable dt =
+                    (new DBHelper().GetTableFromSP)(
+                        "sp_GetBilletForEdit",
+                        p
+                    );
+
+                if (
+                    dt == null ||
+                    dt.Rows.Count == 0
+                )
+                {
+                    return null;
+                }
+
+                return JArray
+                    .Parse(
+                        JsonConvert.SerializeObject(dt)
+                    )
+                    .ToObject<List<BilletBoardBLL>>()
+                    .FirstOrDefault();
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        public List<RMChemicalAnalysisBLL>
+            GetBilletChemistryForEdit(
+                int id)
+        {
+            try
+            {
+                var list =
+                    new List<RMChemicalAnalysisBLL>();
+
+                SqlParameter[] p =
+                {
+                    new SqlParameter("@ID", SqlDbType.Int)
+                    {
+                        Value = id
+                    }
+                };
+
+                DataTable dt =
+                    (new DBHelper().GetTableFromSP)(
+                        "sp_GetBilletChemistryForEdit",
+                        p
+                    );
+
+                if (
+                    dt != null &&
+                    dt.Rows.Count > 0
+                )
+                {
+                    list =
+                        JArray
+                            .Parse(
+                                JsonConvert.SerializeObject(dt)
+                            )
+                            .ToObject<
+                                List<RMChemicalAnalysisBLL>
+                            >();
+                }
+
+                return list;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        public bool IsBilletBoardingExistsForEdit(
+            string billetBoarding,
+            int currentID)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+                    new SqlParameter(
+                        "@BilletBoarding",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                billetBoarding
+                            )
+                                ? (object)DBNull.Value
+                                : billetBoarding.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@CurrentID",
+                        SqlDbType.Int
+                    )
+                    {
+                        Value = currentID
+                    }
+                };
+
+                DataTable dt =
+                    (new DBHelper().GetTableFromSP)(
+                        "sp_CheckBilletBoardingExistsForEdit",
+                        p
+                    );
+
+                if (
+                    dt == null ||
+                    dt.Rows.Count == 0
+                )
+                {
+                    return false;
+                }
+
+                return Convert.ToInt32(
+                    dt.Rows[0]["Total"]
+                ) > 0;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        public List<string> GetDuplicateHeatNosForEdit(
+            List<string> heatNos,
+            int currentID)
+        {
+            try
+            {
+                var duplicates =
+                    new List<string>();
+
+                if (
+                    heatNos == null ||
+                    heatNos.Count == 0
+                )
+                {
+                    return duplicates;
+                }
+
+                string heatNoCsv =
+                    string.Join(
+                        ",",
+                        heatNos
+                            .Where(
+                                x =>
+                                    !string.IsNullOrWhiteSpace(x)
+                            )
+                            .Select(
+                                x => x.Trim()
+                            )
+                    );
+
+                SqlParameter[] p =
+                {
+                    new SqlParameter(
+                        "@HeatNos",
+                        SqlDbType.NVarChar,
+                        -1
+                    )
+                    {
+                        Value = heatNoCsv
+                    },
+
+                    new SqlParameter(
+                        "@CurrentID",
+                        SqlDbType.Int
+                    )
+                    {
+                        Value = currentID
+                    }
+                };
+
+                DataTable dt =
+                    (new DBHelper().GetTableFromSP)(
+                        "sp_GetDuplicateHeatNosForEdit",
+                        p
+                    );
+
+                if (
+                    dt != null &&
+                    dt.Rows.Count > 0
+                )
+                {
+                    foreach (
+                        DataRow row
+                        in dt.Rows
+                    )
+                    {
+                        string heatNo =
+                            Convert.ToString(
+                                row["HeatNo"]
+                            );
+
+                        if (
+                            !string.IsNullOrWhiteSpace(
+                                heatNo
+                            )
+                        )
+                        {
+                            duplicates.Add(
+                                heatNo.Trim()
+                            );
+                        }
+                    }
+                }
+
+                return duplicates;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        public int DeactivateBilletChemistry(
+            int currentID,
+            string updatedBy)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+                    new SqlParameter(
+                        "@CurrentID",
+                        SqlDbType.Int
+                    )
+                    {
+                        Value = currentID
+                    },
+
+                    new SqlParameter(
+                        "@UpdatedBy",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                updatedBy
+                            )
+                                ? (object)DBNull.Value
+                                : updatedBy.Trim()
+                    }
+                };
+
+                return new DBHelper()
+                    .ExecuteNonQueryReturn(
+                        "sp_DeactivateBilletChemistry",
+                        p
+                    );
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        public int DeactivateBilletBoardHeatRows(
+            int currentID,
+            string updatedBy)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+                    new SqlParameter(
+                        "@CurrentID",
+                        SqlDbType.Int
+                    )
+                    {
+                        Value = currentID
+                    },
+
+                    new SqlParameter(
+                        "@UpdatedBy",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                updatedBy
+                            )
+                                ? (object)DBNull.Value
+                                : updatedBy.Trim()
+                    }
+                };
+
+                return new DBHelper()
+                    .ExecuteNonQueryReturn(
+                        "sp_DeactivateBilletBoardHeatRows",
+                        p
+                    );
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        public int UpdateBilletBoarding(
+            BilletBoardBLL model)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+                    new SqlParameter(
+                        "@ID",
+                        SqlDbType.Int
+                    )
+                    {
+                        Value = model.ID
+                    },
+
+                    new SqlParameter(
+                        "@Date",
+                        SqlDbType.Date
+                    )
+                    {
+                        Value =
+                            model.Date.HasValue
+                                ? (object)model.Date.Value
+                                : DBNull.Value
+                    },
+
+                    new SqlParameter(
+                        "@BilletBoarding",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.BilletBoarding
+                            )
+                                ? (object)DBNull.Value
+                                : model.BilletBoarding.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@PlantName",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.PlantName
+                            )
+                                ? (object)DBNull.Value
+                                : model.PlantName.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@Shift",
+                        SqlDbType.NVarChar,
+                        50
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.Shift
+                            )
+                                ? (object)DBNull.Value
+                                : model.Shift.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@SteelGrade",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.SteelGrade
+                            )
+                                ? (object)DBNull.Value
+                                : model.SteelGrade.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@Profile",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.Profile
+                            )
+                                ? (object)DBNull.Value
+                                : model.Profile.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@Size",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.Size
+                            )
+                                ? (object)DBNull.Value
+                                : model.Size.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@ProductSpecs",
+                        SqlDbType.NVarChar,
+                        200
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.ProductSpecs
+                            )
+                                ? (object)DBNull.Value
+                                : model.ProductSpecs.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@BilletLength",
+                        SqlDbType.NVarChar,
+                        50
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.BilletLength
+                            )
+                                ? (object)DBNull.Value
+                                : model.BilletLength.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@CrossSection",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.CrossSection
+                            )
+                                ? (object)DBNull.Value
+                                : model.CrossSection.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@BilletWeight",
+                        SqlDbType.Decimal
+                    )
+                    {
+                        Value = model.BilletWeight
+                    },
+
+                    new SqlParameter(
+                        "@Remarks",
+                        SqlDbType.NVarChar,
+                        -1
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.Remarks
+                            )
+                                ? (object)DBNull.Value
+                                : model.Remarks.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@UpdatedBy",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                model.UpdatedBy
+                            )
+                                ? (object)DBNull.Value
+                                : model.UpdatedBy.Trim()
+                    }
+                };
+
+                DataTable dt =
+                    (new DBHelper().GetTableFromSP)(
+                        "sp_UpdateBilletBoarding",
+                        p
+                    );
+
+                if (
+                    dt != null &&
+                    dt.Rows.Count > 0 &&
+                    dt.Columns.Contains("ID")
+                )
+                {
+                    return Convert.ToInt32(
+                        dt.Rows[0]["ID"]
+                    );
+                }
+
+                return model.ID;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        // Compatibility wrapper for older controller code.
+        public void UpdateBillet(
+            BilletBoardBLL model)
+        {
+            UpdateBilletBoarding(model);
         }
     }
 }

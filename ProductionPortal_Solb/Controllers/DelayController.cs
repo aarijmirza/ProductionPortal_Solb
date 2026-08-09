@@ -817,7 +817,15 @@ namespace ProductionPortal_Solb.Controllers
 
             return View(model);
         }
+        public ActionResult smpdelaydelete(int ID)
+        {
+            var UpdatedBy = User.Identity.Name;
+            int rtn = repo.Delete(ID, UpdatedBy);
+            TempData["SuccessMessage"] = "Data Delete Successfully";
 
+            return RedirectToAction("SMPlist");
+
+        }
         public ActionResult delete(int ID)
         {
             var UpdatedBy = User.Identity.Name;
@@ -1063,10 +1071,49 @@ namespace ProductionPortal_Solb.Controllers
             return table;
         }
 
-        public ActionResult SMPlist()
+        [HttpGet]
+        public ActionResult SMPlist(
+            DateTime? fromDate,
+            DateTime? toDate)
         {
-            var data = repo.GetAllDelay();
-            return View("~/Views/Meltshop/Delay/list.cshtml", data);
+            DateTime selectedToDate =
+                toDate ?? DateTime.Today;
+
+            DateTime selectedFromDate =
+                fromDate ?? selectedToDate;
+
+            if (selectedFromDate > selectedToDate)
+            {
+                DateTime temp =
+                    selectedFromDate;
+
+                selectedFromDate =
+                    selectedToDate;
+
+                selectedToDate =
+                    temp;
+            }
+
+            List<PlantDelayBLL> data =
+                repo.GetAllDelay(
+                    selectedFromDate,
+                    selectedToDate
+                );
+
+            ViewBag.FromDate =
+                selectedFromDate.ToString(
+                    "yyyy-MM-dd"
+                );
+
+            ViewBag.ToDate =
+                selectedToDate.ToString(
+                    "yyyy-MM-dd"
+                );
+
+            return View(
+                "~/Views/Meltshop/Delay/list.cshtml",
+                data
+            );
         }
 
         [HttpGet]

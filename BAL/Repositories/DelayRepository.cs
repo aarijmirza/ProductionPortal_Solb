@@ -305,28 +305,65 @@ namespace BAL.Repositories
             return list;
         }
 
-        public List<PlantDelayBLL> GetAllDelay()
+        public List<PlantDelayBLL> GetAllDelay(
+    DateTime fromDate,
+    DateTime toDate)
         {
             try
             {
-                var lst = new List<PlantDelayBLL>();
+                List<PlantDelayBLL> list =
+                    new List<PlantDelayBLL>();
 
-                SqlParameter[] p = new SqlParameter[0];
-
-                _dt = (new DBHelper().GetTableFromSP)("sp_GetAllPlantDelays", p);
-                if (_dt != null)
+                SqlParameter[] parameters =
                 {
-                    if (_dt.Rows.Count > 0)
-                    {
-                        lst = JArray.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(_dt)).ToObject<List<PlantDelayBLL>>();
-                    }
+            new SqlParameter(
+                "@FromDate",
+                SqlDbType.Date
+            )
+            {
+                Value = fromDate.Date
+            },
+
+            new SqlParameter(
+                "@ToDate",
+                SqlDbType.Date
+            )
+            {
+                Value = toDate.Date
+            }
+        };
+
+                _dt =
+                    new DBHelper()
+                        .GetTableFromSP(
+                            "sp_GetAllSMPPlantDelays",
+                            parameters
+                        );
+
+                if (
+                    _dt != null &&
+                    _dt.Rows.Count > 0
+                )
+                {
+                    list =
+                        JArray
+                            .Parse(
+                                Newtonsoft.Json
+                                    .JsonConvert
+                                    .SerializeObject(
+                                        _dt
+                                    )
+                            )
+                            .ToObject<
+                                List<PlantDelayBLL>
+                            >();
                 }
 
-                return lst;
+                return list;
             }
             catch (Exception ex)
             {
-                return null;
+                throw;
             }
         }
 

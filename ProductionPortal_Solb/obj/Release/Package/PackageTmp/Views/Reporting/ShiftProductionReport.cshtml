@@ -221,6 +221,7 @@
                 <td style="width:180px;" class="red">Reason</td>
                 <td style="width:180px;" class="red">Description</td>
                 <td style="width:180px;" class="red">Reason for Occurrence</td>
+                <td style="width:180px;" class="red">Action Taken</td>
 
             </tr>
             @if (Model?.Delays != null)
@@ -243,6 +244,7 @@
                         <td>@item.Reason</td>
                         <td>@item.DelayDescription</td>
                         <td>@item.ReasonForOccurence</td>
+                        <td>@item.ActionTaken</td>
                     </tr>
                 }
             }

@@ -1,17 +1,18 @@
 ﻿using BAL.Repositories;
+using DAL.Models;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Printing;
 using System.Drawing;
+using System.Drawing.Printing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Xml.Linq;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
-using OfficeOpenXml;
-using System.Globalization;
 
 namespace ProductionPortal_Solb.Controllers
 {
@@ -44,9 +45,36 @@ namespace ProductionPortal_Solb.Controllers
         {
             return View();
         }
-        public ActionResult SMPDailyDashboard()
+        public ActionResult SMPDailyDashboard(DateTime? fromDate,
+            DateTime? toDate)
         {
-            return View();
+            DateTime selectedToDate =
+                toDate ?? DateTime.Today;
+
+            DateTime selectedFromDate =
+                fromDate ?? selectedToDate;
+
+            // Agar From Date, To Date se bari ho
+            // to dates automatically swap ho jayengi.
+            if (selectedFromDate > selectedToDate)
+            {
+                DateTime temp =
+                    selectedFromDate;
+
+                selectedFromDate =
+                    selectedToDate;
+
+                selectedToDate =
+                    temp;
+            }
+
+            SMPDashboardVM model =
+                repo.GetDashboard(
+                    selectedFromDate,
+                    selectedToDate
+                );
+
+            return View(model);
         }
     }
 }
