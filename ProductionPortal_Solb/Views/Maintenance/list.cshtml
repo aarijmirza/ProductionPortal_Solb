@@ -5,6 +5,11 @@
     var delay =
         Model as List<DAL.Models.PlantDelayBLL>;
 
+    var failureAnalysisStatus =
+        ViewBag.FailureAnalysisStatus
+            as Dictionary<int, bool>
+        ?? new Dictionary<int, bool>();
+
     string selectedDelayTypesCsv =
         Convert.ToString(ViewBag.DelayType);
 
@@ -13,19 +18,24 @@
 
     var selectedDelayTypes =
         string.IsNullOrWhiteSpace(selectedDelayTypesCsv)
-            ? new List<string> { "Unscheduled" }
+            ? new List<string>()
             : selectedDelayTypesCsv
-                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Trim())
+                .Split(
+                    new[] { ',' },
+                    StringSplitOptions.RemoveEmptyEntries
+                )
+                .Select(
+                    x => x.Trim()
+                )
                 .ToList();
 
     var selectedAgencies =
-        string.IsNullOrWhiteSpace(selectedAgenciesCsv)
-            ? new List<string>()
-            : selectedAgenciesCsv
-                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Trim())
-                .ToList();
+string.IsNullOrWhiteSpace(selectedAgenciesCsv)
+    ? new List<string>()
+    : selectedAgenciesCsv
+        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim())
+        .ToList();
 
     string selectedPlantsCsv =
         Convert.ToString(ViewBag.Plant);
@@ -289,6 +299,49 @@
             min-width: 82px;
         }
     }
+
+    .failure-analysis-indicator {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-width: 82px;
+        padding: 4px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .failure-analysis-light {
+        display: inline-block;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        flex: 0 0 11px;
+    }
+
+    .failure-analysis-filled {
+        color: #166534;
+        background: #dcfce7;
+        border: 1px solid #86efac;
+    }
+
+        .failure-analysis-filled .failure-analysis-light {
+            background: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, .18);
+        }
+
+    .failure-analysis-pending {
+        color: #991b1b;
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+    }
+
+        .failure-analysis-pending .failure-analysis-light {
+            background: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, .18);
+        }
 </style>
 
 <div class="xp-breadcrumbbar"
@@ -376,6 +429,7 @@
 
                             <div class="col-xl-3 col-md-6">
                                 <div class="form-group filter-select-group">
+
                                     <label for="agency">
                                         Agency
                                     </label>
@@ -386,27 +440,45 @@
                                             multiple="multiple"
                                             data-placeholder="Select agencies">
 
-                                        <option value="Electrical"
-                                                @(selectedAgencies.Any(x => x.Equals("Electrical", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
-                                            Electrical
-                                        </option>
+                                        @if (ViewBag.Agencies != null)
+                                        {
+                                            foreach (
+                                                var a
+                                                in (IEnumerable<DAL.Models.PlantDelayBLL>)ViewBag.Agencies
+                                            )
+                                            {
+                                                string agencyValue =
+                                                    !string.IsNullOrWhiteSpace(
+                                                        a.AgencyName
+                                                    )
+                                                        ? a.AgencyName.Trim()
+                                                        : "";
 
-                                        <option value="Mechanical"
-                                                @(selectedAgencies.Any(x => x.Equals("Mechanical", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
-                                            Mechanical
-                                        </option>
+                                                bool isSelected =
+                                                    selectedAgencies != null
+                                                    &&
+                                                    selectedAgencies.Any(
+                                                        x =>
+                                                            x.Equals(
+                                                                agencyValue,
+                                                                StringComparison.OrdinalIgnoreCase
+                                                            )
+                                                    );
 
-                                        <option value="Utility"
-                                                @(selectedAgencies.Any(x => x.Equals("Utility", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
-                                            Utility
-                                        </option>
+                                                <option value="@agencyValue"
+                                                        data-code="@a.AgencyCode"
+                                                        data-department="@a.Area"
+                                                        data-delaytype="@a.DelayType"
+                                                        @(isSelected ? "selected" : "")>
 
-                                        <option value="Cranes"
-                                                @(selectedAgencies.Any(x => x.Equals("Cranes", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
-                                            Cranes
-                                        </option>
+                                                    @a.AgencyName
+
+                                                </option>
+                                            }
+                                        }
 
                                     </select>
+
                                 </div>
                             </div>
 
@@ -495,6 +567,7 @@
                                 <tr>
                                     <th>Date</th>
                                     <th>Area</th>
+                                    <th>Plant</th>
                                     <th>Shift</th>
                                     <th>Start Time</th>
                                     <th>End Time</th>
@@ -504,6 +577,7 @@
                                     <th>Delay Code</th>
                                     <th>Equipment</th>
                                     <th>Description</th>
+                                    <th>Failure Analysis</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -515,8 +589,13 @@
                                         var gregorian = new CultureInfo("en-US");
                                         gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
 
+                                        bool failureAnalysisFilled =
+                                            failureAnalysisStatus.ContainsKey(item.ID) &&
+                                            failureAnalysisStatus[item.ID];
+
                                         <tr>
                                             <td>@(item.Date?.ToString("dd-MM-yyyy", gregorian))</td>
+                                            <td>@item.Plant</td>
                                             <td>@item.Area</td>
                                             <td>@item.Shift</td>
                                             <td>@item.StartTime</td>
@@ -527,6 +606,17 @@
                                             <td>@item.Delaycode</td>
                                             <td>@item.Equipments</td>
                                             <td>@item.DelayDescription</td>
+                                            <td class="text-center"
+                                                data-order="@(failureAnalysisFilled ? 1 : 0)"
+                                                data-search="@(failureAnalysisFilled ? "Filled" : "Pending")">
+                                                <span class="failure-analysis-indicator @(failureAnalysisFilled ? "failure-analysis-filled" : "failure-analysis-pending")"
+                                                      title="@(failureAnalysisFilled ? "Failure analysis is filled" : "Failure analysis is not filled")">
+                                                    <span class="failure-analysis-light"></span>
+                                                    <span>
+                                                        @(failureAnalysisFilled ? "Filled" : "Pending")
+                                                    </span>
+                                                </span>
+                                            </td>
                                             <td>
                                                 <a href="@Url.Action(
                                                         "add",
@@ -556,7 +646,7 @@
                                 else
                                 {
                                     <tr>
-                                        <td colspan="12" class="text-center text-muted font-italic">
+                                        <td colspan="14" class="text-center text-muted font-italic">
                                             No data available
                                         </td>
                                     </tr>

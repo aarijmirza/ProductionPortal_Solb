@@ -539,7 +539,7 @@
 </div>
 
 <div class="xp-contentbar">
-    <form action="@Url.Action("QCInspectionRMadd", "Quality")"
+    <form action="@Url.Action("QCInspectionRMadd", "RMMechanical")"
           id="addprofileform"
           method="post"
           enctype="multipart/form-data">
@@ -738,6 +738,9 @@
                                                 <tr class="@(detail.MTCID > 0 && detail.MTCID == item.ID ? "selected" : "")"
                                                     data-id="@item.ID"
                                                     data-heatno="@item.HeatNo"
+                                                    data-steelgrade="@item.SteelGrade"
+                                                    data-barsize="@item.BarSize"
+                                                    data-noofbundles="@item.NoOfBundles"
                                                     data-yieldstress="@item.YieldStress"
                                                     data-tensilestress="@item.TensileStress"
                                                     data-ratio="@item.YSTSRatio">
@@ -872,7 +875,7 @@
                             </div>
 
                             <div class="qc-field">
-                                <label for="CrossSectionArea">Cross Section Area</label>
+                                <label for="CrossSectionArea">Cross Section Area(mm)</label>
                                 <input type="number"
                                        step="any"
                                        id="CrossSectionArea"
@@ -1036,7 +1039,7 @@
         </div>
     </form>
 
-    <form action="@Url.Action("DeleteQCInspectionRM", "Quality")"
+    <form action="@Url.Action("DeleteQCInspectionRM", "RMMechanical")"
           method="post"
           id="deleteForm"
           style="display:none;">
@@ -1308,21 +1311,25 @@
                 return;
             }
 
+            /*
+             * data.ID is QCInspectionRM.ID. For a new boarding heat it is 0;
+             * for an already saved heat it is the existing record ID.
+             */
+            setValue(
+                "#ID",
+                data.ID || 0
+            );
+
             setValue(
                 "#BilletBoardingID",
                 data.BilletBoardingID ||
                 data.ID
             );
 
-            if (
-                data.MTCID !== undefined &&
-                data.MTCID !== null
-            ) {
-                setValue(
-                    "#MTCID",
-                    data.MTCID
-                );
-            }
+            setValue(
+                "#MTCID",
+                data.MTCID || data.ID || 0
+            );
 
             setValue(
                 "#Site",
@@ -1563,9 +1570,37 @@
             /* MTC identity */
 
             setValue(
+                "#ID",
+                data.ID || 0
+            );
+
+            setValue(
                 "#MTCID",
                 data.MTCID ||
                 data.ID
+            );
+
+            setValue(
+                "#BilletBoardingID",
+                data.BilletBoardingID || 0
+            );
+
+            setValue(
+                "#Site",
+                data.Site
+            );
+
+            setValue(
+                "#ProductionShift",
+                data.ProductionShift
+            );
+
+            setValue(
+                "#ProductionDateValue",
+                toHtmlDate(
+                    data.ProductionDateValue ||
+                    data.ProductionDate
+                )
             );
 
 
@@ -1843,6 +1878,10 @@
                     row.data("heatno");
 
 
+                /* Never carry the previously selected saved record. */
+                setValue("#ID", "0");
+                clearMTCFields();
+
                 setValue(
                     "#BilletBoardingID",
                     boardingID
@@ -1881,7 +1920,7 @@
 
                 $.ajax({
                     url:
-                        '@Url.Action("GetBoardingDetails", "Quality")',
+                        '@Url.Action("GetBoardingDetails", "RMMechanical")',
 
                     type:
                         "GET",
@@ -1919,7 +1958,7 @@
                                     response &&
                                     response.message
                                         ? response.message
-                                        : "Boarding details available nahi hain.",
+                                        : "Boarding details are not available.",
                                 confirmButtonColor:
                                     "#8b0018"
                             });
@@ -1935,7 +1974,7 @@
                                 xhr.responseJSON &&
                                 xhr.responseJSON.message
                                     ? xhr.responseJSON.message
-                                    : "Billet boarding details load nahi ho saken.",
+                                    : "Billet boarding details could not be loaded.",
                             confirmButtonColor:
                                 "#8b0018"
                         });
@@ -1955,6 +1994,39 @@
                 $("#mtcTableBody");
 
             body.empty();
+
+            /* One visible MTC row per normalized HeatNo. */
+            var uniqueRows = [];
+            var seenKeys = {};
+
+            $.each(
+                rows || [],
+                function (index, item) {
+
+                    var id =
+                        parseInt(
+                            item.ID || "0",
+                            10
+                        );
+
+                    var normalizedHeat =
+                        (item.HeatNo || "")
+                            .toString()
+                            .trim()
+                            .toUpperCase();
+
+                    var key = normalizedHeat
+                        ? "HEAT:" + normalizedHeat
+                        : "ID:" + id;
+
+                    if (!seenKeys[key]) {
+                        seenKeys[key] = true;
+                        uniqueRows.push(item);
+                    }
+                }
+            );
+
+            rows = uniqueRows;
 
             if (
                 !rows ||
@@ -2097,7 +2169,7 @@
 
             $.ajax({
                 url:
-                    '@Url.Action("GetMTCRowsJson", "Quality")',
+                    '@Url.Action("GetMTCRowsJson", "RMMechanical")',
 
                 type:
                     "GET",
@@ -2145,7 +2217,7 @@
                             xhr.responseJSON &&
                             xhr.responseJSON.message
                                 ? xhr.responseJSON.message
-                                : "MTC data load nahi ho saka.",
+                                : "MTC data could not be loaded.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2244,7 +2316,7 @@
          */
         $.ajax({
             url:
-                '@Url.Action("GetMTCDetails", "Quality")',
+                '@Url.Action("GetMTCDetails", "RMMechanical")',
 
             type:
                 "GET",
@@ -2263,7 +2335,7 @@
                     response.success &&
                     response.data
                 ) {
-                    bindCompleteMTCDetail(
+                    bindMTCDetail(
                         response.data
                     );
                 }
@@ -2275,7 +2347,7 @@
                             response &&
                             response.message
                                 ? response.message
-                                : "Selected MTC ki complete details available nahi hain.",
+                                : "Complete details for the selected MTC are not available.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2284,14 +2356,22 @@
 
             error: function (xhr) {
 
+                var message =
+                    "The selected MTC data could not be loaded.";
+
+                if (
+                    xhr &&
+                    xhr.responseJSON &&
+                    xhr.responseJSON.message
+                ) {
+                    message =
+                        xhr.responseJSON.message;
+                }
+
                 Swal.fire({
                     icon: "error",
-                    title: "Load Failed",
-                    text:
-                        xhr.responseJSON &&
-                        xhr.responseJSON.message
-                            ? xhr.responseJSON.message
-                            : "Selected MTC data load nahi ho saka.",
+                    title: "MTC Load Failed",
+                    text: message,
                     confirmButtonColor:
                         "#8b0018"
                 });
@@ -2418,7 +2498,7 @@
                         icon: "info",
                         title: "Select Boarding Record",
                         text:
-                            "Copy karne ke liye pehle boarding row select karein.",
+                            "Please select a boarding row before copying.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2439,7 +2519,7 @@
                             icon: "success",
                             title: "Copied",
                             text:
-                                "Heat number clipboard mein copy ho gaya.",
+                                "Heat number copied to the clipboard.",
                             timer: 1200,
                             showConfirmButton: false
                         });
@@ -2462,7 +2542,7 @@
                         icon: "info",
                         title: "Select MTC Record",
                         text:
-                            "Copy karne ke liye pehle MTC row select karein.",
+                            "Please select an MTC row before copying.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2483,7 +2563,7 @@
                             icon: "success",
                             title: "Copied",
                             text:
-                                "MTC heat number clipboard mein copy ho gaya.",
+                                "MTC heat number copied to the clipboard.",
                             timer: 1200,
                             showConfirmButton: false
                         });
@@ -2527,7 +2607,7 @@
                     $(this).val();
 
                 window.location.href =
-                    '@Url.Action("QCInspectionRMadd", "Quality")'
+                    '@Url.Action("QCInspectionRMadd", "RMMechanical")'
                     + "?rm="
                     + encodeURIComponent(
                         selectedRM
@@ -2583,7 +2663,7 @@
                         icon: "warning",
                         title: "Select Boarding Record",
                         text:
-                            "Save karne se pehle billet boarding record select karein.",
+                            "Please select a billet boarding record before saving.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2656,7 +2736,7 @@
                         icon: "warning",
                         title: "Select MTC Record",
                         text:
-                            "Generate MTC se pehle MTC table se record select karein.",
+                            "Please select an MTC record before generating the MTC.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2672,7 +2752,7 @@
                         icon: "warning",
                         title: "Heat Number Missing",
                         text:
-                            "Selected MTC record mein Heat Number available nahi hai.",
+                            "The selected MTC record does not contain a Heat Number.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2688,7 +2768,7 @@
                         icon: "warning",
                         title: "Steel Grade Missing",
                         text:
-                            "Generate MTC ke liye Steel Grade required hai.",
+                            "Steel Grade is required to generate the MTC.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2704,7 +2784,7 @@
                         icon: "warning",
                         title: "Bar Size Missing",
                         text:
-                            "Generate MTC ke liye Bar Size required hai.",
+                            "Bar Size is required to generate the MTC.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2723,7 +2803,7 @@
                         icon: "warning",
                         title: "Mechanical Data Missing",
                         text:
-                            "Yield Strength aur Tensile Strength required hain.",
+                            "Yield Strength and Tensile Strength are required.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2762,7 +2842,7 @@
                         icon: "info",
                         title: "No Saved Record",
                         text:
-                            "Delete ke liye pehle saved QC inspection record select karein.",
+                            "Please select a saved QC inspection record before deleting.",
                         confirmButtonColor:
                             "#8b0018"
                     });
@@ -2774,7 +2854,7 @@
                     icon: "warning",
                     title: "Delete Record?",
                     text:
-                        "Kya aap selected QC inspection record delete karna chahte hain?",
+                        "Are you sure you want to delete the selected QC inspection record?",
                     showCancelButton: true,
                     confirmButtonText:
                         "Yes, delete",
@@ -2814,8 +2894,6 @@
         loadMTCGrid(
             initialHeatNo
         );
-
-    });
 
     function bindCompleteMTCDetail(data) {
 
@@ -3075,4 +3153,6 @@
             )
         );
     }
+
+    });
 </script>

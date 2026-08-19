@@ -115,6 +115,20 @@ namespace DAL.Models
                 LaddleFurnaces = new List<LaddleFurnaceBLL>();
             }
         }
+        public class CCMMeltShopReportVM
+        {
+            public CCMBLL Master { get; set; }
+
+            public List<CCMBLL> CCM { get; set; }
+
+            public List<CCMChemicalAnalysisBLL>
+                ChemicalAnalysis
+            { get; set; }
+
+            public DateTime FromDate { get; set; }
+
+            public DateTime ToDate { get; set; }
+        }
 
         public class RollingMillChargeVM
         {

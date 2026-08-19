@@ -83,17 +83,17 @@ namespace BAL.Repositories
                     : DBNull.Value
         },
 
-        new SqlParameter(
-            "@Plant",
-            SqlDbType.NVarChar,
-            100
-        )
-        {
-            Value =
-                string.IsNullOrWhiteSpace(plant)
-                    ? (object)DBNull.Value
-                    : plant
-        },
+new SqlParameter(
+    "@Area",
+    SqlDbType.NVarChar,
+    -1
+)
+{
+    Value =
+        string.IsNullOrWhiteSpace(plant)
+            ? (object)DBNull.Value
+            : plant
+},
 
         new SqlParameter(
             "@Agency",
@@ -631,6 +631,23 @@ namespace BAL.Repositories
                 {
                     duration = duration.Add(TimeSpan.FromDays(1));
                 }
+
+                if (data.Area == "2")
+                {
+                    data.Area = "EAF";
+                    data.Plant = "Steel Making";
+                }
+                else if (data.Area == "3")
+                {
+                    data.Area = "LF";
+                    data.Plant = "Steel Making";
+                }
+                else if (data.Area == "4")
+                {
+                    data.Area = "CCM";
+                    data.Plant = "Steel Making";
+                }
+
 
                 p[0] = new SqlParameter("@Date", data.Date);
                 p[1] = new SqlParameter("@Plant", data.Plant);
@@ -1272,6 +1289,180 @@ namespace BAL.Repositories
             }
         }
 
+        public FailureAnalysisFileInfo GetFailureAnalysisFileByDelayID(
+            int delayID)
+        {
+            if (delayID <= 0)
+            {
+                return null;
+            }
+
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@DelayID",
+                    SqlDbType.Int
+                )
+                {
+                    Value = delayID
+                }
+            };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_GetFailureAnalysisFileByDelayID",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null ||
+                dt.Rows.Count == 0
+            )
+            {
+                return null;
+            }
+
+            DataRow row = dt.Rows[0];
+
+            return new FailureAnalysisFileInfo
+            {
+                DelayID =
+                    GetInt(
+                        row,
+                        "DelayID"
+                    ),
+
+                StoredFilePath =
+                    GetString(
+                        row,
+                        "FailureAnalysisFile"
+                    ),
+
+                OriginalFileName =
+                    GetString(
+                        row,
+                        "FailureAnalysisFileName"
+                    ),
+
+                Remarks =
+                    GetString(
+                        row,
+                        "FailureAnalysisFileRemarks"
+                    )
+            };
+        }
+
+        public int SaveFailureAnalysisFile(
+            int delayID,
+            string storedFilePath,
+            string originalFileName,
+            string remarks,
+            string updatedBy)
+        {
+            if (delayID <= 0)
+            {
+                throw new ArgumentException(
+                    "Invalid Delay ID."
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                storedFilePath
+            ))
+            {
+                throw new ArgumentException(
+                    "Stored file path is required."
+                );
+            }
+
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@DelayID",
+                    SqlDbType.Int
+                )
+                {
+                    Value = delayID
+                },
+
+                new SqlParameter(
+                    "@FailureAnalysisFile",
+                    SqlDbType.NVarChar,
+                    500
+                )
+                {
+                    Value = storedFilePath.Trim()
+                },
+
+                new SqlParameter(
+                    "@FailureAnalysisFileName",
+                    SqlDbType.NVarChar,
+                    255
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            originalFileName
+                        )
+                            ? (object)DBNull.Value
+                            : originalFileName.Trim()
+                },
+
+                new SqlParameter(
+                    "@FailureAnalysisFileRemarks",
+                    SqlDbType.NVarChar,
+                    250
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            remarks
+                        )
+                            ? (object)DBNull.Value
+                            : remarks.Trim()
+                },
+
+                new SqlParameter(
+                    "@UpdatedBy",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            updatedBy
+                        )
+                            ? (object)DBNull.Value
+                            : updatedBy.Trim()
+                }
+            };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_SaveFailureAnalysisFile",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null ||
+                dt.Rows.Count == 0 ||
+                !dt.Columns.Contains(
+                    "AffectedRows"
+                ) ||
+                dt.Rows[0]["AffectedRows"] ==
+                    DBNull.Value
+            )
+            {
+                return 0;
+            }
+
+            return Convert.ToInt32(
+                dt.Rows[0]["AffectedRows"]
+            );
+        }
+
         public int UpdateDelayCorrection(PlantDelayBLL model)
         {
             try
@@ -1689,5 +1880,16 @@ namespace BAL.Repositories
                 row[columnName]
             );
         }
+    }
+
+    public class FailureAnalysisFileInfo
+    {
+        public int DelayID { get; set; }
+
+        public string StoredFilePath { get; set; }
+
+        public string OriginalFileName { get; set; }
+
+        public string Remarks { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using DAL.Models;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -16,7 +17,6 @@ namespace ProductionPortal_Solb.Controllers
             repo =
                 new ConsumptionRepository();
         }
-
 
         // =====================================================
         // LIST
@@ -243,6 +243,24 @@ namespace ProductionPortal_Solb.Controllers
                 }
 
 
+                /*
+                 * Production is always loaded from production source tables:
+                 *
+                 * SMP  = SMPDayWiseProduction.TotalCastedTon by selected date
+                 * RM1  = BundlesSection.TotalWeight by selected date + RM1
+                 * RM2  = BundlesSection.TotalWeight by selected date + RM2
+                 *
+                 * Do not depend on previously-saved PlantConsumption
+                 * production values.
+                 */
+                ApplyProductionByDate(
+                    selectedDate.Date,
+                    smp,
+                    rm1,
+                    rm2
+                );
+
+
                 ViewBag.SMP =
                     smp;
 
@@ -363,32 +381,46 @@ namespace ProductionPortal_Solb.Controllers
                         Plant =
                             "SMP",
 
+                        /*
+                         * Production will be loaded from
+                         * SMPDayWiseProduction.TotalCastedTon below.
+                         */
                         TotalProductBillet =
-                            form[
-                                "SMP_TotalProductBillet"
-                            ],
+                            null,
 
                         LPG =
-                            form["SMP_LPG"],
+                            ToNullableDecimal(
+                                form["SMP_LPG"]
+                            ),
 
                         Oxygen =
-                            form["SMP_Oxygen"],
+                            ToNullableDecimal(
+                                form["SMP_Oxygen"]
+                            ),
 
                         Nitrogen =
-                            form["SMP_Nitrogen"],
+                            ToNullableDecimal(
+                                form["SMP_Nitrogen"]
+                            ),
 
                         Argon =
-                            form["SMP_Argon"],
+                            ToNullableDecimal(
+                                form["SMP_Argon"]
+                            ),
 
                         WaterConsumption =
-                            form[
-                                "SMP_WaterConsumption"
-                            ],
+                            ToNullableDecimal(
+                                form[
+                                    "SMP_WaterConsumption"
+                                ]
+                            ),
 
                         PowerConsumption =
-                            form[
-                                "SMP_PowerConsumption"
-                            ],
+                            ToNullableDecimal(
+                                form[
+                                    "SMP_PowerConsumption"
+                                ]
+                            ),
 
                         FuelConsumption =
                             null,
@@ -397,18 +429,10 @@ namespace ProductionPortal_Solb.Controllers
                     };
 
 
-                CalculateConsumptionValues(
-                    smp
-                );
-
                 SetAudit(
                     smp,
                     currentUser,
                     now
-                );
-
-                records.Add(
-                    smp
                 );
 
 
@@ -428,20 +452,25 @@ namespace ProductionPortal_Solb.Controllers
                         Plant =
                             "RM1",
 
+                        /*
+                         * Production will be loaded from BundlesSection below.
+                         */
                         TotalProductBillet =
-                            form[
-                                "RM1_TotalProductBillet"
-                            ],
+                            null,
 
                         WaterConsumption =
-                            form[
-                                "RM1_WaterConsumption"
-                            ],
+                            ToNullableDecimal(
+                                form[
+                                    "RM1_WaterConsumption"
+                                ]
+                            ),
 
                         PowerConsumption =
-                            form[
-                                "RM1_PowerConsumption"
-                            ],
+                            ToNullableDecimal(
+                                form[
+                                    "RM1_PowerConsumption"
+                                ]
+                            ),
 
                         FuelConsumption =
                             ToNullableDecimal(
@@ -454,18 +483,10 @@ namespace ProductionPortal_Solb.Controllers
                     };
 
 
-                CalculateConsumptionValues(
-                    rm1
-                );
-
                 SetAudit(
                     rm1,
                     currentUser,
                     now
-                );
-
-                records.Add(
-                    rm1
                 );
 
 
@@ -485,20 +506,25 @@ namespace ProductionPortal_Solb.Controllers
                         Plant =
                             "RM2",
 
+                        /*
+                         * Production will be loaded from BundlesSection below.
+                         */
                         TotalProductBillet =
-                            form[
-                                "RM2_TotalProductBillet"
-                            ],
+                            null,
 
                         WaterConsumption =
-                            form[
-                                "RM2_WaterConsumption"
-                            ],
+                            ToNullableDecimal(
+                                form[
+                                    "RM2_WaterConsumption"
+                                ]
+                            ),
 
                         PowerConsumption =
-                            form[
-                                "RM2_PowerConsumption"
-                            ],
+                            ToNullableDecimal(
+                                form[
+                                    "RM2_PowerConsumption"
+                                ]
+                            ),
 
                         FuelConsumption =
                             ToNullableDecimal(
@@ -511,14 +537,53 @@ namespace ProductionPortal_Solb.Controllers
                     };
 
 
-                CalculateConsumptionValues(
-                    rm2
-                );
-
                 SetAudit(
                     rm2,
                     currentUser,
                     now
+                );
+
+
+                /*
+                 * IMPORTANT:
+                 * Always take production from live production tables
+                 * using the selected Consumption Date.
+                 *
+                 * SMP  -> SMPDayWiseProduction.TotalCastedTon
+                 * RM1  -> BundlesSection.TotalWeight (RM1)
+                 * RM2  -> BundlesSection.TotalWeight (RM2)
+                 */
+                ApplyProductionByDate(
+                    consumptionDate.Date,
+                    smp,
+                    rm1,
+                    rm2
+                );
+
+
+                /*
+                 * Recalculate all per-ton values after assigning
+                 * the correct production.
+                 */
+                CalculateConsumptionValues(
+                    smp
+                );
+
+                CalculateConsumptionValues(
+                    rm1
+                );
+
+                CalculateConsumptionValues(
+                    rm2
+                );
+
+
+                records.Add(
+                    smp
+                );
+
+                records.Add(
+                    rm1
                 );
 
                 records.Add(
@@ -536,7 +601,7 @@ namespace ProductionPortal_Solb.Controllers
                     );
 
 
-                if (savedID == 0)
+                if (savedID != 0)
                 {
                     TempData["ErrorMessage"] =
                         "Plant wise consumption could not be saved.";
@@ -616,7 +681,7 @@ namespace ProductionPortal_Solb.Controllers
                     );
 
 
-                if (result > 0)
+                if (result != 0)
                 {
                     TempData["SuccessMessage"] =
                         "Consumption record deleted successfully.";
@@ -641,6 +706,284 @@ namespace ProductionPortal_Solb.Controllers
                 return RedirectToAction(
                     "list"
                 );
+            }
+        }
+
+
+        // =====================================================
+        // GET PRODUCTION BY DATE - AJAX
+        // =====================================================
+
+        [HttpGet]
+        public JsonResult GetProductionByDate(
+            DateTime? date)
+        {
+            try
+            {
+                if (!date.HasValue)
+                {
+                    return Json(
+                        new
+                        {
+                            success = false,
+                            message = "Date is required."
+                        },
+                        JsonRequestBehavior.AllowGet
+                    );
+                }
+
+
+                DateTime selectedDate =
+                    date.Value.Date;
+
+
+                /*
+                 * Production:
+                 * SMP -> SMPDayWiseProduction.TotalCastedTon
+                 * RM1/RM2 -> BundlesSection
+                 */
+                PlantConsumptionBLL smpProductionModel =
+                    new PlantConsumptionBLL
+                    {
+                        Plant = "SMP"
+                    };
+
+                PlantConsumptionBLL rm1ProductionModel =
+                    new PlantConsumptionBLL
+                    {
+                        Plant = "RM1"
+                    };
+
+                PlantConsumptionBLL rm2ProductionModel =
+                    new PlantConsumptionBLL
+                    {
+                        Plant = "RM2"
+                    };
+
+
+                ApplyProductionByDate(
+                    selectedDate,
+                    smpProductionModel,
+                    rm1ProductionModel,
+                    rm2ProductionModel
+                );
+
+
+                /*
+                 * Existing Utility Consumption:
+                 * If selected date already exists in PlantConsumption,
+                 * return saved SMP / RM1 / RM2 values as well.
+                 */
+                List<PlantConsumptionBLL> existingRecords =
+                    repo.GetPlantConsumptionByDateAll(
+                        selectedDate
+                    )
+                    ?? new List<PlantConsumptionBLL>();
+
+
+                PlantConsumptionBLL smp =
+                    existingRecords.FirstOrDefault(
+                        x =>
+                            string.Equals(
+                                x.Plant,
+                                "SMP",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                    )
+                    ?? new PlantConsumptionBLL
+                    {
+                        Plant = "SMP"
+                    };
+
+
+                PlantConsumptionBLL rm1 =
+                    existingRecords.FirstOrDefault(
+                        x =>
+                            string.Equals(
+                                x.Plant,
+                                "RM1",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                    )
+                    ?? new PlantConsumptionBLL
+                    {
+                        Plant = "RM1"
+                    };
+
+
+                PlantConsumptionBLL rm2 =
+                    existingRecords.FirstOrDefault(
+                        x =>
+                            string.Equals(
+                                x.Plant,
+                                "RM2",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                    )
+                    ?? new PlantConsumptionBLL
+                    {
+                        Plant = "RM2"
+                    };
+
+
+                return Json(
+                    new
+                    {
+                        success = true,
+
+                        smpProduction =
+                            smpProductionModel.TotalProductBillet ?? 0m,
+
+                        rm1Production =
+                            rm1ProductionModel.TotalProductBillet ?? 0m,
+
+                        rm2Production =
+                            rm2ProductionModel.TotalProductBillet ?? 0m,
+
+
+                        smp = new
+                        {
+                            id = smp.ID,
+                            lpg = smp.LPG,
+                            oxygen = smp.Oxygen,
+                            nitrogen = smp.Nitrogen,
+                            argon = smp.Argon,
+                            waterConsumption = smp.WaterConsumption,
+                            powerConsumption = smp.PowerConsumption
+                        },
+
+
+                        rm1 = new
+                        {
+                            id = rm1.ID,
+                            waterConsumption = rm1.WaterConsumption,
+                            fuelConsumption = rm1.FuelConsumption,
+                            powerConsumption = rm1.PowerConsumption
+                        },
+
+
+                        rm2 = new
+                        {
+                            id = rm2.ID,
+                            waterConsumption = rm2.WaterConsumption,
+                            fuelConsumption = rm2.FuelConsumption,
+                            powerConsumption = rm2.PowerConsumption
+                        }
+                    },
+                    JsonRequestBehavior.AllowGet
+                );
+            }
+            catch (Exception ex)
+            {
+                return Json(
+                    new
+                    {
+                        success = false,
+                        message = ex.Message
+                    },
+                    JsonRequestBehavior.AllowGet
+                );
+            }
+        }
+
+
+        // =====================================================
+        // APPLY PRODUCTION FROM SOURCE TABLES
+        // =====================================================
+
+        private void ApplyProductionByDate(
+            DateTime date,
+            PlantConsumptionBLL smp,
+            PlantConsumptionBLL rm1,
+            PlantConsumptionBLL rm2)
+        {
+            decimal smpProduction =
+                repo.GetSMPProductionByDate(
+                    date.Date
+                );
+
+
+            /*
+             * Existing procedure remains the source for
+             * RM1 and RM2 production only.
+             */
+            DataTable dt =
+                repo.GetProductionByDate(
+                    date.Date
+                );
+
+            decimal rm1Production =
+                0m;
+
+            decimal rm2Production =
+                0m;
+
+
+            if (
+                dt != null &&
+                dt.Rows.Count > 0
+            )
+            {
+                DataRow row =
+                    dt.Rows[0];
+
+
+                if (
+                    row.Table.Columns.Contains(
+                        "RM1Production"
+                    ) &&
+                    row["RM1Production"] != DBNull.Value
+                )
+                {
+                    rm1Production =
+                        Convert.ToDecimal(
+                            row["RM1Production"]
+                        );
+                }
+
+
+                if (
+                    row.Table.Columns.Contains(
+                        "RM2Production"
+                    ) &&
+                    row["RM2Production"] != DBNull.Value
+                )
+                {
+                    rm2Production =
+                        Convert.ToDecimal(
+                            row["RM2Production"]
+                        );
+                }
+            }
+
+
+            if (smp != null)
+            {
+                smp.TotalProductBillet =
+                    Math.Round(
+                        smpProduction,
+                        3
+                    );
+            }
+
+
+            if (rm1 != null)
+            {
+                rm1.TotalProductBillet =
+                    Math.Round(
+                        rm1Production,
+                        3
+                    );
+            }
+
+
+            if (rm2 != null)
+            {
+                rm2.TotalProductBillet =
+                    Math.Round(
+                        rm2Production,
+                        3
+                    );
             }
         }
 
@@ -677,9 +1020,9 @@ namespace ProductionPortal_Solb.Controllers
             PlantConsumptionBLL model)
         {
             decimal production =
-                ToDecimalValue(
-                    model.TotalProductBillet
-                );
+                model.TotalProductBillet.HasValue
+                    ? model.TotalProductBillet.Value
+                    : 0m;
 
 
             model.LPGm3ton =
@@ -720,18 +1063,14 @@ namespace ProductionPortal_Solb.Controllers
         }
 
 
-        private string CalculatePerTon(
-            string consumptionValue,
+        private decimal? CalculatePerTon(
+            decimal? consumptionValue,
             decimal production)
         {
-            decimal consumption =
-                ToDecimalValue(
-                    consumptionValue
-                );
-
             if (
                 production <= 0 ||
-                consumption <= 0
+                !consumptionValue.HasValue ||
+                consumptionValue.Value <= 0
             )
             {
                 return null;
@@ -739,12 +1078,12 @@ namespace ProductionPortal_Solb.Controllers
 
 
             decimal result =
-                consumption /
+                consumptionValue.Value /
                 production;
 
-
-            return result.ToString(
-                "0.000"
+            return Math.Round(
+                result,
+                3
             );
         }
 
@@ -808,6 +1147,20 @@ namespace ProductionPortal_Solb.Controllers
             )
                 ? result
                 : 0;
+        }
+
+        [HttpGet]
+        public ActionResult UtilityDailyReport(DateTime? date)
+        {
+            DateTime reportDate = date ?? DateTime.Today;
+
+            UtilityDailyReportVM model =
+                repo.GetUtilityDailyReport(reportDate.Date);
+
+            return View(
+                "~/Views/Reporting/UtilityDailyReport.cshtml",
+                model
+            );
         }
     }
 }

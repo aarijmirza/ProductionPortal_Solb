@@ -100,7 +100,7 @@
 </style>
 
 <div class="xp-contentbar">
-    <form action="/Quality/addbillet" id="addprofileform" method="post" enctype="multipart/form-data">
+    <form action="@Url.Action("AddBillet", "Quality")" id="addprofileform" method="post" enctype="multipart/form-data">
         <input type="hidden"
                id="ID"
                name="ID"
@@ -201,7 +201,12 @@
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="steelGrade">Grade</label>
-                                <input type="text" id="steelGrade" class="form-control" name="steelGrade" value="@billet.Grade" readonly>
+                                <input type="text"
+                                       id="steelGrade"
+                                       class="form-control"
+                                       name="SteelGrade"
+                                       value="@(string.IsNullOrWhiteSpace(billet.SteelGrade) ? billet.Grade : billet.SteelGrade)"
+                                       readonly>
                             </div>
                         </div>
 
@@ -269,6 +274,7 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
+                                        <th scope="col" style="width:70px;">Sr No</th>
                                         <th scope="col">Heat #</th>
                                         <th scope="col">No. Of Billet</th>
                                         <th scope="col">C</th>
@@ -291,10 +297,20 @@
                                             string heatStatus = Convert.ToString(chem.HeatStatus);
 
                                             <tr>
+                                                <td class="text-center chemistry-srno">
+                                                    @(i + 1)
+                                                </td>
+
                                                 <td class="text-center">
+                                                    <input type="hidden"
+                                                           class="chemistry-id"
+                                                           name="Chemistry[@i].ID"
+                                                           value="@chem.ID" />
+
                                                     <input type="text"
                                                            class="form-control"
                                                            name="Chemistry[@i].HeatNo"
+                                                           autocomplete="off"
                                                            value="@chem.HeatNo" />
                                                 </td>
 
@@ -338,45 +354,45 @@
                                     }
                                 </tbody>
                                 @*<tbody id="chemBody">
-                                    @if (Model.Chemistry == null || !Model.chem.Any())
-                                    {
-                                        // default one row
-                                        Model. = new List<DAL.Models.RMChemicalAnalysisBLL> { new DAL.Models.RMChemicalAnalysisBLL() };
-                                    }
+                                        @if (Model.Chemistry == null || !Model.chem.Any())
+                                        {
+                                            // default one row
+                                            Model. = new List<DAL.Models.RMChemicalAnalysisBLL> { new DAL.Models.RMChemicalAnalysisBLL() };
+                                        }
 
-                                    @for (int i = 0; i < Model.Chemistry.Count; i++)
-                                    {
-                                        <tr>
-                                            <td class="text-center">@(i + 1)</td>
+                                        @for (int i = 0; i < Model.Chemistry.Count; i++)
+                                        {
+                                            <tr>
+                                                <td class="text-center">@(i + 1)</td>
 
-                                            <td><input type="number" class="form-control" name="Chemistry[@i].NoOfBillets" value="@Model.Chemistry[i].NoOfBillets" /></td>
-                                            <td><input type="number" class="form-control" name="Chemistry[@i].C" step="0.01" value="@Model.Chemistry[i].C" /></td>
-                                            <td><input type="number" class="form-control" name="Chemistry[@i].Si" step="0.01" value="@Model.Chemistry[i].Si" /></td>
-                                            <td><input type="number" class="form-control" name="Chemistry[@i].Mn" step="0.01" value="@Model.Chemistry[i].Mn" /></td>
-                                            <td><input type="number" class="form-control" name="Chemistry[@i].S" step="0.01" value="@Model.Chemistry[i].S" /></td>
-                                            <td><input type="number" class="form-control" name="Chemistry[@i].P" step="0.01" value="@Model.Chemistry[i].P" /></td>
-                                            <td><input type="number" class="form-control" name="Chemistry[@i].N" step="0.01" value="@Model.Chemistry[i].N" /></td>
-                                            <td><input type="number" class="form-control" name="Chemistry[@i].Ceq" step="0.01" value="@Model.Chemistry[i].Ceq" /></td>
+                                                <td><input type="number" class="form-control" name="Chemistry[@i].NoOfBillets" value="@Model.Chemistry[i].NoOfBillets" /></td>
+                                                <td><input type="number" class="form-control" name="Chemistry[@i].C" step="0.01" value="@Model.Chemistry[i].C" /></td>
+                                                <td><input type="number" class="form-control" name="Chemistry[@i].Si" step="0.01" value="@Model.Chemistry[i].Si" /></td>
+                                                <td><input type="number" class="form-control" name="Chemistry[@i].Mn" step="0.01" value="@Model.Chemistry[i].Mn" /></td>
+                                                <td><input type="number" class="form-control" name="Chemistry[@i].S" step="0.01" value="@Model.Chemistry[i].S" /></td>
+                                                <td><input type="number" class="form-control" name="Chemistry[@i].P" step="0.01" value="@Model.Chemistry[i].P" /></td>
+                                                <td><input type="number" class="form-control" name="Chemistry[@i].N" step="0.01" value="@Model.Chemistry[i].N" /></td>
+                                                <td><input type="number" class="form-control" name="Chemistry[@i].Ceq" step="0.01" value="@Model.Chemistry[i].Ceq" /></td>
 
-                                            <td>
-                                                <select class="form-control" name="Chemistry[@i].HeatStatus">
-                                                    <option disabled selected>-- select --</option>
-                                                    <option value="Cancelled">Cancelled</option>
-                                                    <option value="Charging">Charging</option>
-                                                    <option value="Complete">Complete</option>
-                                                    <option value="In Process">In-Process</option>
-                                                    <option value="New">New</option>
-                                                    <option value="Rolled">Rolled</option>
-                                                    <option value="Rolling">Rolling</option>
-                                                </select>
-                                            </td>
+                                                <td>
+                                                    <select class="form-control" name="Chemistry[@i].HeatStatus">
+                                                        <option disabled selected>-- select --</option>
+                                                        <option value="Cancelled">Cancelled</option>
+                                                        <option value="Charging">Charging</option>
+                                                        <option value="Complete">Complete</option>
+                                                        <option value="In Process">In-Process</option>
+                                                        <option value="New">New</option>
+                                                        <option value="Rolled">Rolled</option>
+                                                        <option value="Rolling">Rolling</option>
+                                                    </select>
+                                                </td>
 
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger removeRow">X</button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>*@
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-sm btn-danger removeRow">X</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>*@
                             </table>
                             <button type="button" class="btn btn-sm btn-success" id="addChemRow">
                                 + Add Row
@@ -517,8 +533,11 @@
 
             const row = `
         <tr>
+            <td class="text-center chemistry-srno">${rowIndex + 1}</td>
+
             <td class="text-center">
-            <input type="text" class="form-control" id="" name="Chemistry[${rowIndex}].HeatNo" placeholder="">
+            <input type="hidden" class="chemistry-id" name="Chemistry[${rowIndex}].ID" value="0">
+            <input type="text" class="form-control" name="Chemistry[${rowIndex}].HeatNo" autocomplete="off" placeholder="">
             </td>
 
             <td><input type="text" class="form-control" name="Chemistry[${rowIndex}].NoOfBillets" /></td>
@@ -557,6 +576,10 @@
 
             $('#chemBody tr').each(
                 function (i) {
+
+                    $(this)
+                        .find('.chemistry-srno')
+                        .text(i + 1);
 
                     $(this)
                         .find('input, select')
@@ -624,9 +647,12 @@
         $("#addprofileform").on("submit", function (e) {
             e.preventDefault();
 
-            if (isSubmitting) return;
+            if (isSubmitting) {
+                return;
+            }
 
-            var billetBoarding = $("#billetboarding").val().trim();
+            var billetBoarding =
+                ($("#billetboarding").val() || "").trim();
 
             if (billetBoarding === "") {
                 Swal.fire({
@@ -635,108 +661,249 @@
                     icon: 'error',
                     confirmButtonText: 'OK'
                 });
+
                 return;
             }
+
 
             var heatNos = [];
             var duplicateHeatNos = [];
 
-            $("#chemBody").find("input[name*='.HeatNo']").each(function () {
-                var heatNo = $(this).val().trim().toUpperCase();
 
-                if (heatNo !== "") {
-                    if (heatNos.indexOf(heatNo) >= 0) {
-                        duplicateHeatNos.push(heatNo);
-                    } else {
-                        heatNos.push(heatNo);
+            $("#chemBody")
+                .find("input[name*='.HeatNo']")
+                .each(function () {
+
+                    var heatNo =
+                        ($(this).val() || "")
+                            .trim()
+                            .toUpperCase();
+
+                    if (heatNo !== "") {
+
+                        if (
+                            heatNos.indexOf(
+                                heatNo
+                            ) >= 0
+                        ) {
+                            duplicateHeatNos.push(
+                                heatNo
+                            );
+                        }
+                        else {
+                            heatNos.push(
+                                heatNo
+                            );
+                        }
                     }
-                }
-            });
+                });
+
 
             if (heatNos.length === 0) {
+
                 Swal.fire({
                     title: 'Error',
                     text: 'Please enter at least one Heat No.',
                     icon: 'error',
                     confirmButtonText: 'OK'
                 });
+
                 return;
             }
 
+
+            /*
+             * Duplicate inside current screen.
+             */
             if (duplicateHeatNos.length > 0) {
+
                 Swal.fire({
                     title: 'Duplicate Heat No',
-                    text: 'Duplicate Heat No found: ' + duplicateHeatNos.join(', '),
+                    text:
+                        'Duplicate Heat No found in current form: '
+                        +
+                        duplicateHeatNos.join(', '),
                     icon: 'error',
                     confirmButtonText: 'OK'
                 });
+
                 return;
             }
 
-            Swal.fire({
-                title: 'Confirm Submission',
-                text: 'Are you sure you want to submit this Billet Boarding?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Submit',
-                cancelButtonText: 'Cancel',
-                allowOutsideClick: false,
-                allowEscapeKey: false
-            }).then((result) => {
 
-                if (result.isConfirmed) {
+            /*
+             * =====================================================
+             * DATABASE DUPLICATE CHECK BEFORE FORM SUBMIT
+             *
+             * StatusID = 1 => blocked
+             * StatusID = 3 => allowed
+             * =====================================================
+             */
 
-                    isSubmitting = true;
+            var currentID =
+                parseInt(
+                    $("#ID").val() || "0"
+                );
 
-                    $("#addprofileform")
-                        .find("button[type='submit']")
-                        .prop("disabled", true)
-                        .text("Submitting...");
+            // Existing chemistry IDs must be excluded during Edit.
+            // Newly added rows have ID = 0 and are intentionally not excluded.
+            var excludedIDs = [];
 
-                    $("#addprofileform")[0].submit();
+            $("#chemBody .chemistry-id").each(function () {
+                var chemistryID = parseInt($(this).val() || "0");
+
+                if (chemistryID > 0) {
+                    excludedIDs.push(chemistryID);
                 }
+            });
+
+
+            /*
+             * ADD AND EDIT:
+             * Validate against active RMChemicalAnalysis records.
+             * In Edit, the server excludes the current boarding chemistry IDs.
+             */
+            $.ajax({
+                url:
+                    '@Url.Action("CheckDuplicateHeatNosForBilletSave", "Quality")',
+
+                type:
+                    'POST',
+
+                traditional:
+                    true,
+
+                data:
+                {
+                    heatNos: heatNos,
+                    excludedIDs: excludedIDs,
+                    currentID: currentID,
+                    __RequestVerificationToken:
+                        $('#addprofileform input[name="__RequestVerificationToken"]').val()
+                },
+
+                success:
+                    function (response) {
+
+                        if (
+                            !response ||
+                            response.success !== true
+                        ) {
+
+                            Swal.fire({
+                                title: 'Error',
+                                text:
+                                    response &&
+                                    response.message
+                                        ? response.message
+                                        : 'Unable to validate Heat No.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+
+                            return;
+                        }
+
+
+                        if (
+                            response.duplicates &&
+                            response.duplicates.length > 0
+                        ) {
+
+                            Swal.fire({
+                                title: 'Duplicate Heat No',
+                                text:
+                                    'These Heat No(s) already exist in active Chemical Analysis: '
+                                    +
+                                    response.duplicates.join(', '),
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+
+                            return;
+                        }
+
+
+                        Swal.fire({
+                            title: 'Confirm Submission',
+                            text:
+                                currentID > 0
+                                    ? 'Are you sure you want to update this Billet Boarding?'
+                                    : 'Are you sure you want to submit this Billet Boarding?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText:
+                                currentID > 0
+                                    ? 'Yes, Update'
+                                    : 'Yes, Submit',
+                            cancelButtonText: 'Cancel',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+
+                        }).then(function (result) {
+
+                            if (
+                                result.isConfirmed
+                            ) {
+
+                                isSubmitting =
+                                    true;
+
+
+                                $("#addprofileform")
+                                    .find(
+                                        "button[type='submit']"
+                                    )
+                                    .prop(
+                                        "disabled",
+                                        true
+                                    )
+                                    .text(
+                                        currentID > 0
+                                            ? "Updating..."
+                                            : "Submitting..."
+                                    );
+
+
+                                /*
+                                 * Native submit bypasses this jQuery handler,
+                                 * preventing recursive submit.
+                                 */
+                                document
+                                    .getElementById(
+                                        "addprofileform"
+                                    )
+                                    .submit();
+                            }
+                        });
+                    },
+
+                error:
+                    function (xhr) {
+
+                        var message =
+                            'Unable to validate duplicate Heat No.';
+
+
+                        if (
+                            xhr &&
+                            xhr.responseJSON &&
+                            xhr.responseJSON.message
+                        ) {
+                            message =
+                                xhr.responseJSON.message;
+                        }
+
+
+                        Swal.fire({
+                            title: 'Validation Error',
+                            text: message,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
             });
         });
 
     });
 </script>
-
-@*<script>
-        $(document).ready(function () {
-
-            let isSubmitting = false;   // 🔐 double-submit lock
-
-            $("#addprofileform").on("submit", function (e) {
-                e.preventDefault(); // ❗ pehle submit roko
-
-                if (isSubmitting) return; // already submitting
-
-                Swal.fire({
-                    title: 'Confirm Submission',
-                    text: 'Are you sure you want to submit this Heat Record?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, Submit',
-                    cancelButtonText: 'Cancel',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
-                }).then((result) => {
-
-                    if (result.isConfirmed) {
-
-                        isSubmitting = true; // 🔒 lock
-
-                        // Disable submit button
-                        $("#addprofileform")
-                            .find("button[type='submit']")
-                            .prop("disabled", true)
-                            .text("Submitting...");
-
-                        // Finally submit form
-                        $("#addprofileform")[0].submit();
-                    }
-                });
-            });
-
-        });
-    </script>*@

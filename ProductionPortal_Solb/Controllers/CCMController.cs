@@ -45,7 +45,7 @@ namespace ProductionPortal_Solb.Controllers
             var vm = new DAL.Models.ViewModel.CCMMeltShopVM();
 
             var last24Hours = DateTime.Now.AddHours(-24);
-            var heatData = mr.GetAllLFRecord(null,null);
+            var heatData = mr.GetAllLFRecord(null, null);
             var grades = repo.GetAllGrade();
 
             if (id.HasValue)
@@ -735,11 +735,6 @@ namespace ProductionPortal_Solb.Controllers
             return View();
         }
 
-        public ActionResult CCMDailyHeatSummary()
-        {
-            return View();
-        }
-
         [HttpPost]
         public ActionResult AddYieldRecord(CCMYeildBLL data)
         {
@@ -876,5 +871,110 @@ namespace ProductionPortal_Solb.Controllers
             cell.Padding = 3f;
             return cell;
         }
+
+
+        [HttpGet]
+        public ActionResult CCMDailyHeatSummary(
+            DateTime? fromDate,
+            DateTime? toDate)
+        {
+            try
+            {
+                DateTime startDate =
+                    fromDate ?? DateTime.Today;
+
+                DateTime endDate =
+                    toDate ?? DateTime.Today;
+
+
+                if (
+                    startDate.Date >
+                    endDate.Date
+                )
+                {
+                    DateTime temp =
+                        startDate;
+
+                    startDate =
+                        endDate;
+
+                    endDate =
+                        temp;
+                }
+
+
+                CCMMeltShopReportVM model =
+                    repo.GetCCMDailyHeatSummary(
+                        startDate.Date,
+                        endDate.Date
+                    );
+
+
+                if (model == null)
+                {
+                    model =
+                        new CCMMeltShopReportVM
+                        {
+                            CCM =
+                                new List<CCMBLL>(),
+
+                            ChemicalAnalysis =
+                                new List<
+                                    CCMChemicalAnalysisBLL
+                                >()
+                        };
+                }
+
+
+                model.FromDate =
+                    startDate.Date;
+
+                model.ToDate =
+                    endDate.Date;
+
+
+                ViewBag.FromDate =
+                    startDate.ToString(
+                        "yyyy-MM-dd"
+                    );
+
+                ViewBag.ToDate =
+                    endDate.ToString(
+                        "yyyy-MM-dd"
+                    );
+
+
+                return View(
+                    model
+                );
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] =
+                    "Error loading CCM Daily Heat Summary: "
+                    + ex.Message;
+
+
+                return View(
+                    new CCMMeltShopReportVM
+                    {
+                        CCM =
+                            new List<CCMBLL>(),
+
+                        ChemicalAnalysis =
+                            new List<
+                                CCMChemicalAnalysisBLL
+                            >(),
+
+                        FromDate =
+                            DateTime.Today,
+
+                        ToDate =
+                            DateTime.Today
+                    }
+                );
+            }
+        }
+
     }
 }

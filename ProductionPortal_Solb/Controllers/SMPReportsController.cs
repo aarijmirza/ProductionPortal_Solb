@@ -45,36 +45,46 @@ namespace ProductionPortal_Solb.Controllers
         {
             return View();
         }
-        public ActionResult SMPDailyDashboard(DateTime? fromDate,
+
+        [HttpGet]
+        public ActionResult SMPDailyDashboard(
+            DateTime? fromDate,
             DateTime? toDate)
         {
-            DateTime selectedToDate =
-                toDate ?? DateTime.Today;
+            DateTime startDate =
+                fromDate.HasValue
+                    ? fromDate.Value.Date
+                    : DateTime.Today;
 
-            DateTime selectedFromDate =
-                fromDate ?? selectedToDate;
+            DateTime endDate =
+                toDate.HasValue
+                    ? toDate.Value.Date
+                    : startDate;
 
-            // Agar From Date, To Date se bari ho
-            // to dates automatically swap ho jayengi.
-            if (selectedFromDate > selectedToDate)
+
+            if (startDate > endDate)
             {
                 DateTime temp =
-                    selectedFromDate;
+                    startDate;
 
-                selectedFromDate =
-                    selectedToDate;
+                startDate =
+                    endDate;
 
-                selectedToDate =
+                endDate =
                     temp;
             }
 
+
             SMPDashboardVM model =
-                repo.GetDashboard(
-                    selectedFromDate,
-                    selectedToDate
+                repo.GetSMPDashboard(
+                    startDate,
+                    endDate
                 );
 
-            return View(model);
+
+            return View(
+                model
+            );
         }
     }
 }

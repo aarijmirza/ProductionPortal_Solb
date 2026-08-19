@@ -443,7 +443,16 @@
 
         <div class="main-card-body">
 
-            @using (Html.BeginForm("InsertMaintenanceAnalysis", "Maintenance", FormMethod.Post, new { id = "analysisForm" }))
+            @using (Html.BeginForm(
+                "InsertMaintenanceAnalysis",
+                "Maintenance",
+                FormMethod.Post,
+                new
+                {
+                    id = "analysisForm",
+                    enctype = "multipart/form-data"
+                }
+            ))
             {
                 @Html.AntiForgeryToken()
 
@@ -707,6 +716,50 @@
 
                 </div>
 
+                <!-- FAILURE ANALYSIS ATTACHMENT -->
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>
+                                Failure Analysis Attachment
+                            </label>
+
+                            <div class="custom-file">
+                                <input type="file"
+                                       class="custom-file-input"
+                                       id="FailureAnalysisFile"
+                                       name="FailureAnalysisFile"
+                                       accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
+
+                                <label class="custom-file-label"
+                                       for="FailureAnalysisFile">
+                                    Choose file
+                                </label>
+                            </div>
+
+                            <small class="form-text text-muted">
+                                Allowed: PDF, Word, Excel, JPG, JPEG, PNG.
+                                Maximum recommended size: 10 MB.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>
+                                Attachment Remarks
+                            </label>
+
+                            <input type="text"
+                                   class="form-control"
+                                   id="FailureAnalysisFileRemarks"
+                                   name="FailureAnalysisFileRemarks"
+                                   maxlength="250"
+                                   placeholder="Enter attachment remarks (optional)" />
+                        </div>
+                    </div>
+                </div>
+
                 <div class="text-right mt-3">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-save"></i>
@@ -734,6 +787,24 @@
 
 <script>
     $(document).ready(function () {
+
+        $("#FailureAnalysisFile").on("change", function () {
+            var fileName = "";
+
+            if (
+                this.files &&
+                this.files.length > 0
+            ) {
+                fileName =
+                    this.files[0].name;
+            }
+
+            $(this)
+                .next(".custom-file-label")
+                .text(
+                    fileName || "Choose file"
+                );
+        });
 
         $("#analysisForm").on("submit", function (e) {
             e.preventDefault();

@@ -51,16 +51,6 @@
         delayDetail != null && !string.IsNullOrWhiteSpace(delayDetail.AgencyName)
             ? delayDetail.AgencyName
             : "";
-
-    string evidenceForCompletion =
-        delayDetail != null && !string.IsNullOrWhiteSpace(delayDetail.DelayDescription)
-            ? delayDetail.DelayDescription
-            : "";
-
-    string reasonForNotClosing =
-        !string.IsNullOrWhiteSpace(rootCause)
-            ? rootCause
-            : "";
 }
 
 <style>
@@ -367,7 +357,7 @@
 
                 <div class="card-body">
 
-                    <div class="card mb-3">
+                    @*<div class="card mb-3">
                         <div class="card-header">
                             Failure Analysis Information
                         </div>
@@ -459,7 +449,7 @@
 
                             </div>
                         </div>
-                    </div>
+                    </div>*@
 
                     <div id="counterMeasureContainer">
 
@@ -558,7 +548,8 @@
 
                                         <textarea name="CounterMeasures[0].EvidenceForCompletion"
                                                   class="form-control"
-                                                  rows="2">@evidenceForCompletion</textarea>
+                                                  rows="2"
+                                                  placeholder="Enter evidence for completion"></textarea>
                                     </div>
                                 </div>
 
@@ -568,7 +559,8 @@
 
                                         <textarea name="CounterMeasures[0].ReasonForNotClosing"
                                                   class="form-control"
-                                                  rows="2">@reasonForNotClosing</textarea>
+                                                  rows="2"
+                                                  placeholder="Enter reason for not closing"></textarea>
                                     </div>
                                 </div>
 
@@ -670,7 +662,8 @@
 
                                         <textarea name="CounterMeasures[1].EvidenceForCompletion"
                                                   class="form-control"
-                                                  rows="2">@evidenceForCompletion</textarea>
+                                                  rows="2"
+                                                  placeholder="Enter evidence for completion"></textarea>
                                     </div>
                                 </div>
 
@@ -680,7 +673,8 @@
 
                                         <textarea name="CounterMeasures[1].ReasonForNotClosing"
                                                   class="form-control"
-                                                  rows="2">@reasonForNotClosing</textarea>
+                                                  rows="2"
+                                                  placeholder="Enter reason for not closing"></textarea>
                                     </div>
                                 </div>
 
@@ -925,7 +919,8 @@
 
                                 <textarea name="CounterMeasures[${counterIndex}].EvidenceForCompletion"
                                           class="form-control"
-                                          rows="2"></textarea>
+                                          rows="2"
+                                          placeholder="Enter evidence for completion"></textarea>
                             </div>
                         </div>
 
@@ -935,7 +930,8 @@
 
                                 <textarea name="CounterMeasures[${counterIndex}].ReasonForNotClosing"
                                           class="form-control"
-                                          rows="2"></textarea>
+                                          rows="2"
+                                          placeholder="Enter reason for not closing"></textarea>
                             </div>
                         </div>
 

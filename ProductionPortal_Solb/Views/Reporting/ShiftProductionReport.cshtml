@@ -6,11 +6,74 @@
     var data = Model.DischargedHeats;
     var delays = Model.Delays;
 
+    Func<object, int> ShiftDelayOrder = value =>
+    {
+        if (value == null)
+            return int.MaxValue;
+
+        TimeSpan time;
+
+        if (!TimeSpan.TryParse(Convert.ToString(value), out time))
+            return int.MaxValue;
+
+        int minutes = (int)time.TotalMinutes;
+        int shiftStartMinutes = 7 * 60;
+
+        return minutes >= shiftStartMinutes
+            ? minutes - shiftStartMinutes
+            : (24 * 60 - shiftStartMinutes) + minutes;
+    };
+
+    var alignedDelays =
+        delays != null
+            ? delays
+                .OrderBy(x => ShiftDelayOrder(x.StartTime))
+                .ThenBy(x => ShiftDelayOrder(x.EndTime))
+                .ToList()
+            : new List<DAL.Models.PlantDelayBLL>();
+
+    /*
+     * Production order for Sr. No.
+     * Morning -> Evening -> Night.
+     * Within each shift, use actual DischargingSequence,
+     * then HeatNo as a stable fallback.
+     */
+    Func<string, int> ShiftProductionOrder = shift =>
+    {
+        string value = (shift ?? "").Trim().ToLower();
+
+        if (value == "morning")
+            return 1;
+
+        if (value == "evening" || value == "afternoon")
+            return 2;
+
+        if (value == "night")
+            return 3;
+
+        if (value == "long morning")
+            return 4;
+
+        if (value == "long night")
+            return 5;
+
+        return 99;
+    };
+
+    var productionRows =
+        data != null
+            ? data
+                .OrderBy(x => ShiftProductionOrder(x.Shift))
+                .ThenBy(x => x.DischargingSequence)
+                .ThenBy(x => x.HeatNo)
+                .ToList()
+            : data;
+
     // 🔥 Production Totals
     decimal totalDischarge = data.Sum(x => x.TotalBillet ?? 0);
     decimal totalRolled = data.Sum(x => x.TotalBillet ?? 0);
-    decimal totalCobble = data.Sum(x => (decimal)x.Cobble);
-    decimal totalHotOut = data.Sum(x => (decimal)x.HotOut);
+    decimal totalCobble = data.Sum(x => x.Cobble ?? 0);
+    decimal totalHotOut = data.Sum(x => x.HotOut ?? 0);
     decimal totalWeight = data.Sum(x => (decimal)x.TotalWeight);
     decimal totalBundles = data.Sum(x => x.TotalBundleProduced ?? 0);
     decimal theoriticalWeight = data.Sum(x => x.TheoriticalWeight ?? 0);
@@ -25,9 +88,9 @@
     decimal totalShortWeight = data.Sum(x => x.ShortBundleActualWeight ?? 0);
 
     // 🔥 Delay Totals
-    int totalDelayDuration = delays.Sum(x => x.TotalDuration ?? 0);
-    int totalDelayCobble = delays.Sum(x => x.Cobble ?? 0);
-    int totalDelayHotOut = delays.Sum(x => x.HotOut ?? 0);
+    int totalDelayDuration = alignedDelays.Sum(x => x.TotalDuration ?? 0);
+    int totalDelayCobble = alignedDelays.Sum(x => x.Cobble ?? 0);
+    int totalDelayHotOut = alignedDelays.Sum(x => x.HotOut ?? 0);
 
     var gregorian = new CultureInfo("en-US");
     gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
@@ -224,9 +287,9 @@
                 <td style="width:180px;" class="red">Action Taken</td>
 
             </tr>
-            @if (Model?.Delays != null)
+            @if (alignedDelays != null && alignedDelays.Any())
             {
-                foreach (var item in Model.Delays)
+                foreach (var item in alignedDelays)
                 {
 
                     <tr style="height:22px;">
@@ -335,13 +398,14 @@
 
             <tr class="center small bold">
             </tr>
-            @if (Model?.DischargedHeats != null)
+            @if (productionRows != null && productionRows.Any())
             {
-                <!-- 8 Production Blank Rows -->
-                foreach (var item in Model.DischargedHeats)
+                int srNo = 1;
+
+                foreach (var item in productionRows)
                 {
                     <tr>
-                        <td class="center">@item.DischargingSequence</td>
+                        <td class="center">@srNo</td>
                         <td>@item.HeatNo</td>
                         <td>@item.SteelGrade</td>
                         <td>@item.Size</td>
@@ -358,6 +422,8 @@
                         <td>@(((item.TheoriticalWeight / item.TotalWeight) * 100)?.ToString("0.00"))</td>
                         @*<td>@(item.TheoriticalWeight / item.TotalWeight * 100)</td>*@
                     </tr>
+
+                    srNo++;
                 }
             }
             else
@@ -544,9 +610,15 @@
                                 string shift = Model.DischargedHeats.First().Shift?.Trim().ToLower() ?? "";
 
                                 // Morning / Evening / Night → 8 rows, otherwise 12
-                                hourlyRows = (shift == "morning" || shift == "afternoon" || shift == "night")
-                                                ? 8
-                                                : 12;
+                                hourlyRows =
+                                    (
+                                        shift == "morning"
+                                        || shift == "evening"
+                                        || shift == "afternoon"
+                                        || shift == "night"
+                                    )
+                                        ? 8
+                                        : 12;
                             }
                         }
 

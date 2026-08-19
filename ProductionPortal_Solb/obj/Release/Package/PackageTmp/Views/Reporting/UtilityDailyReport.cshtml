@@ -1,5 +1,4 @@
-﻿
-@model DAL.Models.UtilityDailyReportVM
+﻿@model DAL.Models.UtilityDailyReportVM
 @using System.Globalization
 
 @{
@@ -108,59 +107,211 @@
         return pct.ToString("0");
     };
 
-    decimal smpProduction = ToDec(smp != null ? smp.TotalProductBillet : "");
-    decimal rm1Production = ToDec(rm1 != null ? rm1.TotalProductBillet : "");
-    decimal rm2Production = ToDec(rm2 != null ? rm2.TotalProductBillet : "");
+    decimal smpProduction =
+    ToDecNullable(
+        smp != null
+            ? smp.TotalProductBillet
+            : null
+    );
+
+    decimal rm1Production =
+    ToDecNullable(
+        rm1 != null
+            ? rm1.TotalProductBillet
+            : null
+    );
+
+    decimal rm2Production =
+    ToDecNullable(
+        rm2 != null
+            ? rm2.TotalProductBillet
+            : null
+    );
     decimal rmProduction = rm1Production + rm2Production;
     decimal totalProduction = smpProduction + rmProduction;
 
-    decimal smpPowerActual = ToDec(smp != null ? smp.PowerConsumptionKWHton : "");
-    decimal smpPowerTarget = ToDec(smp != null ? smp.PowerConsumptionKWHtarget : "");
+    /*
+     * ACTUAL CONSUMPTION PER TON
+     * Actual = Raw Component Consumption / Plant Total Production
+     */
 
-    decimal smpWaterActual = ToDec(smp != null ? smp.WaterConsumptionM3 : "");
-    decimal smpWaterTarget = ToDec(smp != null ? smp.WaterConsumptionTarget : "");
+    decimal smpPowerActual = smpProduction > 0 && smp != null
+        ? ToDecNullable(smp.PowerConsumption) / smpProduction
+        : 0m;
+    decimal smpPowerTarget = smp != null
+        ? ToDecNullable(smp.PowerConsumptionKWHtarget)
+        : 0m;
 
-    decimal smpOxygenActual = ToDec(smp != null ? smp.OxygenNm3ton : "");
-    decimal smpOxygenTarget = ToDec(smp != null ? smp.OxygenNm3tonTarget : "");
+    decimal smpWaterActual = smpProduction > 0 && smp != null
+        ? ToDecNullable(smp.WaterConsumption) / smpProduction
+        : 0m;
+    decimal smpWaterTarget = smp != null
+        ? ToDecNullable(smp.WaterConsumptionTarget)
+        : 0m;
 
-    decimal smpNitrogenActual = ToDec(smp != null ? smp.NitrogenNm3ton : "");
-    decimal smpNitrogenTarget = ToDec(smp != null ? smp.NitrogenNm3tonTarget : "");
+    decimal smpOxygenActual = smpProduction > 0 && smp != null
+        ? ToDecNullable(smp.Oxygen) / smpProduction
+        : 0m;
+    decimal smpOxygenTarget = smp != null
+        ? ToDecNullable(smp.OxygenNm3tonTarget)
+        : 0m;
 
-    decimal smpArgonActual = ToDec(smp != null ? smp.ArgonNm3ton : "");
-    decimal smpArgonTarget = ToDec(smp != null ? smp.ArgonNm3tonTarget : "");
+    decimal smpNitrogenActual = smpProduction > 0 && smp != null
+        ? ToDecNullable(smp.Nitrogen) / smpProduction
+        : 0m;
+    decimal smpNitrogenTarget = smp != null
+        ? ToDecNullable(smp.NitrogenNm3tonTarget)
+        : 0m;
 
-    decimal smpLpgActual = ToDec(smp != null ? smp.LPGm3ton : "");
-    decimal smpLpgTarget = ToDec(smp != null ? smp.LPGNm3tonTarget : "");
+    decimal smpArgonActual = smpProduction > 0 && smp != null
+        ? ToDecNullable(smp.Argon) / smpProduction
+        : 0m;
+    decimal smpArgonTarget = smp != null
+        ? ToDecNullable(smp.ArgonNm3tonTarget)
+        : 0m;
 
-    decimal rmPowerActual = rmProduction > 0
-        ? ((ToDec(rm1 != null ? rm1.PowerConsumption : "") + ToDec(rm2 != null ? rm2.PowerConsumption : "")) / rmProduction)
-        : 0;
+    decimal smpLpgActual = smpProduction > 0 && smp != null
+        ? ToDecNullable(smp.LPG) / smpProduction
+        : 0m;
+    decimal smpLpgTarget = smp != null
+        ? ToDecNullable(smp.LPGNm3tonTarget)
+        : 0m;
 
-    decimal rmPowerTarget = ToDec(rm1 != null ? rm1.PowerConsumptionKWHtarget : "");
-    if (rmPowerTarget <= 0)
-    {
-        rmPowerTarget = ToDec(rm2 != null ? rm2.PowerConsumptionKWHtarget : "");
-    }
+    decimal rm1PowerActual = rm1Production > 0 && rm1 != null
+        ? ToDecNullable(rm1.PowerConsumption) / rm1Production
+        : 0m;
+    decimal rm1PowerTarget = rm1 != null
+        ? ToDecNullable(rm1.PowerConsumptionKWHtarget)
+        : 0m;
 
-    decimal rmWaterActual = rmProduction > 0
-        ? ((ToDec(rm1 != null ? rm1.WaterConsumption : "") + ToDec(rm2 != null ? rm2.WaterConsumption : "")) / rmProduction)
-        : 0;
+    decimal rm1WaterActual = rm1Production > 0 && rm1 != null
+        ? ToDecNullable(rm1.WaterConsumption) / rm1Production
+        : 0m;
+    decimal rm1WaterTarget = rm1 != null
+        ? ToDecNullable(rm1.WaterConsumptionTarget)
+        : 0m;
 
-    decimal rmWaterTarget = ToDec(rm1 != null ? rm1.WaterConsumptionTarget : "");
-    if (rmWaterTarget <= 0)
-    {
-        rmWaterTarget = ToDec(rm2 != null ? rm2.WaterConsumptionTarget : "");
-    }
+    decimal rm2PowerActual = rm2Production > 0 && rm2 != null
+        ? ToDecNullable(rm2.PowerConsumption) / rm2Production
+        : 0m;
+    decimal rm2PowerTarget = rm2 != null
+        ? ToDecNullable(rm2.PowerConsumptionKWHtarget)
+        : 0m;
 
-    decimal rmFuelActual = rmProduction > 0
-        ? ((ToDecNullable(rm1 != null ? rm1.FuelConsumption : null) + ToDecNullable(rm2 != null ? rm2.FuelConsumption : null)) / rmProduction)
-        : 0;
-
-    decimal rmFuelTarget = 0;
+    decimal rm2WaterActual = rm2Production > 0 && rm2 != null
+        ? ToDecNullable(rm2.WaterConsumption) / rm2Production
+        : 0m;
+    decimal rm2WaterTarget = rm2 != null
+        ? ToDecNullable(rm2.WaterConsumptionTarget)
+        : 0m;
 
     bool smpPowerIssue = smpPowerTarget > 0 && smpPowerActual > smpPowerTarget;
     bool smpNitrogenIssue = smpNitrogenTarget > 0 && smpNitrogenActual > smpNitrogenTarget;
-    bool rmGood = (rmPowerTarget > 0 && rmPowerActual <= rmPowerTarget) || (rmWaterTarget > 0 && rmWaterActual <= rmWaterTarget);
+
+    decimal totalPowerRaw =
+        ToDecNullable(smp != null ? smp.PowerConsumption : null)
+        + ToDecNullable(rm1 != null ? rm1.PowerConsumption : null)
+        + ToDecNullable(rm2 != null ? rm2.PowerConsumption : null);
+
+    decimal totalWaterRaw =
+        ToDecNullable(smp != null ? smp.WaterConsumption : null)
+        + ToDecNullable(rm1 != null ? rm1.WaterConsumption : null)
+        + ToDecNullable(rm2 != null ? rm2.WaterConsumption : null);
+
+    decimal totalFuelRaw =
+        ToDecNullable(rm1 != null ? rm1.FuelConsumption : null)
+        + ToDecNullable(rm2 != null ? rm2.FuelConsumption : null);
+
+    int issueCount = 0;
+    if (smpPowerIssue)
+    {
+        issueCount++;
+    }
+    if (smpNitrogenIssue)
+    {
+        issueCount++;
+    }
+    if (rm1PowerTarget > 0 && rm1PowerActual > rm1PowerTarget)
+    {
+        issueCount++;
+    }
+    if (rm1WaterTarget > 0 && rm1WaterActual > rm1WaterTarget)
+    {
+        issueCount++;
+    }
+    if (rm2PowerTarget > 0 && rm2PowerActual > rm2PowerTarget)
+    {
+        issueCount++;
+    }
+    if (rm2WaterTarget > 0 && rm2WaterActual > rm2WaterTarget)
+    {
+        issueCount++;
+    }
+
+    decimal rm1FuelActual =
+    rm1Production > 0
+        ? ToDecNullable(
+            rm1 != null
+                ? rm1.FuelConsumption
+                : null
+          ) / rm1Production
+        : 0;
+
+    decimal rm1FuelTarget =
+        ToDecNullable(
+            rm1 != null
+                ? rm1.FuelConsumptionTarget
+                : null
+        );
+
+
+    decimal rm2FuelActual =
+        rm2Production > 0
+            ? ToDecNullable(
+                rm2 != null
+                    ? rm2.FuelConsumption
+                    : null
+              ) / rm2Production
+            : 0;
+
+    decimal rm2FuelTarget =
+        ToDecNullable(
+            rm2 != null
+                ? rm2.FuelConsumptionTarget
+                : null
+        );
+
+
+    bool rm1Good =
+        (rm1PowerTarget <= 0 || rm1PowerActual <= rm1PowerTarget)
+        &&
+        (rm1WaterTarget <= 0 || rm1WaterActual <= rm1WaterTarget)
+        &&
+        (rm1FuelTarget <= 0 || rm1FuelActual <= rm1FuelTarget);
+
+    bool rm2Good =
+        (rm2PowerTarget <= 0 || rm2PowerActual <= rm2PowerTarget)
+        &&
+        (rm2WaterTarget <= 0 || rm2WaterActual <= rm2WaterTarget)
+        &&
+        (rm2FuelTarget <= 0 || rm2FuelActual <= rm2FuelTarget);
+
+    bool rmGood = rm1Good && rm2Good;
+
+    if (rm1FuelTarget > 0 && rm1FuelActual > rm1FuelTarget)
+    {
+        issueCount++;
+    }
+
+    if (rm2FuelTarget > 0 && rm2FuelActual > rm2FuelTarget)
+    {
+        issueCount++;
+    }
+
+    string overallStatus =
+        issueCount == 0 ? "Healthy"
+        : issueCount <= 2 ? "Monitor"
+        : "Attention";
 }
 
 <style>
@@ -487,6 +638,100 @@
         font-weight: 900;
     }
 
+
+    .executive-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .executive-tile {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(180deg, #fff 0%, #fbfbfc 100%);
+        border: 1px solid #eceff3;
+        border-radius: 16px;
+        padding: 16px 18px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.06);
+    }
+
+        .executive-tile:after {
+            content: "";
+            position: absolute;
+            right: -28px;
+            top: -28px;
+            width: 92px;
+            height: 92px;
+            border-radius: 50%;
+            background: rgba(127,16,16,.06);
+        }
+
+        .executive-tile .caption {
+            color: #7b8190;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .55px;
+            font-weight: 800;
+        }
+
+        .executive-tile .big {
+            margin-top: 6px;
+            font-size: 25px;
+            line-height: 1.1;
+            font-weight: 900;
+            color: #20242a;
+        }
+
+        .executive-tile .unit {
+            font-size: 11px;
+            color: #8a9099;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+
+        .executive-tile .mini {
+            margin-top: 7px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+    .dashboard-header {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .dashboard-header:before {
+            content: "";
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            right: -75px;
+            top: -120px;
+            background: rgba(255,255,255,.08);
+        }
+
+    .header-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.14);
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+        .header-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #8cffb1;
+            box-shadow: 0 0 0 4px rgba(140,255,177,.12);
+        }
+
     @@media (max-width: 1200px) {
         .kpi-grid {
             grid-template-columns: repeat(2, 1fr);
@@ -649,7 +894,7 @@
 <div class="xp-contentbar utility-dashboard">
 
     <div class="filter-card no-print">
-        <form method="get" action="@Url.Action("UtilityDailyReport", "Reporting")">
+        <form method="get" action="@Url.Action("UtilityDailyReport", "Consumption")">
             <div class="row align-items-end">
                 <div class="col-md-3">
                     <label><b>Date</b></label>
@@ -681,6 +926,10 @@
                 <small>
                     <b>Steel Melting Plant & Rolling Mill Analysis</b>
                 </small>
+                <div class="header-status">
+                    <span class="dot"></span>
+                    Overall Status: @overallStatus
+                </div>
             </div>
             <div class="col-md-4 text-right">
                 <div><b>Date:</b> @reportDate.ToString("dd MMM yyyy")</div>
@@ -688,6 +937,32 @@
             </div>
         </div>
     </div>
+
+    <section class="executive-strip">
+        <div class="executive-tile">
+            <div class="caption">Total Power Draw</div>
+            <div class="big">@F(totalPowerRaw)<span class="unit">KWH</span></div>
+            <div class="mini">SMP + RM1 + RM2 daily total</div>
+        </div>
+
+        <div class="executive-tile">
+            <div class="caption">Total Water Usage</div>
+            <div class="big">@F(totalWaterRaw)<span class="unit">M³</span></div>
+            <div class="mini">Combined plant water consumption</div>
+        </div>
+
+        <div class="executive-tile">
+            <div class="caption">Rolling Mill Fuel</div>
+            <div class="big">@F(totalFuelRaw)<span class="unit">Liter</span></div>
+            <div class="mini">RM1 + RM2 fuel usage</div>
+        </div>
+
+        <div class="executive-tile">
+            <div class="caption">Exceptions</div>
+            <div class="big">@issueCount</div>
+            <div class="mini">Metrics above configured target</div>
+        </div>
+    </section>
 
     <section class="kpi-grid">
         <div class="kpi-card">
@@ -704,10 +979,12 @@
             <div class="kpi-sub">Actual: @F(smpPowerActual) vs Target: @F(smpPowerTarget)</div>
         </div>
 
-        <div class="kpi-card good">
+        <div class="kpi-card @(rmGood ? "good" : "warn")">
             <div class="kpi-label">Rolling Mill Status</div>
-            <div class="kpi-value green">@(rmGood ? "Good" : "Review")</div>
-            <div class="kpi-sub">RM1 + RM2 combined performance</div>
+            <div class="kpi-value @(rmGood ? "green" : "orange")">@(rmGood ? "Good" : "Review")</div>
+            <div class="kpi-sub">
+                RM1: @(rm1Good ? "Good" : "Review") | RM2: @(rm2Good ? "Good" : "Review")
+            </div>
         </div>
 
         <div class="kpi-card @(smpPowerIssue || smpNitrogenIssue ? "warn" : "good")">
@@ -864,8 +1141,8 @@
 
     <div class="section-card">
         <div class="section-card-header dark">
-            <div>Rolling Mill Utilities Consumption</div>
-            <span>Production: @F(rmProduction) Ton | RM1: @F(rm1Production) | RM2: @F(rm2Production)</span>
+            <div>Rolling Mill 1 (RM1) Utilities Consumption</div>
+            <span>Production: @F(rm1Production) Ton</span>
         </div>
 
         <div class="section-card-body">
@@ -883,56 +1160,144 @@
                 <tbody>
                     <tr>
                         <td class="metric">Power Consumption (KWH)</td>
-                        <td class="num">@F(rmPowerActual)</td>
-                        <td class="num">@F(rmPowerTarget)</td>
-                        <td class="num @VarianceClass(rmPowerActual, rmPowerTarget)">
-                            @VarianceText(rmPowerActual, rmPowerTarget)
+                        <td class="num">@F(rm1PowerActual)</td>
+                        <td class="num">@F(rm1PowerTarget)</td>
+                        <td class="num @VarianceClass(rm1PowerActual, rm1PowerTarget)">
+                            @VarianceText(rm1PowerActual, rm1PowerTarget)
                         </td>
                         <td class="num">
                             <div class="barbox">
-                                <span class="bar @(rmPowerActual > rmPowerTarget ? "warn" : "")"
-                                      style="width:@BarWidth(rmPowerActual, rmPowerTarget)%"></span>
+                                <span class="bar @(rm1PowerActual > rm1PowerTarget ? "warn" : "")"
+                                      style="width:@BarWidth(rm1PowerActual, rm1PowerTarget)%"></span>
                             </div>
                         </td>
                         <td class="num">
-                            <span class="badge-status @StatusClass(rmPowerActual, rmPowerTarget)">
-                                @StatusText(rmPowerActual, rmPowerTarget)
+                            <span class="badge-status @StatusClass(rm1PowerActual, rm1PowerTarget)">
+                                @StatusText(rm1PowerActual, rm1PowerTarget)
                             </span>
                         </td>
                     </tr>
 
                     <tr>
                         <td class="metric">Water Consumption (M³)</td>
-                        <td class="num">@F(rmWaterActual)</td>
-                        <td class="num">@F(rmWaterTarget)</td>
-                        <td class="num @VarianceClass(rmWaterActual, rmWaterTarget)">
-                            @VarianceText(rmWaterActual, rmWaterTarget)
+                        <td class="num">@F(rm1WaterActual)</td>
+                        <td class="num">@F(rm1WaterTarget)</td>
+                        <td class="num @VarianceClass(rm1WaterActual, rm1WaterTarget)">
+                            @VarianceText(rm1WaterActual, rm1WaterTarget)
                         </td>
                         <td class="num">
                             <div class="barbox">
-                                <span class="bar @(rmWaterActual > rmWaterTarget ? "warn" : "")"
-                                      style="width:@BarWidth(rmWaterActual, rmWaterTarget)%"></span>
+                                <span class="bar @(rm1WaterActual > rm1WaterTarget ? "warn" : "")"
+                                      style="width:@BarWidth(rm1WaterActual, rm1WaterTarget)%"></span>
                             </div>
                         </td>
                         <td class="num">
-                            <span class="badge-status @StatusClass(rmWaterActual, rmWaterTarget)">
-                                @StatusText(rmWaterActual, rmWaterTarget)
+                            <span class="badge-status @StatusClass(rm1WaterActual, rm1WaterTarget)">
+                                @StatusText(rm1WaterActual, rm1WaterTarget)
                             </span>
                         </td>
                     </tr>
 
                     <tr>
-                        <td class="metric">Fuel Consumption (Liter)</td>
-                        <td class="num">@F(rmFuelActual)</td>
-                        <td class="num">-</td>
-                        <td class="num neutral">-</td>
+                        <td class="metric">Fuel Consumption (Liter/Ton)</td>
+                        <td class="num">@F(rm1FuelActual)</td>
+                        <td class="num">@F(rm1FuelTarget)</td>
+                        <td class="num @VarianceClass(rm1FuelActual, rm1FuelTarget)">
+                            @VarianceText(rm1FuelActual, rm1FuelTarget)
+                        </td>
                         <td class="num">
                             <div class="barbox">
-                                <span class="bar" style="width:0%"></span>
+                                <span class="bar @(rm1FuelActual > rm1FuelTarget ? "warn" : "")"
+                                      style="width:@BarWidth(rm1FuelActual, rm1FuelTarget)%"></span>
                             </div>
                         </td>
                         <td class="num">
-                            <span class="badge-status na">N/A</span>
+                            <span class="badge-status @StatusClass(rm1FuelActual, rm1FuelTarget)">
+                                @StatusText(rm1FuelActual, rm1FuelTarget)
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-card-header dark">
+            <div>Rolling Mill 2 (RM2) Utilities Consumption</div>
+            <span>Production: @F(rm2Production) Ton</span>
+        </div>
+
+        <div class="section-card-body">
+            <table class="utility-table">
+                <thead>
+                    <tr>
+                        <th style="width:22%">Metric Per Ton</th>
+                        <th style="width:12%">Actual</th>
+                        <th style="width:12%">Target</th>
+                        <th style="width:12%">Variance</th>
+                        <th style="width:28%">Performance</th>
+                        <th style="width:14%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric">Power Consumption (KWH)</td>
+                        <td class="num">@F(rm2PowerActual)</td>
+                        <td class="num">@F(rm2PowerTarget)</td>
+                        <td class="num @VarianceClass(rm2PowerActual, rm2PowerTarget)">
+                            @VarianceText(rm2PowerActual, rm2PowerTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(rm2PowerActual > rm2PowerTarget ? "warn" : "")"
+                                      style="width:@BarWidth(rm2PowerActual, rm2PowerTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(rm2PowerActual, rm2PowerTarget)">
+                                @StatusText(rm2PowerActual, rm2PowerTarget)
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="metric">Water Consumption (M³)</td>
+                        <td class="num">@F(rm2WaterActual)</td>
+                        <td class="num">@F(rm2WaterTarget)</td>
+                        <td class="num @VarianceClass(rm2WaterActual, rm2WaterTarget)">
+                            @VarianceText(rm2WaterActual, rm2WaterTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(rm2WaterActual > rm2WaterTarget ? "warn" : "")"
+                                      style="width:@BarWidth(rm2WaterActual, rm2WaterTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(rm2WaterActual, rm2WaterTarget)">
+                                @StatusText(rm2WaterActual, rm2WaterTarget)
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="metric">Fuel Consumption (Liter/Ton)</td>
+                        <td class="num">@F(rm2FuelActual)</td>
+                        <td class="num">@F(rm2FuelTarget)</td>
+                        <td class="num @VarianceClass(rm2FuelActual, rm2FuelTarget)">
+                            @VarianceText(rm2FuelActual, rm2FuelTarget)
+                        </td>
+                        <td class="num">
+                            <div class="barbox">
+                                <span class="bar @(rm2FuelActual > rm2FuelTarget ? "warn" : "")"
+                                      style="width:@BarWidth(rm2FuelActual, rm2FuelTarget)%"></span>
+                            </div>
+                        </td>
+                        <td class="num">
+                            <span class="badge-status @StatusClass(rm2FuelActual, rm2FuelTarget)">
+                                @StatusText(rm2FuelActual, rm2FuelTarget)
+                            </span>
                         </td>
                     </tr>
                 </tbody>
@@ -948,8 +1313,8 @@
                 <span class="@(rmGood ? "icon-good" : "icon-warn")">@(rmGood ? "✓" : "!")</span>
                 <div>
                     <b>Rolling Mill:</b>
-                    RM1 and RM2 combined utility performance is
-                    <b>@(rmGood ? "within acceptable range" : "requiring review")</b>.
+                    RM1 status is <b>@(rm1Good ? "within acceptable range" : "requiring review")</b>
+                    and RM2 status is <b>@(rm2Good ? "within acceptable range" : "requiring review")</b>.
                 </div>
             </div>
 

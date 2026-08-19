@@ -2,8 +2,10 @@
 using ClosedXML.Excel;
 using DAL.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Web;
 using System.Web.Mvc;
 using System.Web.SessionState;
 
@@ -30,8 +32,12 @@ namespace ProductionPortal_Solb.Controllers
             string[] agency,
             string[] delayType)
         {
-            DateTime startDate = fromDate ?? DateTime.Today;
-            DateTime endDate = toDate ?? DateTime.Today;
+            DateTime startDate =
+                fromDate ?? DateTime.Today;
+
+            DateTime endDate =
+                toDate ?? DateTime.Today;
+
 
             if (startDate.Date > endDate.Date)
             {
@@ -40,40 +46,142 @@ namespace ProductionPortal_Solb.Controllers
                 endDate = temp;
             }
 
-            string plantCsv = plant != null && plant.Length > 0
-                ? string.Join(",", plant.Where(x => !string.IsNullOrWhiteSpace(x))
-                                        .Select(x => x.Trim())
-                                        .Distinct(StringComparer.OrdinalIgnoreCase))
-                : null;
+            var agencyList =
+            repo.GetAllAgency()
+            ?? new List<PlantDelayBLL>();
 
-            string agencyCsv = agency != null && agency.Length > 0
-                ? string.Join(",", agency.Where(x => !string.IsNullOrWhiteSpace(x))
-                                         .Select(x => x.Trim())
-                                         .Distinct(StringComparer.OrdinalIgnoreCase))
-                : null;
+            ViewBag.Agencies =
+                agencyList;
 
-            string delayTypeCsv = delayType != null && delayType.Length > 0
-                ? string.Join(",", delayType.Where(x => !string.IsNullOrWhiteSpace(x))
-                                            .Select(x => x.Trim())
-                                            .Distinct(StringComparer.OrdinalIgnoreCase))
-                : null;
 
-            ViewBag.FromDate = startDate.ToString("yyyy-MM-dd");
-            ViewBag.ToDate = endDate.ToString("yyyy-MM-dd");
-            ViewBag.Plant = plantCsv;
-            ViewBag.Agency = agencyCsv;
-            ViewBag.DelayType = delayTypeCsv;
+            string plantCsv =
+                plant != null &&
+                plant.Length > 0
+                    ? string.Join(
+                        ",",
+                        plant
+                            .Where(
+                                x =>
+                                    !string.IsNullOrWhiteSpace(x)
+                            )
+                            .Select(
+                                x => x.Trim()
+                            )
+                            .Distinct(
+                                StringComparer.OrdinalIgnoreCase
+                            )
+                      )
+                    : null;
 
-            var records = repo.GetMaintenanceRecords(
-                startDate.Date,
-                endDate.Date,
-                plantCsv,
-                delayTypeCsv,
-                agencyCsv,
-                false
+
+            string agencyCsv =
+                agency != null &&
+                agency.Length > 0
+                    ? string.Join(
+                        ",",
+                        agency
+                            .Where(
+                                x =>
+                                    !string.IsNullOrWhiteSpace(x)
+                            )
+                            .Select(
+                                x => x.Trim()
+                            )
+                            .Distinct(
+                                StringComparer.OrdinalIgnoreCase
+                            )
+                      )
+                    : null;
+
+
+            string delayTypeCsv =
+                delayType != null &&
+                delayType.Length > 0
+                    ? string.Join(
+                        ",",
+                        delayType
+                            .Where(
+                                x =>
+                                    !string.IsNullOrWhiteSpace(x)
+                            )
+                            .Select(
+                                x => x.Trim()
+                            )
+                            .Distinct(
+                                StringComparer.OrdinalIgnoreCase
+                            )
+                      )
+                    : null;
+
+
+            ViewBag.FromDate =
+                startDate.ToString(
+                    "yyyy-MM-dd"
+                );
+
+            ViewBag.ToDate =
+                endDate.ToString(
+                    "yyyy-MM-dd"
+                );
+
+            ViewBag.Plant =
+                plantCsv;
+
+            ViewBag.Agency =
+                agencyCsv;
+
+            ViewBag.DelayType =
+                delayTypeCsv;
+
+
+            var records =
+                repo.GetMaintenanceRecords(
+                    startDate.Date,
+                    endDate.Date,
+                    plantCsv,
+                    delayTypeCsv,
+                    agencyCsv,
+                    false
+                );
+
+
+            /*
+             * Failure Analysis indicator for the main list.
+             * A saved analysis record means Filled; no record means Pending.
+             */
+            Dictionary<int, bool> failureAnalysisStatus =
+                new Dictionary<int, bool>();
+
+            if (records != null)
+            {
+                foreach (PlantDelayBLL record in records)
+                {
+                    if (
+                        record == null ||
+                        record.ID <= 0
+                    )
+                    {
+                        continue;
+                    }
+
+                    var analysis =
+                        repo.GetMaintenanceAnalysisByDelayID(
+                            record.ID
+                        );
+
+                    failureAnalysisStatus[record.ID] =
+                        analysis != null &&
+                        analysis.ID > 0;
+                }
+            }
+
+            ViewBag.FailureAnalysisStatus =
+                failureAnalysisStatus;
+
+
+            return View(
+                records
             );
-
-            return View(records);
         }
 
         // =========================================================
@@ -117,6 +225,11 @@ namespace ProductionPortal_Solb.Controllers
 
                 ViewBag.Actions =
                     repo.GetFailureAnalysisActionsByDelayID(
+                        id
+                    );
+
+                ViewBag.FailureAnalysisFile =
+                    repo.GetFailureAnalysisFileByDelayID(
                         id
                     );
 
@@ -241,7 +354,9 @@ namespace ProductionPortal_Solb.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult InsertMaintenanceAnalysis(
-            FailureAnalysisBLL model)
+            FailureAnalysisBLL model,
+            HttpPostedFileBase FailureAnalysisFile,
+            string FailureAnalysisFileRemarks)
         {
             int delayID =
             model != null
@@ -306,6 +421,51 @@ namespace ProductionPortal_Solb.Controllers
                         result > 0
                             ? "Maintenance analysis saved successfully."
                             : "Maintenance analysis could not be saved.";
+                }
+
+
+                if (
+                    (
+                        result > 0 ||
+                        model.ID > 0
+                    ) &&
+                    FailureAnalysisFile != null &&
+                    FailureAnalysisFile.ContentLength > 0
+                )
+                {
+                    string originalFileName =
+                        Path.GetFileName(
+                            FailureAnalysisFile.FileName
+                        );
+
+                    string savedRelativePath =
+                        SaveFailureAnalysisFile(
+                            FailureAnalysisFile,
+                            delayID
+                        );
+
+                    int attachmentResult =
+                        repo.SaveFailureAnalysisFile(
+                            delayID,
+                            savedRelativePath,
+                            originalFileName,
+                            FailureAnalysisFileRemarks,
+                            currentUser
+                        );
+
+                    if (attachmentResult <= 0)
+                    {
+                        DeleteUploadedFile(
+                            savedRelativePath
+                        );
+
+                        throw new Exception(
+                            "Failure analysis attachment could not be saved."
+                        );
+                    }
+
+                    TempData["Success"] =
+                        "Maintenance analysis attachment saved successfully.";
                 }
 
                 return RedirectToAction(
@@ -899,6 +1059,129 @@ namespace ProductionPortal_Solb.Controllers
         // =========================================================
         // HELPERS
         // =========================================================
+
+        private string SaveFailureAnalysisFile(
+            HttpPostedFileBase uploadedFile,
+            int delayID)
+        {
+            const int maximumFileSize =
+                10 * 1024 * 1024;
+
+            if (
+                uploadedFile == null ||
+                uploadedFile.ContentLength <= 0
+            )
+            {
+                return null;
+            }
+
+            if (
+                uploadedFile.ContentLength >
+                maximumFileSize
+            )
+            {
+                throw new Exception(
+                    "Attachment size cannot exceed 10 MB."
+                );
+            }
+
+            string extension =
+                Path.GetExtension(
+                    uploadedFile.FileName
+                );
+
+            extension =
+                string.IsNullOrWhiteSpace(extension)
+                    ? ""
+                    : extension.ToLowerInvariant();
+
+            HashSet<string> allowedExtensions =
+                new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase
+                )
+                {
+                    ".pdf",
+                    ".doc",
+                    ".docx",
+                    ".xls",
+                    ".xlsx",
+                    ".jpg",
+                    ".jpeg",
+                    ".png"
+                };
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                throw new Exception(
+                    "Only PDF, Word, Excel, JPG, JPEG and PNG files are allowed."
+                );
+            }
+
+            string uploadDirectory =
+                Server.MapPath(
+                    "~/Uploads/FailureAnalysis"
+                );
+
+            if (!Directory.Exists(uploadDirectory))
+            {
+                Directory.CreateDirectory(
+                    uploadDirectory
+                );
+            }
+
+            string storedFileName =
+                "FA-" +
+                delayID +
+                "-" +
+                DateTime.Now.ToString(
+                    "yyyyMMddHHmmssfff"
+                ) +
+                "-" +
+                Guid.NewGuid()
+                    .ToString("N")
+                    .Substring(0, 8) +
+                extension;
+
+            string physicalPath =
+                Path.Combine(
+                    uploadDirectory,
+                    storedFileName
+                );
+
+            uploadedFile.SaveAs(
+                physicalPath
+            );
+
+            return
+                "~/Uploads/FailureAnalysis/" +
+                storedFileName;
+        }
+
+
+        private void DeleteUploadedFile(
+            string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(
+                relativePath
+            ))
+            {
+                return;
+            }
+
+            string physicalPath =
+                Server.MapPath(
+                    relativePath
+                );
+
+            if (System.IO.File.Exists(
+                physicalPath
+            ))
+            {
+                System.IO.File.Delete(
+                    physicalPath
+                );
+            }
+        }
 
         private string GetCurrentUser()
         {

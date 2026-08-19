@@ -1,8 +1,7 @@
 ﻿@using System
 @using System.Globalization
 @using System.Collections.Generic
-@using System.Linq
-@model DAL.Models.ViewModel.CCMMeltShopVM
+@model DAL.Models.ViewModel.CCMMeltShopReportVM
 
 @{
     Layout = null;
@@ -10,6 +9,12 @@
     var list = Model != null && Model.CCM != null
         ? Model.CCM
         : new List<DAL.Models.CCMBLL>();
+
+    var chemistry =
+        Model != null &&
+        Model.ChemicalAnalysis != null
+            ? Model.ChemicalAnalysis
+            : new List<DAL.Models.CCMChemicalAnalysisBLL>();
 
     var gregorian = new CultureInfo("en-US");
     gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
@@ -47,34 +52,94 @@
         return count;
     };
 
-    string reportDate = list.Any()
-        ? list.First().Date.ToString("dd-MM-yyyy", gregorian)
-        : DateTime.Now.ToString("dd-MM-yyyy", gregorian);
+    DateTime fromDate =
+        Model != null && Model.FromDate != DateTime.MinValue
+            ? Model.FromDate
+            : DateTime.Today;
+
+    DateTime toDate =
+        Model != null && Model.ToDate != DateTime.MinValue
+            ? Model.ToDate
+            : DateTime.Today;
+
+    string reportFromDate =
+        fromDate.ToString("dd-MM-yyyy", gregorian);
+
+    string reportToDate =
+        toDate.ToString("dd-MM-yyyy", gregorian);
 
     int totalHeats = list.Count;
 
-    decimal avgDuration = list.Any() ? list.Average(x => x.CastingTime ?? 0) : 0;
-    decimal avgLadleStart = list.Any() ? list.Average(x => x.LadleWeightStart ?? 0) : 0;
-    decimal avgLadleEnd = list.Any() ? list.Average(x => x.LadleWeightEnd ?? 0) : 0;
-    decimal avgYield = list.Any() ? list.Average(x => x.Yeild ?? x.Yield ?? 0) : 0;
+    decimal totalDuration = 0;
+    decimal totalLadleStart = 0;
+    decimal totalLadleEnd = 0;
 
-    decimal totalDuration = list.Sum(x => x.CastingTime ?? 0);
-    decimal totalLadleStart = list.Sum(x => x.LadleWeightStart ?? 0);
-    decimal totalLadleEnd = list.Sum(x => x.LadleWeightEnd ?? 0);
+    decimal totalPrime1Length = 0;
+    decimal totalPrime1Pcs = 0;
+    decimal totalPrime2Length = 0;
+    decimal totalPrime2Pcs = 0;
 
-    decimal totalPrime1Length = list.Sum(x => x.Prime1Length ?? 0);
-    decimal totalPrime1Pcs = list.Sum(x => x.Prime1Pcs ?? 0);
+    decimal totalVarLengthPcs = 0;
+    decimal totalEndCutPcs = 0;
 
-    decimal totalPrime2Length = list.Sum(x => x.Prime2Length ?? 0);
-    decimal totalPrime2Pcs = list.Sum(x => x.Prime2Pcs ?? 0);
+    decimal totalPrime1Wt = 0;
+    decimal totalPrime2Wt = 0;
+    decimal totalVLenWt = 0;
+    decimal totalEndWt = 0;
 
-    decimal totalVarLengthPcs = list.Sum(x => x.VarLengthPcs ?? 0);
-    decimal totalEndCutPcs = list.Sum(x => x.EndCutPcs ?? 0);
+    decimal totalYield = 0;
+    int yieldCount = 0;
 
-    decimal totalPrime1Wt = list.Sum(x => x.Prime1Wt ?? 0);
-    decimal totalPrime2Wt = list.Sum(x => x.Prime2Wt ?? 0);
-    decimal totalVLenWt = list.Sum(x => x.VLenWt ?? 0);
-    decimal totalEndWt = list.Sum(x => x.EndWt ?? 0);
+    for (int i = 0; i < list.Count; i++)
+    {
+        var item = list[i];
+
+        totalDuration += item.CastingTime ?? 0;
+        totalLadleStart += item.LadleWeightStart ?? 0;
+        totalLadleEnd += item.LadleWeightEnd ?? 0;
+
+        totalPrime1Length += item.Prime1Length ?? 0;
+        totalPrime1Pcs += item.Prime1Pcs ?? 0;
+
+        totalPrime2Length += item.Prime2Length ?? 0;
+        totalPrime2Pcs += item.Prime2Pcs ?? 0;
+
+        totalVarLengthPcs += item.VarLengthPcs ?? 0;
+        totalEndCutPcs += item.EndCutPcs ?? 0;
+
+        totalPrime1Wt += item.Prime1Wt ?? 0;
+        totalPrime2Wt += item.Prime2Wt ?? 0;
+        totalVLenWt += item.VLenWt ?? 0;
+        totalEndWt += item.EndWt ?? 0;
+
+        decimal? yieldValue = item.Yeild ?? item.Yield;
+
+        if (yieldValue.HasValue)
+        {
+            totalYield += yieldValue.Value;
+            yieldCount++;
+        }
+    }
+
+    decimal avgDuration =
+        totalHeats > 0
+            ? totalDuration / totalHeats
+            : 0;
+
+    decimal avgLadleStart =
+        totalHeats > 0
+            ? totalLadleStart / totalHeats
+            : 0;
+
+    decimal avgLadleEnd =
+        totalHeats > 0
+            ? totalLadleEnd / totalHeats
+            : 0;
+
+    decimal avgYield =
+        yieldCount > 0
+            ? totalYield / yieldCount
+            : 0;
 }
 
 <!DOCTYPE html>
@@ -105,6 +170,41 @@
             border-radius: 3px;
             font-weight: bold;
             cursor: pointer;
+        }
+
+
+        .filter-bar {
+            margin: 10px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            display: flex;
+            align-items: end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+            .filter-group label {
+                font-weight: bold;
+                font-size: 12px;
+            }
+
+            .filter-group input {
+                height: 34px;
+                padding: 5px 8px;
+                border: 1px solid #bbb;
+                border-radius: 3px;
+            }
+
+        .filter-action {
+            margin: 0;
+            height: 34px;
         }
 
         .sheet {
@@ -230,9 +330,37 @@
 
 <body>
 
-    <button type="button" class="print-btn no-print" onclick="window.print()">
-        Print / Save PDF
-    </button>
+    <div class="filter-bar no-print">
+        <form method="get"
+              action="@Url.Action("CCMDailyHeatSummary", "CCM")"
+              style="display:flex; align-items:end; gap:12px; flex-wrap:wrap;">
+
+            <div class="filter-group">
+                <label>From Date</label>
+                <input type="date"
+                       name="fromDate"
+                       value="@fromDate.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="filter-group">
+                <label>To Date</label>
+                <input type="date"
+                       name="toDate"
+                       value="@toDate.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <button type="submit"
+                    class="print-btn filter-action">
+                Load Report
+            </button>
+
+            <button type="button"
+                    class="print-btn filter-action"
+                    onclick="window.print()">
+                Print / Save PDF
+            </button>
+        </form>
+    </div>
 
     <div class="sheet">
 
@@ -251,13 +379,16 @@
             </tr>
         </table>
 
-        <!-- DATE -->
+        <!-- DATE RANGE -->
         <table>
             <tr>
-                <td class="bold nowrap" style="width:140px;">Production Date For:</td>
-                <td style="width:160px;">@reportDate</td>
+                <td class="bold nowrap" style="width:100px;">From Date:</td>
+                <td style="width:120px;">@reportFromDate</td>
 
-                <td class="bold nowrap" style="width:90px;">Total Heats</td>
+                <td class="bold nowrap" style="width:90px;">To Date:</td>
+                <td style="width:120px;">@reportToDate</td>
+
+                <td class="bold nowrap" style="width:90px;">Total Heats:</td>
                 <td class="center" style="width:80px;">@totalHeats</td>
 
                 <td></td>
@@ -310,41 +441,43 @@
                 <td>End Wt<br />(t)</td>
             </tr>
 
-            @if (list.Any())
+            @if (list != null && list.Count > 0)
             {
-                foreach (var row in list.Select((item, index) => new { item, index }))
+                for (int i = 0; i < list.Count; i++)
                 {
+                    var item = list[i];
+
                     <tr class="small">
-                        <td class="center">@(row.index + 1)</td>
+                        <td class="center">@(i + 1)</td>
 
-                        <td class="center">@(row.item.HeatNo ?? "-")</td>
-                        <td class="center">@(row.item.Grade ?? row.item.GRADE_ID ?? "-")</td>
-                        <td class="center">@D0(row.item.LadleNo)</td>
-                        <td class="center">@D0(row.item.SequenceHeat)</td>
-                        <td class="center">@StrandCount(row.item)</td>
+                        <td class="center">@(item.HeatNo ?? "-")</td>
+                        <td class="center">@(item.Grade ?? item.GRADE_ID ?? "-")</td>
+                        <td class="center">@D0(item.LadleNo)</td>
+                        <td class="center">@D0(item.SequenceHeat)</td>
+                        <td class="center">@StrandCount(item)</td>
 
-                        <td class="center">@T(row.item.OpenTime)</td>
-                        <td class="center">@T(row.item.CloseTime)</td>
-                        <td class="center">@D2(row.item.CastingTime)</td>
+                        <td class="center">@T(item.OpenTime)</td>
+                        <td class="center">@T(item.CloseTime)</td>
+                        <td class="center">@D2(item.CastingTime)</td>
 
-                        <td class="center">@D2(row.item.LadleWeightStart)</td>
-                        <td class="center">@D2(row.item.LadleWeightEnd)</td>
+                        <td class="center">@D2(item.LadleWeightStart)</td>
+                        <td class="center">@D2(item.LadleWeightEnd)</td>
 
-                        <td class="center">@D2(row.item.Yeild ?? row.item.Yield)</td>
+                        <td class="center">@D2(item.Yeild ?? item.Yield)</td>
 
-                        <td class="center">@D2(row.item.Prime1Length)</td>
-                        <td class="center">@D0(row.item.Prime1Pcs)</td>
+                        <td class="center">@D2(item.Prime1Length)</td>
+                        <td class="center">@D0(item.Prime1Pcs)</td>
 
-                        <td class="center">@D2(row.item.Prime2Length)</td>
-                        <td class="center">@D0(row.item.Prime2Pcs)</td>
+                        <td class="center">@D2(item.Prime2Length)</td>
+                        <td class="center">@D0(item.Prime2Pcs)</td>
 
-                        <td class="center">@D0(row.item.VarLengthPcs)</td>
-                        <td class="center">@D0(row.item.EndCutPcs)</td>
+                        <td class="center">@D0(item.VarLengthPcs)</td>
+                        <td class="center">@D0(item.EndCutPcs)</td>
 
-                        <td class="center">@D2(row.item.Prime1Wt)</td>
-                        <td class="center">@D2(row.item.Prime2Wt)</td>
-                        <td class="center">@D2(row.item.VLenWt)</td>
-                        <td class="center">@D2(row.item.EndWt)</td>
+                        <td class="center">@D2(item.Prime1Wt)</td>
+                        <td class="center">@D2(item.Prime2Wt)</td>
+                        <td class="center">@D2(item.VLenWt)</td>
+                        <td class="center">@D2(item.EndWt)</td>
                     </tr>
                 }
             }
@@ -428,6 +561,53 @@
                 <td class="center">@totalVLenWt.ToString("N2")</td>
                 <td class="center">@totalEndWt.ToString("N2")</td>
             </tr>
+        </table>
+
+        <!-- CCM CHEMICAL ANALYSIS -->
+        <table style="margin-top:8px;">
+            <tr>
+                <td colspan="9" class="section-title">
+                    CCM CHEMICAL ANALYSIS
+                </td>
+            </tr>
+
+            <tr class="center small bold">
+                <td>Sr. No.</td>
+                <td>Heat No.</td>
+                <td>Sample</td>
+                <td>C</td>
+                <td>Si</td>
+                <td>Mn</td>
+                <td>P</td>
+                <td>S</td>
+                <td>TE</td>
+            </tr>
+
+            @if (chemistry != null && chemistry.Count > 0)
+            {
+                for (int i = 0; i < chemistry.Count; i++)
+                {
+                    var chem = chemistry[i];
+
+                    <tr class="center small">
+                        <td>@(i + 1)</td>
+                        <td>@(chem.HeatNo ?? "-")</td>
+                        <td>@(chem.Sample ?? "-")</td>
+                        <td>@chem.C</td>
+                        <td>@chem.Si</td>
+                        <td>@chem.Mn</td>
+                        <td>@chem.P</td>
+                        <td>@chem.S</td>
+                        <td>@chem.TE</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr class="center small">
+                    <td colspan="9">No Chemical Analysis Found</td>
+                </tr>
+            }
         </table>
 
     </div>

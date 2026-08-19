@@ -7,23 +7,34 @@ namespace DAL.Models
     {
         public CMDPerformanceDashboardVM()
         {
-            DailyProduction = new ProductionSummaryVM();
-            MTDProduction = new ProductionSummaryVM();
-            YTDProduction = new ProductionSummaryVM();
+            DailyProduction =
+                new ProductionSummaryVM();
 
-            Downtime = new List<DowntimeSummaryVM>();
-            EquipmentFailures = new List<TopFailureVM>();
-            RCAFailures = new List<TopFailureVM>();
-            ClosureRates = new List<ClosureRateVM>();
-            TopDelays = new List<CMDTopDelayVM>();
+            MTDProduction =
+                new ProductionSummaryVM();
+
+            YTDProduction =
+                new ProductionSummaryVM();
+
+            Downtime =
+                new List<DowntimeSummaryVM>();
+
+            EquipmentFailures =
+                new List<TopFailureVM>();
+
+            RCAFailures =
+                new List<TopFailureVM>();
+
+            ClosureRates =
+                new List<ClosureRateVM>();
+
+            TopDelays =
+                new List<CMDTopDelayVM>();
         }
 
         public DateTime FromDate { get; set; }
 
         public DateTime ToDate { get; set; }
-
-
-        public DateTime ReportDate { get; set; }
 
         public ProductionSummaryVM DailyProduction { get; set; }
 
@@ -45,28 +56,12 @@ namespace DAL.Models
     public class ProductionSummaryVM
     {
         public decimal SMP { get; set; }
+
         public decimal RM1 { get; set; }
+
         public decimal RM2 { get; set; }
 
         public decimal ComparisonPercentage { get; set; }
-
-        public decimal MaximumValue
-        {
-            get
-            {
-                return Math.Max(SMP, Math.Max(RM1, RM2));
-            }
-        }
-
-        public int GetBarHeight(decimal value, int maximumHeight = 105)
-        {
-            if (MaximumValue <= 0 || value <= 0)
-                return 0;
-
-            return Convert.ToInt32(
-                Math.Round((value / MaximumValue) * maximumHeight)
-            );
-        }
     }
 
     public class DowntimeSummaryVM
@@ -74,13 +69,19 @@ namespace DAL.Models
         public string Plant { get; set; }
 
         public decimal DTDMechanical { get; set; }
+
         public decimal DTDElectrical { get; set; }
+
         public decimal DTDCranes { get; set; }
+
         public decimal DTDUtilities { get; set; }
 
         public decimal MTDMechanical { get; set; }
+
         public decimal MTDElectrical { get; set; }
+
         public decimal MTDCranes { get; set; }
+
         public decimal MTDUtilities { get; set; }
     }
 
@@ -113,6 +114,8 @@ namespace DAL.Models
         public string Plant { get; set; }
 
         public string Shift { get; set; }
+
+        public string AgencyName { get; set; }
 
         public decimal TotalDuration { get; set; }
 

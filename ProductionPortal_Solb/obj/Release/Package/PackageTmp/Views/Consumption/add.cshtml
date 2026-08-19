@@ -140,6 +140,7 @@
                         </label>
 
                         <input type="date"
+                               id="ConsumptionDate"
                                name="ConsumptionDate"
                                class="form-control"
                                value="@consumptionDate"
@@ -176,9 +177,11 @@
 
                         <input type="number"
                                step="0.001"
+                               id="SMP_TotalProductBillet"
                                name="SMP_TotalProductBillet"
                                class="form-control"
-                               value="@smp.TotalProductBillet" />
+                               value="@smp.TotalProductBillet"
+                               readonly />
 
                     </div>
 
@@ -301,9 +304,11 @@
 
                         <input type="number"
                                step="0.001"
+                               id="RM1_TotalProductBillet"
                                name="RM1_TotalProductBillet"
                                class="form-control"
-                               value="@rm1.TotalProductBillet" />
+                               value="@rm1.TotalProductBillet"
+                               readonly />
 
                     </div>
 
@@ -381,9 +386,11 @@
 
                         <input type="number"
                                step="0.001"
+                               id="RM2_TotalProductBillet"
                                name="RM2_TotalProductBillet"
                                class="form-control"
-                               value="@rm2.TotalProductBillet" />
+                               value="@rm2.TotalProductBillet"
+                               readonly />
 
                     </div>
 
@@ -467,3 +474,178 @@
     </form>
 
 </div>
+
+<script>
+    $(document).ready(function () {
+
+        function loadProductionByDate() {
+
+            var selectedDate =
+                $("#ConsumptionDate").val();
+
+            if (!selectedDate) {
+                $("#SMP_TotalProductBillet").val("0.000");
+                $("#RM1_TotalProductBillet").val("0.000");
+                $("#RM2_TotalProductBillet").val("0.000");
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetProductionByDate", "Consumption")',
+                type: 'GET',
+                data: {
+                    date: selectedDate
+                },
+                success: function (res) {
+
+                    if (res && res.success) {
+
+                        /*
+                         * Production always comes from source production tables.
+                         */
+                        $("#SMP_TotalProductBillet").val(
+                            Number(res.smpProduction || 0).toFixed(3)
+                        );
+
+                        $("#RM1_TotalProductBillet").val(
+                            Number(res.rm1Production || 0).toFixed(3)
+                        );
+
+                        $("#RM2_TotalProductBillet").val(
+                            Number(res.rm2Production || 0).toFixed(3)
+                        );
+
+
+                        /*
+                         * If PlantConsumption already exists for selected date,
+                         * load the saved utility values as well.
+                         */
+                        var smp = res.smp || {};
+                        var rm1 = res.rm1 || {};
+                        var rm2 = res.rm2 || {};
+
+                        $("input[name='SMP_ID']").val(smp.id || 0);
+                        $("input[name='RM1_ID']").val(rm1.id || 0);
+                        $("input[name='RM2_ID']").val(rm2.id || 0);
+
+                        $("input[name='SMP_LPG']").val(
+                            smp.lpg != null ? smp.lpg : ""
+                        );
+
+                        $("input[name='SMP_Oxygen']").val(
+                            smp.oxygen != null ? smp.oxygen : ""
+                        );
+
+                        $("input[name='SMP_Nitrogen']").val(
+                            smp.nitrogen != null ? smp.nitrogen : ""
+                        );
+
+                        $("input[name='SMP_Argon']").val(
+                            smp.argon != null ? smp.argon : ""
+                        );
+
+                        $("input[name='SMP_WaterConsumption']").val(
+                            smp.waterConsumption != null
+                                ? smp.waterConsumption
+                                : ""
+                        );
+
+                        $("input[name='SMP_PowerConsumption']").val(
+                            smp.powerConsumption != null
+                                ? smp.powerConsumption
+                                : ""
+                        );
+
+
+                        $("input[name='RM1_WaterConsumption']").val(
+                            rm1.waterConsumption != null
+                                ? rm1.waterConsumption
+                                : ""
+                        );
+
+                        $("input[name='RM1_FuelConsumption']").val(
+                            rm1.fuelConsumption != null
+                                ? rm1.fuelConsumption
+                                : ""
+                        );
+
+                        $("input[name='RM1_PowerConsumption']").val(
+                            rm1.powerConsumption != null
+                                ? rm1.powerConsumption
+                                : ""
+                        );
+
+
+                        $("input[name='RM2_WaterConsumption']").val(
+                            rm2.waterConsumption != null
+                                ? rm2.waterConsumption
+                                : ""
+                        );
+
+                        $("input[name='RM2_FuelConsumption']").val(
+                            rm2.fuelConsumption != null
+                                ? rm2.fuelConsumption
+                                : ""
+                        );
+
+                        $("input[name='RM2_PowerConsumption']").val(
+                            rm2.powerConsumption != null
+                                ? rm2.powerConsumption
+                                : ""
+                        );
+                    }
+                    else {
+
+                        $("#SMP_TotalProductBillet").val("0.000");
+                        $("#RM1_TotalProductBillet").val("0.000");
+                        $("#RM2_TotalProductBillet").val("0.000");
+
+                        $("input[name='SMP_ID']").val(0);
+                        $("input[name='RM1_ID']").val(0);
+                        $("input[name='RM2_ID']").val(0);
+
+                        $("input[name='SMP_LPG']").val("");
+                        $("input[name='SMP_Oxygen']").val("");
+                        $("input[name='SMP_Nitrogen']").val("");
+                        $("input[name='SMP_Argon']").val("");
+                        $("input[name='SMP_WaterConsumption']").val("");
+                        $("input[name='SMP_PowerConsumption']").val("");
+
+                        $("input[name='RM1_WaterConsumption']").val("");
+                        $("input[name='RM1_FuelConsumption']").val("");
+                        $("input[name='RM1_PowerConsumption']").val("");
+
+                        $("input[name='RM2_WaterConsumption']").val("");
+                        $("input[name='RM2_FuelConsumption']").val("");
+                        $("input[name='RM2_PowerConsumption']").val("");
+                    }
+                },
+                error: function () {
+
+                    $("#SMP_TotalProductBillet").val("0.000");
+                    $("#RM1_TotalProductBillet").val("0.000");
+                    $("#RM2_TotalProductBillet").val("0.000");
+
+                    alert("Production data could not be loaded.");
+                }
+            });
+        }
+
+
+        /*
+         * Date change:
+         * SMP = SMPDayWiseProduction.TotalCastedTon
+         * RM1/RM2 = BundlesSection.TotalWeight by Date + Plant
+         */
+        $("#ConsumptionDate").on(
+            "change",
+            loadProductionByDate
+        );
+
+
+        /*
+         * Load production automatically when page opens.
+         */
+        loadProductionByDate();
+    });
+</script>

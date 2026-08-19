@@ -1,0 +1,436 @@
+﻿@model IEnumerable<DAL.Models.SMPDayWiseProductionBLL>
+@using System
+@using System.Linq
+
+@{
+    ViewBag.Title = "SMP Day Wise Production";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var records =
+        Model != null
+            ? Model.ToList()
+            : new List<DAL.Models.SMPDayWiseProductionBLL>();
+}
+
+<style>
+    .upload-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 18px;
+        box-shadow: 0 5px 18px rgba(0,0,0,.06);
+    }
+
+    .production-table-wrap {
+        max-height: 650px;
+        overflow: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fff;
+    }
+
+    .production-table {
+        margin-bottom: 0;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+        .production-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            background: #7f1230;
+            color: #fff;
+            vertical-align: middle;
+            text-align: center;
+            min-width: 95px;
+        }
+
+        .production-table tbody td {
+            vertical-align: middle;
+            text-align: right;
+        }
+
+            .production-table tbody td:first-child,
+            .production-table tbody td:nth-child(2) {
+                text-align: center;
+            }
+
+    .upload-warning {
+        color: #9a3412;
+        font-size: 12px;
+        margin-top: 8px;
+    }
+
+    .record-count {
+        font-weight: 700;
+        color: #7f1230;
+    }
+</style>
+
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-8">
+            <h4 class="xp-page-title font-weight-bold">
+                SMP Day Wise Production
+            </h4>
+        </div>
+    </div>
+</div>
+
+
+<div class="xp-contentbar">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+
+    <div class="upload-card">
+
+        <div class="row align-items-end">
+
+            <div class="col-xl-5 col-md-6">
+
+                @using (
+                    Html.BeginForm(
+                        "UploadExcel",
+                        "SMPDayWiseProduction",
+                        FormMethod.Post,
+                        new
+                        {
+                            enctype = "multipart/form-data",
+                            id = "uploadProductionForm"
+                        }
+                    )
+                )
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold">
+                            Upload Day Wise Production Excel
+                        </label>
+
+                        <div class="input-group">
+
+                            <input type="file"
+                                   id="excelFile"
+                                   name="excelFile"
+                                   class="form-control"
+                                   accept=".xlsx,.xlsm"
+                                   required />
+
+                            <div class="input-group-append">
+                                <button type="submit"
+                                        class="btn btn-success">
+                                    <i class="fa fa-upload"></i>
+                                    Upload & Replace
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <div class="upload-warning">
+                            Every successful upload replaces the previously uploaded day-wise production data.
+                            If the new upload fails, the previous data remains unchanged.
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+
+            <div class="col-xl-7 col-md-6">
+
+                @using (
+                    Html.BeginForm(
+                        "Index",
+                        "SMPDayWiseProduction",
+                        FormMethod.Get,
+                        new
+                        {
+                            @class = "form-inline justify-content-md-end mt-3 mt-md-0"
+                        }
+                    )
+                )
+                {
+                    <label class="mr-2">
+                        From
+                    </label>
+
+                    <input type="date"
+                           name="fromDate"
+                           value="@ViewBag.FromDate"
+                           class="form-control mr-2" />
+
+                    <label class="mr-2">
+                        To
+                    </label>
+
+                    <input type="date"
+                           name="toDate"
+                           value="@ViewBag.ToDate"
+                           class="form-control mr-2" />
+
+                    <button type="submit"
+                            class="btn btn-primary mr-2">
+                        Filter
+                    </button>
+
+                    <a href="@Url.Action("Index", "SMPDayWiseProduction")"
+                       class="btn btn-light">
+                        Reset
+                    </a>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="upload-card">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <h5 class="mb-0 font-weight-bold">
+                Day Wise Production Data
+            </h5>
+
+            <div>
+                Total Records:
+                <span class="record-count">
+                    @records.Count
+                </span>
+            </div>
+
+        </div>
+
+
+        <div class="production-table-wrap">
+
+            <table class="table table-bordered table-striped production-table">
+
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        @*<th>Month</th>*@
+                        <th>No. of Heats</th>
+                        <th>Production Plan</th>
+                        <th>Total Casted (Ton)</th>
+                        @*<th>TLS (Ton)</th>
+                            <th>Scrap</th>
+                            <th>DRI + OLD DRI</th>
+                            <th>HBI</th>*@
+                        <th>Avg. Heat Weight</th>
+                        <th>CCM Productivity</th>
+                        <th>Performance Rate</th>
+                        <th>SMP Material Yield</th>
+                        <th>Availability</th>
+                        <th>Quality Yield</th>
+                        <th>Net Tap to Tap</th>
+                        <th>Avg. Casting Time</th>
+                        <th>Length of Sequence</th>
+                        @*<th>Electrical</th>
+                            <th>EAF-LF</th>
+                            <th>LPG</th>
+                            <th>O2</th>
+                            <th>Argon</th>
+                            <th>N2</th>
+                            <th>DRI / HBI</th>
+                            <th>Scrap Cons.</th>
+                            <th>FeSi</th>
+                            <th>SiMn</th>
+                            <th>EAF Electrode</th>
+                            <th>LRF Electrode</th>
+                            <th>Flourspar</th>
+                            <th>Calcined Carbon</th>
+                            <th>Charge Coal</th>
+                            <th>Rice Husk</th>
+                            <th>Lime</th>
+                            <th>LF Lime</th>
+                            <th>Dolo Lime</th>*@
+                        @*<th>Electrical EM</th>
+                            <th>Mechanical MM</th>
+                            <th>Refractory RF</th>
+                            <th>Operation O</th>
+                            <th>Utility U</th>
+                            <th>Cranes CR</th>
+                            <th>Material Handling RMH</th>
+                            <th>Procurement PR</th>
+                            <th>CCM Operation O</th>
+                            <th>Outside OS</th>
+                            <th>Planned Maintenance</th>
+                            <th>Schedule Time</th>
+                            <th>Utilized Time</th>
+                            <th>Total Delay Time</th>*@
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+
+                    @if (records.Any())
+                    {
+                        foreach (var item in records)
+                        {
+                            <tr>
+                                <td>@item.Date.ToString("dd-MMM-yyyy")</td>
+                                @*<td>@item.Month</td>*@
+                                <td>@item.NoOfHeats</td>
+                                <td>@(item.ProductionPlan?.ToString("0.###"))</td>
+                                <td>@(item.TotalCastedTon?.ToString("0.###"))</td>
+                                @*<td>@(item.TLSTon?.ToString("0.###"))</td>
+                                    <td>@(item.ScrapCharge?.ToString("0.###"))</td>
+                                    <td>@(item.DRI_OLD_DRI?.ToString("0.###"))</td>
+                                    <td>@(item.HBI?.ToString("0.###"))</td>*@
+                                <td>@(item.AverageHeatWeight?.ToString("0.###"))</td>
+                                <td>@(item.CCMProductivity?.ToString("0.###"))</td>
+                                <td>@(item.PerformanceRate?.ToString("0.###"))</td>
+                                <td>@(item.SMPMaterialYield?.ToString("0.###"))</td>
+                                <td>@(item.Availability?.ToString("0.###"))</td>
+                                <td>@(item.QualityYield?.ToString("0.###"))</td>
+                                <td>@(item.NetTapToTap?.ToString("0.###"))</td>
+                                <td>@(item.AverageCastingTime?.ToString("0.###"))</td>
+                                <td>@item.LengthOfSequence</td>
+                                @*<td>@(item.Electrical?.ToString("0.###"))</td>
+                                    <td>@(item.EAFLF?.ToString("0.###"))</td>
+                                    <td>@(item.LPG?.ToString("0.###"))</td>
+                                    <td>@(item.O2?.ToString("0.###"))</td>
+                                    <td>@(item.Argon?.ToString("0.###"))</td>
+                                    <td>@(item.N2?.ToString("0.###"))</td>
+                                    <td>@(item.DRI_HBI?.ToString("0.###"))</td>
+                                    <td>@(item.ScrapConsumption?.ToString("0.###"))</td>
+                                    <td>@(item.FeSi?.ToString("0.###"))</td>
+                                    <td>@(item.SiMn?.ToString("0.###"))</td>
+                                    <td>@(item.EAFElectrode?.ToString("0.###"))</td>
+                                    <td>@(item.LRFElectrode?.ToString("0.###"))</td>
+                                    <td>@(item.Flourspar?.ToString("0.###"))</td>
+                                    <td>@(item.CalcinedCarbon?.ToString("0.###"))</td>
+                                    <td>@(item.ChargeCoal?.ToString("0.###"))</td>
+                                    <td>@(item.RiceHusk?.ToString("0.###"))</td>
+                                    <td>@(item.Lime?.ToString("0.###"))</td>
+                                    <td>@(item.LFLime?.ToString("0.###"))</td>
+                                    <td>@(item.DoloLime?.ToString("0.###"))</td>*@
+                                @*<td>@(item.ElectricalDelayEM?.ToString("0.###"))</td>
+                                    <td>@(item.MechanicalDelayMM?.ToString("0.###"))</td>
+                                    <td>@(item.RefractoryDelayRF?.ToString("0.###"))</td>
+                                    <td>@(item.OperationDelayO?.ToString("0.###"))</td>
+                                    <td>@(item.UtilityDelayU?.ToString("0.###"))</td>
+                                    <td>@(item.CranesDelayCR?.ToString("0.###"))</td>
+                                    <td>@(item.MaterialHandlingRMH?.ToString("0.###"))</td>
+                                    <td>@(item.ProcurementPR?.ToString("0.###"))</td>
+                                    <td>@(item.CCMOperationO?.ToString("0.###"))</td>
+                                    <td>@(item.OutsideOS?.ToString("0.###"))</td>
+                                    <td>@(item.PlannedMaintenance?.ToString("0.###"))</td>
+                                    <td>@(item.ScheduleTime?.ToString("0.###"))</td>
+                                    <td>@(item.UtilizedTime?.ToString("0.###"))</td>
+                                    <td>@(item.TotalDelayTime?.ToString("0.###"))</td>*@
+                                <td class="text-center">
+                                    <a href="@Url.Action(
+                                                "Details",
+                                                "SMPDayWiseProduction",
+                                                new { id = item.ID }
+                                            )"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="View Details">
+                                        <i class="fa fa-eye"></i>
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="15"
+                                class="text-center text-muted p-4">
+                                No day-wise production data found.
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(function () {
+
+        $("#uploadProductionForm")
+            .on(
+                "submit",
+                function (e) {
+
+                    e.preventDefault();
+
+                    var file =
+                        $("#excelFile")
+                            .val();
+
+                    if (!file) {
+
+                        Swal.fire({
+                            icon: "error",
+                            title: "Excel File Required",
+                            text: "Please select the Day Wise Production Excel file."
+                        });
+
+                        return;
+                    }
+
+
+                    var form =
+                        this;
+
+
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Replace Existing Data?",
+                        text:
+                            "The previous uploaded Day Wise Production data will be replaced with this Excel file.",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes, Upload & Replace",
+                        cancelButtonText: "Cancel",
+                        confirmButtonColor: "#198754"
+                    })
+                        .then(
+                            function (result) {
+
+                                if (
+                                    result.isConfirmed
+                                ) {
+                                    form.submit();
+                                }
+                            }
+                        );
+                }
+            );
+
+    });
+</script>

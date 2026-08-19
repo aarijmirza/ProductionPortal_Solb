@@ -17,8 +17,8 @@ namespace DAL.Models
         public string NewSteelGrade { get; set; }
         public string ProductCode { get; set; }
         public string PONumber { get; set; }
-        public int Cobble { get; set; }
-        public int HotOut { get; set; }
+        public decimal? Cobble { get; set; }
+        public decimal? HotOut { get; set; }
         public decimal? TotalBillet { get; set; }
         public decimal? FuelConsumption { get; set; }
         public decimal? TotalWeight { get; set; }

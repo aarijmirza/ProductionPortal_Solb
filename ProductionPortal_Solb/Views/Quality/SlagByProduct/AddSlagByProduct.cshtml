@@ -3,7 +3,9 @@
 @{
     //ViewBag.Title = "add";
 
-    ViewBag.Title = Model.ID == 0 ? "Add Slag By Product" : "Edit Slag By Product";
+    bool isEdit = Model != null && Model.ID > 0;
+
+    ViewBag.Title = isEdit ? "Edit Slag By Product" : "Add Slag By Product";
 
     var t = (Model?.ByProductType ?? "").Trim();  // nvarchar value from DB
 }
@@ -18,20 +20,26 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="@Url.Action("Index" ,"Home")"><i class="icon-home"></i></a></li>
                     <li class="breadcrumb-item"><a href="#">Slag By Product</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        @(isEdit ? "Edit Record" : "Add Record")
+                    </li>
                 </ol>
             </div>
         </div>
     </div>
 </div>
 <div class="xp-contentbar">
-    <form action="/Quality/AddSlagByProduct" id="slagForm" method="post" enctype="multipart/form-data">
+    <form action="@Url.Action("AddSlagByProduct", "Quality")" id="slagForm" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.ID)
+        @Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
         <div class="row">
             <div class="col-lg-12">
                 <div class="card m-b-30">
                     <div class="card-header bg-white" style="ALIGN-SELF: end;">
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="submit" class="btn btn-primary" id="submitButton">
+                            @(isEdit ? "Update" : "Submit")
+                        </button>
                     </div>
                     <div class="card-body">
                         <div class="form-row">
@@ -86,7 +94,7 @@
 
                     <div class="card-body" id="samplesContainer">
                         <!-- Samples Container -->
-                        @if (Model?.Samples != null)
+                        @if (Model?.Samples != null && Model.Samples.Count > 0)
                         {
                             for (int i = 0; i < Model.Samples.Count; i++)
                             {
@@ -429,17 +437,48 @@
 
     $(document).ready(function () {
 
-        // Set current date
+        // Set current date only in Add mode. Never overwrite Edit data.
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById("date").value = today;
+        const productionDate = document.getElementById("date");
+
+        if (productionDate && !productionDate.value) {
+            productionDate.value = today;
+        }
 
 
         let isSubmitting = false;   // 🔐 double-submit lock
 
-        $("#addprofileform").on("submit", function (e) {
+        $("#slagForm").on("submit", function (e) {
             e.preventDefault(); // ❗ pehle submit roko
 
             if (isSubmitting) return; // already submitting
+
+            // Duplicate Sample Codes inside the current form are not allowed.
+            const seenSampleCodes = new Set();
+            const duplicateSampleCodes = new Set();
+
+            $('#samplesContainer input[name$=".SampleCode"]').each(function () {
+                const code = String($(this).val() || '').trim().toUpperCase();
+
+                if (!code) return;
+
+                if (seenSampleCodes.has(code)) {
+                    duplicateSampleCodes.add(code);
+                }
+
+                seenSampleCodes.add(code);
+            });
+
+            if (duplicateSampleCodes.size > 0) {
+                Swal.fire({
+                    title: 'Duplicate Sample Code',
+                    text: 'Duplicate Sample Code(s): ' +
+                        Array.from(duplicateSampleCodes).join(', '),
+                    icon: 'error'
+                });
+
+                return;
+            }
 
             Swal.fire({
                 title: 'Confirm Submission',
@@ -457,13 +496,13 @@
                     isSubmitting = true; // 🔒 lock
 
                     // Disable submit button
-                    $("#addprofileform")
+                    $("#slagForm")
                         .find("button[type='submit']")
                         .prop("disabled", true)
-                        .text("Submitting...");
+                        .text("Saving...");
 
                     // Finally submit form
-                    $("#addprofileform")[0].submit();
+                    $("#slagForm")[0].submit();
                 }
             });
         });
@@ -599,7 +638,7 @@
         sampleIndex++;
     });
 
-    $(document).on('click', '.removeSample', function () {
+    $(document).on('click', '.removeSample, .removeSampleBtn', function () {
         $(this).closest('.sample-block').remove();
         reIndex();
     });

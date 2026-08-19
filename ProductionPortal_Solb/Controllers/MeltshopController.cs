@@ -111,7 +111,7 @@ namespace ProductionPortal_Solb.Controllers
                         "Invalid data submitted.";
 
                     return RedirectToAction(
-                        "EAFadd"
+                        "EAFlist"
                     );
                 }
 
@@ -143,7 +143,7 @@ namespace ProductionPortal_Solb.Controllers
                     "Data not saved. Please try again.";
 
                 return RedirectToAction(
-                    "EAFadd"
+                    "EAFlist"
                 );
             }
             catch (Exception ex)
@@ -153,7 +153,7 @@ namespace ProductionPortal_Solb.Controllers
                     ex.Message;
 
                 return RedirectToAction(
-                    "EAFadd"
+                    "EAFlist"
                 );
             }
         }

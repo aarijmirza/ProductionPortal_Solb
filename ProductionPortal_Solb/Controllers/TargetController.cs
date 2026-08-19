@@ -193,74 +193,197 @@ namespace ProductionPortal_Solb.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult SaveDaily(
-            DateTime date,
-            decimal dailyProductionTarget,
-            decimal fuelConsumption)
+            DateTime? date1,
+            decimal? dailyProductionTarget1,
+            decimal? fuelConsumption1,
+
+            DateTime? date2,
+            decimal? dailyProductionTarget2,
+            decimal? fuelConsumption2)
         {
             try
             {
-                if (date == DateTime.MinValue)
+                /* ======================================
+                   VALIDATION - RM1
+                   ====================================== */
+
+                if (!date1.HasValue)
                 {
-                    TempData["Error"] =
-                        "Please select target date.";
+                    TempData["ErrorMessage"] =
+                        "RM1 Date is required.";
 
-                    return RedirectToAction("add");
-                }
-
-                if (dailyProductionTarget < 0)
-                {
-                    TempData["Error"] =
-                        "Daily production target cannot be negative.";
-
-                    return RedirectToAction("add");
-                }
-
-                if (fuelConsumption < 0)
-                {
-                    TempData["Error"] =
-                        "Fuel consumption cannot be negative.";
-
-                    return RedirectToAction("add");
-                }
-
-                string currentUser =
-                    Convert.ToString(
-                        Session["UserName"] ??
-                        User.Identity.Name
+                    return RedirectToAction(
+                        "list"
                     );
+                }
 
-                var model =
+
+                if (!dailyProductionTarget1.HasValue)
+                {
+                    TempData["ErrorMessage"] =
+                        "RM1 Daily Production Target is required.";
+
+                    return RedirectToAction(
+                        "list"
+                    );
+                }
+
+
+                if (!fuelConsumption1.HasValue)
+                {
+                    TempData["ErrorMessage"] =
+                        "RM1 Fuel Consumption is required.";
+
+                    return RedirectToAction(
+                        "list"
+                    );
+                }
+
+
+                /* ======================================
+                   VALIDATION - RM2
+                   ====================================== */
+
+                if (!date2.HasValue)
+                {
+                    TempData["ErrorMessage"] =
+                        "RM2 Date is required.";
+
+                    return RedirectToAction(
+                        "list"
+                    );
+                }
+
+
+                if (!dailyProductionTarget2.HasValue)
+                {
+                    TempData["ErrorMessage"] =
+                        "RM2 Daily Production Target is required.";
+
+                    return RedirectToAction(
+                        "list"
+                    );
+                }
+
+
+                if (!fuelConsumption2.HasValue)
+                {
+                    TempData["ErrorMessage"] =
+                        "RM2 Fuel Consumption is required.";
+
+                    return RedirectToAction(
+                        "list"
+                    );
+                }
+
+
+                /* ======================================
+                   RM1
+                   ====================================== */
+
+                RollingMillDailyTargetBLL rm1 =
                     new RollingMillDailyTargetBLL
                     {
-                        TargetDate = date.Date,
+                        TargetDate =
+                            date1.Value.Date,
+
+                        Plant =
+                            "RM1",
+
                         DailyProductionTarget =
-                            dailyProductionTarget,
+                            dailyProductionTarget1,
+
                         FuelConsumption =
-                            fuelConsumption,
-                        StatusID = 1,
-                        CreatedBy = currentUser,
-                        CreatedDate = DateTime.Now
+                            fuelConsumption1,
+
+                        StatusID =
+                            1,
+
+                        CreatedBy =
+                            User.Identity.Name,
+
+                        CreatedDate =
+                            DateTime.Now
                     };
 
-                int id = dailyTargetRepo.Save(model);
 
-                if (id > 0)
+                /* ======================================
+                   RM2
+                   ====================================== */
+
+                RollingMillDailyTargetBLL rm2 =
+                    new RollingMillDailyTargetBLL
+                    {
+                        TargetDate =
+                            date2.Value.Date,
+
+                        Plant =
+                            "RM2",
+
+                        DailyProductionTarget =
+                            dailyProductionTarget2,
+
+                        FuelConsumption =
+                            fuelConsumption2,
+
+                        StatusID =
+                            1,
+
+                        CreatedBy =
+                            User.Identity.Name,
+
+                        CreatedDate =
+                            DateTime.Now
+                    };
+
+
+                /* ======================================
+                   SAVE
+                   ====================================== */
+
+                int rtnRM1 =
+                    dailyTargetRepo.SaveDailyTarget(
+                        rm1
+                    );
+
+
+                int rtnRM2 =
+                    dailyTargetRepo.SaveDailyTarget(
+                        rm2
+                    );
+
+
+                if (
+                    rtnRM1 > 0 &&
+                    rtnRM2 > 0
+                )
                 {
-                    TempData["Success"] =
-                        "Daily target saved successfully.";
+                    TempData["SuccessMessage"] =
+                        "RM1 and RM2 Daily Targets saved successfully.";
                 }
                 else
                 {
-                    TempData["Error"] =
-                        "Daily target could not be saved.";
+                    TempData["ErrorMessage"] =
+                        "Daily Targets could not be saved completely.";
                 }
+
+
+                return RedirectToAction(
+                    "list"
+                );
             }
             catch (Exception ex)
             {
-                TempData["Error"] = ex.Message;
-            }
+                TempData["ErrorMessage"] =
+                    "Error while saving Daily Target: "
+                    +
+                    ex.Message;
 
-            return RedirectToAction("add");
+
+                return RedirectToAction(
+                    "list"
+                );
+            }
         }
 
         [HttpGet]

@@ -1,0 +1,225 @@
+﻿@model DAL.Models.SMPDayWiseProductionBLL
+@using System
+
+@{
+    ViewBag.Title = "SMP Day Wise Production Detail";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    Func<decimal?, string> num = x => x.HasValue ? x.Value.ToString("0.###") : "-";
+    Func<int?, string> intNum = x => x.HasValue ? x.Value.ToString() : "-";
+}
+
+<style>
+    .dw-header {
+        background: linear-gradient(135deg,#7f1230,#a6173f);
+        color: #fff;
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 18px;
+        box-shadow: 0 8px 22px rgba(127,18,48,.18)
+    }
+
+        .dw-header h3 {
+            margin: 0;
+            color: #fff;
+            font-weight: 700
+        }
+
+        .dw-header .sub {
+            opacity: .9;
+            margin-top: 6px;
+            font-size: 13px
+        }
+
+    .dw-section {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        margin-bottom: 18px;
+        overflow: hidden;
+        box-shadow: 0 5px 16px rgba(0,0,0,.05)
+    }
+
+    .dw-title {
+        padding: 13px 18px;
+        font-weight: 700;
+        color: #7f1230;
+        border-bottom: 1px solid #eceff3;
+        background: #fafafa
+    }
+
+    .dw-body {
+        padding: 16px 18px
+    }
+
+    .dw-item {
+        border: 1px solid #edf0f4;
+        border-radius: 10px;
+        padding: 11px 12px;
+        margin-bottom: 12px;
+        min-height: 72px;
+        background: #fff
+    }
+
+    .dw-label {
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+        margin-bottom: 6px
+    }
+
+    .dw-value {
+        color: #111827;
+        font-size: 15px;
+        font-weight: 700;
+        word-break: break-word
+    }
+
+    .summary-card {
+        border-radius: 12px;
+        padding: 14px 16px;
+        height: 100%;
+        border: 1px solid #eceff3;
+        background: #fff
+    }
+
+        .summary-card .value {
+            font-size: 23px;
+            font-weight: 800;
+            color: #7f1230
+        }
+
+        .summary-card .label {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 3px
+        }
+
+    @@media print {
+        .no-print {
+            display: none !important
+        }
+
+        .dw-section, .summary-card, .dw-header {
+            box-shadow: none !important
+        }
+
+        body {
+            background: #fff !important
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row">
+        <div class="col-md-8"><h4 class="xp-page-title font-weight-bold">SMP Day Wise Production Detail</h4></div>
+        <div class="col-md-4 text-right">
+            <a href="@Url.Action("Index","SMPDayWiseProduction")" class="btn btn-light"><i class="fa fa-arrow-left"></i> Back to List</a>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="text-right mb-3 no-print"><button type="button" class="btn btn-outline-secondary" onclick="window.print();"><i class="fa fa-print"></i> Print</button></div>
+
+    <div class="dw-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h3>@Model.Date.ToString("dd-MMM-yyyy")</h3>
+                <div class="sub">Month: <strong>@(Model.Month ?? "-")</strong> &nbsp; | &nbsp; Record ID: <strong>@Model.ID</strong></div>
+            </div>
+            <div class="col-md-4 text-md-right mt-3 mt-md-0">
+                <div>Uploaded By: <strong>@(Model.CreatedBy ?? "-")</strong></div>
+                <div class="sub">@(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("dd-MMM-yyyy HH:mm") : "-")</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-xl-3 col-md-6 mb-3"><div class="summary-card"><div class="value">@intNum(Model.NoOfHeats)</div><div class="label">No. of Heats</div></div></div>
+        <div class="col-xl-3 col-md-6 mb-3"><div class="summary-card"><div class="value">@num(Model.ProductionPlan)</div><div class="label">Production Plan</div></div></div>
+        <div class="col-xl-3 col-md-6 mb-3"><div class="summary-card"><div class="value">@num(Model.TotalCastedTon)</div><div class="label">Total Casted (Ton)</div></div></div>
+        <div class="col-xl-3 col-md-6 mb-3"><div class="summary-card"><div class="value">@num(Model.TotalDelayTime)</div><div class="label">Total Delay Time</div></div></div>
+    </div>
+
+    <div class="dw-section">
+        <div class="dw-title">Production Performance</div><div class="dw-body">
+            <div class="row">
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">TLS (Ton)</div><div class="dw-value">@num(Model.TLSTon)</div></div></div>
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">Average Heat Weight</div><div class="dw-value">@num(Model.AverageHeatWeight)</div></div></div>
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">CCM Productivity</div><div class="dw-value">@num(Model.CCMProductivity)</div></div></div>
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">Performance Rate</div><div class="dw-value">@num(Model.PerformanceRate)</div></div></div>
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">SMP Material Yield</div><div class="dw-value">@num(Model.SMPMaterialYield)</div></div></div>
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">Availability</div><div class="dw-value">@num(Model.Availability)</div></div></div>
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">Quality Yield</div><div class="dw-value">@num(Model.QualityYield)</div></div></div>
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">Net Tap to Tap</div><div class="dw-value">@num(Model.NetTapToTap)</div></div></div>
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">Average Casting Time</div><div class="dw-value">@num(Model.AverageCastingTime)</div></div></div>
+                <div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">Length of Sequence</div><div class="dw-value">@(Model.LengthOfSequence ?? "-")</div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dw-section">
+        <div class="dw-title">Charge Mix</div><div class="dw-body">
+            <div class="row">
+                <div class="col-md-4"><div class="dw-item"><div class="dw-label">Scrap</div><div class="dw-value">@num(Model.ScrapCharge)</div></div></div>
+                <div class="col-md-4"><div class="dw-item"><div class="dw-label">DRI + OLD DRI</div><div class="dw-value">@num(Model.DRI_OLD_DRI)</div></div></div>
+                <div class="col-md-4"><div class="dw-item"><div class="dw-label">HBI</div><div class="dw-value">@num(Model.HBI)</div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dw-section">
+        <div class="dw-title">Energy & Utilities</div><div class="dw-body">
+            <div class="row">
+                <div class="col-xl-2 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">Electrical</div><div class="dw-value">@num(Model.Electrical)</div></div></div>
+                <div class="col-xl-2 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">EAF-LF</div><div class="dw-value">@num(Model.EAFLF)</div></div></div>
+                <div class="col-xl-2 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">LPG</div><div class="dw-value">@num(Model.LPG)</div></div></div>
+                <div class="col-xl-2 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">O2</div><div class="dw-value">@num(Model.O2)</div></div></div>
+                <div class="col-xl-2 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">Argon</div><div class="dw-value">@num(Model.Argon)</div></div></div>
+                <div class="col-xl-2 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">N2</div><div class="dw-value">@num(Model.N2)</div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dw-section">
+        <div class="dw-title">Raw Material Consumption</div><div class="dw-body">
+            <div class="row">
+                @{ var materials = new[] {
+            new { L="DRI / HBI", V=num(Model.DRI_HBI) }, new { L="Scrap Consumption", V=num(Model.ScrapConsumption) }, new { L="FeSi", V=num(Model.FeSi) }, new { L="SiMn", V=num(Model.SiMn) },
+            new { L="EAF Electrode", V=num(Model.EAFElectrode) }, new { L="LRF Electrode", V=num(Model.LRFElectrode) }, new { L="Flourspar", V=num(Model.Flourspar) }, new { L="Calcined Carbon", V=num(Model.CalcinedCarbon) },
+            new { L="Charge Coal", V=num(Model.ChargeCoal) }, new { L="Rice Husk", V=num(Model.RiceHusk) }, new { L="Lime", V=num(Model.Lime) }, new { L="LF Lime", V=num(Model.LFLime) }, new { L="Dolo Lime", V=num(Model.DoloLime) }
+        }; }
+                @foreach (var x in materials)
+                {<div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">@x.L</div><div class="dw-value">@x.V</div></div></div>}
+            </div>
+        </div>
+    </div>
+
+    <div class="dw-section">
+        <div class="dw-title">Delay Breakdown</div><div class="dw-body">
+            <div class="row">
+                @{ var delays = new[] {
+            new { L="Electrical (EM)", V=num(Model.ElectricalDelayEM) }, new { L="Mechanical (MM)", V=num(Model.MechanicalDelayMM) }, new { L="Refractory (RF)", V=num(Model.RefractoryDelayRF) },
+            new { L="Operation (O)", V=num(Model.OperationDelayO) }, new { L="Utility (U)", V=num(Model.UtilityDelayU) }, new { L="Cranes (CR)", V=num(Model.CranesDelayCR) },
+            new { L="Material Handling (RMH)", V=num(Model.MaterialHandlingRMH) }, new { L="Procurement (PR)", V=num(Model.ProcurementPR) }, new { L="CCM Operation (O)", V=num(Model.CCMOperationO) }, new { L="Outside (OS)", V=num(Model.OutsideOS) }
+        }; }
+                @foreach (var x in delays)
+                {<div class="col-xl-3 col-md-4 col-sm-6"><div class="dw-item"><div class="dw-label">@x.L</div><div class="dw-value">@x.V</div></div></div>}
+            </div>
+        </div>
+    </div>
+
+    <div class="dw-section">
+        <div class="dw-title">Time Summary</div><div class="dw-body">
+            <div class="row">
+                <div class="col-md-3"><div class="dw-item"><div class="dw-label">Planned Maintenance</div><div class="dw-value">@num(Model.PlannedMaintenance)</div></div></div>
+                <div class="col-md-3"><div class="dw-item"><div class="dw-label">Schedule Time</div><div class="dw-value">@num(Model.ScheduleTime)</div></div></div>
+                <div class="col-md-3"><div class="dw-item"><div class="dw-label">Utilized Time</div><div class="dw-value">@num(Model.UtilizedTime)</div></div></div>
+                <div class="col-md-3"><div class="dw-item"><div class="dw-label">Total Delay Time</div><div class="dw-value">@num(Model.TotalDelayTime)</div></div></div>
+            </div>
+        </div>
+    </div>
+</div>

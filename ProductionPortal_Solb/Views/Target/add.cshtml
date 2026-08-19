@@ -247,16 +247,163 @@
             <div class="target-card-header">Add Daily Rolling Mill Target</div>
             <div class="target-card-body">
                 @*<div class="daily-target-note">Daily mode mein sirf Date, Daily Production Target aur Fuel Consumption save honge.</div>*@
-                @using (Html.BeginForm("SaveDaily", "Target", FormMethod.Post, new { id = "dailyTargetForm" }))
+                @using (Html.BeginForm(
+                "SaveDaily",
+                "Target",
+                FormMethod.Post,
+                new { id = "dailyTargetForm" }
+            ))
                 {
                     @Html.AntiForgeryToken()
-                    <div class="section-title">Daily Target</div>
-                    <div class="row">
-                        <div class="col-md-4"><div class="form-group"><label>Date</label><input type="date" name="date" id="DailyTargetDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div></div>
-                        <div class="col-md-4"><div class="form-group"><label>Daily Production Target (MT)</label><input type="number" name="dailyProductionTarget" id="dailyProductionTarget" class="form-control" step="0.01" min="0" required /></div></div>
-                        <div class="col-md-4"><div class="form-group"><label>Fuel Consumption</label><input type="number" name="fuelConsumption" id="FuelConsumption" class="form-control" step="0.01" min="0" required /></div></div>
+
+                    <!-- =========================
+             RM1
+             ========================= -->
+                    <div class="section-title">
+                        Daily Target For RM1
                     </div>
-                    <div class="text-right"><button type="reset" class="btn btn-warning">Clear</button> <button type="submit" class="btn btn-save"><i class="fa fa-save"></i> Save Daily Target</button></div>
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+
+                                <label>Date</label>
+
+                                <input type="date"
+                                       name="date1"
+                                       id="RM1DailyTargetDate"
+                                       class="form-control"
+                                       value="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                       required />
+
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+
+                                <label>
+                                    Daily Production Target (MT)
+                                </label>
+
+                                <input type="number"
+                                       name="dailyProductionTarget1"
+                                       id="RM1DailyProductionTarget"
+                                       class="form-control"
+                                       step="0.01"
+                                       min="0"
+                                       required />
+
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+
+                                <label>
+                                    Fuel Consumption
+                                </label>
+
+                                <input type="number"
+                                       name="fuelConsumption1"
+                                       id="RM1FuelConsumption"
+                                       class="form-control"
+                                       step="0.01"
+                                       min="0"
+                                       required />
+
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================
+             RM2
+             ========================= -->
+
+                    <div class="section-title">
+                        Daily Target For RM2
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+
+                                <label>Date</label>
+
+                                <input type="date"
+                                       name="date2"
+                                       id="RM2DailyTargetDate"
+                                       class="form-control"
+                                       value="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                       required />
+
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+
+                                <label>
+                                    Daily Production Target (MT)
+                                </label>
+
+                                <input type="number"
+                                       name="dailyProductionTarget2"
+                                       id="RM2DailyProductionTarget"
+                                       class="form-control"
+                                       step="0.01"
+                                       min="0"
+                                       required />
+
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+
+                                <label>
+                                    Fuel Consumption
+                                </label>
+
+                                <input type="number"
+                                       name="fuelConsumption2"
+                                       id="RM2FuelConsumption"
+                                       class="form-control"
+                                       step="0.01"
+                                       min="0"
+                                       required />
+
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="text-right">
+
+                        <button type="reset"
+                                class="btn btn-warning">
+                            Clear
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-save">
+
+                            <i class="fa fa-save"></i>
+
+                            Save Daily Targets
+
+                        </button>
+
+                    </div>
                 }
             </div>
         </div>

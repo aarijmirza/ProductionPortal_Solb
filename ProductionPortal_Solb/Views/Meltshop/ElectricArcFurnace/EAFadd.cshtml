@@ -24,6 +24,8 @@
 <div class="xp-contentbar">
     <!-- Start XP Row -->
     <form action="/Meltshop/EAFadd" id="addprofileform" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
         <div class="row">
             <!-- Start XP Col -->
             <div class="col-lg-12">
@@ -65,9 +67,9 @@
                                 <input type="text" class="form-control" id="date" name="Grade" placeholder="Grade">
                             </div>
                             @*<div class="form-group col-md-2">
-                                    <label for="heatno">Heat #</label>
-                                    <input type="text" class="form-control" id="heatno" name="heatno" placeholder="Heat #">
-                                </div>*@
+                                <label for="heatno">Heat #</label>
+                                <input type="text" class="form-control" id="heatno" name="heatno" placeholder="Heat #">
+                            </div>*@
                         </div>
                     </div>
                     <div class="card-header bg-white">

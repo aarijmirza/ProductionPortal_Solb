@@ -10,13 +10,15 @@ namespace DAL.Models
     {
         public int ID { get; set; }
 
-        public DateTime TargetDate { get; set; }
+        public DateTime? TargetDate { get; set; }
 
-        public decimal DailyProductionTarget { get; set; }
+        public string Plant { get; set; }
 
-        public decimal FuelConsumption { get; set; }
+        public decimal? DailyProductionTarget { get; set; }
 
-        public int StatusID { get; set; }
+        public decimal? FuelConsumption { get; set; }
+
+        public int? StatusID { get; set; }
 
         public string CreatedBy { get; set; }
 

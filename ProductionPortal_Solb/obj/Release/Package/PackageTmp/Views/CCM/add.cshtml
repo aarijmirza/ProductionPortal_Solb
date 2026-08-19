@@ -43,8 +43,8 @@
                             <div class="form-group col-md-1">
                                 <label>Date <br /> <br /></label>
                                 @Html.TextBoxFor(m => m.Master.Date,
-                                    "{0:yyyy-MM-dd}",
-                                    new { @class = "form-control", type = "date" })
+                                         "{0:yyyy-MM-dd}",
+                                         new { @class = "form-control", type = "date" })
 
                                 @*<input type="date" class="form-control" id="date" name="Date">*@
                             </div>
@@ -52,14 +52,14 @@
                             <div class="form-group col-md-1">
                                 <label>Shift <br /> <br /></label>
                                 @Html.DropDownListFor(
-                                    m => m.Master.Shift,
-                                    new SelectList(
-                                        new[] { "Morning", "Evening", "Night", "Long Morning", "Long Night" },
-                                        Model.Master?.Shift
-                                    ),
-                                    "Choose...",
-                                    new { @class = "form-control" }
-                                )
+                                         m => m.Master.Shift,
+                                         new SelectList(
+                                             new[] { "Morning", "Evening", "Night", "Long Morning", "Long Night" },
+                                             Model.Master?.Shift
+                                         ),
+                                         "Choose...",
+                                         new { @class = "form-control" }
+                                     )
                             </div>
 
                             <div class="form-group col-md-1">
@@ -73,80 +73,80 @@
                                         <option value="A-706">A-706</option>
                                     </select>*@
                                 @Html.DropDownListFor(
-                                    m => m.Master.Grade,
-                                    new SelectList(
-                                        new[] { "BS-4449", "GR-40", "GR-60", "SAE-1008", "SAE-1006", "A-706" },
-                                        Model.Master?.Grade   // ✅ selected value
-                                    ),
-                                    "-- Select Grade --",
-                                    new { @class = "form-control" }
-                                )
+                                         m => m.Master.Grade,
+                                         new SelectList(
+                                             new[] { "BS-4449", "GR-40", "GR-60", "SAE-1008", "SAE-1006", "A-706" },
+                                             Model.Master?.Grade   // ✅ selected value
+                                         ),
+                                         "-- Select Grade --",
+                                         new { @class = "form-control" }
+                                     )
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Heat #  <br /> <br /></label>
                                 @Html.TextBoxFor(m => m.Master.HeatNo,
-                                    new { @class = "form-control", type = "text" })
+                                         new { @class = "form-control", type = "text" })
 
                                 @*@Html.DropDownListFor(
-                                         m => m.Master.HeatNo,
-                                         (SelectList)ViewBag.HeatNo,
-                                         "-- Select Heat # --",
-                                         new { @class = "form-control" }
-                                     )
+                                             m => m.Master.HeatNo,
+                                             (SelectList)ViewBag.HeatNo,
+                                             "-- Select Heat # --",
+                                             new { @class = "form-control" }
+                                         )
 
-                                @Html.ValidationMessageFor(m => m.Master.HeatNo, "", new { @class = "text-danger" })*@
+                                    @Html.ValidationMessageFor(m => m.Master.HeatNo, "", new { @class = "text-danger" })*@
                             </div>
 
 
                             <div class="form-group col-md-1">
                                 <label>Sequence <br /> Heat</label>
                                 @Html.TextBoxFor(m => m.Master.SequenceHeat,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Ladle No <br /><br /></label>
                                 @Html.TextBoxFor(m => m.Master.LadleNo,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control" name="LadleNo">*@
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Ladle <br /> Temp (°C)</label>
                                 @Html.TextBoxFor(m => m.Master.LadleTemperature,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Molten <br /> Steel (ton)</label>
                                 @Html.TextBoxFor(m => m.Master.MoltenSteel,
-                                    new { @class = "form-control", type = "number", step = "any", name = "MoltenSteel" })
+                                         new { @class = "form-control", type = "number", step = "any", name = "MoltenSteel" })
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Time on <br /> Turret</label>
                                 @Html.TextBoxFor(m => m.Master.TimeOnTurret,
-                                    new { @class = "form-control", type = "time" })
+                                         new { @class = "form-control", type = "time" })
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Plate <br /> Life</label>
                                 @Html.TextBoxFor(m => m.Master.PlateLife,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control" name="PlateLife">*@
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Open <br /> Time</label>
                                 @Html.TextBoxFor(m => m.Master.OpenTime,
-                                    new { @class = "form-control", type = "time", id = "OpenTime" })
+                                         new { @class = "form-control", type = "time", id = "OpenTime" })
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Close <br /> Time</label>
                                 @Html.TextBoxFor(m => m.Master.CloseTime,
-                                    new { @class = "form-control", type = "time", id = "CloseTime" })
+                                         new { @class = "form-control", type = "time", id = "CloseTime" })
                             </div>
                         </div>
 
@@ -154,21 +154,21 @@
                             <div class="form-group col-md-1">
                                 <label>Tundish <br /> No</label>
                                 @Html.TextBoxFor(m => m.Master.TundishNo,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control" name="TundishNo">*@
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Tundish Life (Heats)</label>
                                 @Html.TextBoxFor(m => m.Master.TundishLife,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control" name="TundishLife">*@
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Shroud Life (Heats)</label>
                                 @Html.TextBoxFor(m => m.Master.ShroudLife,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control" name="ShroudLife">*@
                             </div>
 
@@ -195,22 +195,22 @@
                             <div class="form-group col-md-1">
                                 <label>Billet Size <br /> (mm²)</label>
                                 @Html.TextBoxFor(m => m.Master.BilletSize,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control" name="BilletSize">*@
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Billet Length (m)</label>
                                 @Html.TextBoxFor(m => m.Master.BilletLength,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control" name="BilletLength">*@
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Casting Time (min)</label>
                                 @Html.TextBoxFor(
-                                    m => m.Master.CastingTime,
-                                    new { @class = "form-control", type = "number", id = "CastingTime", @readonly = "readonly" })
+                                         m => m.Master.CastingTime,
+                                         new { @class = "form-control", type = "number", id = "CastingTime", @readonly = "readonly" })
 
                                 @*<input type="number" class="form-control" id="CastingTime" name="CastingTime" readonly>*@
                             </div>
@@ -218,27 +218,27 @@
                             <div class="form-group col-md-1">
                                 <label>Billet <br /> Number</label>
                                 @Html.TextBoxFor(m => m.Master.BilletNumber,
-                                    new { @class = "form-control", type = "number", name = "BilletNumber" })
+                                         new { @class = "form-control", type = "number", name = "BilletNumber" })
                                 @*<input type="number" class="form-control" name="BilletNumber">*@
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Billet <br /> Weight</label>
                                 @Html.TextBoxFor(m => m.Master.BilletTotalWeight,
-                                    new { @class = "form-control", type = "number", name = "BilletTotalWeight", step = "any" })
+                                         new { @class = "form-control", type = "number", name = "BilletTotalWeight", step = "any" })
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Productivity (ton/hr)</label>
                                 @Html.TextBoxFor(m => m.Master.Productivitytonhr,
-                                    new { @class = "form-control", type = "number", name = "Productivitytonhr", @readonly = "readonly", step = "any" })
+                                         new { @class = "form-control", type = "number", name = "Productivitytonhr", @readonly = "readonly", step = "any" })
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Yeild (%) <br />  <br /> </label>
                                 @Html.TextBoxFor(
-                                    m => m.Master.Yeild,
-                                    new { @class = "form-control", type = "number", name = "Yeild", @readonly = "readonly", step = "any" })
+                                         m => m.Master.Yeild,
+                                         new { @class = "form-control", type = "number", name = "Yeild", @readonly = "readonly", step = "any" })
                             </div>
                         </div>
 
@@ -259,44 +259,44 @@
                             <div class="form-group col-md-1">
                                 <label>C %</label>
                                 @Html.TextBoxFor(m => m.Master.LF_C,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control" name="LF_C">*@
                             </div>
                             <div class="form-group col-md-1">
                                 <label>Si %</label>
                                 @Html.TextBoxFor(m => m.Master.LF_Si,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control lf-analysis-si" name="LF_Si">*@
                             </div>
                             <div class="form-group col-md-1">
                                 <label>Mn %</label>
                                 @Html.TextBoxFor(m => m.Master.LF_Mn,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control lf-analysis-mn" name="LF_Mn">*@
                             </div>
                             <div class="form-group col-md-1">
                                 <label>S %</label>
                                 @Html.TextBoxFor(m => m.Master.LF_S,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control lf-analysis-s" name="LF_S">*@
                             </div>
                             <div class="form-group col-md-1">
                                 <label>T.E %</label>
                                 @Html.TextBoxFor(m => m.Master.LF_TE,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control" name="LF_TE">*@
                             </div>
 
                             <div class="form-group col-md-1">
                                 <label>Mn / Si</label>
                                 @Html.TextBoxFor(m => m.Master.LF_MnSi,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control lf-analysis-mn-si" name="LF_MnSi" readonly>*@
                             </div>
                             <div class="form-group col-md-1">
                                 <label>Mn / S</label>
                                 @Html.TextBoxFor(m => m.Master.LF_MnS,
-                                    new { @class = "form-control", type = "number" })
+                                         new { @class = "form-control", type = "number" })
                                 @*<input type="number" class="form-control lf-analysis-mn-s" name="LF_MnS" readonly>*@
                             </div>
 
@@ -318,34 +318,172 @@
                             <table class="table table-bordered" id="chemTable">
                                 <thead>
                                     <tr>
-                                        <th>Sample</th>
+                                        <th style="width:120px;">Sample</th>
                                         <th>C %</th>
                                         <th>Si %</th>
                                         <th>Mn %</th>
                                         <th>P %</th>
                                         <th>S %</th>
                                         <th>TE %</th>
-                                        <th>Action</th>
+                                        <th style="width:80px;">Action</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-                                    <tr>
-                                        <td class="sample-no" name="Analysis[0].Sample">Sample 1</td>
+                                    @if (
+                                        Model != null &&
+                                        Model.Master != null &&
+                                        Model.Master.Analysis != null &&
+                                        Model.Master.Analysis.Count > 0
+                                    )
+                                    {
+                                        for (int i = 0; i < Model.Master.Analysis.Count; i++)
+                                        {
+                                            var a = Model.Master.Analysis[i];
 
-                                        <td><input type="number" class="form-control" name="Analysis[0].C"></td>
-                                        <td><input type="number" class="form-control" name="Analysis[0].Si"></td>
-                                        <td><input type="number" class="form-control" name="Analysis[0].Mn"></td>
-                                        <td><input type="number" class="form-control" name="Analysis[0].P"></td>
-                                        <td><input type="number" class="form-control" name="Analysis[0].S"></td>
-                                        <td><input type="number" class="form-control" name="Analysis[0].TE"></td>
+                                            <tr>
+                                                <td class="sample-no">
+                                                    <span class="sample-label">
+                                                        @(string.IsNullOrWhiteSpace(a.Sample)
+                                                            ? "Sample " + (i + 1)
+                                                            : a.Sample)
+                                                    </span>
 
-                                        <td><button type="button" class="btn btn-danger btn-sm remove-row">X</button></td>
-                                    </tr>
+                                                    <input type="hidden"
+                                                           class="sample-value"
+                                                           name="Master.Analysis[@i].Sample"
+                                                           value="@(string.IsNullOrWhiteSpace(a.Sample)
+                                                               ? "Sample " + (i + 1)
+                                                               : a.Sample)" />
+                                                </td>
+
+                                                <td>
+                                                    <input type="number"
+                                                           step="any"
+                                                           class="form-control chem-value"
+                                                           name="Master.Analysis[@i].C"
+                                                           value="@a.C" />
+                                                </td>
+
+                                                <td>
+                                                    <input type="number"
+                                                           step="any"
+                                                           class="form-control chem-value"
+                                                           name="Master.Analysis[@i].Si"
+                                                           value="@a.Si" />
+                                                </td>
+
+                                                <td>
+                                                    <input type="number"
+                                                           step="any"
+                                                           class="form-control chem-value"
+                                                           name="Master.Analysis[@i].Mn"
+                                                           value="@a.Mn" />
+                                                </td>
+
+                                                <td>
+                                                    <input type="number"
+                                                           step="any"
+                                                           class="form-control chem-value"
+                                                           name="Master.Analysis[@i].P"
+                                                           value="@a.P" />
+                                                </td>
+
+                                                <td>
+                                                    <input type="number"
+                                                           step="any"
+                                                           class="form-control chem-value"
+                                                           name="Master.Analysis[@i].S"
+                                                           value="@a.S" />
+                                                </td>
+
+                                                <td>
+                                                    <input type="number"
+                                                           step="any"
+                                                           class="form-control chem-value"
+                                                           name="Master.Analysis[@i].TE"
+                                                           value="@a.TE" />
+                                                </td>
+
+                                                <td class="text-center">
+                                                    <button type="button"
+                                                            class="btn btn-danger btn-sm remove-row">
+                                                        X
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td class="sample-no">
+                                                <span class="sample-label">Sample 1</span>
+
+                                                <input type="hidden"
+                                                       class="sample-value"
+                                                       name="Master.Analysis[0].Sample"
+                                                       value="Sample 1" />
+                                            </td>
+
+                                            <td>
+                                                <input type="number"
+                                                       step="any"
+                                                       class="form-control chem-value"
+                                                       name="Master.Analysis[0].C" />
+                                            </td>
+
+                                            <td>
+                                                <input type="number"
+                                                       step="any"
+                                                       class="form-control chem-value"
+                                                       name="Master.Analysis[0].Si" />
+                                            </td>
+
+                                            <td>
+                                                <input type="number"
+                                                       step="any"
+                                                       class="form-control chem-value"
+                                                       name="Master.Analysis[0].Mn" />
+                                            </td>
+
+                                            <td>
+                                                <input type="number"
+                                                       step="any"
+                                                       class="form-control chem-value"
+                                                       name="Master.Analysis[0].P" />
+                                            </td>
+
+                                            <td>
+                                                <input type="number"
+                                                       step="any"
+                                                       class="form-control chem-value"
+                                                       name="Master.Analysis[0].S" />
+                                            </td>
+
+                                            <td>
+                                                <input type="number"
+                                                       step="any"
+                                                       class="form-control chem-value"
+                                                       name="Master.Analysis[0].TE" />
+                                            </td>
+
+                                            <td class="text-center">
+                                                <button type="button"
+                                                        class="btn btn-danger btn-sm remove-row">
+                                                    X
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
                                 </tbody>
                             </table>
 
-                            <button type="button" id="addRow" class="btn btn-primary">Add Row</button>
+                            <button type="button"
+                                    id="addRow"
+                                    class="btn btn-primary">
+                                Add Row
+                            </button>
 
                         </div>
                     </div>
@@ -392,71 +530,188 @@
 
 
         /* ------------------------------------------------------
-         * 3️⃣ DYNAMIC CHEMICAL ANALYSIS TABLE
+         * 3. DYNAMIC CHEMICAL ANALYSIS TABLE
+         * IMPORTANT:
+         * Input names MUST be Master.Analysis[index].Property
+         * because controller receives CCMMeltShopVM and reads
+         * model.Master.Analysis.
          * ------------------------------------------------------ */
-        let tableBody = $("#chemTable tbody");
-        let sampleCount = tableBody.find("tr").length || 0;
 
-        // Re-index rows
+        var tableBody = $("#chemTable tbody");
+
         function reIndexRows() {
+
             tableBody.find("tr").each(function (index) {
-                let sampleNumber = index + 1;
 
-                // Sample cell + hidden field
-                let sampleCell = $(this).find(".sample-no");
-                sampleCell.html(`
-                Sample ${sampleNumber}
-                <input type="hidden" name="Analysis[${index}].Sample" value="Sample ${sampleNumber}" />
-            `);
+                var sampleNumber =
+                    index + 1;
 
-                // Fix input names
-                $(this).find("input[type='number']").each(function () {
-                    let oldName = $(this).attr("name");
-                    if (oldName) {
-                        let newName = oldName.replace(/Analysis\[\d+\]/, `Analysis[${index}]`);
-                        $(this).attr("name", newName);
-                    }
-                });
+                var row =
+                    $(this);
+
+                row.find(".sample-label")
+                    .text(
+                        "Sample " +
+                        sampleNumber
+                    );
+
+                row.find(".sample-value")
+                    .attr(
+                        "name",
+                        "Master.Analysis[" +
+                        index +
+                        "].Sample"
+                    )
+                    .val(
+                        "Sample " +
+                        sampleNumber
+                    );
+
+                row.find("input.chem-value")
+                    .each(function () {
+
+                        var input =
+                            $(this);
+
+                        var oldName =
+                            input.attr("name") || "";
+
+                        var propertyName =
+                            oldName.substring(
+                                oldName.lastIndexOf(".") + 1
+                            );
+
+                        input.attr(
+                            "name",
+                            "Master.Analysis[" +
+                            index +
+                            "]." +
+                            propertyName
+                        );
+                    });
             });
-
-            sampleCount = tableBody.find("tr").length;
         }
 
-        // Add new row
+
         function addAnalysisRow() {
-            let index = sampleCount;
-            let number = index + 1;
 
-            let row = `
-        <tr>
-            <td class="sample-no">
-                Sample ${number}
-                <input type="hidden" name="Analysis[${index}].Sample" value="Sample ${number}" />
-            </td>
-            <td><input type="number" class="form-control" name="Analysis[${index}].C"></td>
-            <td><input type="number" class="form-control" name="Analysis[${index}].Si"></td>
-            <td><input type="number" class="form-control" name="Analysis[${index}].Mn"></td>
-            <td><input type="number" class="form-control" name="Analysis[${index}].P"></td>
-            <td><input type="number" class="form-control" name="Analysis[${index}].S"></td>
-            <td><input type="number" class="form-control" name="Analysis[${index}].TE"></td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-row">X</button></td>
-        </tr>
-        `;
-            tableBody.append(row);
-            sampleCount++;
+            var index =
+                tableBody.find("tr").length;
+
+            var sampleNumber =
+                index + 1;
+
+            var row =
+                '<tr>' +
+
+                '<td class="sample-no">' +
+                '<span class="sample-label">Sample ' +
+                sampleNumber +
+                '</span>' +
+
+                '<input type="hidden" ' +
+                'class="sample-value" ' +
+                'name="Master.Analysis[' +
+                index +
+                '].Sample" ' +
+                'value="Sample ' +
+                sampleNumber +
+                '" />' +
+                '</td>' +
+
+                '<td>' +
+                '<input type="number" step="any" class="form-control chem-value" ' +
+                'name="Master.Analysis[' + index + '].C" />' +
+                '</td>' +
+
+                '<td>' +
+                '<input type="number" step="any" class="form-control chem-value" ' +
+                'name="Master.Analysis[' + index + '].Si" />' +
+                '</td>' +
+
+                '<td>' +
+                '<input type="number" step="any" class="form-control chem-value" ' +
+                'name="Master.Analysis[' + index + '].Mn" />' +
+                '</td>' +
+
+                '<td>' +
+                '<input type="number" step="any" class="form-control chem-value" ' +
+                'name="Master.Analysis[' + index + '].P" />' +
+                '</td>' +
+
+                '<td>' +
+                '<input type="number" step="any" class="form-control chem-value" ' +
+                'name="Master.Analysis[' + index + '].S" />' +
+                '</td>' +
+
+                '<td>' +
+                '<input type="number" step="any" class="form-control chem-value" ' +
+                'name="Master.Analysis[' + index + '].TE" />' +
+                '</td>' +
+
+                '<td class="text-center">' +
+                '<button type="button" class="btn btn-danger btn-sm remove-row">X</button>' +
+                '</td>' +
+
+                '</tr>';
+
+            tableBody.append(
+                row
+            );
+
+            reIndexRows();
         }
 
-        $("#addRow").click(addAnalysisRow);
 
-        // Remove row
-        $(document).on("click", ".remove-row", function () {
-            if (tableBody.find("tr").length > 1) {
-                $(this).closest("tr").remove();
-                reIndexRows();
-            } else {
-                alert("At least one sample is required.");
+        $("#addRow").on(
+            "click",
+            function () {
+
+                addAnalysisRow();
             }
-        });
+        );
+
+
+        $(document).on(
+            "click",
+            ".remove-row",
+            function () {
+
+                if (
+                    tableBody
+                        .find("tr")
+                        .length <= 1
+                ) {
+                    alert(
+                        "At least one sample is required."
+                    );
+
+                    return;
+                }
+
+                $(this)
+                    .closest("tr")
+                    .remove();
+
+                reIndexRows();
+            }
+        );
+
+
+        // Ensure correct indexes before POST.
+        $("#addprofileform").on(
+            "submit",
+            function () {
+
+                reIndexRows();
+
+                return true;
+            }
+        );
+
+
+        // Also normalize existing Edit rows once.
+        reIndexRows();
 
 
         /* ------------------------------------------------------

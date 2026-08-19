@@ -1,4 +1,5 @@
 ﻿using DAL.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -46,7 +47,7 @@ namespace BAL.Repositories
                 return null;
             }
         }
-               
+
         public List<CCMYeildBLL> GetAllCCMBreakdown()
         {
             try
@@ -320,6 +321,156 @@ namespace BAL.Repositories
                 return rtn;
             }
             catch (Exception ex)
+            {
+                return 0;
+            }
+        }
+
+        public CCMMeltShopReportVM GetCCMDailyHeatSummary(
+    DateTime fromDate,
+    DateTime toDate)
+        {
+            try
+            {
+                CCMMeltShopReportVM vm =
+                    new CCMMeltShopReportVM
+                    {
+                        CCM =
+                            new List<CCMBLL>(),
+
+                        ChemicalAnalysis =
+                            new List<
+                                CCMChemicalAnalysisBLL
+                            >(),
+
+                        FromDate =
+                            fromDate.Date,
+
+                        ToDate =
+                            toDate.Date
+                    };
+
+
+                SqlParameter[] p =
+                {
+            new SqlParameter(
+                "@FromDate",
+                SqlDbType.Date
+            )
+            {
+                Value =
+                    fromDate.Date
+            },
+
+            new SqlParameter(
+                "@ToDate",
+                SqlDbType.Date
+            )
+            {
+                Value =
+                    toDate.Date
+            }
+        };
+
+
+                DataSet ds =
+                    new DBHelper()
+                        .GetDatasetFromSP(
+                            "sp_GetCCMDailyHeatSummary",
+                            p
+                        );
+
+
+                if (ds == null)
+                {
+                    return vm;
+                }
+
+
+                // =========================================
+                // TABLE 0 - CCM
+                // =========================================
+
+                if (
+                    ds.Tables.Count > 0 &&
+                    ds.Tables[0] != null &&
+                    ds.Tables[0].Rows.Count > 0
+                )
+                {
+                    vm.CCM =
+                        JArray
+                            .Parse(
+                                JsonConvert
+                                    .SerializeObject(
+                                        ds.Tables[0]
+                                    )
+                            )
+                            .ToObject<
+                                List<CCMBLL>
+                            >();
+                }
+
+
+                // =========================================
+                // TABLE 1 - CCM CHEMICAL ANALYSIS
+                // =========================================
+
+                if (
+                    ds.Tables.Count > 1 &&
+                    ds.Tables[1] != null &&
+                    ds.Tables[1].Rows.Count > 0
+                )
+                {
+                    vm.ChemicalAnalysis =
+                        JArray
+                            .Parse(
+                                JsonConvert
+                                    .SerializeObject(
+                                        ds.Tables[1]
+                                    )
+                            )
+                            .ToObject<
+                                List<
+                                    CCMChemicalAnalysisBLL
+                                >
+                            >();
+                }
+
+
+                return vm;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        // Add this method inside CCMRespository
+        public int DeleteChemicalAnalysisByHeatNo(
+            string heatNo,
+            string updatedBy)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+            new SqlParameter(
+                "@HeatNo",
+                heatNo
+            ),
+
+            new SqlParameter(
+                "@UpdatedBy",
+                updatedBy
+            )
+        };
+
+                return new DBHelper()
+                    .ExecuteNonQueryReturn(
+                        "sp_DeleteCCMChemicalAnalysisByHeatNo",
+                        p
+                    );
+            }
+            catch
             {
                 return 0;
             }

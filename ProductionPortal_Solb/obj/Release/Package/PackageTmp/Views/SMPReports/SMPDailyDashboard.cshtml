@@ -27,6 +27,26 @@
 
     decimal maxDelay = 0;
 
+    /*
+     * Use the HeatTarget returned by the SP.  The PeriodTarget fallback
+     * also protects the card when an older repository mapper has not yet
+     * mapped the HeatTarget column.
+     */
+    decimal heatTarget =
+        Convert.ToDecimal(m.HeatTarget);
+
+    decimal periodTarget =
+        Convert.ToDecimal(m.PeriodTarget);
+
+    if (heatTarget <= 0 && periodTarget > 0)
+    {
+        heatTarget = Math.Round(
+            periodTarget / 140m,
+            0,
+            MidpointRounding.AwayFromZero
+        );
+    }
+
     for (int i = 0; i < topDelays.Count; i++)
     {
         if (topDelays[i].Minutes > maxDelay)
@@ -41,34 +61,49 @@
     var actualValues =
         new List<string>();
 
-    var planValues =
-        new List<string>();
+    DateTime chartToDate = m.ToDate.Date;
+    DateTime chartFromDate = new DateTime(
+        chartToDate.Year,
+        chartToDate.Month,
+        1
+    );
 
-    for (int i = 0; i < dailyProduction.Count; i++)
+    /*
+     * Build a continuous month-to-date series up to the selected ToDate.
+     * Missing dates remain zero and previous dates keep their production.
+     */
+    for (
+        DateTime chartDate = chartFromDate;
+        chartDate <= chartToDate;
+        chartDate = chartDate.AddDays(1)
+    )
     {
-        dayLabels.Add(
-            "\"" +
-            (
-                string.IsNullOrWhiteSpace(
-                    dailyProduction[i].DateLabel
-                )
-                    ? dailyProduction[i].ProductionDate.ToString("dd-MMM")
-                    : dailyProduction[i].DateLabel
-            ) +
-            "\""
-        );
+        decimal dayActual = 0;
+        string dateLabel = chartDate.ToString("dd-MMM");
+
+        for (int i = 0; i < dailyProduction.Count; i++)
+        {
+            if (dailyProduction[i].ProductionDate.Date != chartDate)
+            {
+                continue;
+            }
+
+            dayActual += dailyProduction[i].Actual;
+
+            if (!string.IsNullOrWhiteSpace(dailyProduction[i].DateLabel))
+            {
+                dateLabel = dailyProduction[i].DateLabel;
+            }
+        }
+
+        dayLabels.Add("\"" + dateLabel + "\"");
 
         actualValues.Add(
-            dailyProduction[i].Actual.ToString(
+            dayActual.ToString(
                 System.Globalization.CultureInfo.InvariantCulture
             )
         );
 
-        planValues.Add(
-            dailyProduction[i].Plan.ToString(
-                System.Globalization.CultureInfo.InvariantCulture
-            )
-        );
     }
 
     string dayLabelsJson =
@@ -77,14 +112,20 @@
     string actualValuesJson =
         "[" + string.Join(",", actualValues.ToArray()) + "]";
 
-    string planValuesJson =
-        "[" + string.Join(",", planValues.ToArray()) + "]";
+    string pdfFileName =
+        "SMP_Daily_Dashboard_" +
+        m.FromDate.ToString("yyyyMMdd") +
+        "_to_" +
+        m.ToDate.ToString("yyyyMMdd") +
+        ".pdf";
 }
 
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
     :root {
@@ -410,6 +451,126 @@
         .variance-table tr:last-child td {
             border-bottom: 0;
         }
+
+        .variance-table tbody tr:last-child {
+            background: #f8fafc;
+        }
+
+            .variance-table tbody tr:last-child td {
+                padding-top: 11px;
+                padding-bottom: 11px;
+            }
+
+    .variance-value {
+        min-width: 92px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 6px 10px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: .1px;
+    }
+
+        .variance-value .variance-arrow {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            flex: 0 0 20px;
+        }
+
+        .variance-value.up {
+            color: #087a50;
+            background: #e9f8f1;
+            border-color: #bcebd7;
+        }
+
+            .variance-value.up .variance-arrow {
+                background: #159565;
+            }
+
+                .variance-value.up .variance-arrow::before {
+                    content: "";
+                    position: absolute;
+                    left: 9px;
+                    top: 9px;
+                    width: 2px;
+                    height: 7px;
+                    background: #fff;
+                    border-radius: 2px;
+                }
+
+                .variance-value.up .variance-arrow::after {
+                    content: "";
+                    position: absolute;
+                    left: 6px;
+                    top: 4px;
+                    width: 0;
+                    height: 0;
+                    border-left: 4px solid transparent;
+                    border-right: 4px solid transparent;
+                    border-bottom: 6px solid #fff;
+                }
+
+        .variance-value.down {
+            color: #b42335;
+            background: #fff0f2;
+            border-color: #f3c5cd;
+        }
+
+            .variance-value.down .variance-arrow {
+                background: #c83248;
+            }
+
+                .variance-value.down .variance-arrow::before {
+                    content: "";
+                    position: absolute;
+                    left: 9px;
+                    top: 4px;
+                    width: 2px;
+                    height: 7px;
+                    background: #fff;
+                    border-radius: 2px;
+                }
+
+                .variance-value.down .variance-arrow::after {
+                    content: "";
+                    position: absolute;
+                    left: 6px;
+                    top: 10px;
+                    width: 0;
+                    height: 0;
+                    border-left: 4px solid transparent;
+                    border-right: 4px solid transparent;
+                    border-top: 6px solid #fff;
+                }
+
+        .variance-value.flat {
+            color: #5f6b7a;
+            background: #f1f4f7;
+            border-color: #d9e0e8;
+        }
+
+            .variance-value.flat .variance-arrow {
+                background: #778395;
+            }
+
+                .variance-value.flat .variance-arrow::before {
+                    content: "";
+                    position: absolute;
+                    left: 5px;
+                    top: 9px;
+                    width: 10px;
+                    height: 2px;
+                    background: #fff;
+                    border-radius: 2px;
+                }
 
     .positive {
         color: var(--green) !important;
@@ -903,6 +1064,120 @@
             font-size: 7px !important;
         }
     }
+
+    /* Used only while generating the one-page PDF. */
+    #smpPdfReport.pdf-export-mode {
+        width: 1800px !important;
+        max-width: none !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 12px !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+    }
+
+        #smpPdfReport.pdf-export-mode .dashboard-header {
+            grid-template-columns: 135px 1fr 235px !important;
+            margin-bottom: 12px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .kpi-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin-bottom: 9px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .kpi-card {
+            min-height: 82px !important;
+            padding: 8px 11px 8px 14px !important;
+            box-shadow: none !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .kpi-value {
+            margin-top: 6px !important;
+            font-size: 20px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .overview-grid {
+            grid-template-columns: 2fr .7fr !important;
+            gap: 9px !important;
+            margin-bottom: 9px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .analytics-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 9px !important;
+            margin-bottom: 9px !important;
+        }
+
+            #smpPdfReport.pdf-export-mode .analytics-grid > :last-child {
+                grid-column: auto !important;
+            }
+
+        #smpPdfReport.pdf-export-mode .lower-grid {
+            grid-template-columns: .8fr 1fr 1.8fr !important;
+            gap: 9px !important;
+            margin-bottom: 8px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .production-card {
+            grid-column: auto !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .dashboard-card {
+            box-shadow: none !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .card-header {
+            min-height: 40px !important;
+            padding: 9px 11px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .card-body {
+            padding: 10px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .chart-box,
+        #smpPdfReport.pdf-export-mode .utility-chart-box,
+        #smpPdfReport.pdf-export-mode .production-chart-box {
+            height: 205px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .yearly-body {
+            height: 172px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .single-donut-wrap {
+            width: 150px !important;
+            height: 150px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .variance-table th,
+        #smpPdfReport.pdf-export-mode .variance-table td {
+            padding-top: 9px !important;
+            padding-bottom: 9px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .delay-row {
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .dashboard-footer {
+            margin-top: 4px !important;
+            padding-top: 6px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .no-print {
+            display: none !important;
+        }
+
+        /* Web-font icons can become square boxes in html2canvas. */
+        #smpPdfReport.pdf-export-mode .card-title i,
+        #smpPdfReport.pdf-export-mode .header-meta i {
+            display: none !important;
+        }
 </style>
 
 <div class="xp-breadcrumbbar no-print">
@@ -926,13 +1201,15 @@
     <div class="smp-dashboard">
 
         <div class="dashboard-actions no-print">
-            <button type="button" class="print-btn" onclick="printSMPDashboard()">
-                <i class="fa-solid fa-print"></i>
-                Print / Save PDF
+            <button type="button"
+                    class="print-btn"
+                    onclick="downloadSMPDashboardPDF(this)">
+                <i class="fa-solid fa-file-pdf"></i>
+                Download Single Page PDF
             </button>
         </div>
 
-        <div class="dashboard-shell">
+        <div class="dashboard-shell" id="smpPdfReport">
 
             <!-- HEADER -->
             <header class="dashboard-header">
@@ -980,7 +1257,7 @@
                         <div class="kpi-badge">H</div>
                     </div>
                     <div class="kpi-value">@m.HeatCount.ToString("N0")</div>
-                    <div class="kpi-target">Target: 24 heats</div>
+                    <div class="kpi-target">Target: @heatTarget.ToString("N0") heats</div>
                 </div>
 
                 <div class="kpi-card good">
@@ -989,7 +1266,9 @@
                         <div class="kpi-badge">B</div>
                     </div>
                     <div class="kpi-value">@m.BilletOutput.ToString("N0")</div>
-                    <div class="kpi-target">Target: 3,000 MT</div>
+                    <div class="kpi-target">
+                        Target: @m.PeriodTarget.ToString("N0") MT
+                    </div>
                 </div>
 
                 <div class="kpi-card">
@@ -997,7 +1276,7 @@
                         <div class="kpi-name">Yield (%)</div>
                         <div class="kpi-badge">Y</div>
                     </div>
-                    <div class="kpi-value">@m.Yield.ToString("0.0")</div>
+                    <div class="kpi-value">@m.Yield.ToString("N0")</div>
                     <div class="kpi-target">Target: 87%</div>
                 </div>
 
@@ -1006,16 +1285,16 @@
                         <div class="kpi-name">Productivity (t/hr)</div>
                         <div class="kpi-badge">P</div>
                     </div>
-                    <div class="kpi-value">@m.Productivity.ToString("0.0")</div>
+                    <div class="kpi-value">@m.Productivity.ToString("N0")</div>
                     <div class="kpi-target">Target: 140 t/hr</div>
                 </div>
 
                 <div class="kpi-card bad">
                     <div class="kpi-head">
-                        <div class="kpi-name">Power Consumption</div>
+                        <div class="kpi-name">Power Consumption (EAF-LF)</div>
                         <div class="kpi-badge">E</div>
                     </div>
-                    <div class="kpi-value">@m.PowerConsumption.ToString("0.0")</div>
+                    <div class="kpi-value">@m.PowerConsumption.ToString("N0")</div>
                     <div class="kpi-target">Target: 602 kWh/t</div>
                 </div>
 
@@ -1024,7 +1303,7 @@
                         <div class="kpi-name">TTT Time (min)</div>
                         <div class="kpi-badge">T</div>
                     </div>
-                    <div class="kpi-value">@m.TapToTap.ToString("0.0")</div>
+                    <div class="kpi-value">@m.TapToTap.ToString("N0")</div>
                     <div class="kpi-target">Target: 60 min</div>
                 </div>
 
@@ -1033,7 +1312,7 @@
                         <div class="kpi-name">Power-on Time (min)</div>
                         <div class="kpi-badge">O</div>
                     </div>
-                    <div class="kpi-value">@m.TapToTap.ToString("0.0")</div>
+                    <div class="kpi-value">@m.PowerOnTime.ToString("N0")</div>
                     <div class="kpi-target">Target: 48 min</div>
                 </div>
 
@@ -1042,7 +1321,7 @@
                         <div class="kpi-name">Heat Weight (t)</div>
                         <div class="kpi-badge">W</div>
                     </div>
-                    <div class="kpi-value">@m.HeatWeight.ToString("0.0")</div>
+                    <div class="kpi-value">@m.HeatWeight.ToString("N0")</div>
                     <div class="kpi-target">Target: 140 t</div>
                 </div>
 
@@ -1073,26 +1352,35 @@
                             <tbody>
                                 <tr>
                                     <td>Actual</td>
-                                    <td>@m.DailyActual.ToString("N0")</td>
-                                    <td>@m.MTDActual.ToString("N0")</td>
-                                    <td>@m.YTDActual.ToString("N0")</td>
+                                    <td>@m.DailyActual.ToString("N1")</td>
+                                    <td>@m.MTDActual.ToString("N1")</td>
+                                    <td>@m.YTDActual.ToString("N1")</td>
                                 </tr>
                                 <tr>
                                     <td>Target</td>
-                                    <td>@m.DailyTarget.ToString("N0")</td>
-                                    <td>@m.MTDTarget.ToString("N0")</td>
-                                    <td>@m.YTDTarget.ToString("N0")</td>
+                                    <td>@m.DailyTarget.ToString("N1")</td>
+                                    <td>@m.MTDTarget.ToString("N1")</td>
+                                    <td>@m.YTDTarget.ToString("N1")</td>
                                 </tr>
                                 <tr>
                                     <td>Variance</td>
-                                    <td class="@(dailyVariance >= 0 ? "positive" : "negative")">
-                                        @dailyVariance.ToString("+#,##0;-#,##0;0")
+                                    <td>
+                                        <span class="variance-value @(dailyVariance > 0 ? "up" : dailyVariance < 0 ? "down" : "flat")">
+                                            <span class="variance-arrow" aria-hidden="true"></span>
+                                            @dailyVariance.ToString("+#,##0.0;-#,##0.0;0.0")
+                                        </span>
                                     </td>
-                                    <td class="@(mtdVariance >= 0 ? "positive" : "negative")">
-                                        @mtdVariance.ToString("+#,##0;-#,##0;0")
+                                    <td>
+                                        <span class="variance-value @(mtdVariance > 0 ? "up" : mtdVariance < 0 ? "down" : "flat")">
+                                            <span class="variance-arrow" aria-hidden="true"></span>
+                                            @mtdVariance.ToString("+#,##0.0;-#,##0.0;0.0")
+                                        </span>
                                     </td>
-                                    <td class="@(ytdVariance >= 0 ? "positive" : "negative")">
-                                        @ytdVariance.ToString("+#,##0;-#,##0;0")
+                                    <td>
+                                        <span class="variance-value @(ytdVariance > 0 ? "up" : ytdVariance < 0 ? "down" : "flat")">
+                                            <span class="variance-arrow" aria-hidden="true"></span>
+                                            @ytdVariance.ToString("+#,##0.0;-#,##0.0;0.0")
+                                        </span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1106,9 +1394,21 @@
                     </div>
 
                     <div class="yearly-body">
-                        <div class="single-donut-wrap">
-                            <canvas id="yearlyChart"></canvas>
-                            <div class="donut-center">@m.YearlyAchievement.ToString("0")%</div>
+                        <div>
+                            <div class="single-donut-wrap">
+                                <canvas id="yearlyChart"></canvas>
+                                <div class="donut-center">@m.YearlyAchievement.ToString("0.0")%</div>
+                            </div>
+
+                            <div style="text-align:center;
+                                        margin-top:6px;
+                                        font-size:10px;
+                                        font-weight:700;
+                                        color:#697386;">
+                                YTD Actual: @m.YTDActual.ToString("N1") MT
+                                <br />
+                                Target: @m.YearlyTarget.ToString("N1") MT
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1122,9 +1422,9 @@
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="fa-solid fa-chart-column"></i>
-                            Performance KPIs (%)
+                            Performance KPIs
                         </h3>
-                        <span class="card-note">Target vs Actual</span>
+                        <span class="card-note">(%)</span>
                     </div>
 
                     <div class="card-body">
@@ -1167,7 +1467,7 @@
                                             <span style="width:@width.ToString("0.##")%;"></span>
                                         </div>
 
-                                        <div class="delay-min">@delay.Minutes.ToString("0")</div>
+                                        <div class="delay-min">@delay.Minutes.ToString("N0")</div>
                                         <div class="delay-area">@delay.Area</div>
                                     </div>
                                 }
@@ -1181,7 +1481,7 @@
                         </div>
 
                         <div class="delay-note">
-                            Top delays are grouped from PlantDelay against the selected report date.
+                            Top delays are calculated from SMP day-wise delay columns.
                         </div>
                     </div>
                 </div>
@@ -1213,6 +1513,7 @@
                             <i class="fa-solid fa-bolt"></i>
                             Utility Consumption
                         </h3>
+                        <span class="card-note">Nm³/t</span>
                     </div>
 
                     <div class="card-body">
@@ -1261,7 +1562,7 @@
 
                                 <div class="mini-donut-wrap">
                                     <canvas id="availabilityChart"></canvas>
-                                    <div class="mini-center">@m.Availability.ToString("0")%</div>
+                                    <div class="mini-center">@m.Availability.ToString("0.0")%</div>
                                 </div>
 
                                 <div class="legend-list">
@@ -1296,9 +1597,11 @@
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="fa-solid fa-chart-line"></i>
-                            Daily Production Actual Vs Plan
+                            Day Wise Production
                         </h3>
-                        <span class="card-note">Selected date range</span>
+                        <span class="card-note">
+                            MT
+                        </span>
                     </div>
 
                     <div class="card-body">
@@ -1330,34 +1633,68 @@
 
     const valueLabelPlugin = {
         id: "valueLabelPlugin",
+
         afterDatasetsDraw(chart) {
+
             const ctx = chart.ctx;
 
             ctx.save();
             ctx.fillStyle = "#202632";
             ctx.textAlign = "center";
             ctx.textBaseline = "bottom";
-            ctx.font = "700 10px Segoe UI";
+            ctx.font = "700 9px Segoe UI";
 
             chart.data.datasets.forEach(function (dataset, datasetIndex) {
+
                 if (dataset.type === "line") {
                     return;
                 }
 
-                const meta = chart.getDatasetMeta(datasetIndex);
+                const meta =
+                    chart.getDatasetMeta(datasetIndex);
 
-                if (meta.hidden) {
+                if (
+                    !meta ||
+                    meta.hidden
+                ) {
                     return;
                 }
 
                 meta.data.forEach(function (element, index) {
-                    const value = dataset.data[index];
 
-                    if (value === null || value === undefined) {
+                    const value =
+                        Number(dataset.data[index] || 0);
+
+                    if (!Number.isFinite(value)) {
                         return;
                     }
 
-                    ctx.fillText(value, element.x, element.y - 5);
+                    const label =
+                        value.toLocaleString(
+                            undefined,
+                            {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 1
+                            }
+                        );
+
+                    /*
+                     * When Target + Actual are both very small,
+                     * stagger labels slightly so they do not overlap.
+                     */
+                    const yOffset =
+                        datasetIndex % 2 === 0
+                            ? 5
+                            : 16;
+
+                    ctx.fillText(
+                        label,
+                        element.x,
+                        Math.max(
+                            element.y - yOffset,
+                            10
+                        )
+                    );
                 });
             });
 
@@ -1446,13 +1783,10 @@
                     beginAtZero: true,
                     max: 110,
                     ticks: {
-                        stepSize: 25,
-                        font: {
-                            size: 10
-                        }
+                        display: false
                     },
                     grid: {
-                        color: gridColor
+                        display: false
                     },
                     border: {
                         display: false
@@ -1492,6 +1826,25 @@
             ],
             datasets: [
                 {
+                    label: "Target",
+                    data: [
+                        2,      // FeSi
+                        11,     // SiMn
+                        0.80,   // Flourspar
+                        16,     // Calcined Carbon
+                        10,     // Charge Coal
+                        0.25,   // Rice Husk
+                        40,     // Lime
+                        30      // Dolo Lime
+                    ],
+                    backgroundColor: grayColor,
+                    borderColor: "#7d8794",
+                    borderWidth: 1,
+                    borderRadius: 3,
+                    barThickness: 25,
+                    minBarLength: 3
+                },
+                {
                     label: "Actual",
                     data: [
                         @m.FeSi.ToString(System.Globalization.CultureInfo.InvariantCulture),
@@ -1505,19 +1858,10 @@
                     ],
                     backgroundColor: redColor,
                     borderRadius: 3,
-                    barThickness: 17
-                },
-                {
-                    label: "Target",
-                    data: [2, 18, 1, 20, 16, 1, 24, 31],
-                    type: "line",
-                    borderColor: blueColor,
-                    backgroundColor: blueColor,
-                    borderWidth: 3,
-                    pointRadius: 2,
-                    pointHoverRadius: 2,
-                    tension: 0
+                    barThickness: 25,
+                    minBarLength: 3
                 }
+
             ]
         },
         options: {
@@ -1526,7 +1870,7 @@
             animation: false,
             layout: {
                 padding: {
-                    top: 15
+                    top: 30
                 }
             },
             plugins: {
@@ -1544,15 +1888,16 @@
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 35,
+                    suggestedMax: 45,
                     ticks: {
-                        stepSize: 5,
-                        font: {
-                            size: 9
-                        }
+                        display: false
+                        //stepSize: 5,
+                        //font: {
+                        //    size: 9
+                        //}
                     },
                     grid: {
-                        color: gridColor
+                        display: false
                     },
                     border: {
                         display: false
@@ -1586,10 +1931,16 @@
             datasets: [
                 {
                     label: "Target",
-                    data: [100, 100, 100, 100],
+                    data: [
+                        7,      // LPG nm3/ton
+                        30,     // Oxygen nm3/ton
+                        0.16,   // Argon nm3/ton
+                        1       // Nitrogen nm3/ton
+                    ],
                     backgroundColor: grayColor,
                     borderRadius: 3,
-                    barThickness: 22
+                    barThickness: 25,
+                    minBarLength: 4
                 },
                 {
                     label: "Actual",
@@ -1601,7 +1952,8 @@
                     ],
                     backgroundColor: redColor,
                     borderRadius: 3,
-                    barThickness: 22
+                    barThickness: 25,
+                    minBarLength: 4
                 }
             ]
         },
@@ -1628,16 +1980,17 @@
             },
             scales: {
                 y: {
-                    beginAtZero: true,
-                    max: 450,
+                    beginAtZero: false,
+                    suggestedMax: 35,
                     ticks: {
-                        stepSize: 100,
-                        font: {
-                            size: 9
-                        }
+                        display: false
+                        //stepSize: 5,
+                        //font: {
+                        //    size: 9
+                        //}
                     },
                     grid: {
-                        color: gridColor
+                        display: false
                     },
                     border: {
                         display: false
@@ -1741,25 +2094,16 @@
         type: "bar",
         data: {
             labels: @Html.Raw(dayLabelsJson),
-            datasets: [
-                {
-                    label: "Actual",
-                    data: @Html.Raw(actualValuesJson),
-                    backgroundColor: redColor,
-                    borderRadius: 3,
-                    barThickness: 16
-                },
-                {
-                    label: "Plan",
-                    data: @Html.Raw(planValuesJson),
-                    type: "line",
-                    borderColor: blueColor,
-                    backgroundColor: blueColor,
-                    borderWidth: 3,
-                    pointRadius: 0,
-                    tension: 0
-                }
-            ]
+            datasets: [{
+                label: "Actual",
+                data: @Html.Raw(actualValuesJson),
+                backgroundColor: redColor,
+                borderRadius: 3,
+                maxBarThickness: 28,
+                categoryPercentage: 0.72,
+                barPercentage: 0.9,
+                minBarLength: 3
+            }]
         },
         options: {
             responsive: true,
@@ -1772,28 +2116,22 @@
             },
             plugins: {
                 legend: {
-                    position: "bottom",
-                    labels: {
-                        boxWidth: 15,
-                        font: {
-                            size: 10,
-                            weight: "bold"
-                        }
-                    }
+                    display: false
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 4200,
+                    suggestedMax: 3500,
                     ticks: {
-                        stepSize: 1000,
-                        font: {
-                            size: 9
-                        }
+                        display: false
+                        //precision: 0,
+                        //font: {
+                        //    size: 9
+                        //}
                     },
                     grid: {
-                        color: gridColor
+                        display: false
                     },
                     border: {
                         display: false
@@ -1804,7 +2142,14 @@
                         display: false
                     },
                     ticks: {
-                        display: false
+                        display: true,
+                        autoSkip: false,
+                        maxRotation: 45,
+                        minRotation: 0,
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
                     },
                     border: {
                         display: false
@@ -1815,7 +2160,150 @@
         plugins: [valueLabelPlugin]
     });
 
-    function printSMPDashboard() {
-        window.print();
+    async function downloadSMPDashboardPDF(button) {
+
+        const report =
+            document.getElementById("smpPdfReport");
+
+        if (!report) {
+            alert("Report area was not found.");
+            return;
+        }
+
+        const originalButtonHtml =
+            button ? button.innerHTML : "";
+
+        if (button) {
+            button.disabled = true;
+            button.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin"></i> Preparing PDF...';
+        }
+
+        try {
+            if (!window.html2canvas || !window.jspdf) {
+                throw new Error("PDF libraries could not be loaded.");
+            }
+
+            report.classList.add("pdf-export-mode");
+
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+
+            /* Finish chart animations before taking the snapshot. */
+            if (window.Chart && typeof Chart.getChart === "function") {
+                report.querySelectorAll("canvas").forEach(function (canvas) {
+                    const chart = Chart.getChart(canvas);
+
+                    if (chart) {
+                        chart.stop();
+                        chart.resize();
+                        chart.update("none");
+                    }
+                });
+            }
+
+            await new Promise(function (resolve) {
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(resolve);
+                });
+            });
+
+            const reportWidth =
+                Math.ceil(report.scrollWidth);
+
+            const reportHeight =
+                Math.ceil(report.scrollHeight);
+
+            const canvas = await html2canvas(report, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: false,
+                backgroundColor: "#ffffff",
+                logging: false,
+                width: reportWidth,
+                height: reportHeight,
+                windowWidth: reportWidth,
+                windowHeight: reportHeight,
+                scrollX: 0,
+                scrollY: 0,
+                ignoreElements: function (element) {
+                    return element.classList &&
+                        element.classList.contains("no-print");
+                }
+            });
+
+            const jsPDF = window.jspdf.jsPDF;
+
+            const pdf = new jsPDF({
+                orientation: "landscape",
+                unit: "mm",
+                format: "a4",
+                compress: true
+            });
+
+            const pageWidth =
+                pdf.internal.pageSize.getWidth();
+
+            const pageHeight =
+                pdf.internal.pageSize.getHeight();
+
+            const margin = 1.5;
+            const availableWidth = pageWidth - (margin * 2);
+            const availableHeight = pageHeight - (margin * 2);
+
+            const fitRatio = Math.min(
+                availableWidth / canvas.width,
+                availableHeight / canvas.height
+            );
+
+            const imageWidth = canvas.width * fitRatio;
+            const imageHeight = canvas.height * fitRatio;
+            const imageX = (pageWidth - imageWidth) / 2;
+            const imageY = (pageHeight - imageHeight) / 2;
+
+            const imageData =
+                canvas.toDataURL("image/png");
+
+            pdf.addImage(
+                imageData,
+                "PNG",
+                imageX,
+                imageY,
+                imageWidth,
+                imageHeight,
+                undefined,
+                "FAST"
+            );
+
+            pdf.save("@pdfFileName");
+        }
+        catch (error) {
+            console.error(error);
+            alert(
+                "PDF could not be generated. Please refresh the page and try again."
+            );
+        }
+        finally {
+            report.classList.remove("pdf-export-mode");
+
+            if (window.Chart && typeof Chart.getChart === "function") {
+                requestAnimationFrame(function () {
+                    report.querySelectorAll("canvas").forEach(function (canvas) {
+                        const chart = Chart.getChart(canvas);
+
+                        if (chart) {
+                            chart.resize();
+                            chart.update("none");
+                        }
+                    });
+                });
+            }
+
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = originalButtonHtml;
+            }
+        }
     }
 </script>

@@ -188,9 +188,9 @@
                             <div class="form-group col-md-2">
                                 <label>Heat #</label>
                                 @Html.DropDownListFor(m => m.HeatNo,
-                                    (IEnumerable<SelectListItem>)ViewBag.HeatNo,
-                                    "-- Select Heat --",
-                                    new { @class = "form-control select2-heat", id = "ddlHeat" })
+                                         (IEnumerable<SelectListItem>)ViewBag.HeatNo,
+                                         "-- Select Heat --",
+                                         new { @class = "form-control select2-heat", id = "ddlHeat" })
                             </div>
                             <div class="form-group col-md-2">
                                 <label>Boarding #</label>
@@ -205,8 +205,8 @@
                                 <input type="text" class="form-control" id="txtPONumber" name="PONumber" readonly />
                             </div>
                             <div class="form-group col-md-2">
-                                <label for="productSpec">Product Code</label>
-                                <input type="text" class="form-control" id="txtProductSpecs" name="ProductCode" readonly>
+                                <label for="ProductSpecs">Product Code</label>
+                                <input type="text" class="form-control" id="txtProductSpecs" name="ProductSpecs" readonly>
                             </div>
                         </div>
                         <div class="form-row">
@@ -294,8 +294,8 @@
                             </div>
 
                             <div>
-                                <small>Total Billet Produced</small><br />
-                                <span class="badge badge-success p-2" id="totalProducedBadge">0</span>
+                                <small>Total Weight (MT)</small><br />
+                                <span class="badge badge-success p-2" id="totalWeightBadge">0.000</span>
                             </div>
 
                         </div>
@@ -362,7 +362,7 @@
                                                    data-grade="@item.SteelGrade"
                                                    data-newgrade="@item.NewSteelGrade"
                                                    data-ponumber="@item.PONumber"
-                                                   data-productspecs="@item.ProductSpecs"
+                                                   data-productspecs="@item.ProductCode"
                                                    data-cobble="@item.Cobble"
                                                    data-hotout="@item.HotOut"
                                                    data-billet="@item.TotalBillet"
@@ -476,15 +476,44 @@
 
         function calculateKPI() {
             var totalBillet = 0;
-            var totalProduced = 0;
+            var totalWeight = 0;
 
             $("#dischargeTableBody tr:visible").each(function () {
-                totalBillet += toNum($(this).find("td:eq(4)").text());
-                totalProduced += toNum($(this).find("td:eq(5)").text());
+
+                var row = $(this);
+
+                /*
+                 * Table columns:
+                 * 0 = Discharging Seq.
+                 * 1 = Shift
+                 * 2 = Heat #
+                 * 3 = Steel Grade
+                 * 4 = Cobble
+                 * 5 = HotOut
+                 * 6 = Total Billet
+                 * 7 = Total Weight (MT)
+                 * 8 = Status
+                 * 9 = Action
+                 */
+
+                totalBillet +=
+                    toNum(
+                        row.find("td:eq(6)").text()
+                    );
+
+                totalWeight +=
+                    toNum(
+                        row.find("td:eq(7)").text()
+                    );
             });
 
-            $("#totalBilletBadge").text(totalBillet);
-            $("#totalProducedBadge").text(totalProduced.toFixed(2));
+            $("#totalBilletBadge")
+                .text(totalBillet);
+
+            $("#totalWeightBadge")
+                .text(
+                    totalWeight.toFixed(3)
+                );
         }
 
         function applyShiftFilter() {
@@ -574,10 +603,14 @@ $.ajax({
         chargingWeightPerBillet = remainingBillet > 0
             ? (remainingWeight / remainingBillet)
             : 0;
-
+        debugger
         $("#txtBoarding").val(res.BoardingNo || '');
         $("#txtGrade").val(res.SteelGrade || '');
-        $("#txtProductSpecs").val(res.ProductSpecs || '');
+        $("#txtProductSpecs").val(
+            res.ProductSpecs ||
+            res.ProductCode ||
+            ''
+        );
         $("#txtPONumber").val(res.HeatNo || heatNo);
 
         $("#txtTotalBillet")
@@ -611,7 +644,7 @@ $.ajax({
         // EDIT BUTTON
         // ==============================
  $(document).on("click", ".btn-edit", function () {
-
+     debugger
     isEditMode = true;
 
     var id = $(this).data("id");
@@ -620,7 +653,10 @@ $.ajax({
     var grade = $(this).data("grade");
     var newGrade = $(this).data("newgrade");
     var poNumber = $(this).data("ponumber");
-    var productSpecs = $(this).data("productspecs");
+    var productSpecs =
+        ($(this).attr("data-productspecs") || "")
+            .toString()
+            .trim();
     var cobble = $(this).data("cobble");
     var hotOut = $(this).data("hotout");
     var billet = toNum($(this).data("billet"));
@@ -679,6 +715,27 @@ $.ajax({
                 if (remainingBillet > 0 && remainingWeight > 0) {
                     chargingWeightPerBillet = remainingWeight / remainingBillet;
                 }
+
+                /*
+                 * Product Specs / Product Code:
+                 * Prefer current charging response.
+                 * If backend uses ProductCode instead of ProductSpecs,
+                 * both names are supported.
+                 */
+                var chargingProductSpecs =
+                    res.ProductSpecs ||
+                    res.ProductCode ||
+                    productSpecs ||
+                    "";
+
+                $("#txtProductSpecs").val(
+                    chargingProductSpecs
+                );
+            }
+            else {
+                $("#txtProductSpecs").val(
+                    productSpecs || ""
+                );
             }
 
             $("#remainingBilletText").text(

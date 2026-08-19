@@ -1245,8 +1245,6 @@ namespace ProductionPortal_Solb.Controllers
 
                 // Delay Code Auto Generate
                 data.Delaycode = repo.GenerateSMPDelayCode();
-
-                data.Date = DateTime.Now;
                 data.StatusID = 1;
                 data.CreatedDate = DateTime.Now;
                 data.CreatedBy = User.Identity.Name;

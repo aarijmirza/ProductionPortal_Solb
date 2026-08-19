@@ -400,7 +400,7 @@ namespace BAL.Repositories
                 if (model.IsPOComplete == true)
                 {
                     p[9] = new SqlParameter("@HeatStatus", 100);
-                    p[10] = new SqlParameter("@StatusID", 2);
+                    p[10] = new SqlParameter("@StatusID", 1);
                 }
                 else
                 {

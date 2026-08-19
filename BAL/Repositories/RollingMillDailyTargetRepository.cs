@@ -21,7 +21,7 @@ namespace BAL.Repositories
 
         new SqlParameter(
             "@TargetDate",
-            model.TargetDate.Date
+            model.TargetDate?.Date
         ),
 
         new SqlParameter(
@@ -118,15 +118,20 @@ namespace BAL.Repositories
         }
 
         public RollingMillDailyTargetBLL GetByDate(
-            DateTime targetDate)
+            DateTime targetDate, string plant)
         {
             SqlParameter[] parameters =
             {
                 new SqlParameter(
                     "@TargetDate",
                     targetDate.Date
+                ),
+                new SqlParameter(
+                    "@Plant",
+                    plant
                 )
             };
+
 
             DataTable dt = DBHelper.ExecuteDataTable(
                 "sp_GetRollingMillDailyTargetByDate",
@@ -247,6 +252,120 @@ namespace BAL.Repositories
                         )
                         : (DateTime?)null
             };
+        }
+
+        public int SaveDailyTarget(
+           RollingMillDailyTargetBLL data)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+                    new SqlParameter(
+                        "@Date",
+                        SqlDbType.Date
+                    )
+                    {
+                        Value =
+                            data.TargetDate.HasValue
+                                ? (object)data.TargetDate.Value.Date
+                                : DBNull.Value
+                    },
+
+
+                    new SqlParameter(
+                        "@Plant",
+                        SqlDbType.NVarChar,
+                        20
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                data.Plant
+                            )
+                                ? (object)DBNull.Value
+                                : data.Plant.Trim()
+                    },
+
+
+                    new SqlParameter(
+                        "@DailyProductionTarget",
+                        SqlDbType.Decimal
+                    )
+                    {
+                        Precision = 18,
+                        Scale = 2,
+
+                        Value =
+                            data.DailyProductionTarget.HasValue
+                                ? (object)data.DailyProductionTarget.Value
+                                : DBNull.Value
+                    },
+
+
+                    new SqlParameter(
+                        "@FuelConsumption",
+                        SqlDbType.Decimal
+                    )
+                    {
+                        Precision = 18,
+                        Scale = 2,
+
+                        Value =
+                            data.FuelConsumption.HasValue
+                                ? (object)data.FuelConsumption.Value
+                                : DBNull.Value
+                    },
+
+
+                    new SqlParameter(
+                        "@StatusID",
+                        SqlDbType.Int
+                    )
+                    {
+                        Value =
+                            data.StatusID ?? 1
+                    },
+
+
+                    new SqlParameter(
+                        "@CreatedBy",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                data.CreatedBy
+                            )
+                                ? (object)DBNull.Value
+                                : data.CreatedBy
+                    },
+
+
+                    new SqlParameter(
+                        "@CreatedDate",
+                        SqlDbType.DateTime
+                    )
+                    {
+                        Value =
+                            data.CreatedDate.HasValue
+                                ? (object)data.CreatedDate.Value
+                                : DateTime.Now
+                    }
+                };
+
+
+                return new DBHelper()
+                    .ExecuteNonQueryReturn(
+                        "sp_SaveRollingMillDailyTarget",
+                        p
+                    );
+            }
+            catch
+            {
+                return 0;
+            }
         }
     }
 }

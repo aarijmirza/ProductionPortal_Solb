@@ -12,47 +12,49 @@ namespace DAL.Models
 
         public DateTime? Date { get; set; }
 
-        public string TotalProductBillet { get; set; }
+        public decimal? TotalProductBillet { get; set; }
 
-        public string LPG { get; set; }
+        public decimal? LPG { get; set; }
 
-        public string Oxygen { get; set; }
+        public decimal? Oxygen { get; set; }
 
-        public string Nitrogen { get; set; }
+        public decimal? Nitrogen { get; set; }
 
-        public string Argon { get; set; }
+        public decimal? Argon { get; set; }
 
-        public string WaterConsumption { get; set; }
+        public decimal? WaterConsumption { get; set; }
 
-        public string PowerConsumption { get; set; }
+        public decimal? PowerConsumption { get; set; }
 
-        public string LPGm3ton { get; set; }
+        public decimal? LPGm3ton { get; set; }
 
-        public string LPGNm3tonTarget { get; set; }
+        public decimal? LPGNm3tonTarget { get; set; }
 
-        public string OxygenNm3ton { get; set; }
+        public decimal? OxygenNm3ton { get; set; }
 
-        public string OxygenNm3tonTarget { get; set; }
+        public decimal? OxygenNm3tonTarget { get; set; }
 
-        public string NitrogenNm3ton { get; set; }
+        public decimal? NitrogenNm3ton { get; set; }
 
-        public string NitrogenNm3tonTarget { get; set; }
+        public decimal? NitrogenNm3tonTarget { get; set; }
 
-        public string ArgonNm3ton { get; set; }
+        public decimal? ArgonNm3ton { get; set; }
 
-        public string ArgonNm3tonTarget { get; set; }
+        public decimal? ArgonNm3tonTarget { get; set; }
 
-        public string PowerConsumptionKWHton { get; set; }
+        public decimal? PowerConsumptionKWHton { get; set; }
 
-        public string PowerConsumptionKWHtarget { get; set; }
+        public decimal? PowerConsumptionKWHtarget { get; set; }
 
-        public string WaterConsumptionM3 { get; set; }
+        public decimal? WaterConsumptionM3 { get; set; }
 
-        public string WaterConsumptionTarget { get; set; }
+        public decimal? WaterConsumptionTarget { get; set; }
 
         public string Plant { get; set; }
 
         public decimal? FuelConsumption { get; set; }
+
+        public decimal? FuelConsumptionTarget { get; set; }
 
         public int? StatusID { get; set; }
 

@@ -410,9 +410,9 @@ namespace BAL.Repositories
 
         public PlantDelayBLL GetFailureAnalysisByID(
         int plantDelayID)
+        {
+            SqlParameter[] parameters =
             {
-                SqlParameter[] parameters =
-                {
             new SqlParameter(
                 "@PlantDelayID",
                 SqlDbType.Int
@@ -573,8 +573,8 @@ namespace BAL.Repositories
         GetCounterMeasuresByPlantDelayID(
         int plantDelayID)
         {
-                SqlParameter[] parameters =
-                {
+            SqlParameter[] parameters =
+            {
             new SqlParameter(
                 "@PlantDelayID",
                 SqlDbType.Int
@@ -748,15 +748,14 @@ namespace BAL.Repositories
 
             return savedRecords;
         }
+
         public int Save(
-            DelayCounterMeasureBLL model,
-            string createdBy)
+    DelayCounterMeasureBLL model,
+    string createdBy)
         {
             if (model == null)
             {
-                throw new ArgumentNullException(
-                    "model"
-                );
+                throw new ArgumentNullException("model");
             }
 
             if (model.PlantDelayID <= 0)
@@ -766,14 +765,17 @@ namespace BAL.Repositories
                 );
             }
 
+            if (string.IsNullOrWhiteSpace(
+                model.CounterMeasure
+            ))
+            {
+                throw new ArgumentException(
+                    "Countermeasure is required."
+                );
+            }
+
             SqlParameter[] parameters =
             {
-        Param(
-            "@ID",
-            SqlDbType.Int,
-            model.ID
-        ),
-
         Param(
             "@PlantDelayID",
             SqlDbType.Int,
@@ -783,117 +785,35 @@ namespace BAL.Repositories
         Param(
             "@CounterMeasureCode",
             SqlDbType.NVarChar,
-            DbValue(
-                model.CounterMeasureCode
-            ),
+            DbValue(model.CounterMeasureCode),
             50
         ),
 
         Param(
             "@CounterMeasure",
             SqlDbType.NVarChar,
-            DbValue(
-                model.CounterMeasure
-            ),
+            DbValue(model.CounterMeasure),
             -1
-        ),
-
-        Param(
-            "@CounterMeasureA",
-            SqlDbType.NVarChar,
-            DbValue(
-                model.CounterMeasureA
-            ),
-            -1
-        ),
-
-        Param(
-            "@IncreaseMTBF",
-            SqlDbType.NVarChar,
-            DbValue(
-                model.IncreaseMTBF
-            ),
-            -1
-        ),
-
-        Param(
-            "@DecreaseMTTR",
-            SqlDbType.NVarChar,
-            DbValue(
-                model.DecreaseMTTR
-            ),
-            -1
-        ),
-
-        Param(
-            "@IncreaseMTBF1",
-            SqlDbType.NVarChar,
-            DbValue(
-                model.IncreaseMTBF1
-            ),
-            -1
-        ),
-
-        Param(
-            "@DecreaseMTTR1",
-            SqlDbType.NVarChar,
-            DbValue(
-                model.DecreaseMTTR1
-            ),
-            -1
-        ),
-
-        Param(
-            "@RootCause",
-            SqlDbType.NVarChar,
-            DbValue(
-                model.RootCause
-            ),
-            -1
-        ),
-
-        Param(
-            "@SAPBreakdownOrder",
-            SqlDbType.NVarChar,
-            DbValue(
-                model.SAPBreakdownOrder
-            ),
-            100
-        ),
-
-        Param(
-            "@FailureReportStatus",
-            SqlDbType.NVarChar,
-            DbValue(
-                model.FailureReportStatus
-            ),
-            50
         ),
 
         Param(
             "@SAPOrderNo",
             SqlDbType.NVarChar,
-            DbValue(
-                model.SAPOrderNo
-            ),
+            DbValue(model.SAPOrderNo),
             100
         ),
 
         Param(
             "@SubOrderNumber",
             SqlDbType.NVarChar,
-            DbValue(
-                model.SubOrderNumber
-            ),
+            DbValue(model.SubOrderNumber),
             50
         ),
 
         Param(
             "@Responsible",
             SqlDbType.NVarChar,
-            DbValue(
-                model.Responsible
-            ),
+            DbValue(model.Responsible),
             150
         ),
 
@@ -903,6 +823,13 @@ namespace BAL.Repositories
             model.TargetDate.HasValue
                 ? (object)model.TargetDate.Value.Date
                 : DBNull.Value
+        ),
+
+        Param(
+            "@EvidenceForCompletion",
+            SqlDbType.NVarChar,
+            DbValue(model.EvidenceForCompletion),
+            -1
         ),
 
         Param(
@@ -919,29 +846,16 @@ namespace BAL.Repositories
         ),
 
         Param(
-            "@EvidenceForCompletion",
-            SqlDbType.NVarChar,
-            DbValue(
-                model.EvidenceForCompletion
-            ),
-            -1
-        ),
-
-        Param(
             "@ReasonForNotClosing",
             SqlDbType.NVarChar,
-            DbValue(
-                model.ReasonForNotClosing
-            ),
+            DbValue(model.ReasonForNotClosing),
             -1
         ),
 
         Param(
             "@CreatedBy",
             SqlDbType.NVarChar,
-            DbValue(
-                createdBy
-            ),
+            DbValue(createdBy),
             100
         )
     };
@@ -967,6 +881,7 @@ namespace BAL.Repositories
                 dt.Rows[0]["ID"]
             );
         }
+
         public DelayCounterMeasureVM GetPageData(int plantDelayID)
         {
             if (plantDelayID <= 0)

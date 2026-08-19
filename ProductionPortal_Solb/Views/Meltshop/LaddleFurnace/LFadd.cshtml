@@ -54,19 +54,20 @@
 
                             <div class="form-group col-md-2">
                                 <label for="HeatNo">Heat No</label>
-                                @*@Html.DropDownListFor(model => model.HeatNo,
-                                        ViewBag.HeatNo as SelectList,
-                                         "-- Select Heat # --",
-                                         new { @class = "form-control", id = "ddlgrade" })
+                                @Html.DropDownListFor(model => model.HeatNo,
+                                 ViewBag.HeatNo as SelectList,
+                                  "-- Select Heat # --",
+                                  new { @class = "form-control", id = "ddlgrade" })
 
-                                    @Html.ValidationMessageFor(model => model.HeatNo, "", new { @class = "text-danger" })*@
-                                <input type="text"
-                                       class="form-control"
-                                       id="HeatNo"
-                                       name="HeatNo"
-                                       value="@(Model != null ? Model.HeatNo : "")"
-                                       placeholder="Enter Heat No"
-                                       required>
+                                @Html.ValidationMessageFor(model => model.HeatNo, "", new { @class = "text-danger" })
+                                @*<input type="text"
+                                    class="form-control"
+                                    id="HeatNo"
+                                    name="HeatNo"
+                                    value="@(Model != null ? Model.HeatNo : "")"
+                                    placeholder="Enter Heat No"
+                                    required>*@
+
                             </div>
 
                             <div class="form-group col-md-2">

@@ -220,6 +220,10 @@
                                 </ul>
 
                                 <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("Index", "SMPDayWiseProduction")">DAY WISE PRODUCTION</a></li>
+                                </ul>
+
+                                <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("CCMYieldlist", "CCM")">CCM YIELD BREAK DOWN</a></li>
                                 </ul>
 
@@ -230,7 +234,7 @@
                         }
 
                         @* QUALITY CONTROL - QC section with relevant access *@
-                        @if (isAdmin || isQC || isRollingMill || isSteelMaking)
+                        @if (isAdmin || isQC || isRollingMill || isSteelMaking || isSupplyChain)
                         {
                             <li>
                                 <a href="javascript:void(0);">
@@ -243,9 +247,9 @@
                                         <li><a href="@Url.Action("HeatChemistry", "Quality")">HEAT CHEMISTRY</a></li>
                                     </ul>
 
-                                    <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("castmillCertificate", "Quality")">CAST / MILL CERTIFICATE</a></li>
-                                    </ul>
+                                    @*<ul class="xp-vertical-submenu">
+                                            <li><a href="@Url.Action("castmillCertificate", "Quality")">CAST / MILL CERTIFICATE</a></li>
+                                        </ul>*@
                                 }
 
                                 @if (isAdmin || isQC || isRollingMill)
@@ -253,13 +257,17 @@
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("AddInspectionRM", "Quality")">QC INSPECTION DATA - RM</a></li>
                                     </ul>
-
+                                }
+                                @if (isAdmin || isQC || isRollingMill || isSupplyChain)
+                                {
                                     <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("BilletBoard", "Quality")">BILLET BOARD</a></li>
+                                        <li><a href="@Url.Action("BilletBoard", "Quality")">BILLET BOARDING</a></li>
                                     </ul>
-
+                                }
+                                @if (isAdmin || isQC || isRollingMill)
+                                {
                                     <ul class="xp-vertical-submenu">
-                                        <li><a href="@Url.Action("QCInspectionRMadd", "Quality")">RM MECHANICAL TEST RESULT</a></li>
+                                        <li><a href="@Url.Action("QCInspectionRMadd", "RMMechanical")">RM MECHANICAL TEST RESULT</a></li>
                                     </ul>
                                 }
 
@@ -341,7 +349,7 @@
                         }
 
                         @* CMD MAINTENANCE - No separate CMD role available, so kept Admin/User *@
-                        @if (isAdmin || isUser )
+                        @if (isAdmin || isUser)
                         {
                             <li>
                                 <a href="javascript:void(0);">

@@ -133,6 +133,7 @@
     <Compile Include="Models\SlagByProductAnalysisBLL.cs" />
     <Compile Include="Models\SMPDailyPerformanceReportBLL.cs" />
     <Compile Include="Models\SMPDashboardVM.cs" />
+    <Compile Include="Models\SMPDayWiseProductionBLL.cs" />
     <Compile Include="Models\SupplyChainDailyBLL.cs" />
     <Compile Include="Models\SupplyChainReceivedMaterialBLL.cs" />
     <Compile Include="Models\UserBLL.cs" />

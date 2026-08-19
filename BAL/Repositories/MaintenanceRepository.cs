@@ -17,169 +17,370 @@ namespace BAL.Repositories
             DateTime fromDate,
             DateTime toDate)
         {
-            var model = new CMDPerformanceDashboardVM
+            fromDate = fromDate.Date;
+            toDate = toDate.Date;
+
+            if (fromDate > toDate)
             {
-                FromDate = fromDate.Date,
-                ToDate = toDate.Date,
+                DateTime temp = fromDate;
+                fromDate = toDate;
+                toDate = temp;
+            }
 
-                DailyProduction = new ProductionSummaryVM(),
-                MTDProduction = new ProductionSummaryVM(),
-                YTDProduction = new ProductionSummaryVM(),
+            CMDPerformanceDashboardVM model =
+                new CMDPerformanceDashboardVM
+                {
+                    FromDate = fromDate,
+                    ToDate = toDate,
 
-                Downtime = new List<DowntimeSummaryVM>(),
-                EquipmentFailures = new List<TopFailureVM>(),
-                RCAFailures = new List<TopFailureVM>(),
-                ClosureRates = new List<ClosureRateVM>(),
-                TopDelays = new List<CMDTopDelayVM>()
-            };
+                    DailyProduction =
+                        new ProductionSummaryVM(),
 
-            using (var connection = new SqlConnection(connectionString))
-            using (var command = new SqlCommand(
-                "dbo.sp_GetCMDPerformanceDashboard",
-                connection))
+                    MTDProduction =
+                        new ProductionSummaryVM(),
+
+                    YTDProduction =
+                        new ProductionSummaryVM(),
+
+                    Downtime =
+                        new List<DowntimeSummaryVM>(),
+
+                    EquipmentFailures =
+                        new List<TopFailureVM>(),
+
+                    RCAFailures =
+                        new List<TopFailureVM>(),
+
+                    ClosureRates =
+                        new List<ClosureRateVM>(),
+
+                    TopDelays =
+                        new List<CMDTopDelayVM>()
+                };
+
+            using (
+                SqlConnection connection =
+                    new SqlConnection(
+                        connectionString
+                    )
+            )
+            using (
+                SqlCommand command =
+                    new SqlCommand(
+                        "dbo.sp_GetCMDPerformanceDashboard",
+                        connection
+                    )
+            )
             {
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandTimeout = 120;
+                command.CommandType =
+                    CommandType.StoredProcedure;
+
+                command.CommandTimeout =
+                    120;
 
                 command.Parameters.Add(
                     "@FromDate",
-                    SqlDbType.DateTime
-                ).Value = fromDate.Date;
+                    SqlDbType.Date
+                ).Value = fromDate;
 
                 command.Parameters.Add(
                     "@ToDate",
-                    SqlDbType.DateTime
-                ).Value = toDate.Date;
+                    SqlDbType.Date
+                ).Value = toDate;
 
                 connection.Open();
 
-                using (var reader = command.ExecuteReader())
+                using (
+                    SqlDataReader reader =
+                        command.ExecuteReader()
+                )
                 {
+                    // 1 - Selected Date / Selected Period Production
                     if (reader.Read())
                     {
                         model.DailyProduction =
-                            ReadProductionSummary(reader);
+                            ReadProductionSummary(
+                                reader
+                            );
                     }
 
-                    if (reader.NextResult() && reader.Read())
-                    {
-                        model.MTDProduction =
-                            ReadProductionSummary(reader);
-                    }
-
-                    if (reader.NextResult() && reader.Read())
-                    {
-                        model.YTDProduction =
-                            ReadProductionSummary(reader);
-                    }
-
+                    // 2 - MTD Production
                     if (reader.NextResult())
                     {
-                        while (reader.Read())
+                        if (reader.Read())
                         {
-                            model.Downtime.Add(new DowntimeSummaryVM
-                            {
-                                Plant = GetString(reader, "Plant"),
-
-                                DTDMechanical =
-                                    GetDecimal(reader, "DTDMechanical"),
-
-                                DTDElectrical =
-                                    GetDecimal(reader, "DTDElectrical"),
-
-                                DTDCranes =
-                                    GetDecimal(reader, "DTDCranes"),
-
-                                DTDUtilities =
-                                    GetDecimal(reader, "DTDUtilities"),
-
-                                MTDMechanical =
-                                    GetDecimal(reader, "MTDMechanical"),
-
-                                MTDElectrical =
-                                    GetDecimal(reader, "MTDElectrical"),
-
-                                MTDCranes =
-                                    GetDecimal(reader, "MTDCranes"),
-
-                                MTDUtilities =
-                                    GetDecimal(reader, "MTDUtilities")
-                            });
+                            model.MTDProduction =
+                                ReadProductionSummary(
+                                    reader
+                                );
                         }
                     }
 
+                    // 3 - YTD Production
                     if (reader.NextResult())
                     {
-                        while (reader.Read())
+                        if (reader.Read())
                         {
-                            model.EquipmentFailures.Add(new TopFailureVM
-                            {
-                                Plant = GetString(reader, "Plant"),
-                                Name = GetString(reader, "Name"),
-                                DelayHours = GetDecimal(reader, "DelayHours"),
-                                FailureType = GetString(reader, "FailureType")
-                            });
+                            model.YTDProduction =
+                                ReadProductionSummary(
+                                    reader
+                                );
                         }
                     }
 
+                    // 4 - Downtime %
                     if (reader.NextResult())
                     {
                         while (reader.Read())
                         {
-                            model.RCAFailures.Add(new TopFailureVM
-                            {
-                                Plant = GetString(reader, "Plant"),
-                                Name = GetString(reader, "Name"),
-                                DelayHours = GetDecimal(reader, "DelayHours"),
-                                FailureType = GetString(reader, "FailureType")
-                            });
+                            model.Downtime.Add(
+                                new DowntimeSummaryVM
+                                {
+                                    Plant =
+                                        NormalizeCMDPlant(
+                                            GetString(
+                                                reader,
+                                                "Plant"
+                                            )
+                                        ),
+
+                                    DTDMechanical =
+                                        GetDecimal(
+                                            reader,
+                                            "DTDMechanical"
+                                        ),
+
+                                    DTDElectrical =
+                                        GetDecimal(
+                                            reader,
+                                            "DTDElectrical"
+                                        ),
+
+                                    DTDCranes =
+                                        GetDecimal(
+                                            reader,
+                                            "DTDCranes"
+                                        ),
+
+                                    DTDUtilities =
+                                        GetDecimal(
+                                            reader,
+                                            "DTDUtilities"
+                                        ),
+
+                                    MTDMechanical =
+                                        GetDecimal(
+                                            reader,
+                                            "MTDMechanical"
+                                        ),
+
+                                    MTDElectrical =
+                                        GetDecimal(
+                                            reader,
+                                            "MTDElectrical"
+                                        ),
+
+                                    MTDCranes =
+                                        GetDecimal(
+                                            reader,
+                                            "MTDCranes"
+                                        ),
+
+                                    MTDUtilities =
+                                        GetDecimal(
+                                            reader,
+                                            "MTDUtilities"
+                                        )
+                                }
+                            );
                         }
                     }
 
+                    // 5 - Equipment Failures
                     if (reader.NextResult())
                     {
                         while (reader.Read())
                         {
-                            model.ClosureRates.Add(new ClosureRateVM
-                            {
-                                Plant = GetString(reader, "Plant"),
-                                Department = GetString(reader, "Department"),
-                                MonthName = GetString(reader, "MonthName"),
-                                MonthNumber = GetInt(reader, "MonthNumber"),
+                            model.EquipmentFailures.Add(
+                                new TopFailureVM
+                                {
+                                    Plant =
+                                        NormalizeCMDPlant(
+                                            GetString(
+                                                reader,
+                                                "Plant"
+                                            )
+                                        ),
 
-                                ClosurePercentage =
-                                    GetDecimal(reader, "ClosurePercentage")
-                            });
+                                    Name =
+                                        GetString(
+                                            reader,
+                                            "Name"
+                                        ),
+
+                                    DelayHours =
+                                        GetDecimal(
+                                            reader,
+                                            "DelayHours"
+                                        ),
+
+                                    FailureType =
+                                        GetString(
+                                            reader,
+                                            "FailureType"
+                                        )
+                                }
+                            );
                         }
                     }
 
+                    // 6 - RCA Failures
                     if (reader.NextResult())
                     {
                         while (reader.Read())
                         {
-                            model.TopDelays.Add(new CMDTopDelayVM
-                            {
-                                Plant = GetString(reader, "Plant"),
-                                Shift = GetString(reader, "Shift"),
+                            model.RCAFailures.Add(
+                                new TopFailureVM
+                                {
+                                    Plant =
+                                        NormalizeCMDPlant(
+                                            GetString(
+                                                reader,
+                                                "Plant"
+                                            )
+                                        ),
 
-                                TotalDuration =
-                                    GetDecimal(reader, "TotalDuration"),
+                                    Name =
+                                        GetString(
+                                            reader,
+                                            "Name"
+                                        ),
 
-                                DelayCode =
-                                    GetString(reader, "DelayCode"),
+                                    DelayHours =
+                                        GetDecimal(
+                                            reader,
+                                            "DelayHours"
+                                        ),
 
-                                EquipmentCode =
-                                    GetString(reader, "EquipmentCode"),
+                                    FailureType =
+                                        GetString(
+                                            reader,
+                                            "FailureType"
+                                        )
+                                }
+                            );
+                        }
+                    }
 
-                                Description =
-                                    GetString(reader, "Description"),
+                    // 7 - Closure Rates
+                    if (reader.NextResult())
+                    {
+                        while (reader.Read())
+                        {
+                            model.ClosureRates.Add(
+                                new ClosureRateVM
+                                {
+                                    Plant =
+                                        NormalizeCMDPlant(
+                                            GetString(
+                                                reader,
+                                                "Plant"
+                                            )
+                                        ),
 
-                                ReasonForOccurrence =
-                                    GetString(reader, "ReasonForOccurrence"),
+                                    Department =
+                                        GetString(
+                                            reader,
+                                            "Department"
+                                        ),
 
-                                ActionTaken =
-                                    GetString(reader, "ActionTaken")
-                            });
+                                    MonthName =
+                                        GetString(
+                                            reader,
+                                            "MonthName"
+                                        ),
+
+                                    MonthNumber =
+                                        GetInt(
+                                            reader,
+                                            "MonthNumber"
+                                        ),
+
+                                    ClosurePercentage =
+                                        GetDecimal(
+                                            reader,
+                                            "ClosurePercentage"
+                                        )
+                                }
+                            );
+                        }
+                    }
+
+                    // 8 - Top Delays
+                    if (reader.NextResult())
+                    {
+                        while (reader.Read())
+                        {
+                            model.TopDelays.Add(
+                                new CMDTopDelayVM
+                                {
+                                    Plant =
+                                        NormalizeCMDPlant(
+                                            GetString(
+                                                reader,
+                                                "Plant"
+                                            )
+                                        ),
+
+                                    Shift =
+                                        GetString(
+                                            reader,
+                                            "Shift"
+                                        ),
+
+                                    AgencyName =
+                                        GetString(
+                                            reader,
+                                            "AgencyName"
+                                        ),
+
+                                    TotalDuration =
+                                        GetDecimal(
+                                            reader,
+                                            "TotalDuration"
+                                        ),
+
+                                    DelayCode =
+                                        GetString(
+                                            reader,
+                                            "DelayCode"
+                                        ),
+
+                                    EquipmentCode =
+                                        GetString(
+                                            reader,
+                                            "EquipmentCode"
+                                        ),
+
+                                    Description =
+                                        GetString(
+                                            reader,
+                                            "Description"
+                                        ),
+
+                                    ReasonForOccurrence =
+                                        GetString(
+                                            reader,
+                                            "ReasonForOccurrence"
+                                        ),
+
+                                    ActionTaken =
+                                        GetString(
+                                            reader,
+                                            "ActionTaken"
+                                        )
+                                }
+                            );
                         }
                     }
                 }
@@ -188,22 +389,77 @@ namespace BAL.Repositories
             return model;
         }
 
-        private static ProductionSummaryVM ReadProductionSummary(
+
+        private ProductionSummaryVM ReadProductionSummary(
             SqlDataReader reader)
         {
             return new ProductionSummaryVM
             {
-                SMP = GetDecimal(reader, "SMP"),
+                SMP =
+                    GetDecimal(
+                        reader,
+                        "SMP"
+                    ),
 
-                RM1 = GetDecimal(reader, "RM1"),
+                RM1 =
+                    GetDecimal(
+                        reader,
+                        "RM1"
+                    ),
 
-                RM2 = GetDecimal(reader, "RM2"),
+                RM2 =
+                    GetDecimal(
+                        reader,
+                        "RM2"
+                    ),
 
-                ComparisonPercentage = GetDecimal(
-                    reader,
-                    "ComparisonPercentage"
-                )
+                ComparisonPercentage =
+                    GetDecimal(
+                        reader,
+                        "ComparisonPercentage"
+                    )
             };
+        }
+        private string NormalizeCMDPlant(
+            string plant)
+        {
+            string value =
+                (plant ?? "")
+                    .Trim()
+                    .ToUpper();
+
+            if (
+                value == "SMP" ||
+                value == "STEEL MAKING" ||
+                value == "STEEL MAKING PLANT" ||
+                value == "MELT SHOP" ||
+                value == "EAF" ||
+                value == "LF" ||
+                value == "CCM"
+            )
+            {
+                return "SMP";
+            }
+
+            if (
+                value == "RM1" ||
+                value == "ROLLING MILL 1" ||
+                value == "ROLLING MILL1"
+            )
+            {
+                return "RM1";
+            }
+
+            if (
+                value == "RM2" ||
+                value == "ROLLING MILL 2" ||
+                value == "ROLLING MILL2"
+            )
+            {
+                return "RM2";
+            }
+
+            return value;
         }
 
         private static string GetString(

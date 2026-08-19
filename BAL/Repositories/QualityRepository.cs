@@ -194,33 +194,114 @@ namespace BAL.Repositories
             }
         }
 
-        public int InsertChemicalAnalysisRM(RMChemicalAnalysisBLL model)
+        public int InsertChemicalAnalysisRM(
+            RMChemicalAnalysisBLL model,
+            int srNo = 0)
         {
             try
             {
-                SqlParameter[] p = new SqlParameter[13];
+                SqlParameter[] p =
+                    new SqlParameter[14];
 
-                p[0] = new SqlParameter("@HeatNo", model.HeatNo);
-                p[1] = new SqlParameter("@NoOfBillets", model.NoOfBillets);
-                p[2] = new SqlParameter("@C", model.C);
-                p[3] = new SqlParameter("@Si", model.Si);
-                p[4] = new SqlParameter("@Mn", model.Mn);
-                p[5] = new SqlParameter("@S", model.S);
-                p[6] = new SqlParameter("@P", model.P);
-                p[7] = new SqlParameter("@N", model.N);
-                p[8] = new SqlParameter("@Ceq", model.Ceq);
-                p[9] = new SqlParameter("@HeatStatus", model.HeatStatus);
-                p[10] = new SqlParameter("@StatusID", model.StatusID);
-                p[11] = new SqlParameter("@CreatedBy", model.CreatedBy);
-                p[12] = new SqlParameter("@CreatedDate", model.CreatedDate);
+                p[0] =
+                    new SqlParameter(
+                        "@SrNo",
+                        srNo > 0
+                            ? srNo
+                            : 1
+                    );
 
-                return (new DBHelper().ExecuteNonQueryReturn)("sp_AddRMChemicalAnalysis", p);
+                p[1] =
+                    new SqlParameter(
+                        "@HeatNo",
+                        model.HeatNo ?? ""
+                    );
+
+                p[2] =
+                    new SqlParameter(
+                        "@NoOfBillets",
+                        model.NoOfBillets
+                    );
+
+                p[3] =
+                    new SqlParameter(
+                        "@C",
+                        model.C
+                    );
+
+                p[4] =
+                    new SqlParameter(
+                        "@Si",
+                        model.Si
+                    );
+
+                p[5] =
+                    new SqlParameter(
+                        "@Mn",
+                        model.Mn
+                    );
+
+                p[6] =
+                    new SqlParameter(
+                        "@S",
+                        model.S
+                    );
+
+                p[7] =
+                    new SqlParameter(
+                        "@P",
+                        model.P
+                    );
+
+                p[8] =
+                    new SqlParameter(
+                        "@N",
+                        model.N
+                    );
+
+                p[9] =
+                    new SqlParameter(
+                        "@Ceq",
+                        model.Ceq
+                    );
+
+                p[10] =
+                    new SqlParameter(
+                        "@HeatStatus",
+                        model.HeatStatus
+                    );
+
+                p[11] =
+                    new SqlParameter(
+                        "@StatusID",
+                        model.StatusID
+                    );
+
+                p[12] =
+                    new SqlParameter(
+                        "@CreatedBy",
+                        model.CreatedBy ?? ""
+                    );
+
+                p[13] =
+                    new SqlParameter(
+                        "@CreatedDate",
+                        model.CreatedDate
+                    );
+
+                return
+                    (new DBHelper()
+                        .ExecuteNonQueryReturn)(
+                            "sp_AddRMChemicalAnalysis",
+                            p
+                        );
             }
-            catch (Exception ex)
+            catch
             {
-                return 0;
+                throw;
             }
         }
+
 
         public List<BilletBoardBLL> GetAllBoarding()
         {
@@ -543,6 +624,47 @@ namespace BAL.Repositories
             }
 
             return list;
+        }
+
+        public bool IsSlagByProductDuplicate(
+            DateTime productionDate,
+            string heatNo,
+            string byProductType,
+            int excludeID)
+        {
+            SqlParameter[] p = new SqlParameter[4];
+
+            p[0] = new SqlParameter(
+                "@DateOfProduction",
+                SqlDbType.Date
+            )
+            {
+                Value = productionDate.Date
+            };
+
+            p[1] = new SqlParameter(
+                "@HeatNo",
+                (heatNo ?? string.Empty).Trim()
+            );
+
+            p[2] = new SqlParameter(
+                "@ByProductType",
+                (byProductType ?? string.Empty).Trim()
+            );
+
+            p[3] = new SqlParameter(
+                "@ExcludeID",
+                excludeID
+            );
+
+            object result = new DBHelper().ExecuteScalar(
+                "sp_CheckSlagByProductDuplicate",
+                p
+            );
+
+            return result != null
+                && result != DBNull.Value
+                && Convert.ToInt32(result) > 0;
         }
 
         public int InsertSlagByProduct(SlagByProductAnalysisBLL data)
@@ -935,7 +1057,7 @@ namespace BAL.Repositories
         {
             try
             {
-                var _obj = new SlagByProductAnalysisBLL();
+                SlagByProductAnalysisBLL _obj = null;
                 SqlParameter[] p = new SqlParameter[1];
                 p[0] = new SqlParameter("@id", id);
 
@@ -1300,101 +1422,143 @@ namespace BAL.Repositories
             return list;
         }
 
-
-        public List<QCMTCRowBLL> GetMTCRows(
-            string heatNo = null)
+        public List<QCMTCRowBLL> GetMTCRows(string heatNo = null)
         {
-            var list =
-                new List<QCMTCRowBLL>();
+            var list = new List<QCMTCRowBLL>();
 
             SqlParameter[] parameters =
             {
-                new SqlParameter(
-                    "@HeatNo",
-                    SqlDbType.NVarChar,
-                    50
-                )
-                {
-                    Value =
-                        string.IsNullOrWhiteSpace(
-                            heatNo
-                        )
-                            ? (object)DBNull.Value
-                            : heatNo.Trim()
-                }
-            };
+        new SqlParameter("@HeatNo", SqlDbType.NVarChar, 50)
+        {
+            Value = string.IsNullOrWhiteSpace(heatNo)
+                ? (object)DBNull.Value
+                : heatNo.Trim()
+        }
+    };
 
-            DataTable dt =
-                DBHelper.ExecuteDataTable(
-                    "sp_QC_GetMTCRows",
-                    CommandType.StoredProcedure,
-                    parameters
-                );
+            DataTable dt = DBHelper.ExecuteDataTable(
+                "sp_QC_GetMTCRows",
+                CommandType.StoredProcedure,
+                parameters
+            );
 
-            if (dt == null)
-            {
+            if (dt == null || dt.Rows.Count == 0)
                 return list;
-            }
 
             foreach (DataRow row in dt.Rows)
             {
-                list.Add(
-                    new QCMTCRowBLL
-                    {
-                        ID =
-                            GetInt(
-                                row,
-                                "ID"
-                            ),
-
-                        HeatNo =
-                            GetString(
-                                row,
-                                "HeatNo"
-                            ),
-
-                        SteelGrade =
-                            GetString(
-                                row,
-                                "SteelGrade"
-                            ),
-
-                        BarSize =
-                            GetDecimal(
-                                row,
-                                "BarSize"
-                            ),
-
-                        YieldStress =
-                            GetDecimal(
-                                row,
-                                "YieldStress"
-                            ),
-
-                        TensileStress =
-                            GetDecimal(
-                                row,
-                                "TensileStress"
-                            ),
-
-                        NoOfBundles =
-                            GetInt(
-                                row,
-                                "NoOfBundles"
-                            ),
-
-                        YSTSRatio =
-                            GetDecimal(
-                                row,
-                                "YSTSRatio"
-                            )
-                    }
-                );
+                list.Add(new QCMTCRowBLL
+                {
+                    ID = GetInt(row, "ID"),
+                    HeatNo = GetString(row, "HeatNo"),
+                    SteelGrade = GetString(row, "SteelGrade"),
+                    BarSize = GetDecimal(row, "BarSize"),
+                    YieldStress = GetDecimal(row, "YieldStress"),
+                    TensileStress = GetDecimal(row, "TensileStress"),
+                    NoOfBundles = GetInt(row, "NoOfBundles"),
+                    YSTSRatio = GetDecimal(row, "YSTSRatio")
+                });
             }
 
-            return list;
+            // Important: dedupe by HeatNo, not by ID.
+            return list
+                .Where(x => !string.IsNullOrWhiteSpace(x.HeatNo))
+                .GroupBy(x => x.HeatNo.Trim(), StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.OrderByDescending(x => x.ID).First())
+                .OrderByDescending(x => x.ID)
+                .ToList();
         }
 
+
+        public QCInspectionRMDetailBLL GetMTCDetails(int mtcID)
+        {
+            if (mtcID <= 0)
+                return null;
+
+            SqlParameter[] parameters =
+            {
+        new SqlParameter("@MTCID", SqlDbType.Int)
+        {
+            Value = mtcID
+        }
+    };
+
+            DataTable dt = DBHelper.ExecuteDataTable(
+                "sp_QC_GetMTCDetails",
+                CommandType.StoredProcedure,
+                parameters
+            );
+
+            if (dt == null || dt.Rows.Count == 0)
+                return null;
+
+            DataRow row = dt.Rows[0];
+
+            var model = new QCInspectionRMDetailBLL
+            {
+                ID = GetInt(row, "ID"),
+                MTCID = GetInt(row, "MTCID"),
+                BilletBoardingID = GetInt(row, "BilletBoardingID"),
+                Site = GetString(row, "Site"),
+                ProductionShift = GetString(row, "ProductionShift"),
+                HeatNo = GetString(row, "HeatNo"),
+                Specification = GetString(row, "Specification"),
+                SteelGrade = GetString(row, "SteelGrade"),
+
+                BarSize = Convert.ToString(GetDecimal(row, "BarSize")),
+                Length = Convert.ToString(GetDecimal(row, "Length")),
+                WeightPerBundle = Convert.ToString(GetDecimal(row, "WeightPerBundle")),
+                NominalWeight = Convert.ToString(GetDecimal(row, "NominalWeight")),
+                CrossSectionArea = Convert.ToString(GetDecimal(row, "CrossSectionArea")),
+                NoOfBarsPerBundle = Convert.ToString(GetInt(row, "NoOfBarsPerBundle")),
+                NoOfBundles = Convert.ToString(GetInt(row, "NoOfBundles")),
+
+                BendTestObserved = GetBool(row, "BendTestObserved"),
+                IsWireRodOrCoil = GetBool(row, "IsWireRodOrCoil"),
+
+                YieldStrength = Convert.ToString(GetDecimal(row, "YieldStrength")),
+                TensileStrength = Convert.ToString(GetDecimal(row, "TensileStrength")),
+                TensileYieldRatio = Convert.ToString(GetDecimal(row, "TensileYieldRatio")),
+                Elongation = Convert.ToString(GetDecimal(row, "Elongation")),
+                GaugeLength = Convert.ToString(GetDecimal(row, "GaugeLength")),
+
+                // Chemistry comes from RMChemicalAnalysis via SP.
+                C = Convert.ToString(GetDecimal(row, "C")),
+                Si = Convert.ToString(GetDecimal(row, "Si")),
+                Mn = Convert.ToString(GetDecimal(row, "Mn")),
+                P = Convert.ToString(GetDecimal(row, "P")),
+                S = Convert.ToString(GetDecimal(row, "S")),
+                N = Convert.ToString(GetDecimal(row, "N")),
+                Ceq = Convert.ToString(GetDecimal(row, "Ceq"))
+            };
+
+            DateTime productionDate;
+            if (DateTime.TryParse(Convert.ToString(row["ProductionDate"]), out productionDate))
+            {
+                model.ProductionDate = productionDate.ToString("dd-MM-yyyy");
+                model.ProductionDateValue = productionDate;
+            }
+
+            return model;
+        }
+
+
+        // Add only if not already present in your repository:
+        private bool GetBool(DataRow row, string columnName)
+        {
+            if (row == null ||
+                row.Table == null ||
+                !row.Table.Columns.Contains(columnName) ||
+                row[columnName] == DBNull.Value)
+                return false;
+
+            bool b;
+            if (bool.TryParse(Convert.ToString(row[columnName]), out b))
+                return b;
+
+            int i;
+            return int.TryParse(Convert.ToString(row[columnName]), out i) && i == 1;
+        }
 
         public QCInspectionRMDetailBLL
             GetQCInspectionRMByID(
@@ -1584,6 +1748,167 @@ namespace BAL.Repositories
                         "Ceq"
                     )
             };
+        }
+
+
+        public QCInspectionRMDetailBLL
+            GetCompleteMTCInspectionDetail(
+                int mtcID)
+        {
+            /*
+             * Base saved QC / product detail.
+             */
+            var data =
+                GetQCInspectionRMByID(
+                    mtcID
+                );
+
+
+            if (data == null)
+            {
+                return null;
+            }
+
+
+            /*
+             * Product fallback from Billet Boarding.
+             */
+            if (
+                data.BilletBoardingID > 0
+            )
+            {
+                var boardingData =
+                    GetQCInspectionRMFromBoarding(
+                        data.BilletBoardingID
+                    );
+
+
+                if (boardingData != null)
+                {
+                    if (
+                        string.IsNullOrWhiteSpace(
+                            data.Specification
+                        )
+                    )
+                        data.Specification =
+                            boardingData.Specification;
+
+                    if (
+                        string.IsNullOrWhiteSpace(
+                            data.SteelGrade
+                        )
+                    )
+                        data.SteelGrade =
+                            boardingData.SteelGrade;
+
+                    if (
+                        !data.BarSizeValue.HasValue
+                    )
+                        data.BarSizeValue =
+                            boardingData.BarSizeValue;
+
+                    if (
+                        !data.LengthValue.HasValue
+                    )
+                        data.LengthValue =
+                            boardingData.LengthValue;
+
+                    if (
+                        !data.WeightPerBundleValue.HasValue
+                    )
+                        data.WeightPerBundleValue =
+                            boardingData.WeightPerBundleValue;
+
+                    if (
+                        !data.NominalWeightValue.HasValue
+                    )
+                        data.NominalWeightValue =
+                            boardingData.NominalWeightValue;
+
+                    if (
+                        !data.CrossSectionAreaValue.HasValue
+                    )
+                        data.CrossSectionAreaValue =
+                            boardingData.CrossSectionAreaValue;
+
+                    if (
+                        !data.NoOfBarsPerBundleValue.HasValue
+                    )
+                        data.NoOfBarsPerBundleValue =
+                            boardingData.NoOfBarsPerBundleValue;
+
+                    if (
+                        !data.NoOfBundlesValue.HasValue
+                    )
+                        data.NoOfBundlesValue =
+                            boardingData.NoOfBundlesValue;
+                }
+            }
+
+
+            /*
+             * RM Mechanical + Chemical source by HeatNo.
+             */
+            if (
+                !string.IsNullOrWhiteSpace(
+                    data.HeatNo
+                )
+            )
+            {
+                var mtc =
+                    GetMTCDetail(
+                        data.HeatNo.Trim()
+                    );
+
+
+                if (mtc != null)
+                {
+                    if (mtc.YieldStrength != 0M)
+                        data.YieldStrengthValue =
+                            mtc.YieldStrength;
+
+                    if (mtc.TensileStrength != 0M)
+                        data.TensileStrengthValue =
+                            mtc.TensileStrength;
+
+                    if (mtc.TensileYieldRatio != 0M)
+                        data.TensileYieldRatioValue =
+                            mtc.TensileYieldRatio;
+
+                    if (mtc.Elongation != 0M)
+                        data.ElongationValue =
+                            mtc.Elongation;
+
+                    if (mtc.GaugeLength != 0M)
+                        data.GaugeLengthValue =
+                            mtc.GaugeLength;
+
+
+                    data.CValue =
+                        mtc.C;
+
+                    data.SiValue =
+                        mtc.Si;
+
+                    data.MnValue =
+                        mtc.Mn;
+
+                    data.PValue =
+                        mtc.P;
+
+                    data.SValue =
+                        mtc.S;
+
+                    data.NValue =
+                        mtc.N;
+
+                    data.CeqValue =
+                        mtc.Ceq;
+                }
+            }
+
+
+            return data;
         }
 
 
@@ -2291,47 +2616,6 @@ namespace BAL.Repositories
                 : null;
         }
 
-
-        private static bool GetBool(
-            DataRow row,
-            string column)
-        {
-            if (
-                row == null ||
-                row.Table == null ||
-                !row.Table.Columns.Contains(column) ||
-                row[column] == DBNull.Value
-            )
-            {
-                return false;
-            }
-
-            bool boolResult;
-
-            if (
-                bool.TryParse(
-                    Convert.ToString(
-                        row[column]
-                    ),
-                    out boolResult
-                )
-            )
-            {
-                return boolResult;
-            }
-
-            int intResult;
-
-            return int.TryParse(
-                Convert.ToString(
-                    row[column]
-                ),
-                out intResult
-            )
-                && intResult == 1;
-        }
-
-
         public RMChemicalAnalysisBLL GetChemicalAnalysisByHeatNo(
     string heatNo)
         {
@@ -2681,7 +2965,6 @@ namespace BAL.Repositories
             }
         }
 
-
         public int DeactivateBilletChemistry(
             int currentID,
             string updatedBy)
@@ -2690,28 +2973,30 @@ namespace BAL.Repositories
             {
                 SqlParameter[] p =
                 {
-                    new SqlParameter(
-                        "@CurrentID",
-                        SqlDbType.Int
-                    )
-                    {
-                        Value = currentID
-                    },
+            new SqlParameter(
+                "@CurrentID",
+                SqlDbType.Int
+            )
+            {
+                Value =
+                    currentID
+            },
 
-                    new SqlParameter(
-                        "@UpdatedBy",
-                        SqlDbType.NVarChar,
-                        100
+            new SqlParameter(
+                "@UpdatedBy",
+                SqlDbType.NVarChar,
+                100
+            )
+            {
+                Value =
+                    string.IsNullOrWhiteSpace(
+                        updatedBy
                     )
-                    {
-                        Value =
-                            string.IsNullOrWhiteSpace(
-                                updatedBy
-                            )
-                                ? (object)DBNull.Value
-                                : updatedBy.Trim()
-                    }
-                };
+                        ? (object)DBNull.Value
+                        : updatedBy.Trim()
+            }
+        };
+
 
                 return new DBHelper()
                     .ExecuteNonQueryReturn(
@@ -2762,6 +3047,412 @@ namespace BAL.Repositories
                         "sp_DeactivateBilletBoardHeatRows",
                         p
                     );
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+
+        public List<string> GetDuplicateHeatNosForHeatChange(
+            List<string> newHeatNos,
+            int currentID,
+            List<string> oldHeatNos)
+        {
+            try
+            {
+                var duplicates =
+                    new List<string>();
+
+
+                if (
+                    newHeatNos == null ||
+                    newHeatNos.Count == 0
+                )
+                {
+                    return duplicates;
+                }
+
+
+                string newHeatCsv =
+                    string.Join(
+                        ",",
+                        newHeatNos
+                            .Where(
+                                x =>
+                                    !string.IsNullOrWhiteSpace(x)
+                            )
+                            .Select(
+                                x => x.Trim()
+                            )
+                            .Distinct(
+                                StringComparer.OrdinalIgnoreCase
+                            )
+                    );
+
+
+                string oldHeatCsv =
+                    oldHeatNos == null
+                        ? ""
+                        : string.Join(
+                            ",",
+                            oldHeatNos
+                                .Where(
+                                    x =>
+                                        !string.IsNullOrWhiteSpace(x)
+                                )
+                                .Select(
+                                    x => x.Trim()
+                                )
+                                .Distinct(
+                                    StringComparer.OrdinalIgnoreCase
+                                )
+                        );
+
+
+                SqlParameter[] p =
+                {
+                    new SqlParameter(
+                        "@NewHeatNos",
+                        SqlDbType.NVarChar,
+                        -1
+                    )
+                    {
+                        Value = newHeatCsv
+                    },
+
+                    new SqlParameter(
+                        "@CurrentID",
+                        SqlDbType.Int
+                    )
+                    {
+                        Value = currentID
+                    },
+
+                    new SqlParameter(
+                        "@OldHeatNos",
+                        SqlDbType.NVarChar,
+                        -1
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                oldHeatCsv
+                            )
+                                ? (object)DBNull.Value
+                                : oldHeatCsv
+                    }
+                };
+
+
+                DataTable dt =
+                    (new DBHelper().GetTableFromSP)(
+                        "sp_ValidateBilletBoardHeatChanges",
+                        p
+                    );
+
+
+                if (
+                    dt != null &&
+                    dt.Rows.Count > 0
+                )
+                {
+                    foreach (
+                        DataRow row
+                        in dt.Rows
+                    )
+                    {
+                        string heatNo =
+                            Convert.ToString(
+                                row["HeatNo"]
+                            );
+
+
+                        if (
+                            !string.IsNullOrWhiteSpace(
+                                heatNo
+                            )
+                        )
+                        {
+                            duplicates.Add(
+                                heatNo.Trim()
+                            );
+                        }
+                    }
+                }
+
+
+                return duplicates;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        public int UpdateBilletBoardHeatNo(
+            int currentID,
+            string oldHeatNo,
+            string newHeatNo,
+            string updatedBy)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+                    new SqlParameter(
+                        "@CurrentID",
+                        SqlDbType.Int
+                    )
+                    {
+                        Value = currentID
+                    },
+
+                    new SqlParameter(
+                        "@OldHeatNo",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                oldHeatNo
+                            )
+                                ? (object)DBNull.Value
+                                : oldHeatNo.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@NewHeatNo",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                newHeatNo
+                            )
+                                ? (object)DBNull.Value
+                                : newHeatNo.Trim()
+                    },
+
+                    new SqlParameter(
+                        "@UpdatedBy",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(
+                                updatedBy
+                            )
+                                ? (object)DBNull.Value
+                                : updatedBy.Trim()
+                    }
+                };
+
+
+                DataTable dt =
+                    (new DBHelper().GetTableFromSP)(
+                        "sp_UpdateBilletBoardHeatNo",
+                        p
+                    );
+
+
+                if (
+                    dt != null &&
+                    dt.Rows.Count > 0 &&
+                    dt.Columns.Contains("ID")
+                )
+                {
+                    return Convert.ToInt32(
+                        dt.Rows[0]["ID"]
+                    );
+                }
+
+
+                return currentID;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        // Heat duplicate check ONLY in active RMChemicalAnalysis rows.
+        public List<string> GetDuplicateHeatNosExcludingIDs(
+            List<string> heatNos,
+            List<int> excludedIDs)
+        {
+            try
+            {
+                var duplicates = new List<string>();
+
+                if (heatNos == null || !heatNos.Any())
+                    return duplicates;
+
+                string heatNoCsv = string.Join(",", heatNos
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => x.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase));
+
+                string excludedIDCsv = excludedIDs == null
+                    ? string.Empty
+                    : string.Join(",", excludedIDs
+                        .Where(x => x > 0)
+                        .Distinct());
+
+                SqlParameter[] p =
+                {
+                    new SqlParameter("@HeatNos", SqlDbType.NVarChar, -1)
+                    {
+                        Value = heatNoCsv
+                    },
+                    new SqlParameter("@ExcludedIDs", SqlDbType.NVarChar, -1)
+                    {
+                        Value = string.IsNullOrWhiteSpace(excludedIDCsv)
+                            ? (object)DBNull.Value
+                            : excludedIDCsv
+                    }
+                };
+
+                DataTable dt = new DBHelper().GetTableFromSP(
+                    "sp_GetDuplicateRMHeatNosExcludingIDs",
+                    p
+                );
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    duplicates = dt.AsEnumerable()
+                        .Select(x => Convert.ToString(x["HeatNo"]))
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Select(x => x.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                }
+
+                return duplicates;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        // Update existing chemistry, including HeatNo and SrNo.
+        public int UpdateChemicalAnalysisRM(
+            RMChemicalAnalysisBLL model,
+            int srNo)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+                    new SqlParameter("@ID", SqlDbType.Int) { Value = model.ID },
+                    new SqlParameter("@SrNo", SqlDbType.Int) { Value = srNo },
+                    new SqlParameter("@HeatNo", SqlDbType.NVarChar, 100)
+                    {
+                        Value = string.IsNullOrWhiteSpace(model.HeatNo)
+                            ? (object)DBNull.Value : model.HeatNo.Trim()
+                    },
+                    new SqlParameter("@NoOfBillets", SqlDbType.Int)
+                    {
+                        Value = (object)model.NoOfBillets ?? DBNull.Value
+                    },
+                    new SqlParameter("@C", SqlDbType.Decimal)
+                    {
+                        Value = (object)model.C ?? DBNull.Value
+                    },
+                    new SqlParameter("@Si", SqlDbType.Decimal)
+                    {
+                        Value = (object)model.Si ?? DBNull.Value
+                    },
+                    new SqlParameter("@Mn", SqlDbType.Decimal)
+                    {
+                        Value = (object)model.Mn ?? DBNull.Value
+                    },
+                    new SqlParameter("@S", SqlDbType.Decimal)
+                    {
+                        Value = (object)model.S ?? DBNull.Value
+                    },
+                    new SqlParameter("@P", SqlDbType.Decimal)
+                    {
+                        Value = (object)model.P ?? DBNull.Value
+                    },
+                    new SqlParameter("@N", SqlDbType.Decimal)
+                    {
+                        Value = (object)model.N ?? DBNull.Value
+                    },
+                    new SqlParameter("@Ceq", SqlDbType.Decimal)
+                    {
+                        Value = (object)model.Ceq ?? DBNull.Value
+                    },
+                    new SqlParameter("@HeatStatus", SqlDbType.Int)
+                    {
+                        Value = (object)model.HeatStatus ?? DBNull.Value
+                    },
+                    new SqlParameter("@StatusID", SqlDbType.Int)
+                    {
+                        Value = model.StatusID
+                    },
+                    new SqlParameter("@UpdatedBy", SqlDbType.NVarChar, 100)
+                    {
+                        Value = string.IsNullOrWhiteSpace(model.UpdatedBy)
+                            ? (object)DBNull.Value : model.UpdatedBy.Trim()
+                    },
+                    new SqlParameter("@UpdatedDate", SqlDbType.DateTime)
+                    {
+                        Value = model.UpdatedDate.HasValue
+                            ? (object)model.UpdatedDate.Value : DateTime.Now
+                    }
+                };
+
+                return new DBHelper().ExecuteNonQueryReturn(
+                    "sp_UpdateRMChemicalAnalysis",
+                    p
+                );
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        // Removed Edit row becomes inactive/deleted only in chemistry table.
+        public int DeactivateChemicalAnalysisRM(
+            int chemistryID,
+            string updatedBy,
+            DateTime updatedDate)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+                    new SqlParameter("@ID", SqlDbType.Int)
+                    {
+                        Value = chemistryID
+                    },
+                    new SqlParameter("@UpdatedBy", SqlDbType.NVarChar, 100)
+                    {
+                        Value = string.IsNullOrWhiteSpace(updatedBy)
+                            ? (object)DBNull.Value : updatedBy.Trim()
+                    },
+                    new SqlParameter("@UpdatedDate", SqlDbType.DateTime)
+                    {
+                        Value = updatedDate
+                    }
+                };
+
+                return new DBHelper().ExecuteNonQueryReturn(
+                    "sp_DeactivateRMChemicalAnalysisByID",
+                    p
+                );
             }
             catch
             {

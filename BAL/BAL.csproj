@@ -56,11 +56,13 @@
     <Compile Include="Repositories\EAFMeltShopRepository.cs" />
     <Compile Include="Repositories\MaintenanceRepository.cs" />
     <Compile Include="Repositories\MeltshopRepository.cs" />
+    <Compile Include="Repositories\RMMechanicalRepository.cs" />
     <Compile Include="Repositories\RollingMillDailyTargetRepository.cs" />
     <Compile Include="Repositories\RollingMillRepository.cs" />
     <Compile Include="Repositories\QualityRepository.cs" />
     <Compile Include="Repositories\RMReportsRepository.cs" />
     <Compile Include="Repositories\RollingMillTargetsRepository.cs" />
+    <Compile Include="Repositories\SMPDayWiseProductionRepository.cs" />
     <Compile Include="Repositories\SMPReportsRepository.cs" />
     <Compile Include="Repositories\ScrapyardRepository.cs" />
     <Compile Include="Repositories\StockRepository.cs" />

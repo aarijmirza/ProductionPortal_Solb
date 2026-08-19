@@ -112,22 +112,6 @@ namespace ProductionPortal_Solb.Controllers
             }
             return View("~/Views/Quality/HeatChemistry/Chemistrydetails.cshtml", data);
         }
-        //public ActionResult AddBillet()
-        //{
-        //    var heat = repo.GetAllChemistry()
-        //        .Where(x => x.Area == "Rolling Mill 1" || x.Area == "Rolling Mill 2")
-        //        .Select(x => new { x.HeatNo, x.Area })
-        //        .Distinct()
-        //        .ToList();
-
-        //    ViewBag.HeatNo = new SelectList(heat);
-        //    var BilletGradeList = repo.GetBilletGrade();
-        //    ViewBag.BilletGrade = new SelectList(BilletGradeList, "ProductID", "SpecGrade");
-        //    ViewBag.GradeDataJson = JsonConvert.SerializeObject(BilletGradeList);
-
-        //    return View("~/Views/Quality/BilletBoard/AddBillet.cshtml");
-        //}
-
         [HttpGet]
         public ActionResult AddBillet(int? id)
         {
@@ -222,91 +206,25 @@ namespace ProductionPortal_Solb.Controllers
                 );
             }
         }
-
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult AddBillet(
-    BilletBoardBLL data)
+        public JsonResult CheckDuplicateHeatNos(
+            string[] heatNos,
+            int currentID = 0)
         {
             try
             {
-                if (data == null)
-                {
-                    TempData["ErrorMessage"] =
-                        "Invalid data.";
-
-                    return RedirectToAction(
-                        "AddBillet"
-                    );
-                }
-
-                bool isEdit =
-                    data.ID > 0;
-
-                if (
-                    string.IsNullOrWhiteSpace(
-                        data.BilletBoarding
-                    )
-                )
-                {
-                    TempData["ErrorMessage"] =
-                        "Billet Boarding number is required.";
-
-                    return RedirectToAction(
-                        "AddBillet",
-                        isEdit
-                            ? new { id = data.ID }
-                            : null
-                    );
-                }
-
-                if (
-                    data.Chemistry == null ||
-                    !data.Chemistry.Any()
-                )
-                {
-                    TempData["ErrorMessage"] =
-                        "Chemistry data not found.";
-
-                    return RedirectToAction(
-                        "AddBillet",
-                        isEdit
-                            ? new { id = data.ID }
-                            : null
-                    );
-                }
-
-                var validChemistry =
-                    data.Chemistry
+                var cleanHeatNos =
+                    (heatNos ?? new string[0])
                         .Where(
                             x =>
-                                x != null &&
                                 !string.IsNullOrWhiteSpace(
-                                    x.HeatNo
+                                    x
                                 )
                         )
-                        .ToList();
-
-                if (!validChemistry.Any())
-                {
-                    TempData["ErrorMessage"] =
-                        "Heat No not found in chemistry.";
-
-                    return RedirectToAction(
-                        "AddBillet",
-                        isEdit
-                            ? new { id = data.ID }
-                            : null
-                    );
-                }
-
-                /*
-                 * Unique Heat Nos from submitted form
-                 */
-                var uniqueHeatNos =
-                    validChemistry
                         .Select(
-                            x => x.HeatNo.Trim()
+                            x =>
+                                x.Trim()
+                                    .ToUpper()
                         )
                         .Distinct(
                             StringComparer.OrdinalIgnoreCase
@@ -314,687 +232,88 @@ namespace ProductionPortal_Solb.Controllers
                         .ToList();
 
 
-                /*
-                 * Duplicate Heat No inside same submitted form
-                 */
-                int postedHeatCount =
-                    validChemistry
-                        .Select(
-                            x => x.HeatNo.Trim()
-                        )
-                        .Count();
-
                 if (
-                    uniqueHeatNos.Count !=
-                    postedHeatCount
+                    cleanHeatNos.Count == 0
                 )
                 {
-                    TempData["ErrorMessage"] =
-                        "Duplicate Heat No found in submitted data.";
-
-                    return RedirectToAction(
-                        "AddBillet",
-                        isEdit
-                            ? new { id = data.ID }
-                            : null
-                    );
-                }
-
-
-                /* ==============================================
-                   DUPLICATE CHECKS
-                   ============================================== */
-
-                if (!isEdit)
-                {
-                    /*
-                     * ADD MODE
-                     */
-                    bool isBilletBoardingExists =
-                        repo.IsBilletBoardingExists(
-                            data.BilletBoarding.Trim()
-                        );
-
-                    if (isBilletBoardingExists)
-                    {
-                        TempData["ErrorMessage"] =
-                            "This Billet Boarding number already exists.";
-
-                        return RedirectToAction(
-                            "AddBillet"
-                        );
-                    }
-
-                    var duplicateHeatNos =
-                        repo.GetDuplicateHeatNos(
-                            uniqueHeatNos
-                        );
-
-                    if (
-                        duplicateHeatNos != null &&
-                        duplicateHeatNos.Any()
-                    )
-                    {
-                        TempData["ErrorMessage"] =
-                            "These Heat No(s) already exist: "
-                            + string.Join(
-                                ", ",
-                                duplicateHeatNos
-                            );
-
-                        return RedirectToAction(
-                            "AddBillet"
-                        );
-                    }
-                }
-                else
-                {
-                    /*
-                     * EDIT MODE
-
-                     * Current boarding ko duplicate check se
-                     * exclude karenge.
-                     */
-                    bool boardingExists =
-                        repo.IsBilletBoardingExistsForEdit(
-                            data.BilletBoarding.Trim(),
-                            data.ID
-                        );
-
-                    if (boardingExists)
-                    {
-                        TempData["ErrorMessage"] =
-                            "This Billet Boarding number already exists.";
-
-                        return RedirectToAction(
-                            "AddBillet",
-                            new
-                            {
-                                id = data.ID
-                            }
-                        );
-                    }
-
-                    var duplicateHeatNos =
-                        repo.GetDuplicateHeatNosForEdit(
-                            uniqueHeatNos,
-                            data.ID
-                        );
-
-                    if (
-                        duplicateHeatNos != null &&
-                        duplicateHeatNos.Any()
-                    )
-                    {
-                        TempData["ErrorMessage"] =
-                            "These Heat No(s) already exist in another Billet Boarding: "
-                            + string.Join(
-                                ", ",
-                                duplicateHeatNos
-                            );
-
-                        return RedirectToAction(
-                            "AddBillet",
-                            new
-                            {
-                                id = data.ID
-                            }
-                        );
-                    }
-                }
-
-
-                /* ==============================================
-                   BILLET WEIGHT
-                   ============================================== */
-
-                decimal billetLength = 0;
-
-                if (
-                    !string.IsNullOrWhiteSpace(
-                        data.BilletLength
-                    )
-                )
-                {
-                    decimal.TryParse(
-                        data.BilletLength,
-                        out billetLength
-                    );
-                }
-
-                decimal billetWeight = 0;
-
-                if (
-                    !string.IsNullOrWhiteSpace(
-                        data.CrossSection
-                    )
-                )
-                {
-                    var parts =
-                        data.CrossSection
-                            .Replace(
-                                " ",
-                                ""
-                            )
-                            .ToLower()
-                            .Split('x');
-
-                    if (parts.Length == 2)
-                    {
-                        int w = 0;
-                        int h = 0;
-
-                        int.TryParse(
-                            parts[0],
-                            out w
-                        );
-
-                        int.TryParse(
-                            parts[1],
-                            out h
-                        );
-
-                        if (
-                            w == 150 &&
-                            h == 150
-                        )
-                        {
-                            billetWeight =
-                                175m
-                                * billetLength
-                                / 1000;
-                        }
-                    }
-                }
-
-                data.BilletWeight =
-                    billetWeight;
-
-                data.StatusID = 1;
-
-
-                /* ==============================================
-                   INSERT MODE
-                   ============================================== */
-
-                if (!isEdit)
-                {
-                    data.CreatedDate =
-                        DateTime.Now;
-
-                    data.CreatedBy =
-                        User.Identity.Name;
-
-
-                    /*
-                     * Insert chemistry
-                     */
-                    foreach (
-                        var chem
-                        in validChemistry
-                    )
-                    {
-                        var chemData =
-                            new RMChemicalAnalysisBLL
-                            {
-                                HeatNo =
-                                    chem.HeatNo.Trim(),
-
-                                StatusID = 1,
-
-                                CreatedDate =
-                                    DateTime.Now,
-
-                                CreatedBy =
-                                    User.Identity.Name,
-
-                                C = chem.C,
-                                Mn = chem.Mn,
-                                Si = chem.Si,
-                                P = chem.P,
-                                S = chem.S,
-                                N = chem.N,
-                                Ceq = chem.Ceq,
-
-                                HeatStatus =
-                                    chem.HeatStatus,
-
-                                NoOfBillets =
-                                    chem.NoOfBillets
-                            };
-
-                        repo.InsertChemicalAnalysisRM(
-                            chemData
-                        );
-                    }
-
-
-                    /*
-                     * Insert one BilletBoard row
-                     * per unique Heat No.
-                     */
-                    foreach (
-                        var heatNo
-                        in uniqueHeatNos
-                    )
-                    {
-                        var billetData =
-                            new BilletBoardBLL
-                            {
-                                HeatNo =
-                                    heatNo,
-
-                                Date =
-                                    data.Date,
-
-                                BilletLength =
-                                    data.BilletLength,
-
-                                CrossSection =
-                                    data.CrossSection,
-
-                                BilletWeight =
-                                    data.BilletWeight,
-
-                                StatusID = 1,
-
-                                CreatedDate =
-                                    DateTime.Now,
-
-                                CreatedBy =
-                                    User.Identity.Name,
-
-                                PlantName =
-                                    data.PlantName,
-
-                                Shift =
-                                    data.Shift,
-
-                                SteelGrade =
-                                    data.SteelGrade,
-
-                                Profile =
-                                    data.Profile,
-
-                                Size =
-                                    data.Size,
-
-                                BilletBoarding =
-                                    data.BilletBoarding
-                                        .Trim(),
-
-                                ProductSpecs =
-                                    data.ProductSpecs,
-
-                                Remarks =
-                                    data.Remarks
-                            };
-
-                        repo.InsertBilletBoarding(
-                            billetData
-                        );
-                    }
-
-                    TempData["SuccessMessage"] =
-                        "Billet Boarding inserted successfully against all Heat Numbers.";
-
-                    return RedirectToAction(
-                        "AddBillet"
-                    );
-                }
-
-
-                /* ==============================================
-                   EDIT MODE
-                   ============================================== */
-
-                else
-                {
-                    data.UpdatedDate =
-                        DateTime.Now;
-
-                    data.UpdatedBy =
-                        User.Identity.Name;
-
-                    int boardingNo =
-                        data.ID;
-
-
-                    /*
-                     * 1. Update common BilletBoard fields
-                     * for complete boarding.
-                     */
-                    repo.UpdateBilletBoarding(
-                        data
-                    );
-
-
-                    /*
-                     * 2. Existing chemistry/detail records
-                     * deactivate/remove for this boarding.
-                     */
-                    repo.DeactivateBilletChemistry(
-                        boardingNo,
-                        User.Identity.Name
-                    );
-
-
-                    /*
-                     * 3. Existing BilletBoard Heat rows
-                     * deactivate.
-                     *
-                     * Then updated submitted HeatNos
-                     * re-insert karenge.
-                     */
-                    repo.DeactivateBilletBoardHeatRows(
-                        boardingNo,
-                        User.Identity.Name
-                    );
-
-
-                    /*
-                     * 4. Insert updated chemistry
-                     */
-                    foreach (
-                        var chem
-                        in validChemistry
-                    )
-                    {
-                        var chemData =
-                            new RMChemicalAnalysisBLL
-                            {
-                                HeatNo =
-                                    chem.HeatNo.Trim(),
-
-                                StatusID = 1,
-
-                                CreatedDate =
-                                    DateTime.Now,
-
-                                CreatedBy =
-                                    User.Identity.Name,
-
-                                C = chem.C,
-                                Mn = chem.Mn,
-                                Si = chem.Si,
-                                P = chem.P,
-                                S = chem.S,
-                                N = chem.N,
-                                Ceq = chem.Ceq,
-
-                                HeatStatus =
-                                    chem.HeatStatus,
-
-                                NoOfBillets =
-                                    chem.NoOfBillets
-                            };
-
-                        repo.InsertChemicalAnalysisRM(
-                            chemData
-                        );
-                    }
-
-
-                    /*
-                     * 5. Re-create BilletBoard Heat rows
-                     */
-                    foreach (
-                        string heatNo
-                        in uniqueHeatNos
-                    )
-                    {
-                        BilletBoardBLL billetData =
-                            new BilletBoardBLL
-                            {
-                                HeatNo =
-                                    heatNo,
-
-                                Date =
-                                    data.Date,
-
-                                BilletLength =
-                                    data.BilletLength,
-
-                                CrossSection =
-                                    data.CrossSection,
-
-                                BilletWeight =
-                                    data.BilletWeight,
-
-                                StatusID = 1,
-
-                                CreatedDate =
-                                    DateTime.Now,
-
-                                CreatedBy =
-                                    User.Identity.Name,
-
-                                PlantName =
-                                    data.PlantName,
-
-                                Shift =
-                                    data.Shift,
-
-                                SteelGrade =
-                                    data.SteelGrade,
-
-                                Profile =
-                                    data.Profile,
-
-                                Size =
-                                    data.Size,
-
-                                ID =
-                                    boardingNo,
-
-                                ProductSpecs =
-                                    data.ProductSpecs,
-
-                                Remarks =
-                                    data.Remarks
-                            };
-
-                        repo.InsertBilletBoarding(
-                            billetData
-                        );
-                    }
-
-
-                    TempData["SuccessMessage"] =
-                        "Billet Boarding updated successfully.";
-
-                    return RedirectToAction(
-                        "AddBillet",
+                    return Json(
                         new
                         {
-                            id = data.ID
+                            success = true,
+                            duplicates =
+                                new string[0]
                         }
                     );
                 }
+
+
+                List<string> duplicates;
+
+
+                if (
+                    currentID > 0
+                )
+                {
+                    duplicates =
+                        repo.GetDuplicateHeatNosForEdit(
+                            cleanHeatNos,
+                            currentID
+                        )
+                        ??
+                        new List<string>();
+                }
+                else
+                {
+                    duplicates =
+                        repo.GetDuplicateHeatNos(
+                            cleanHeatNos
+                        )
+                        ??
+                        new List<string>();
+                }
+
+
+                duplicates =
+                    duplicates
+                        .Where(
+                            x =>
+                                !string.IsNullOrWhiteSpace(
+                                    x
+                                )
+                        )
+                        .Select(
+                            x => x.Trim()
+                        )
+                        .Distinct(
+                            StringComparer.OrdinalIgnoreCase
+                        )
+                        .ToList();
+
+
+                return Json(
+                    new
+                    {
+                        success = true,
+                        duplicates = duplicates
+                    }
+                );
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] =
-                    "Error while saving Billet Boarding: "
-                    + ex.Message;
+                Response.StatusCode = 500;
 
-                if (
-                    data != null &&
-                    data.ID > 0
-                )
-                {
-                    return RedirectToAction(
-                        "AddBillet",
-                        new
-                        {
-                            id = data.ID
-                        }
-                    );
-                }
-
-                return RedirectToAction(
-                    "AddBillet"
+                return Json(
+                    new
+                    {
+                        success = false,
+                        message =
+                            "Duplicate Heat validation failed: "
+                            +
+                            ex.Message
+                    }
                 );
             }
         }
-
-        //[HttpPost]
-        //public ActionResult AddBillet(BilletBoardBLL data)
-        //{
-        //    try
-        //    {
-        //        if (data == null)
-        //        {
-        //            TempData["ErrorMessage"] = "Invalid data.";
-        //            return RedirectToAction("AddBillet");
-        //        }
-
-        //        if (string.IsNullOrWhiteSpace(data.BilletBoarding))
-        //        {
-        //            TempData["ErrorMessage"] = "Billet Boarding number is required.";
-        //            return RedirectToAction("AddBillet");
-        //        }
-
-        //        if (data.Chemistry == null || !data.Chemistry.Any())
-        //        {
-        //            TempData["ErrorMessage"] = "Chemistry data not found.";
-        //            return RedirectToAction("AddBillet");
-        //        }
-
-        //        var validChemistry = data.Chemistry
-        //            .Where(x => x != null && !string.IsNullOrWhiteSpace(x.HeatNo))
-        //            .ToList();
-
-        //        if (!validChemistry.Any())
-        //        {
-        //            TempData["ErrorMessage"] = "Heat No not found in chemistry.";
-        //            return RedirectToAction("AddBillet");
-        //        }
-
-        //        // Unique HeatNos from posted chemistry
-        //        var uniqueHeatNos = validChemistry
-        //            .Select(x => x.HeatNo.Trim())
-        //            .Distinct(StringComparer.OrdinalIgnoreCase)
-        //            .ToList();
-
-        //        // 1) Check duplicate HeatNo inside same submitted form
-        //        if (uniqueHeatNos.Count != validChemistry.Select(x => x.HeatNo.Trim()).Count())
-        //        {
-        //            TempData["ErrorMessage"] = "Duplicate Heat No found in submitted data.";
-        //            return RedirectToAction("AddBillet");
-        //        }
-
-        //        // 2) Check duplicate Billet Boarding from DB
-        //        bool isBilletBoardingExists = repo.IsBilletBoardingExists(data.BilletBoarding.Trim());
-
-        //        if (isBilletBoardingExists)
-        //        {
-        //            TempData["ErrorMessage"] = "This Billet Boarding number already exists.";
-        //            return RedirectToAction("AddBillet");
-        //        }
-
-        //        // 3) Check duplicate HeatNos from DB
-        //        var duplicateHeatNos = repo.GetDuplicateHeatNos(uniqueHeatNos);
-
-        //        if (duplicateHeatNos != null && duplicateHeatNos.Any())
-        //        {
-        //            TempData["ErrorMessage"] = "These Heat No(s) already exist: " + string.Join(", ", duplicateHeatNos);
-        //            return RedirectToAction("AddBillet");
-        //        }
-
-        //        decimal billetLength = 0;
-        //        if (!string.IsNullOrWhiteSpace(data.BilletLength))
-        //        {
-        //            decimal.TryParse(data.BilletLength, out billetLength);
-        //        }
-
-        //        decimal billetWeight = 0;
-        //        if (!string.IsNullOrEmpty(data.CrossSection))
-        //        {
-        //            var parts = data.CrossSection.Replace(" ", "").ToLower().Split('x');
-
-        //            if (parts.Length == 2)
-        //            {
-        //                int w = 0;
-        //                int h = 0;
-
-        //                int.TryParse(parts[0], out w);
-        //                int.TryParse(parts[1], out h);
-
-        //                if (w == 150 && h == 150)
-        //                {
-        //                    billetWeight = 175m * billetLength / 1000;
-        //                }
-        //            }
-        //        }
-
-        //        data.BilletWeight = billetWeight;
-        //        data.StatusID = 1;
-        //        data.CreatedDate = DateTime.Now;
-        //        data.CreatedBy = User.Identity.Name;
-
-        //        int rtn = 0;
-
-        //        // 4) Insert chemistry rows
-        //        foreach (var chem in validChemistry)
-        //        {
-        //            var chemData = new RMChemicalAnalysisBLL
-        //            {
-        //                HeatNo = chem.HeatNo.Trim(),
-        //                StatusID = 1,
-        //                CreatedDate = DateTime.Now,
-        //                CreatedBy = User.Identity.Name,
-
-        //                C = chem.C,
-        //                Mn = chem.Mn,
-        //                Si = chem.Si,
-        //                P = chem.P,
-        //                S = chem.S,
-        //                N = chem.N,
-        //                Ceq = chem.Ceq,
-        //                HeatStatus = chem.HeatStatus,
-        //                NoOfBillets = chem.NoOfBillets
-        //            };
-
-        //            repo.InsertChemicalAnalysisRM(chemData);
-        //        }
-
-        //        // 5) Insert BilletBoarding once per unique HeatNo
-        //        foreach (var heatNo in uniqueHeatNos)
-        //        {
-        //            var billetData = new BilletBoardBLL
-        //            {
-        //                HeatNo = heatNo,
-        //                Date = data.Date,
-        //                BilletLength = data.BilletLength,
-        //                CrossSection = data.CrossSection,
-        //                BilletWeight = data.BilletWeight,
-        //                StatusID = 1,
-        //                CreatedDate = DateTime.Now,
-        //                CreatedBy = User.Identity.Name,
-
-        //                PlantName = data.PlantName,
-        //                Shift = data.Shift,
-        //                SteelGrade = data.SteelGrade,
-        //                Profile = data.Profile,
-        //                Size = data.Size,
-        //                BilletBoarding = data.BilletBoarding.Trim(),
-        //                ProductSpecs = data.ProductSpecs,
-        //                Remarks = data.Remarks
-        //            };
-
-        //            rtn = repo.InsertBilletBoarding(billetData);
-        //        }
-
-        //        TempData["SuccessMessage"] = "Billet Boarding inserted successfully against all Heat Numbers.";
-        //        return RedirectToAction("AddBillet");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        TempData["ErrorMessage"] = "Error while saving Billet Boarding: " + ex.Message;
-        //        return RedirectToAction("AddBillet");
-        //    }
-        //}
 
         [HttpGet]
         public ActionResult Boardingdetails(int id)
@@ -1011,14 +330,10 @@ namespace ProductionPortal_Solb.Controllers
 
             return Json(data, JsonRequestBehavior.AllowGet);
         }
-
         public ActionResult QCInspectionRM()
         {
             return View("~/Views/Quality/RMMechanical/list.cshtml");
         }
-
-
-
         [HttpGet]
         public ActionResult QCInspectionRMadd(
             string rm = "RM1",
@@ -1108,8 +423,6 @@ namespace ProductionPortal_Solb.Controllers
             model
             );
         }
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult QCInspectionRMadd(
@@ -1192,8 +505,6 @@ namespace ProductionPortal_Solb.Controllers
                 );
             }
         }
-
-
         [HttpGet]
         public JsonResult GetBoardingDetails(
             int boardingID)
@@ -1237,14 +548,120 @@ namespace ProductionPortal_Solb.Controllers
         }
 
         [HttpGet]
+        public JsonResult GetMTCDetails(
+            int mtcID)
+        {
+            try
+            {
+                if (mtcID <= 0)
+                {
+                    Response.StatusCode = 400;
+
+                    return Json(
+                        new
+                        {
+                            success = false,
+                            message =
+                                "A valid MTC record must be selected."
+                        },
+                        JsonRequestBehavior.AllowGet
+                    );
+                }
+
+                /*
+                 * Single repository call.
+                 * Product + Mechanical = QCInspectionRM
+                 * Chemistry = RMChemicalAnalysis
+                 */
+                var data =
+                    repo.GetMTCDetails(
+                        mtcID
+                    );
+
+                if (data == null)
+                {
+                    Response.StatusCode = 404;
+
+                    return Json(
+                        new
+                        {
+                            success = false,
+                            message =
+                                "The selected MTC record was not found."
+                        },
+                        JsonRequestBehavior.AllowGet
+                    );
+                }
+
+                return Json(
+                    new
+                    {
+                        success = true,
+                        data = data
+                    },
+                    JsonRequestBehavior.AllowGet
+                );
+            }
+            catch (Exception ex)
+            {
+                Response.StatusCode = 500;
+
+                return Json(
+                    new
+                    {
+                        success = false,
+                        message =
+                            "The selected MTC data could not be loaded. "
+                            + ex.Message
+                    },
+                    JsonRequestBehavior.AllowGet
+                );
+            }
+        }
+
+
+        [HttpGet]
         public JsonResult GetMTCRowsJson(
-    string heatNo = null)
+            string heatNo = null)
         {
             try
             {
                 var rows =
-                    repo.GetMTCRows(heatNo)
+                    repo.GetMTCRows(
+                        heatNo
+                    )
                     ?? new List<QCMTCRowBLL>();
+
+                /*
+                 * Remove duplicate MTC rows by HeatNo, NOT by ID.
+                 * Latest QCInspectionRM.ID is kept for each heat.
+                 */
+                rows =
+                    rows
+                        .Where(
+                            x =>
+                                x != null
+                                &&
+                                !string.IsNullOrWhiteSpace(
+                                    x.HeatNo
+                                )
+                        )
+                        .GroupBy(
+                            x => x.HeatNo.Trim(),
+                            StringComparer.OrdinalIgnoreCase
+                        )
+                        .Select(
+                            g =>
+                                g
+                                    .OrderByDescending(
+                                        x => x.ID
+                                    )
+                                    .First()
+                        )
+                        .OrderByDescending(
+                            x => x.ID
+                        )
+                        .ToList();
 
                 return Json(
                     new
@@ -1263,54 +680,14 @@ namespace ProductionPortal_Solb.Controllers
                     new
                     {
                         success = false,
-                        message = ex.Message
+                        message =
+                            "MTC data could not be loaded. "
+                            + ex.Message
                     },
                     JsonRequestBehavior.AllowGet
                 );
             }
         }
-
-        //[HttpGet]
-        //public JsonResult GetMTCDetails(
-        //    string heatNo)
-        //{
-        //    try
-        //    {
-        //        var data =
-        //            repo.GetMTCDetail(
-        //                heatNo
-        //            );
-
-        //        return Json(
-        //            new
-        //            {
-        //                success =
-        //                    data != null,
-
-        //                data =
-        //                    data
-        //            },
-        //            JsonRequestBehavior.AllowGet
-        //        );
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Response.StatusCode =
-        //            500;
-
-        //        return Json(
-        //            new
-        //            {
-        //                success =
-        //                    false,
-
-        //                message =
-        //                    ex.Message
-        //            },
-        //            JsonRequestBehavior.AllowGet
-        //        );
-        //    }
-        //}
 
 
         [HttpPost]
@@ -1345,8 +722,6 @@ namespace ProductionPortal_Solb.Controllers
                 "QCInspectionRMadd"
             );
         }
-
-
 
         public ActionResult InspectionRMlist()
         {
@@ -1439,6 +814,7 @@ namespace ProductionPortal_Solb.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult AddSlagByProduct(SlagByProductAnalysisBLL data)
         {
             if (data == null)
@@ -1447,61 +823,111 @@ namespace ProductionPortal_Solb.Controllers
                 return RedirectToAction("SlagByProductList");
             }
 
-            // ✅ Ensure samples list not null
             if (data.Samples == null)
                 data.Samples = new List<SlagSampleAnalysisBLL>();
 
+            data.HeatNo = (data.HeatNo ?? string.Empty).Trim();
+            data.CertificateNo = (data.CertificateNo ?? string.Empty).Trim();
+            data.ByProductType = (data.ByProductType ?? string.Empty).Trim();
+
+            if (!data.DateOfProduction.HasValue)
+                return SlagSaveError(data, "Production Date is required.");
+
+            if (string.IsNullOrWhiteSpace(data.HeatNo))
+                return SlagSaveError(data, "Heat No is required.");
+
+            if (string.IsNullOrWhiteSpace(data.ByProductType))
+                return SlagSaveError(data, "By-Product Type is required.");
+
+            var activeSamples = data.Samples
+                .Where(x => x != null && !IsEmptySlagSample(x))
+                .ToList();
+
+            foreach (var sample in activeSamples)
+            {
+                sample.SampleCode = (sample.SampleCode ?? string.Empty).Trim();
+            }
+
+            var duplicateSampleCodes = activeSamples
+                .Where(x => !string.IsNullOrWhiteSpace(x.SampleCode))
+                .GroupBy(
+                    x => x.SampleCode,
+                    StringComparer.OrdinalIgnoreCase
+                )
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .OrderBy(x => x)
+                .ToList();
+
+            if (duplicateSampleCodes.Any())
+            {
+                return SlagSaveError(
+                    data,
+                    "Duplicate Sample Code(s): " +
+                    string.Join(", ", duplicateSampleCodes)
+                );
+            }
+
+            /*
+             * One active entry is allowed for the same Production Date,
+             * Heat No and By-Product Type. In Edit, the current ID is excluded.
+             */
+            bool duplicateEntry = repo.IsSlagByProductDuplicate(
+                data.DateOfProduction.Value,
+                data.HeatNo,
+                data.ByProductType,
+                data.ID
+            );
+
+            if (duplicateEntry)
+            {
+                return SlagSaveError(
+                    data,
+                    "This Production Date, Heat No and By-Product Type already exists."
+                );
+            }
+
+            DateTime now = DateTime.Now;
+            string currentUser = User.Identity.Name;
+
             // ============================
-            // ✅ ADD MODE (Insert)
+            // ADD MODE
             // ============================
-            if (data.ID == 0)
+            if (data.ID <= 0)
             {
                 data.StatusID = 1;
-                data.CreatedDate = DateTime.Now;
-                data.CreatedBy = User.Identity.Name;
+                data.CreatedDate = now;
+                data.CreatedBy = currentUser;
 
-                int newID = repo.InsertSlagByProduct(data);   // returns newly inserted SlagID
+                int newID = repo.InsertSlagByProduct(data);
+
+                // -1 means the transaction-level DB duplicate check blocked it.
+                if (newID == -1)
+                {
+                    return SlagSaveError(
+                        data,
+                        "Duplicate entry blocked. This record already exists."
+                    );
+                }
 
                 if (newID <= 0)
                 {
-                    TempData["ErrorMessage"] = "Data not saved. Please try again.";
-                    return RedirectToAction("SlagByProductList");
+                    return SlagSaveError(
+                        data,
+                        "Data not saved. Please try again."
+                    );
                 }
 
-                foreach (var item in data.Samples)
+                foreach (var item in activeSamples)
                 {
-                    // optional: skip empty rows
-                    if (string.IsNullOrWhiteSpace(item.SampleCode) &&
-                        item.CaO == null && item.MgO == null && item.SiO2 == null)
-                        continue;
-
-                    var bll = new SlagSampleAnalysisBLL
-                    {
-                        SampleCode = item.SampleCode,
-                        SampleTime = item.SampleTime,
-                        CaO = item.CaO,
-                        MgO = item.MgO,
-                        SiO2 = item.SiO2,
-                        Al2O3 = item.Al2O3,
-                        Fe2O3 = item.Fe2O3,
-                        S = item.S,
-                        MnO = item.MnO,
-                        Cr2O3 = item.Cr2O3,
-                        P2O5 = item.P2O5,
-                        V2O5 = item.V2O5,
-                        TiO2 = item.TiO2,
-                        ZnO = item.ZnO,
-                        TotalFe = item.TotalFe,
-                        Basicity4 = item.Basicity4,
-                        Comment = item.Comment,
-
-                        SlagID = newID,
-                        StatusID = 1,
-                        CreatedDate = data.CreatedDate,
-                        CreatedBy = data.CreatedBy
-                    };
-
-                    repo.InsertSlagSample(bll);
+                    repo.InsertSlagSample(
+                        BuildSlagSample(
+                            item,
+                            newID,
+                            currentUser,
+                            now
+                        )
+                    );
                 }
 
                 TempData["SuccessMessage"] = "Data saved successfully";
@@ -1509,85 +935,135 @@ namespace ProductionPortal_Solb.Controllers
             }
 
             // ============================
-            // ✅ EDIT MODE (Update)
+            // EDIT MODE
             // ============================
-            else
+            var existing = repo.GetSlagByID(data.ID);
+
+            if (existing == null || existing.ID <= 0)
             {
-                // 1) Fetch existing master
-                var existing = repo.GetSlagByID(data.ID);   // ✅ create this repo method
-                if (existing == null)
-                {
-                    TempData["ErrorMessage"] = "Record not found.";
-                    return RedirectToAction("SlagByProductList");
-                }
-
-                // 2) Update master fields (map only those you allow)
-                existing.DateOfProduction = data.DateOfProduction;
-                existing.DateOfAnalysis = data.DateOfAnalysis;
-                existing.HeatNo = data.HeatNo;
-                existing.CertificateNo = data.CertificateNo;
-
-                // ✅ If you store ByProductType as string, set it here
-                // existing.ByProductType = data.ByProductType;  // if you have this field
-
-                // OR if you have EAF/LF/TS... columns:
-                existing.ByProductType = data.ByProductType;
-
-                existing.StatusID = 1;
-                existing.UpdatedDate = DateTime.Now;     // ✅ add in model if not present
-                existing.UpdatedBy = User.Identity.Name; // ✅ add in model if not present
-
-                int upd = repo.UpdateSlagByProduct(existing); // ✅ create this repo method
-
-                if (upd != 0)
-                {
-                    TempData["ErrorMessage"] = "Data not updated. Please try again.";
-                    return RedirectToAction("SlagByProductList");
-                }
-                existing.UpdatedBy = User.Identity.Name;
-                // 3) Replace samples
-                // ✅ OPTION A: Hard delete previous samples then insert new
-                repo.DeleteSlagSamplesBySlagID(existing.ID, existing.UpdatedBy); // ✅ create this method (recommended)
-
-                foreach (var item in data.Samples)
-                {
-                    // optional: skip empty rows
-                    if (string.IsNullOrWhiteSpace(item.SampleCode) &&
-                        item.CaO == null && item.MgO == null && item.SiO2 == null)
-                        continue;
-
-                    var bll = new SlagSampleAnalysisBLL
-                    {
-                        SampleCode = item.SampleCode,
-                        SampleTime = item.SampleTime,
-                        CaO = item.CaO,
-                        MgO = item.MgO,
-                        SiO2 = item.SiO2,
-                        Al2O3 = item.Al2O3,
-                        Fe2O3 = item.Fe2O3,
-                        S = item.S,
-                        MnO = item.MnO,
-                        Cr2O3 = item.Cr2O3,
-                        P2O5 = item.P2O5,
-                        V2O5 = item.V2O5,
-                        TiO2 = item.TiO2,
-                        ZnO = item.ZnO,
-                        TotalFe = item.TotalFe,
-                        Basicity4 = item.Basicity4,
-                        Comment = item.Comment,
-
-                        SlagID = existing.ID,
-                        StatusID = 1,
-                        CreatedDate = DateTime.Now,
-                        CreatedBy = User.Identity.Name
-                    };
-
-                    repo.InsertSlagSample(bll);
-                }
-
-                TempData["SuccessMessage"] = "Data updated successfully";
-                return RedirectToAction("SlagByProductList");
+                return SlagSaveError(data, "Record not found.");
             }
+
+            existing.DateOfProduction = data.DateOfProduction;
+            existing.DateOfAnalysis = data.DateOfAnalysis;
+            existing.HeatNo = data.HeatNo;
+            existing.CertificateNo = data.CertificateNo;
+            existing.ByProductType = data.ByProductType;
+            existing.StatusID = 1;
+            existing.UpdatedDate = now;
+            existing.UpdatedBy = currentUser;
+
+            int updateResult = repo.UpdateSlagByProduct(existing);
+
+            if (updateResult == -1)
+            {
+                return SlagSaveError(
+                    data,
+                    "Duplicate entry blocked. This record already exists."
+                );
+            }
+
+            if (updateResult <= 0)
+            {
+                return SlagSaveError(
+                    data,
+                    "Data not updated. Please try again."
+                );
+            }
+
+            /*
+             * Existing active samples are soft-deleted and the posted sample
+             * list is inserted again. This makes removed and edited rows match
+             * the form exactly without leaving duplicate active samples.
+             */
+            repo.DeleteSlagSamplesBySlagID(
+                existing.ID,
+                currentUser
+            );
+
+            foreach (var item in activeSamples)
+            {
+                repo.InsertSlagSample(
+                    BuildSlagSample(
+                        item,
+                        existing.ID,
+                        currentUser,
+                        now
+                    )
+                );
+            }
+
+            TempData["SuccessMessage"] = "Data updated successfully";
+            return RedirectToAction("SlagByProductList");
+        }
+
+        private ActionResult SlagSaveError(
+            SlagByProductAnalysisBLL data,
+            string message)
+        {
+            ModelState.AddModelError(string.Empty, message);
+
+            if (data.Samples == null)
+                data.Samples = new List<SlagSampleAnalysisBLL>();
+
+            return View(
+                "~/Views/Quality/SlagByProduct/AddSlagByProduct.cshtml",
+                data
+            );
+        }
+
+        private static bool IsEmptySlagSample(
+            SlagSampleAnalysisBLL item)
+        {
+            return string.IsNullOrWhiteSpace(item.SampleCode)
+                && item.SampleTime == null
+                && item.CaO == null
+                && item.MgO == null
+                && item.SiO2 == null
+                && item.Al2O3 == null
+                && item.Fe2O3 == null
+                && item.S == null
+                && item.MnO == null
+                && item.Cr2O3 == null
+                && item.P2O5 == null
+                && item.V2O5 == null
+                && item.TiO2 == null
+                && item.ZnO == null
+                && item.TotalFe == null
+                && item.Basicity4 == null
+                && string.IsNullOrWhiteSpace(item.Comment);
+        }
+
+        private static SlagSampleAnalysisBLL BuildSlagSample(
+            SlagSampleAnalysisBLL source,
+            int slagID,
+            string currentUser,
+            DateTime now)
+        {
+            return new SlagSampleAnalysisBLL
+            {
+                SampleCode = source.SampleCode,
+                SampleTime = source.SampleTime,
+                CaO = source.CaO,
+                MgO = source.MgO,
+                SiO2 = source.SiO2,
+                Al2O3 = source.Al2O3,
+                Fe2O3 = source.Fe2O3,
+                S = source.S,
+                MnO = source.MnO,
+                Cr2O3 = source.Cr2O3,
+                P2O5 = source.P2O5,
+                V2O5 = source.V2O5,
+                TiO2 = source.TiO2,
+                ZnO = source.ZnO,
+                TotalFe = source.TotalFe,
+                Basicity4 = source.Basicity4,
+                Comment = source.Comment,
+                SlagID = slagID,
+                StatusID = 1,
+                CreatedDate = now,
+                CreatedBy = currentUser
+            };
         }
 
         [Route("SlagByProductDelete")]
@@ -2356,5 +1832,419 @@ namespace ProductionPortal_Solb.Controllers
                     selectedShift
                 );
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AddBillet(BilletBoardBLL data)
+        {
+            bool isEdit = data != null && data.ID > 0;
+
+            try
+            {
+                if (data == null)
+                    return BilletSaveError("Invalid data.", false, 0);
+
+                data.BilletBoarding =
+                    (data.BilletBoarding ?? string.Empty).Trim();
+
+                if (string.IsNullOrWhiteSpace(data.BilletBoarding))
+                    return BilletSaveError(
+                        "Billet Boarding number is required.",
+                        isEdit,
+                        data.ID
+                    );
+
+                var chemistry =
+                    (data.Chemistry ?? new List<RMChemicalAnalysisBLL>())
+                        .Where(x =>
+                            x != null &&
+                            !string.IsNullOrWhiteSpace(x.HeatNo))
+                        .ToList();
+
+                if (!chemistry.Any())
+                    return BilletSaveError(
+                        "At least one Chemical Analysis Heat No is required.",
+                        isEdit,
+                        data.ID
+                    );
+
+                foreach (var item in chemistry)
+                    item.HeatNo = item.HeatNo.Trim();
+
+                // Duplicate inside the current form.
+                var formDuplicateHeats = chemistry
+                    .GroupBy(x => x.HeatNo, StringComparer.OrdinalIgnoreCase)
+                    .Where(x => x.Count() > 1)
+                    .Select(x => x.Key)
+                    .ToList();
+
+                if (formDuplicateHeats.Any())
+                    return BilletSaveError(
+                        "Duplicate Heat No(s) entered: " +
+                        string.Join(", ", formDuplicateHeats),
+                        isEdit,
+                        data.ID
+                    );
+
+                var heatNos = chemistry
+                    .Select(x => x.HeatNo)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var oldChemistry = new List<RMChemicalAnalysisBLL>();
+
+                if (isEdit)
+                {
+                    oldChemistry =
+                        repo.GetBilletChemistryForEdit(data.ID)
+                        ?? new List<RMChemicalAnalysisBLL>();
+
+                    oldChemistry = oldChemistry
+                        .Where(x => x != null && x.StatusID != 3)
+                        .ToList();
+
+                    var allowedIDs = new HashSet<int>(
+                        oldChemistry.Select(x => x.ID)
+                    );
+
+                    // Do not allow a chemistry ID from another boarding.
+                    bool invalidIDPosted = chemistry.Any(x =>
+                        x.ID > 0 && !allowedIDs.Contains(x.ID));
+
+                    if (invalidIDPosted)
+                        return BilletSaveError(
+                            "Invalid Chemical Analysis record submitted.",
+                            true,
+                            data.ID
+                        );
+                }
+
+                // Boarding number must be unique; Edit excludes the current group.
+                bool boardingDuplicate = !isEdit
+                    ? repo.IsBilletBoardingExists(data.BilletBoarding)
+                    : repo.IsBilletBoardingExistsForEdit(
+                        data.BilletBoarding,
+                        data.ID
+                      );
+
+                if (boardingDuplicate)
+                    return BilletSaveError(
+                        "This Billet Boarding number already exists.",
+                        isEdit,
+                        data.ID
+                    );
+
+                /*
+                 * DB Heat duplicate check ONLY in RMChemicalAnalysis.
+                 * StatusID = 3 is ignored.
+                 * Edit excludes all chemistry IDs belonging to the current boarding,
+                 * so an unchanged existing Heat does not duplicate itself.
+                 */
+                var excludedIDs = isEdit
+                    ? oldChemistry.Select(x => x.ID).ToList()
+                    : new List<int>();
+
+                // In Edit, unchanged existing Heat Nos do not need another DB check.
+                // Validate only newly added rows or rows whose Heat No was changed.
+                var heatNosForDatabaseCheck = !isEdit
+                    ? heatNos
+                    : chemistry
+                        .Where(x =>
+                            x.ID <= 0 ||
+                            oldChemistry.Any(old =>
+                                old.ID == x.ID &&
+                                !string.Equals(
+                                    (old.HeatNo ?? string.Empty).Trim(),
+                                    x.HeatNo,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                            )
+                        )
+                        .Select(x => x.HeatNo)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                var databaseDuplicateHeats = heatNosForDatabaseCheck.Any()
+                    ? repo.GetDuplicateHeatNosExcludingIDs(
+                        heatNosForDatabaseCheck,
+                        excludedIDs
+                      ) ?? new List<string>()
+                    : new List<string>();
+
+                if (databaseDuplicateHeats.Any())
+                    return BilletSaveError(
+                        "These Heat No(s) already exist in active Chemical Analysis: " +
+                        string.Join(", ", databaseDuplicateHeats),
+                        isEdit,
+                        data.ID
+                    );
+
+                CalculateBilletWeight(data);
+
+                string currentUser = User.Identity.Name;
+                DateTime now = DateTime.Now;
+
+                if (!isEdit)
+                {
+                    data.StatusID = 1;
+                    data.CreatedBy = currentUser;
+                    data.CreatedDate = now;
+
+                    for (int index = 0; index < chemistry.Count; index++)
+                    {
+                        var item = chemistry[index];
+                        int srNo = index + 1;
+
+                        item.StatusID = 1;
+                        item.CreatedBy = currentUser;
+                        item.CreatedDate = now;
+
+                        repo.InsertChemicalAnalysisRM(item, srNo);
+
+                        repo.InsertBilletBoarding(
+                            CreateBilletHeatRow(
+                                data,
+                                item.HeatNo,
+                                currentUser,
+                                now
+                            )
+                        );
+                    }
+
+                    TempData["SuccessMessage"] =
+                        "Billet Boarding and Chemical Analysis added successfully.";
+
+                    return RedirectToAction("BilletBoard");
+                }
+
+                /* ============================ EDIT ============================ */
+
+                data.StatusID = 1;
+                data.UpdatedBy = currentUser;
+                data.UpdatedDate = now;
+
+                // Updates common boarding details for all heats of this boarding.
+                repo.UpdateBilletBoarding(data);
+
+                var postedExistingIDs = new HashSet<int>(
+                    chemistry
+                        .Where(x => x.ID > 0)
+                        .Select(x => x.ID)
+                );
+
+                // Existing Heat removed from the form -> StatusID = 3.
+                var removedChemistry = oldChemistry
+                    .Where(x => !postedExistingIDs.Contains(x.ID))
+                    .ToList();
+
+                foreach (var removed in removedChemistry)
+                {
+                    repo.DeactivateChemicalAnalysisRM(
+                        removed.ID,
+                        currentUser,
+                        now
+                    );
+                }
+
+                for (int index = 0; index < chemistry.Count; index++)
+                {
+                    var item = chemistry[index];
+                    int srNo = index + 1;
+
+                    if (item.ID > 0)
+                    {
+                        var oldItem = oldChemistry.First(x => x.ID == item.ID);
+                        string oldHeatNo =
+                            (oldItem.HeatNo ?? string.Empty).Trim();
+
+                        if (!oldHeatNo.Equals(
+                            item.HeatNo,
+                            StringComparison.OrdinalIgnoreCase))
+                        {
+                            repo.UpdateBilletBoardHeatNo(
+                                data.ID,
+                                oldHeatNo,
+                                item.HeatNo,
+                                currentUser
+                            );
+                        }
+
+                        item.StatusID = 1;
+                        item.UpdatedBy = currentUser;
+                        item.UpdatedDate = now;
+
+                        // Update HeatNo, SrNo and all Chemical Analysis values.
+                        repo.UpdateChemicalAnalysisRM(item, srNo);
+                    }
+                    else
+                    {
+                        item.StatusID = 1;
+                        item.CreatedBy = currentUser;
+                        item.CreatedDate = now;
+
+                        repo.InsertChemicalAnalysisRM(item, srNo);
+
+                        // Newly added Heat gets a corresponding BilletBoard row.
+                        repo.InsertBilletBoarding(
+                            CreateBilletHeatRow(
+                                data,
+                                item.HeatNo,
+                                currentUser,
+                                now
+                            )
+                        );
+                    }
+                }
+
+                TempData["SuccessMessage"] =
+                    "Billet Boarding and Chemical Analysis updated successfully.";
+
+                return RedirectToAction(
+                    "BilletBoard",
+                    new { id = data.ID }
+                );
+            }
+            catch (Exception ex)
+            {
+                return BilletSaveError(
+                    "Error while saving Billet Boarding: " + ex.Message,
+                    isEdit,
+                    data != null ? data.ID : 0
+                );
+            }
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult CheckDuplicateHeatNosForBilletSave(
+            List<string> heatNos,
+            List<int> excludedIDs,
+            int currentID = 0)
+        {
+            try
+            {
+                var normalizedHeatNos =
+                    (heatNos ?? new List<string>())
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Select(x => x.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                if (!normalizedHeatNos.Any())
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Please enter at least one Heat No.",
+                        duplicates = new List<string>()
+                    });
+                }
+
+                // Edit View posts the exact existing chemistry IDs currently on screen.
+                // Excluding these prevents every unchanged Heat from duplicating itself.
+                excludedIDs = (excludedIDs ?? new List<int>())
+                    .Where(x => x > 0)
+                    .Distinct()
+                    .ToList();
+
+                var duplicates =
+                    repo.GetDuplicateHeatNosExcludingIDs(
+                        normalizedHeatNos,
+                        excludedIDs
+                    ) ?? new List<string>();
+
+                return Json(new
+                {
+                    success = true,
+                    duplicates = duplicates
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Unable to validate Heat No: " + ex.Message,
+                    duplicates = new List<string>()
+                });
+            }
+        }
+
+
+        private ActionResult BilletSaveError(
+            string message,
+            bool isEdit,
+            int id)
+        {
+            TempData["ErrorMessage"] = message;
+
+            return RedirectToAction(
+                "AddBillet",
+                isEdit ? new { id = id } : null
+            );
+        }
+
+
+        private void CalculateBilletWeight(BilletBoardBLL data)
+        {
+            decimal billetLength = 0m;
+            decimal.TryParse(data.BilletLength, out billetLength);
+
+            decimal billetWeight = 0m;
+
+            if (!string.IsNullOrWhiteSpace(data.CrossSection))
+            {
+                string[] parts = data.CrossSection
+                    .Replace(" ", string.Empty)
+                    .ToLowerInvariant()
+                    .Split('x');
+
+                int width;
+                int height;
+
+                if (
+                    parts.Length == 2 &&
+                    int.TryParse(parts[0], out width) &&
+                    int.TryParse(parts[1], out height) &&
+                    width == 150 &&
+                    height == 150
+                )
+                {
+                    billetWeight = 175m * billetLength / 1000m;
+                }
+            }
+
+            data.BilletWeight = billetWeight;
+        }
+
+
+        private BilletBoardBLL CreateBilletHeatRow(
+            BilletBoardBLL source,
+            string heatNo,
+            string currentUser,
+            DateTime now)
+        {
+            return new BilletBoardBLL
+            {
+                HeatNo = heatNo,
+                Date = source.Date,
+                BilletBoarding = source.BilletBoarding,
+                PlantName = source.PlantName,
+                Shift = source.Shift,
+                ProductSpecs = source.ProductSpecs,
+                BilletLength = source.BilletLength,
+                CrossSection = source.CrossSection,
+                BilletWeight = source.BilletWeight,
+                SteelGrade = source.SteelGrade,
+                Size = source.Size,
+                Profile = source.Profile,
+                Remarks = source.Remarks,
+                StatusID = 1,
+                CreatedBy = currentUser,
+                CreatedDate = now
+            };
+        }
+
     }
 }

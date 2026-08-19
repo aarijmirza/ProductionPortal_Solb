@@ -609,25 +609,54 @@
             </div>
 
             <div class="col-md-4 text-right no-print">
-                @using (Html.BeginForm("CMDPerformance", "Executive", FormMethod.Get, new { @class = "form-inline justify-content-end" }))
-                {
-                    @*<input type="date"
-                           name="reportDate"
-                           value="@Model.ReportDate.ToString("yyyy-MM-dd")"
+                <form method="get"
+                      action="@Url.Action("CMDDailyReport")"
+                      class="form-inline justify-content-end">
+
+                    <input type="date"
+                           name="fromDate"
+                           value="@Model.FromDate.ToString("yyyy-MM-dd")"
                            class="form-control form-control-sm mr-2" />
 
-                    <button type="submit" class="btn btn-light btn-sm mr-2">Load</button>*@
-                    <button type="button" class="btn btn-light btn-sm" onclick="printCMDReport()">Print / Save PDF</button>
-                }
+                    <input type="date"
+                           name="toDate"
+                           value="@Model.ToDate.ToString("yyyy-MM-dd")"
+                           class="form-control form-control-sm mr-2" />
+
+                    <button type="submit"
+                            class="btn btn-light btn-sm mr-2">
+                        Load
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-light btn-sm"
+                            onclick="printCMDReport()">
+                        Print / Save PDF
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
     <div class="top-grid">
         @{
+            bool isSingleDay =
+                Model.FromDate.Date == Model.ToDate.Date;
+
             var cards = new[]
             {
-                new { Title = "Daily Production in Tons", Compare = "VS Yesterday", Data = Model.DailyProduction },
+                new
+                {
+                    Title = isSingleDay
+                        ? "Daily Production in Tons"
+                        : "Selected Period Production in Tons",
+
+                    Compare = isSingleDay
+                        ? "VS Yesterday"
+                        : "VS Previous Equal Period",
+
+                    Data = Model.DailyProduction
+                },
                 new { Title = "Production in Tons Month to Date", Compare = "VS Previous Month", Data = Model.MTDProduction },
                 new { Title = "Production in Tons Year to Date", Compare = "VS Previous Year", Data = Model.YTDProduction }
             };
@@ -678,21 +707,43 @@
             var dtd2 = dtd1 + d.DTDMechanical;
             var dtd3 = dtd2 + d.DTDElectrical;
 
+            var dtdTotal =
+                d.DTDUtilities +
+                d.DTDMechanical +
+                d.DTDElectrical +
+                d.DTDCranes;
+
             var mtd1 = d.MTDUtilities;
             var mtd2 = mtd1 + d.MTDMechanical;
             var mtd3 = mtd2 + d.MTDElectrical;
 
-            var dtdGradient = string.Format(
-                CultureInfo.InvariantCulture,
-                "conic-gradient(#0c4c58 0 {0}%, #accb8e {0}% {1}%, #f57c00 {1}% {2}%, #a696bf {2}% 100%)",
-                dtd1, dtd2, dtd3
-            );
+            var mtdTotal =
+                d.MTDUtilities +
+                d.MTDMechanical +
+                d.MTDElectrical +
+                d.MTDCranes;
 
-            var mtdGradient = string.Format(
-                CultureInfo.InvariantCulture,
-                "conic-gradient(#0c4c58 0 {0}%, #accb8e {0}% {1}%, #f57c00 {1}% {2}%, #a696bf {2}% 100%)",
-                mtd1, mtd2, mtd3
-            );
+            var dtdGradient =
+                dtdTotal > 0
+                    ? string.Format(
+                        CultureInfo.InvariantCulture,
+                        "conic-gradient(#0c4c58 0 {0}%, #accb8e {0}% {1}%, #f57c00 {1}% {2}%, #a696bf {2}% 100%)",
+                        dtd1,
+                        dtd2,
+                        dtd3
+                    )
+                    : "conic-gradient(#e9ecef 0 100%)";
+
+            var mtdGradient =
+                mtdTotal > 0
+                    ? string.Format(
+                        CultureInfo.InvariantCulture,
+                        "conic-gradient(#0c4c58 0 {0}%, #accb8e {0}% {1}%, #f57c00 {1}% {2}%, #a696bf {2}% 100%)",
+                        mtd1,
+                        mtd2,
+                        mtd3
+                    )
+                    : "conic-gradient(#e9ecef 0 100%)";
 
             <div class="pie-box">
                 <div class="red-head pie-title">@plant Downtime %</div>
@@ -838,13 +889,24 @@
         }
     </div>
 
-    <div class="bottom-title">Description of Top Delays on Date</div>
+    <div class="bottom-title">Description of Top 5 Delays on Date</div>
+
+    @{
+        var topFiveDelays =
+            (Model.TopDelays ?? new List<DAL.Models.CMDTopDelayVM>())
+                .OrderByDescending(x => x.TotalDuration)
+                .Take(5)
+                .ToList();
+    }
 
     <table class="delay-table">
         <thead>
             <tr>
-                <th>SHIFT</th>
-                <th>Total</th>
+                <th>#</th>
+                <th>Plant</th>
+                <th>Shift</th>
+                <th>Agency</th>
+                <th>Total (Min)</th>
                 <th>Delay Code</th>
                 <th>Equipment Code</th>
                 <th>Description</th>
@@ -853,12 +915,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (Model.TopDelays != null && Model.TopDelays.Any())
+            @if (topFiveDelays.Any())
             {
-                foreach (var item in Model.TopDelays)
+                int delayRank = 1;
+
+                foreach (var item in topFiveDelays)
                 {
                     <tr>
+                        <td>@delayRank</td>
+                        <td>@item.Plant</td>
                         <td>@item.Shift</td>
+                        <td>@item.AgencyName</td>
                         <td>@item.TotalDuration.ToString("N1")</td>
                         <td>@item.DelayCode</td>
                         <td>@item.EquipmentCode</td>
@@ -866,12 +933,16 @@
                         <td>@item.ReasonForOccurrence</td>
                         <td>@item.ActionTaken</td>
                     </tr>
+
+                    delayRank++;
                 }
             }
             else
             {
                 <tr>
-                    <td colspan="7">No delay records found for @Model.ReportDate.ToString("dd MMM yyyy").</td>
+                    <td colspan="10">
+                        No delay records found for selected date range.
+                    </td>
                 </tr>
             }
         </tbody>

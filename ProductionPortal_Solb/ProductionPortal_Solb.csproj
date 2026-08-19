@@ -568,7 +568,9 @@
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\MaintenanceController.cs" />
     <Compile Include="Controllers\MeltshopController.cs" />
+    <Compile Include="Controllers\RMMechanicalController.cs" />
     <Compile Include="Controllers\RMReportsController.cs" />
+    <Compile Include="Controllers\SMPDayWiseProductionController.cs" />
     <Compile Include="Controllers\TargetController.cs" />
     <Compile Include="Controllers\SMPReportsController.cs" />
     <Compile Include="Controllers\QualityController.cs" />
@@ -2612,6 +2614,9 @@
     <Content Include="Views\CCMProduction\CCM_GetAllPdf_Template_NoLinq.cshtml" />
     <Content Include="Templates\MTCTemplate.xlsx" />
     <Content Include="Views\Consumption\list.cshtml" />
+    <Content Include="Views\Reporting\UtilityDailyReport - Copy.cshtml" />
+    <Content Include="Views\SMPDayWiseProduction\Index.cshtml" />
+    <Content Include="Views\SMPDayWiseProduction\Details.cshtml" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
