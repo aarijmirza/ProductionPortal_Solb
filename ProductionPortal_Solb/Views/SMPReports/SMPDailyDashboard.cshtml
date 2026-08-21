@@ -258,7 +258,7 @@
             display: block;
             margin-bottom: 2px;
             color: var(--text);
-            font-size: 15px;
+            font-size: 12px;
             font-weight: 900;
         }
 
@@ -1218,8 +1218,8 @@
                 </div>
 
                 <div class="header-title">
-                    <h1>SMP Dashboard</h1>
-                    <p>Steel Making Plant • Production / Utilities / Reliability</p>
+                    <h1>Steel Making Plant Dashboard</h1>
+                    <p>Production / Utilities / Reliability</p>
                 </div>
 
                 <div class="header-meta">
@@ -1352,34 +1352,34 @@
                             <tbody>
                                 <tr>
                                     <td>Actual</td>
-                                    <td>@m.DailyActual.ToString("N1")</td>
-                                    <td>@m.MTDActual.ToString("N1")</td>
-                                    <td>@m.YTDActual.ToString("N1")</td>
+                                    <td>@m.DailyActual.ToString("N0")</td>
+                                    <td>@m.MTDActual.ToString("N0")</td>
+                                    <td>@m.YTDActual.ToString("N0")</td>
                                 </tr>
                                 <tr>
                                     <td>Target</td>
-                                    <td>@m.DailyTarget.ToString("N1")</td>
-                                    <td>@m.MTDTarget.ToString("N1")</td>
-                                    <td>@m.YTDTarget.ToString("N1")</td>
+                                    <td>@m.DailyTarget.ToString("N0")</td>
+                                    <td>@m.MTDTarget.ToString("N0")</td>
+                                    <td>@m.YTDTarget.ToString("N0")</td>
                                 </tr>
                                 <tr>
                                     <td>Variance</td>
                                     <td>
                                         <span class="variance-value @(dailyVariance > 0 ? "up" : dailyVariance < 0 ? "down" : "flat")">
                                             <span class="variance-arrow" aria-hidden="true"></span>
-                                            @dailyVariance.ToString("+#,##0.0;-#,##0.0;0.0")
+                                            @dailyVariance.ToString("+#,##0;-#,##0;0")
                                         </span>
                                     </td>
                                     <td>
                                         <span class="variance-value @(mtdVariance > 0 ? "up" : mtdVariance < 0 ? "down" : "flat")">
                                             <span class="variance-arrow" aria-hidden="true"></span>
-                                            @mtdVariance.ToString("+#,##0.0;-#,##0.0;0.0")
+                                            @mtdVariance.ToString("+#,##0;-#,##0;0")
                                         </span>
                                     </td>
                                     <td>
                                         <span class="variance-value @(ytdVariance > 0 ? "up" : ytdVariance < 0 ? "down" : "flat")">
                                             <span class="variance-arrow" aria-hidden="true"></span>
-                                            @ytdVariance.ToString("+#,##0.0;-#,##0.0;0.0")
+                                            @ytdVariance.ToString("+#,##0;-#,##0;0")
                                         </span>
                                     </td>
                                 </tr>

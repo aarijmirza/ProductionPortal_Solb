@@ -20,220 +20,6 @@
         ? Model.Delays
         : new List<DAL.Models.PlantDelayBLL>();
 
-    /*
-     * ============================================================
-     * SHIFT / SR. NO. ORDER
-     *
-     * Normal 8-hour shift cycle starts at 07:00:
-     *
-     * Morning : 07:00 - 14:59
-     * Evening : 15:00 - 22:59
-     * Night   : 23:00 - 06:59
-     *
-     * Therefore 00:00 - 06:59 belongs to the previous
-     * operational day's Night shift.
-     * ============================================================
-     */
-
-    Func<string, int> ShiftOrder = shiftName =>
-    {
-        string shift =
-            (shiftName ?? "")
-                .Trim()
-                .ToLowerInvariant();
-
-        if (shift == "morning")
-            return 1;
-
-        if (shift == "evening" || shift == "afternoon")
-            return 2;
-
-        if (shift == "night")
-            return 3;
-
-        if (shift == "long morning")
-            return 4;
-
-        if (shift == "long night")
-            return 5;
-
-        return 99;
-    };
-
-
-    Func<object, TimeSpan?> ParseShiftTime = value =>
-    {
-        if (value == null)
-            return null;
-
-        TimeSpan parsed;
-
-        if (
-            TimeSpan.TryParse(
-                Convert.ToString(value),
-                out parsed
-            )
-        )
-        {
-            return parsed;
-        }
-
-        return null;
-    };
-
-
-    Func<object, string> GetDelayShift = startTime =>
-    {
-        TimeSpan? time =
-            ParseShiftTime(startTime);
-
-        if (!time.HasValue)
-            return "";
-
-        TimeSpan value =
-            time.Value;
-
-        // Morning: 07:00 - 14:59
-        if (
-            value >= new TimeSpan(7, 0, 0) &&
-            value < new TimeSpan(15, 0, 0)
-        )
-        {
-            return "Morning";
-        }
-
-        // Evening: 15:00 - 22:59
-        if (
-            value >= new TimeSpan(15, 0, 0) &&
-            value < new TimeSpan(23, 0, 0)
-        )
-        {
-            return "Evening";
-        }
-
-        // Night: 23:00 - 06:59
-        return "Night";
-    };
-
-
-    Func<DAL.Models.PlantDelayBLL, DateTime> GetDelayOperationalDate =
-        item =>
-        {
-            DateTime date =
-                item != null &&
-                item.Date.HasValue
-                    ? item.Date.Value.Date
-                    : DateTime.MinValue;
-
-            TimeSpan? start =
-                item != null
-                    ? ParseShiftTime(item.StartTime)
-                    : null;
-
-            /*
-             * 00:00 - 06:59 belongs to the previous
-             * operational day's Night shift.
-             */
-            if (
-                start.HasValue &&
-                start.Value < new TimeSpan(7, 0, 0)
-            )
-            {
-                date =
-                    date.AddDays(-1);
-            }
-
-            return date;
-        };
-
-
-    Func<object, int> DelayTimeOrder = value =>
-    {
-        TimeSpan? time =
-            ParseShiftTime(value);
-
-        if (!time.HasValue)
-            return int.MaxValue;
-
-        int minutes =
-            (int)time.Value.TotalMinutes;
-
-        int dayStartMinutes =
-            7 * 60;
-
-        /*
-         * 07:00 becomes minute 0.
-         * 06:59 becomes the end of the operational day.
-         */
-        return minutes >= dayStartMinutes
-            ? minutes - dayStartMinutes
-            : (24 * 60 - dayStartMinutes) + minutes;
-    };
-
-
-    /*
-     * Production rows:
-     * Date -> Morning -> Evening -> Night ->
-     * actual DischargingSequence -> HeatNo.
-     *
-     * Display Sr. No. will be generated separately as 1,2,3...
-     */
-    var productionRows =
-        data
-            .OrderBy(x =>
-                x.Date != DateTime.MinValue
-                    ? x.Date.Date
-                    : DateTime.MinValue
-            )
-            .ThenBy(x =>
-                ShiftOrder(
-                    x.Shift
-                )
-            )
-            .ThenBy(x =>
-                x.DischargingSequence
-            )
-            .ThenBy(x =>
-                x.HeatNo
-            )
-            .ToList();
-
-
-    /*
-     * Delay rows:
-     * Operational Date -> Morning -> Evening -> Night ->
-     * Start Time -> Finish Time.
-     */
-    var orderedDelays =
-        delays
-            /*
-             * IMPORTANT:
-             * Shift order has highest priority.
-             * Morning delays will ALWAYS appear first,
-             * followed by Evening, then Night.
-             */
-            .OrderBy(x =>
-                ShiftOrder(
-                    GetDelayShift(
-                        x.StartTime
-                    )
-                )
-            )
-            .ThenBy(x =>
-                GetDelayOperationalDate(x)
-            )
-            .ThenBy(x =>
-                DelayTimeOrder(
-                    x.StartTime
-                )
-            )
-            .ThenBy(x =>
-                DelayTimeOrder(
-                    x.EndTime
-                )
-            )
-            .ToList();
-
     decimal totalDischarge = data.Sum(x => x.TotalBillet ?? 0);
     decimal totalRolled = data.Sum(x => x.TotalBillet ?? 0);
 
@@ -313,11 +99,11 @@
             .Distinct())
         : "-";
 
-    var heatLabels = productionRows.Select(x => x.HeatNo ?? "").ToList();
-    var billetRolledData = productionRows.Select(x => x.TotalBillet ?? 0).ToList();
-    var billetWeightData = productionRows.Select(x => x.TotalWeight ?? 0).ToList();
-    var finishedWeightData = productionRows.Select(x => x.TheoriticalWeight ?? 0).ToList();
-    var bundleData = productionRows.Select(x => x.TotalBundleProduced ?? 0).ToList();
+    var heatLabels = data.Select(x => x.HeatNo ?? "").ToList();
+    var billetRolledData = data.Select(x => x.TotalBillet ?? 0).ToList();
+    var billetWeightData = data.Select(x => x.TotalWeight ?? 0).ToList();
+    var finishedWeightData = data.Select(x => x.TheoriticalWeight ?? 0).ToList();
+    var bundleData = data.Select(x => x.TotalBundleProduced ?? 0).ToList();
 
     // Daily production chart data
     var dailyProductionByDay = monthlyData
@@ -541,12 +327,14 @@
 
     decimal dailyProductionActual = totalFinishedProd;
 
-    // Controller already calculates the date-wise utility ratio:
-    // Total Fuel Consumption / Total Finished Product.
-    // Do not divide it again in the View.
+    decimal dailyFuelConsumption =
+        ViewBag.DailyFuelConsumption != null
+            ? Convert.ToDecimal(ViewBag.DailyFuelConsumption)
+            : 0;
+
     decimal fuelConsumptionActual =
-        ViewBag.FuelConsumptionActual != null
-            ? Convert.ToDecimal(ViewBag.FuelConsumptionActual)
+        totalFinishedProd > 0
+            ? dailyFuelConsumption / totalFinishedProd
             : 0;
 
     decimal fuelConsumptionTarget =
@@ -583,592 +371,232 @@
         : 0;
 
     Func<decimal, decimal, decimal> ConsumptionPerformance = (target, actual) =>
-    {
-        if (target <= 0 || actual <= 0) return 0;
-        decimal value = (target / actual) * 100;
-        if (value < 0) value = 0;
-        if (value > 100) value = 100;
-        return Math.Round(value, 2);
-    };
+        {
+            if (target <= 0 || actual <= 0) return 0;
+            decimal value = (target / actual) * 100;
+            if (value < 0) value = 0;
+            if (value > 100) value = 100;
+            return Math.Round(value, 2);
+        };
 
     Func<string, string> NormalizeAgencyCode = agency =>
     {
         if (string.IsNullOrWhiteSpace(agency))
             return "OTH";
 
-        string raw =
-            agency.Trim();
+        string value = agency
+            .Trim()
+            .Replace("/", "")
+            .Replace("\\", "")
+            .Replace(" ", "")
+            .Replace("-", "")
+            .Replace("_", "")
+            .ToUpperInvariant();
 
-        string value =
-            raw
-                .Replace("/", "")
-                .Replace("\\", "")
-                .Replace(" ", "")
-                .Replace("-", "")
-                .Replace("_", "")
-                .Replace(".", "")
-                .Replace("&", "")
-                .Replace("(", "")
-                .Replace(")", "")
-                .ToUpperInvariant();
-
-        /*
-         * Maintenance Down Day must always display as code D.
-         * Accept old DB values D / DD / MD and normalize all to D.
-         */
-        if (
-            value == "D" ||
-            value == "DD" ||
-            value == "MD"
-        )
-        {
-            return "D";
-        }
-
-        /*
-         * If database already stores the Agency Code,
-         * keep it exactly as a standard code.
-         */
         switch (value)
         {
-            case "GP":
-            case "QA":
-            case "D":
-            case "PRD":
-            case "RS":
-            case "EL":
-            case "ME":
-            case "CR":
-            case "DP":
-            case "UT":
-            case "SC":
-            case "PF":
-            case "NB":
-            case "AS":
-            case "OTH":
-                return value;
-        }
+            case "GUIDE":
+            case "GUIDEPASS":
+            case "GUIDEPASSCHANGE":
+                return "GP";
 
+            case "QUALITY":
+            case "QUALITYMAINTENANCE":
+                return "QA";
 
-        /*
-         * Robust text mapping.
-         * This also handles values such as:
-         * "Maintenance Down Day (MD)"
-         * "Guide / Pass Change"
-         * "Electrical Maintenance"
-         */
-        if (
-            value.Contains("GUIDE") ||
-            value.Contains("PASSCHANGE")
-        )
-            return "GP";
+            case "MAINTENANCEDOWNDAY":
+            case "DOWNDAY":
+                return "MD";
 
-        if (
-            value.Contains("QUALITY")
-        )
-            return "QA";
+            case "PRODUCTION":
+                return "PRD";
 
-        if (
-            value.Contains("MAINTENANCE") &&
-            value.Contains("DOWNDAY")
-        )
-            return "D";
+            case "ROLLSHOP":
+                return "RS";
 
-        if (
-            value == "DOWNDAY" ||
-            value.Contains("MAINTENANCEDOWN")
-        )
-            return "D";
+            case "ELECTRICAL":
+                return "EL";
 
-        /*
-         * DB may contain AgencyName simply as "Maintenance".
-         * In both delay charts this must display as Agency Code D.
-         */
-        if (
-            value == "MAINTENANCE" ||
-            value == "MAINT" ||
-            value == "MAINTA" ||
-            value.StartsWith("MAINT")
-        )
-            return "D";
+            case "MECHANICAL":
+                return "ME";
 
-        if (
-            value.Contains("PRODUCTION")
-        )
-            return "PRD";
+            case "CRANE":
+                return "CR";
 
-        if (
-            value.Contains("ROLLSHOP")
-        )
-            return "RS";
+            case "DISPATCH":
+                return "DP";
 
-        if (
-            value.Contains("ELECTRICAL")
-        )
-            return "EL";
+            case "UTILITY":
+                return "UT";
 
-        if (
-            value.Contains("MECHANICAL")
-        )
-            return "ME";
+            case "SIZECHANGE":
+                return "SC";
 
-        if (
-            value.Contains("CRANE")
-        )
-            return "CR";
+            case "POWERFAILURE":
+                return "PF";
 
-        if (
-            value.Contains("DISPATCH")
-        )
-            return "DP";
+            case "NOBILLET":
+                return "NB";
 
-        if (
-            value.Contains("UTILITY") ||
-            value.Contains("UTILITIES")
-        )
-            return "UT";
-
-        if (
-            value.Contains("SIZECHANGE")
-        )
-            return "SC";
-
-        if (
-            value.Contains("POWERFAILURE")
-        )
-            return "PF";
-
-        if (
-            value.Contains("NOBILLET")
-        )
-            return "NB";
-
-        if (
-            value.Contains("ANNUALSHUTDOWN")
-        )
-            return "AS";
-
-        if (
-            value == "OTHER" ||
-            value == "OTHERS" ||
-            value.Contains("OTHERDELAY")
-        )
-            return "OTH";
-
-
-        /*
-         * Non-standard agencies remain separate.
-         * Use a compact uppercase code-like key instead of full name.
-         */
-        if (value.Length <= 6)
-            return value;
-
-        return value.Substring(0, 6);
-    };
-
-    Func<string, string> GetAgencyDisplayName = agency =>
-    {
-        if (string.IsNullOrWhiteSpace(agency))
-            return "Others";
-
-        string code =
-            NormalizeAgencyCode(agency);
-
-        switch (code)
-        {
-            case "GP":
-                return "Guide / Pass Change";
-
-            case "QA":
-                return "Quality";
-
-            case "D":
-                return "Maintenance Down Day";
-
-            case "PRD":
-                return "Production";
-
-            case "RS":
-                return "Roll Shop";
-
-            case "EL":
-                return "Electrical";
-
-            case "ME":
-                return "Mechanical";
-
-            case "CR":
-                return "Crane";
-
-            case "DP":
-                return "Dispatch";
-
-            case "UT":
-                return "Utility";
-
-            case "SC":
-                return "Size Change";
-
-            case "PF":
-                return "Power Failure";
-
-            case "NB":
-                return "No Billet";
-
-            case "AS":
-                return "Annual Shutdown";
+            case "ANNUALSHUTDOWN":
+                return "AS";
 
             default:
-                return agency.Trim();
+                return "OTH";
         }
     };
 
-
-    Func<string, string> GetAgencyChartCode = agency =>
-    {
-        /*
-         * Both delay charts must use Agency Code only.
-         * Standard examples:
-         * GP, QA, D, PRD, RS, EL, ME, CR, DP, UT, SC, PF, NB, AS.
-         */
-        return NormalizeAgencyCode(
-            agency
-        );
-    };
-
-    Func<string, decimal> GetAgencyTargetPercentage = agency =>
-    {
-        string code =
-            NormalizeAgencyCode(agency);
-
-        switch (code)
-        {
-            case "GP":
-                return rollingMillTarget.GuidePassTarget;
-
-            case "QA":
-                return rollingMillTarget.QualityTarget;
-
-            case "D":
-                return rollingMillTarget.DownDayTarget;
-
-            case "PRD":
-                return rollingMillTarget.ProductionTarget;
-
-            case "RS":
-                return rollingMillTarget.RollShopTarget;
-
-            case "EL":
-                return rollingMillTarget.ElectricalTarget;
-
-            case "ME":
-                return rollingMillTarget.MechanicalTarget;
-
-            case "CR":
-                return rollingMillTarget.CraneTarget;
-
-            case "DP":
-                return rollingMillTarget.DispatchTarget;
-
-            case "UT":
-                return rollingMillTarget.UtilityTarget;
-
-            case "SC":
-                return rollingMillTarget.SizeChangeTarget;
-
-            case "PF":
-                return rollingMillTarget.PowerFailureTarget;
-
-            case "NB":
-                return rollingMillTarget.NoBilletTarget;
-
-            case "AS":
-                return rollingMillTarget.AnnualShutdownTarget;
-
-            default:
-                /*
-                 * Every separately displayed "other" agency uses the
-                 * configured Others target.
-                 */
-                return rollingMillTarget.OthersTarget;
-        }
-    };
-
-
-    /*
-     * ============================================================
-     * DELAY CHART AVAILABLE TIME
-     *
-     * Total Time     = 1440 minutes
-     * Available Time = 1440 - Scheduled Delay
-     * ============================================================
-     */
-    decimal delayChartTotalTimeMinutes =
-        1440m;
-
+    // Available operating time:
+    // Total shift minutes minus scheduled/planned delay minutes.
     decimal availableOperatingMinutes =
-        delayChartTotalTimeMinutes
-        -
-        plannedDowntime;
+        totalTimeMins - plannedDowntime;
 
     if (availableOperatingMinutes < 0)
     {
         availableOperatingMinutes = 0;
     }
 
-    /*
-     * Scheduled + Unscheduled delays are grouped by the REAL agency.
-     *
-     * Known agencies retain their standard code.
-     * Any agency that previously fell under "Others" now gets its own
-     * independent bar.
-     */
+    // Scheduled and Unscheduled delays agency-wise group hongi.
+    // Scheduled + Unscheduled delays are included agency-wise.
     var actualDowntimeLookup = delays
         .Where(x =>
             (x.TotalDuration ?? 0) > 0
         )
-        .GroupBy(x =>
-            GetAgencyChartCode(
-                x.AgencyName
-            ),
-            StringComparer.OrdinalIgnoreCase
-        )
+        .GroupBy(x => NormalizeAgencyCode(x.AgencyName))
         .Select(g => new
         {
             Code = g.Key,
-
-            Name = GetAgencyDisplayName(
-                g.First().AgencyName
-            ),
-
-            SourceAgency =
-                g.First().AgencyName,
-
-            TargetPercentage =
-                GetAgencyTargetPercentage(
-                    g.First().AgencyName
-                ),
-
-            ActualMinutes =
-                g.Sum(
-                    x =>
-                        Convert.ToDecimal(
-                            x.TotalDuration ?? 0
-                        )
-                )
+            ActualMinutes = g.Sum(
+                x => Convert.ToDecimal(x.TotalDuration ?? 0)
+            )
         })
-        .OrderBy(x =>
-        {
-            string code =
-                NormalizeAgencyCode(
-                    x.SourceAgency
-                );
-
-            switch (code)
-            {
-                case "GP": return 1;
-                case "QA": return 2;
-                case "D": return 3;
-                case "PRD": return 4;
-                case "RS": return 5;
-                case "EL": return 6;
-                case "ME": return 7;
-                case "CR": return 8;
-                case "DP": return 9;
-                case "UT": return 10;
-                case "SC": return 11;
-                case "PF": return 12;
-                case "NB": return 13;
-                case "AS": return 14;
-                default: return 100;
-            }
-        })
-        .ThenBy(x => x.Name)
         .ToList();
 
 
-    var downtimeAgencyLabels =
-        actualDowntimeLookup
-            .Select(x => x.Code)
-            .ToList();
 
+    // Table values are already target percentages.
+    var downtimeTargets = new[]
+    {
+        new { Code = "GP",  Name = "Guide / Pass Change", TargetPercentage = rollingMillTarget.GuidePassTarget },
+        new { Code = "QA",  Name = "Quality",             TargetPercentage = rollingMillTarget.QualityTarget },
+        new { Code = "MD",  Name = "Down Day",            TargetPercentage = rollingMillTarget.DownDayTarget },
+        new { Code = "PRD", Name = "Production",          TargetPercentage = rollingMillTarget.ProductionTarget },
+        new { Code = "RS",  Name = "Roll Shop",           TargetPercentage = rollingMillTarget.RollShopTarget },
+        new { Code = "EL",  Name = "Electrical",          TargetPercentage = rollingMillTarget.ElectricalTarget },
+        new { Code = "ME",  Name = "Mechanical",          TargetPercentage = rollingMillTarget.MechanicalTarget },
+        new { Code = "CR",  Name = "Crane",               TargetPercentage = rollingMillTarget.CraneTarget },
+        new { Code = "DP",  Name = "Dispatch",            TargetPercentage = rollingMillTarget.DispatchTarget },
+        new { Code = "UT",  Name = "Utility",             TargetPercentage = rollingMillTarget.UtilityTarget },
+        new { Code = "SC",  Name = "Size Change",         TargetPercentage = rollingMillTarget.SizeChangeTarget },
+        new { Code = "PF",  Name = "Power Failure",       TargetPercentage = rollingMillTarget.PowerFailureTarget },
+        new { Code = "NB",  Name = "No Billet",           TargetPercentage = rollingMillTarget.NoBilletTarget },
+        new { Code = "AS",  Name = "Annual Shutdown",     TargetPercentage = rollingMillTarget.AnnualShutdownTarget },
+        new { Code = "OTH", Name = "Others",              TargetPercentage = rollingMillTarget.OthersTarget }
+    }.ToList();
 
-    var downtimeAgencyNames =
-        actualDowntimeLookup
-            .Select(x => x.Name)
-            .ToList();
+    // Agencies with Scheduled or Unscheduled delay will be shown.
+    var availableDowntimeTargets = downtimeTargets
+        .Where(x =>
+            actualDowntimeLookup.Any(a =>
+                string.Equals(
+                    a.Code,
+                    x.Code,
+                    StringComparison.OrdinalIgnoreCase
+                ) &&
+                a.ActualMinutes > 0
+            )
+        )
+        .ToList();
 
+    var downtimeAgencyLabels = availableDowntimeTargets
+        .Select(x => x.Code)
+        .ToList();
 
-    var downtimeAgencyTargetData =
-        actualDowntimeLookup
-            .Select(x =>
-                Math.Round(
-                    x.TargetPercentage,
+    var downtimeAgencyNames = availableDowntimeTargets
+        .Select(x => x.Name)
+        .ToList();
+
+    // Target directly percentage table se.
+    var downtimeAgencyTargetData = availableDowntimeTargets
+        .Select(x => Math.Round(x.TargetPercentage, 2))
+        .ToList();
+
+    // Actual percentage =
+    // Agency total delay minutes / total selected period minutes * 100.
+    // Both Scheduled and Unscheduled delays are included.
+    var downtimeAgencyActualData = availableDowntimeTargets
+        .Select(x =>
+        {
+            decimal actualMinutes = actualDowntimeLookup
+                .Where(a =>
+                    string.Equals(
+                        a.Code,
+                        x.Code,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                .Select(a => a.ActualMinutes)
+                .FirstOrDefault();
+
+            return totalTimeMins > 0
+                ? Math.Round(
+                    (actualMinutes / totalTimeMins) * 100,
                     2
                 )
-            )
-            .ToList();
+                : 0;
+        })
+        .ToList();
 
-
-    /*
-     * Delay Agency Percentage:
-     *
-     * Agency Delay / Available Time * 100
-     *
-     * Available Time = 1440 - Scheduled Delay
-     */
-    var downtimeAgencyActualData =
-        actualDowntimeLookup
-            .Select(x =>
-                availableOperatingMinutes > 0
-                    ? Math.Round(
-                        (
-                            x.ActualMinutes
-                            /
-                            availableOperatingMinutes
-                        ) * 100,
-                        2
+    var downtimeAgencyActualMinutes = availableDowntimeTargets
+        .Select(x =>
+            actualDowntimeLookup
+                .Where(a =>
+                    string.Equals(
+                        a.Code,
+                        x.Code,
+                        StringComparison.OrdinalIgnoreCase
                     )
-                    : 0
-            )
-            .ToList();
-
-
-    var downtimeAgencyActualMinutes =
-        actualDowntimeLookup
-            .Select(x =>
-                x.ActualMinutes
-            )
-            .ToList();
-
-    /*
-     * Monthly accumulated delays grouped by Agency Code.
-     * This keeps the right chart aligned with the left chart.
-     */
-    var monthlyDelayAgencyData = delays
-        .Where(x =>
-            (x.TotalDuration ?? 0) > 0
+                )
+                .Select(a => a.ActualMinutes)
+                .FirstOrDefault()
         )
-        .GroupBy(
-            x =>
-                GetAgencyChartCode(
-                    x.AgencyName
-                ),
-            StringComparer.OrdinalIgnoreCase
+        .ToList();
+
+    // Monthly accumulated delays grouped agency-wise.
+    var monthlyDelayAgencyData = delays
+        .Where(x => (x.TotalDuration ?? 0) > 0)
+        .GroupBy(x =>
+            string.IsNullOrWhiteSpace(x.AgencyName)
+                ? "Others"
+                : x.AgencyName.Trim()
         )
         .Select(g => new
         {
-            Code =
-                g.Key,
-
-            Agency =
-                GetAgencyDisplayName(
-                    g.First().AgencyName
-                ),
-
-            SourceAgency =
-                g.First().AgencyName,
-
-            TargetPercentage =
-                GetAgencyTargetPercentage(
-                    g.First().AgencyName
-                ),
-
-            TotalMinutes =
-                g.Sum(
-                    x =>
-                        Convert.ToDecimal(
-                            x.TotalDuration ?? 0
-                        )
+            Agency = g.Key,
+            TotalMinutes = g.Sum(
+                x => Convert.ToDecimal(
+                    x.TotalDuration ?? 0
                 )
+            )
         })
-        .OrderBy(x =>
-        {
-            switch (x.Code)
-            {
-                case "GP": return 1;
-                case "QA": return 2;
-                case "D": return 3;
-                case "PRD": return 4;
-                case "RS": return 5;
-                case "EL": return 6;
-                case "ME": return 7;
-                case "CR": return 8;
-                case "DP": return 9;
-                case "UT": return 10;
-                case "SC": return 11;
-                case "PF": return 12;
-                case "NB": return 13;
-                case "AS": return 14;
-                case "OTH": return 15;
-                default: return 100;
-            }
-        })
-        .ThenBy(x =>
-            x.Code
-        )
+        .OrderByDescending(x => x.TotalMinutes)
         .ToList();
 
-    //var monthlyDelayAgencyLabels =
-    //    monthlyDelayAgencyData
-    //        .Select(x => x.Code)
-    //        .ToList();
+    decimal totalMonthlyDelayMinutes =
+        monthlyDelayAgencyData.Sum(x => x.TotalMinutes);
 
-    //var monthlyDelayAgencyTargetData =
-    //    monthlyDelayAgencyData
-    //        .Select(x =>
-    //            Math.Round(
-    //                x.TargetPercentage,
-    //                2
-    //            )
-    //        )
-    //        .ToList();
-    //decimal totalMonthlyDelayMinutes =
-    //    monthlyDelayAgencyData.Sum(x => x.TotalMinutes);
-
-    /*
-     * Use Agency Code in Monthly Accumulated Delay chart as well,
-     * so both delay charts use the same x-axis labels.
-     *
-     * Known examples:
-     * GP, QA, D, PRD, RS, EL, ME, CR, DP, UT, SC, PF, NB, AS
-     *
-     * Any non-standard agency stays separate and uses its own
-     * normalized code/key instead of being merged into OTH.
-     */
     var monthlyDelayAgencyLabels = monthlyDelayAgencyData
-        .Select(x =>
-            GetAgencyChartCode(
-                x.SourceAgency
-            )
-        )
+        .Select(x => x.Agency)
         .ToList();
 
-    var monthlyDelayAgencyTargetData = monthlyDelayAgencyData
-        .Select(x =>
-            Math.Round(
-                x.TargetPercentage,
-                2
-            )
-        )
-        .ToList();
-
-    /*
-     * Monthly delay agency percentage uses the same calculation:
-     *
-     * Agency Delay / Available Time * 100
-     *
-     * Available Time = 1440 - Scheduled Delay
-     */
+    // Correct accumulated percentage:
+    // Agency delay minutes / total selected period minutes * 100.
     var monthlyDelayAgencyPercentages = monthlyDelayAgencyData
         .Select(x =>
-            availableOperatingMinutes > 0
+            totalTimeMins > 0
                 ? Math.Round(
-                    (
-                        x.TotalMinutes
-                        /
-                        availableOperatingMinutes
-                    ) * 100,
+                    (x.TotalMinutes /
+                     totalTimeMins) * 100,
                     2
                 )
                 : 0
@@ -1319,10 +747,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-
-<!-- PDF DOWNLOAD LIBRARIES -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
     :root {
@@ -1967,21 +1391,6 @@
         }
     }
 
-    /* PDF export helper */
-    .pdf-exporting {
-        background: #ffffff !important;
-    }
-
-        .pdf-exporting .no-print {
-            display: none !important;
-        }
-
-        .pdf-exporting .section-card,
-        .pdf-exporting .kpi-card,
-        .pdf-exporting .summary-box {
-            break-inside: avoid;
-        }
-
     @@media print {
         .no-print {
             display: none !important;
@@ -2042,7 +1451,7 @@
     </div>
 </div>
 
-<div class="xp-contentbar" id="dashboardPdfArea">
+<div class="xp-contentbar">
 
     <div class="dashboard-header">
         <div class="row align-items-center">
@@ -2060,13 +1469,7 @@
                 </small>
             </div>
             <div class="col-md-4 text-right no-print">
-                <button type="button"
-                        id="btnDownloadPdf"
-                        class="btn btn-light btn-sm"
-                        onclick="downloadDashboardPdf()">
-                    <i class="fa fa-file-pdf-o"></i>
-                    Download PDF
-                </button>
+                <button class="btn btn-light btn-sm" onclick="window.print()">Print / Save PDF</button>
             </div>
         </div>
     </div>
@@ -2513,9 +1916,9 @@
         <div class="col-md-6">
             <div class="card section-card">
                 <div class="card-header">
-                    Monthly Accumulated Delay 
+                    Monthly Accumulated Delay Target vs Actual
                     <small class="text-muted">
-                        @*Available Time = 1440 - Scheduled Delay*@
+                        Scheduled + Unscheduled delays by agency
                     </small>
                 </div>
 
@@ -2572,7 +1975,6 @@
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Shift</th>
                             <th>Start</th>
                             <th>Finish</th>
                             <th>Total Min</th>
@@ -2585,19 +1987,15 @@
                     </thead>
 
                     <tbody>
-                        @if (orderedDelays.Any())
+                        @if (delays.Any())
                         {
-                            foreach (var item in orderedDelays)
+                            foreach (var item in delays)
                             {
                                 <tr>
                                     <td>
                                         @(item.Date.HasValue
                                         ? item.Date.Value.ToString("dd/MM/yyyy", gregorian)
                                         : "-")
-                                    </td>
-
-                                    <td>
-                                        @GetDelayShift(item.StartTime)
                                     </td>
 
                                     <td>@item.StartTime</td>
@@ -2620,7 +2018,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="10"
+                                <td colspan="9"
                                     class="text-center text-muted">
                                     No downtime found.
                                 </td>
@@ -2630,7 +2028,7 @@
 
                     <tfoot>
                         <tr class="font-weight-bold">
-                            <td colspan="4" class="text-right">
+                            <td colspan="3" class="text-right">
                                 Total
                             </td>
 
@@ -2659,7 +2057,7 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th>Sr. No.</th>
+                            <th>Seq.</th>
                             <th>Heat No</th>
                             <th>Grade</th>
                             <th>Size</th>
@@ -2678,11 +2076,9 @@
                     </thead>
 
                     <tbody>
-                        @if (productionRows != null && productionRows.Any())
+                        @if (data != null && data.Any())
                         {
-                            int srNo = 1;
-
-                            foreach (var item in productionRows)
+                            foreach (var item in data)
                             {
                                 decimal itemTotalWeight = item.TotalWeight ?? 0;
                                 decimal itemTheoriticalWeight =
@@ -2693,7 +2089,7 @@
                                     : 0;
 
                                 <tr>
-                                    <td>@srNo</td>
+                                    <td>@item.DischargingSequence</td>
                                     <td>@item.HeatNo</td>
                                     <td>@item.SteelGrade</td>
                                     <td>@item.Size</td>
@@ -2730,8 +2126,6 @@
                                         </span>
                                     </td>
                                 </tr>
-
-                                srNo++;
                             }
                         }
                         else
@@ -2768,242 +2162,6 @@
 
 
 </div>
-
-<script>
-    async function downloadDashboardPdf() {
-
-        var button =
-            document.getElementById("btnDownloadPdf");
-
-        var dashboard =
-            document.getElementById("dashboardPdfArea");
-
-        if (!dashboard) {
-            alert("Dashboard area not found.");
-            return;
-        }
-
-        if (
-            typeof html2canvas === "undefined" ||
-            typeof window.jspdf === "undefined"
-        ) {
-            alert("PDF library is not loaded.");
-            return;
-        }
-
-        var originalButtonHtml =
-            button ? button.innerHTML : "";
-
-        try {
-
-            if (button) {
-                button.disabled = true;
-                button.innerHTML =
-                    '<i class="fa fa-spinner fa-spin"></i> Generating PDF...';
-            }
-
-            /*
-             * Hide filter/action controls during PDF capture.
-             * Dashboard design/data/charts remain exactly as visible.
-             */
-            var hiddenElements =
-                dashboard.querySelectorAll(".no-print");
-
-            var previousDisplay = [];
-
-            hiddenElements.forEach(
-                function (element, index) {
-
-                    previousDisplay[index] =
-                        element.style.display;
-
-                    element.style.display =
-                        "none";
-                }
-            );
-
-            dashboard.classList.add(
-                "pdf-exporting"
-            );
-
-            /*
-             * Give Chart.js/canvas a moment to complete drawing.
-             */
-            await new Promise(
-                function (resolve) {
-                    setTimeout(
-                        resolve,
-                        300
-                    );
-                }
-            );
-
-            var canvas =
-                await html2canvas(
-                    dashboard,
-                    {
-                        scale: 2,
-                        useCORS: true,
-                        allowTaint: false,
-                        backgroundColor: "#ffffff",
-                        logging: false,
-                        scrollX: 0,
-                        scrollY: -window.scrollY,
-                        windowWidth:
-                            dashboard.scrollWidth
-                    }
-                );
-
-            dashboard.classList.remove(
-                "pdf-exporting"
-            );
-
-            hiddenElements.forEach(
-                function (element, index) {
-
-                    element.style.display =
-                        previousDisplay[index];
-                }
-            );
-
-            var imageData =
-                canvas.toDataURL(
-                    "image/jpeg",
-                    0.95
-                );
-
-            var jsPDF =
-                window.jspdf.jsPDF;
-
-            /*
-             * SINGLE PAGE PDF
-             * The PDF page size is created from the dashboard's
-             * actual aspect ratio, so nothing breaks between pages.
-             *
-             * We use a wide custom page for better readability.
-             */
-            var margin =
-                5;
-
-            var pdfWidth =
-                420; // mm
-
-            var usableWidth =
-                pdfWidth - (margin * 2);
-
-            var imageHeight =
-                (canvas.height * usableWidth)
-                / canvas.width;
-
-            var pdfHeight =
-                imageHeight + (margin * 2);
-
-            /*
-             * jsPDF custom format:
-             * one continuous page matching dashboard height.
-             */
-            var pdf =
-                new jsPDF(
-                    {
-                        orientation:
-                            pdfWidth >= pdfHeight
-                                ? "landscape"
-                                : "portrait",
-
-                        unit:
-                            "mm",
-
-                        format:
-                            [
-                                pdfWidth,
-                                pdfHeight
-                            ],
-
-                        compress:
-                            true
-                    }
-                );
-
-            pdf.addImage(
-                imageData,
-                "JPEG",
-                margin,
-                margin,
-                usableWidth,
-                imageHeight,
-                undefined,
-                "FAST"
-            );
-
-            var reportDate =
-                '@Convert.ToString(ViewBag.ReportDate)'
-                    .replace(
-                        /[^0-9A-Za-z_-]/g,
-                        "-"
-                    );
-
-            var plant =
-                '@Convert.ToString(ViewBag.ReportPlant ?? ViewBag.Plant)'
-                    .replace(
-                        /[^0-9A-Za-z_-]/g,
-                        "-"
-                    );
-
-            var fileName =
-                "Rolling_Mill_Dashboard_" +
-                (plant || "RM") +
-                "_" +
-                (reportDate || "Report") +
-                ".pdf";
-
-            pdf.save(
-                fileName
-            );
-        }
-        catch (error) {
-
-            console.error(
-                "PDF generation failed:",
-                error
-            );
-
-            alert(
-                "Unable to generate PDF. Please try again."
-            );
-        }
-        finally {
-
-            dashboard.classList.remove(
-                "pdf-exporting"
-            );
-
-            /*
-             * Safety restore in case capture failed midway.
-             */
-            var hiddenElements =
-                dashboard.querySelectorAll(".no-print");
-
-            hiddenElements.forEach(
-                function (element) {
-
-                    if (
-                        element.style.display ===
-                        "none"
-                    ) {
-                        element.style.display =
-                            "";
-                    }
-                }
-            );
-
-            if (button) {
-                button.disabled = false;
-                button.innerHTML =
-                    originalButtonHtml;
-            }
-        }
-    }
-</script>
 
 <script>
     $(document).ready(function () {
@@ -3056,13 +2214,6 @@
         var downtimeAgencyLabels = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyLabels));
         var downtimeAgencyNames = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyNames));
         var downtimeAgencyTargetData = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyTargetData));
-
-    var monthlyDelayAgencyTargetData =
-        @Html.Raw(
-            JsonConvert.SerializeObject(
-                monthlyDelayAgencyTargetData
-            )
-        );
         var downtimeAgencyActualData = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyActualData));
         var downtimeAgencyActualMinutes = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyActualMinutes));
 
@@ -3836,7 +2987,7 @@
                             label: "Actual (%)",
                             data: downtimeAgencyActualData,
                             backgroundColor: "#9ca3af",
-                            borderColor: "#9ca3af",
+                            borderColor: "#545b62",
                             borderWidth: 1,
                             borderRadius: 5,
                             barPercentage: 0.72,
@@ -3917,11 +3068,10 @@
                             grid: { display: false },
                             title: { display: true, text: "Agency Code" },
                             ticks: {
-                                //autoSkip: false,
-                                //maxRotation: 0,
-                                //minRotation: 0,
-                                //font: { weight: "bold" }
-                                display: false
+                                autoSkip: false,
+                                maxRotation: 0,
+                                minRotation: 0,
+                                font: { weight: "bold" }
                             }
                         },
                         y: {
@@ -3936,10 +3086,9 @@
                                 text: "Downtime Percentage (%)"
                             },
                             ticks: {
-                                display: false
-                                //callback: function (value) {
-                                //    return Number(value || 0).toFixed(1) + "%";
-                                //}
+                                callback: function (value) {
+                                    return Number(value || 0).toFixed(1) + "%";
+                                }
                             }
                         }
                     }
@@ -3956,21 +3105,21 @@
             if (!canvas) return;
 
             var labels =
-                monthlyDelayAgencyLabels &&
-                monthlyDelayAgencyLabels.length > 0
-                    ? monthlyDelayAgencyLabels
+                downtimeAgencyNames &&
+                downtimeAgencyNames.length > 0
+                    ? downtimeAgencyNames
                     : ["No Delay"];
 
             var targetValues =
-                monthlyDelayAgencyTargetData &&
-                monthlyDelayAgencyTargetData.length > 0
-                    ? monthlyDelayAgencyTargetData
+                downtimeAgencyTargetData &&
+                downtimeAgencyTargetData.length > 0
+                    ? downtimeAgencyTargetData
                     : [0];
 
             var actualValues =
-                monthlyDelayAgencyPercentages &&
-                monthlyDelayAgencyPercentages.length > 0
-                    ? monthlyDelayAgencyPercentages
+                downtimeAgencyActualData &&
+                downtimeAgencyActualData.length > 0
+                    ? downtimeAgencyActualData
                     : [0];
 
             var highestValue = Math.max.apply(
@@ -4055,11 +3204,6 @@
                                 display: false
                             },
 
-                            title: {
-                                display: true,
-                                text: "Agency Code"
-                            },
-
                             ticks: {
                                 color: "#374151",
                                 maxRotation: 35,
@@ -4105,24 +3249,22 @@
                             },
 
                             grid: {
-                                display: false
-                                //color:
-                                //    "rgba(107,114,128,0.12)"
+                                color:
+                                    "rgba(107,114,128,0.12)"
                             },
 
                             ticks: {
-                                display: false
-                                //maxTicksLimit: 6,
+                                maxTicksLimit: 6,
 
-                                //callback: function (value) {
-                                //    return Number(
-                                //        value || 0
-                                //    ).toFixed(
-                                //        axisMaximum <= 5
-                                //            ? 1
-                                //            : 0
-                                //    ) + "%";
-                                //}
+                                callback: function (value) {
+                                    return Number(
+                                        value || 0
+                                    ).toFixed(
+                                        axisMaximum <= 5
+                                            ? 1
+                                            : 0
+                                    ) + "%";
+                                }
                             }
                         }
                     },
@@ -4293,19 +3435,15 @@
                         },
                         y: {
                             beginAtZero: true,
-                            grid: {
-                                display: false
-                                /*color: "rgba(0,0,0,0.08)"*/
-                            },
+                            grid: { color: "rgba(0,0,0,0.08)" },
                             title: {
-                                display: false,
+                                display: true,
                                 text: "Daily Production (MT)"
                             },
                             ticks: {
-                                //callback: function (value) {
-                                //    return numberLabel(value);
-                                //}
-                                display: false
+                                callback: function (value) {
+                                    return numberLabel(value);
+                                }
                             }
                         }
                     }
@@ -4358,10 +3496,7 @@
                         y: {
                             beginAtZero: true,
                             title: { display: true, text: "Nos." },
-                            ticks: {
-                                //precision: 0
-                                display: false
-                            }
+                            ticks: { precision: 0 }
                         }
                     }
                 }
@@ -4455,18 +3590,16 @@
                             beginAtZero: true,
                             grace: "20%",
                             grid: {
-                                display: false
-                                /*color: "rgba(0,0,0,0.08)"*/
+                                color: "rgba(0,0,0,0.08)"
                             },
                             title: {
-                                display: false,
+                                display: true,
                                 text: "Finished Production (MT)"
                             },
                             ticks: {
-                                display: false
-                                //callback: function (value) {
-                                //    return numberLabel(value);
-                                //}
+                                callback: function (value) {
+                                    return numberLabel(value);
+                                }
                             }
                         }
                     }

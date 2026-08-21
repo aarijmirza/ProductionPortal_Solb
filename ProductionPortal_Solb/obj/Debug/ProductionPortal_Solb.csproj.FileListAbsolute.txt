@@ -1,5 +1,3 @@
-D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\ProductionPortal_Solb.csproj.AssemblyReference.cache
-D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\ProductionPortal_Solb.csproj.CoreCompileInputs.cache
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\Microsoft.DiaSymReader.Native.x86.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\Microsoft.DiaSymReader.Native.amd64.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ProductionPortal_Solb.dll.config
@@ -284,6 +282,8 @@ D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\Xamarin.Forms.Xaml.pd
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\Xamarin.Forms.Xaml.xml
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\System.Text.Json.xml
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\System.Formats.Asn1.xml
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\ProductionPortal_Solb.csproj.AssemblyReference.cache
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\ProductionPortal_Solb.csproj.CoreCompileInputs.cache
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\Producti.ECDD0488.Up2Date
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\ProductionPortal_Solb.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\ProductionPortal_Solb.pdb
