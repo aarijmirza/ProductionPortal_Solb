@@ -328,8 +328,8 @@
     decimal dailyProductionActual = totalFinishedProd;
 
     decimal dailyFuelConsumption =
-        ViewBag.DailyFuelConsumption != null
-            ? Convert.ToDecimal(ViewBag.DailyFuelConsumption)
+        ViewBag.TotalFuelConsumption != null
+            ? Convert.ToDecimal(ViewBag.TotalFuelConsumption)
             : 0;
 
     decimal fuelConsumptionActual =
@@ -743,10 +743,15 @@
     // Bundles / Coils Produced
     decimal bundlesCoilsProduced = totalBundles;
 
+    string pdfFileTimestamp =
+        DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
 }
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 
 <style>
     :root {
@@ -1451,7 +1456,7 @@
     </div>
 </div>
 
-<div class="xp-contentbar">
+<div class="xp-contentbar" id="pdfReportArea">
 
     <div class="dashboard-header">
         <div class="row align-items-center">
@@ -1469,7 +1474,13 @@
                 </small>
             </div>
             <div class="col-md-4 text-right no-print">
-                <button class="btn btn-light btn-sm" onclick="window.print()">Print / Save PDF</button>
+                <button type="button"
+                        class="btn btn-light btn-sm"
+                        id="btnSaveOnePagePdf"
+                        onclick="saveDashboardAsOnePagePdf(this)">
+                    <i class="fa fa-file-pdf-o"></i>
+                    Save One-Page PDF
+                </button>
             </div>
         </div>
     </div>
@@ -1983,6 +1994,8 @@
                             <th>Equipment</th>
                             <th>Reason</th>
                             <th>Description</th>
+                            <th>Reason For Occurance</th>
+                            <th>Action Taken</th>
                         </tr>
                     </thead>
 
@@ -2012,6 +2025,8 @@
                                     <td>@item.Equipments</td>
                                     <td>@item.Reason</td>
                                     <td>@item.DelayDescription</td>
+                                    <td>@item.ReasonForOccurence</td>
+                                    <td>@item.ActionTaken</td>
                                 </tr>
                             }
                         }
@@ -2162,6 +2177,255 @@
 
 
 </div>
+
+<script>
+    async function saveDashboardAsOnePagePdf(button) {
+        var report = document.getElementById("pdfReportArea");
+
+        if (!report) {
+            alert("PDF report area was not found.");
+            return;
+        }
+
+        if (
+            typeof html2canvas === "undefined" ||
+            !window.jspdf ||
+            !window.jspdf.jsPDF
+        ) {
+            alert("PDF libraries could not be loaded. Please refresh the page and try again.");
+            return;
+        }
+
+        var originalButtonHtml = button ? button.innerHTML : "";
+        var originalScrollX = window.pageXOffset || 0;
+        var originalScrollY = window.pageYOffset || 0;
+
+        try {
+            if (button) {
+                button.disabled = true;
+                button.innerHTML =
+                    '<i class="fa fa-spinner fa-spin"></i> Preparing PDF...';
+            }
+
+            document.body.classList.add("pdf-exporting");
+
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+
+            // Give Chart.js and browser layout one final frame before capture.
+            await new Promise(function (resolve) {
+                window.requestAnimationFrame(function () {
+                    window.requestAnimationFrame(resolve);
+                });
+            });
+
+            var reportRect = report.getBoundingClientRect();
+
+            // Use the ACTUAL rendered width. report.scrollWidth can include
+            // the layout/sidebar overflow and was creating blank PDF space
+            // on the right side.
+            var contentWidth = Math.ceil(reportRect.width);
+
+            var contentHeight = Math.ceil(
+                Math.max(report.scrollHeight, reportRect.height)
+            );
+
+            /*
+             * Keep canvas memory controlled while retaining readable charts.
+             * The complete dashboard is then placed on ONE custom-size PDF page.
+             */
+            var longestSide = Math.max(contentWidth, contentHeight);
+            var captureScale = Math.min(
+                1.6,
+                Math.max(1, 10000 / longestSide)
+            );
+
+            var capturedCanvas = await html2canvas(report, {
+                backgroundColor: "#ffffff",
+                scale: captureScale,
+                useCORS: true,
+                allowTaint: false,
+                logging: false,
+                scrollX: 0,
+                scrollY: -window.scrollY,
+                ignoreElements: function (element) {
+                    return !!(
+                        element &&
+                        element.classList &&
+                        element.classList.contains("no-print")
+                    );
+                }
+            });
+
+            /*
+             * Trim any remaining outer white area from html2canvas and add
+             * equal padding on all four sides. This prevents an unbalanced
+             * blank strip even when the master layout has hidden overflow.
+             */
+            var canvas = trimDashboardCanvas(
+                capturedCanvas,
+                Math.max(12, Math.round(12 * captureScale))
+            );
+
+            if (!canvas.width || !canvas.height) {
+                throw new Error("Dashboard capture is empty.");
+            }
+
+            var jsPDF = window.jspdf.jsPDF;
+
+            // 420 mm gives an A3-width canvas; height follows the report ratio.
+            // This produces exactly one PDF page without splitting any card/chart.
+            var pdfWidthMm = 420;
+            var pdfHeightMm =
+                pdfWidthMm * canvas.height / canvas.width;
+
+            // Stay below the PDF maximum page dimension.
+            if (pdfHeightMm > 5000) {
+                pdfHeightMm = 5000;
+                pdfWidthMm =
+                    pdfHeightMm * canvas.width / canvas.height;
+            }
+
+            var orientation =
+                pdfWidthMm >= pdfHeightMm
+                    ? "landscape"
+                    : "portrait";
+
+            var pdf = new jsPDF({
+                orientation: orientation,
+                unit: "mm",
+                format: [pdfWidthMm, pdfHeightMm],
+                compress: true,
+                hotfixes: ["px_scaling"]
+            });
+
+            var imageData =
+                canvas.toDataURL("image/jpeg", 0.94);
+
+            pdf.addImage(
+                imageData,
+                "JPEG",
+                0,
+                0,
+                pdfWidthMm,
+                pdfHeightMm,
+                undefined,
+                "FAST"
+            );
+
+            pdf.save(
+                "Rolling_Mill_Dashboard_" +
+                "@pdfFileTimestamp" +
+                ".pdf"
+            );
+        }
+        catch (error) {
+            console.error("One-page PDF generation failed:", error);
+
+            alert(
+                "PDF could not be generated. " +
+                (error && error.message
+                    ? error.message
+                    : "Please try again.")
+            );
+        }
+        finally {
+            document.body.classList.remove("pdf-exporting");
+            window.scrollTo(originalScrollX, originalScrollY);
+
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = originalButtonHtml;
+            }
+        }
+    }
+
+    function trimDashboardCanvas(sourceCanvas, padding) {
+        if (!sourceCanvas || !sourceCanvas.width || !sourceCanvas.height) {
+            return sourceCanvas;
+        }
+
+        var context = sourceCanvas.getContext("2d", {
+            willReadFrequently: true
+        });
+
+        var width = sourceCanvas.width;
+        var height = sourceCanvas.height;
+        var pixels = context.getImageData(0, 0, width, height).data;
+
+        var minX = width;
+        var minY = height;
+        var maxX = -1;
+        var maxY = -1;
+        var step = 2;
+
+        for (var y = 0; y < height; y += step) {
+            for (var x = 0; x < width; x += step) {
+                var index = (y * width + x) * 4;
+                var alpha = pixels[index + 3];
+
+                var isVisible =
+                    alpha > 10 &&
+                    (
+                        pixels[index] < 248 ||
+                        pixels[index + 1] < 248 ||
+                        pixels[index + 2] < 248
+                    );
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+        }
+
+        if (maxX < minX || maxY < minY) {
+            return sourceCanvas;
+        }
+
+        padding = Math.max(0, Number(padding || 0));
+
+        minX = Math.max(0, minX - padding);
+        minY = Math.max(0, minY - padding);
+        maxX = Math.min(width - 1, maxX + padding);
+        maxY = Math.min(height - 1, maxY + padding);
+
+        var cropWidth = maxX - minX + 1;
+        var cropHeight = maxY - minY + 1;
+
+        // Skip recreation only when the source is already tightly balanced.
+        if (cropWidth === width && cropHeight === height) {
+            return sourceCanvas;
+        }
+
+        var trimmedCanvas = document.createElement("canvas");
+        trimmedCanvas.width = cropWidth;
+        trimmedCanvas.height = cropHeight;
+
+        var trimmedContext = trimmedCanvas.getContext("2d");
+        trimmedContext.fillStyle = "#ffffff";
+        trimmedContext.fillRect(0, 0, cropWidth, cropHeight);
+
+        trimmedContext.drawImage(
+            sourceCanvas,
+            minX,
+            minY,
+            cropWidth,
+            cropHeight,
+            0,
+            0,
+            cropWidth,
+            cropHeight
+        );
+
+        return trimmedCanvas;
+    }
+</script>
 
 <script>
     $(document).ready(function () {

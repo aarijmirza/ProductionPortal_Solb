@@ -386,9 +386,70 @@ namespace BAL.Repositories
                 }
             }
 
+            /*
+               Defensive repository filter:
+               the stored procedure already normalizes the delay source, but only
+               the four CMD agencies are allowed to reach agency-labelled report
+               sections even if an older/changed procedure returns extra rows.
+
+               RCA rows are already restricted through #Delays in the procedure;
+               their FailureType field contains RCA/report information, not agency.
+            */
+            HashSet<string> allowedAgencies =
+                new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase
+                )
+                {
+                "Mechanical",
+                "Electrical",
+                "Cranes",
+                "Utility"
+                };
+
+            HashSet<string> allowedClosureDepartments =
+                new HashSet<string>(
+                    allowedAgencies,
+                    StringComparer.OrdinalIgnoreCase
+                )
+                {
+                "Total"
+                };
+
+            model.EquipmentFailures =
+                model.EquipmentFailures
+                    .Where(x =>
+                        x != null &&
+                        !string.IsNullOrWhiteSpace(x.FailureType) &&
+                        allowedAgencies.Contains(
+                            x.FailureType.Trim()
+                        )
+                    )
+                    .ToList();
+
+            model.ClosureRates =
+                model.ClosureRates
+                    .Where(x =>
+                        x != null &&
+                        !string.IsNullOrWhiteSpace(x.Department) &&
+                        allowedClosureDepartments.Contains(
+                            x.Department.Trim()
+                        )
+                    )
+                    .ToList();
+
+            model.TopDelays =
+                model.TopDelays
+                    .Where(x =>
+                        x != null &&
+                        !string.IsNullOrWhiteSpace(x.AgencyName) &&
+                        allowedAgencies.Contains(
+                            x.AgencyName.Trim()
+                        )
+                    )
+                    .ToList();
+
             return model;
         }
-
 
         private ProductionSummaryVM ReadProductionSummary(
             SqlDataReader reader)

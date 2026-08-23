@@ -411,8 +411,8 @@
                         <td>@item.Size</td>
                         <td>@item.TotalBillet</td>
                         <td>@item.TotalBillet</td>
-                        <td>@item.Cobble</td>
-                        <td>@item.HotOut</td>
+                        <td>@(item.Cobble ?? 0)</td>
+                        <td>@(item.HotOut ?? 0)</td>
                         <td>@item.TotalWeight</td>
                         <td>@item.TotalBundleProduced</td>
                         <td>@(item.TotalBundleOnHold.HasValue ? item.TotalBundleOnHold.Value.ToString("0.00") : "0.00")</td>
