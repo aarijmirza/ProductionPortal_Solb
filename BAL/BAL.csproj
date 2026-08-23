@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repositories\BilletBoardRepository.cs" />
     <Compile Include="Repositories\BoardingRepository.cs" />
     <Compile Include="Repositories\CCMDailyProductionRepository.cs" />
     <Compile Include="Repositories\CCMRespository.cs" />

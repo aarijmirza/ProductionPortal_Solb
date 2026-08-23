@@ -557,6 +557,7 @@
     <Compile Include="App_Start\NoCacheAttribute.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\BilletBoardController.cs" />
     <Compile Include="Controllers\BoardingController.cs" />
     <Compile Include="Controllers\CCMController.cs" />
     <Compile Include="Controllers\CCMProductionController.cs" />
