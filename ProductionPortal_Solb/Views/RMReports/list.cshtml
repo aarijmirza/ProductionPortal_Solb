@@ -29,8 +29,19 @@
             <div class="row align-items-end">
 
                 <div class="col-md-2">
-                    <label>Select Date</label>
-                    <input type="date" id="selectedDate" class="form-control" />
+                    <label>From Date</label>
+                    <input type="date"
+                           id="fromDate"
+                           name="fromDate"
+                           class="form-control" />
+                </div>
+
+                <div class="col-md-2">
+                    <label>To Date</label>
+                    <input type="date"
+                           id="toDate"
+                           name="toDate"
+                           class="form-control" />
                 </div>
 
                 <div class="col-md-2">
@@ -111,13 +122,12 @@
             <div class="card border-danger mb-3">
                 <div class="card-body text-center">
                     <h5>Daily Production</h5>-->
+        @*<button class="btn btn-primary openReport mb-2"
+                    data-url="@Url.Action("DailyProductionRM", "Reporting")">
+                View Report
+            </button>*@
 
-                    @*<button class="btn btn-primary openReport mb-2"
-                                data-url="@Url.Action("DailyProductionRM", "Reporting")">
-                            View Report
-                        </button>*@
-
-                    <!--<button class="btn btn-primary openReport mb-2"
+        <!--<button class="btn btn-primary openReport mb-2"
                             data-url="@Url.Action("ShiftProductionDashboard", "Reporting")">
                         View Report
                     </button>
@@ -136,15 +146,33 @@
 <!-- ================= SCRIPTS ================= -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
 <script>
     $(document).ready(function () {
 
-        var today = new Date().toISOString().split('T')[0];
-        $("#selectedDate").val(today);
+        var today = new Date().toISOString().split("T")[0];
+
+        $("#fromDate").val(today);
+        $("#toDate").val(today);
 
         function validateFilters() {
-            if (!$("#selectedDate").val()) {
-                alert("Please select date");
+
+            var fromDate = $("#fromDate").val();
+            var toDate = $("#toDate").val();
+
+            if (!fromDate) {
+                alert("Please select From Date.");
+                return false;
+            }
+
+            if (!toDate) {
+                alert("Please select To Date.");
+                return false;
+            }
+
+            if (new Date(fromDate) > new Date(toDate)) {
+                alert("From Date cannot be greater than To Date.");
                 return false;
             }
 
@@ -153,27 +181,21 @@
 
         function buildReportUrl(baseUrl, isDownload) {
 
-            var selectedDate = $("#selectedDate").val();
+            var fromDate = $("#fromDate").val();
+            var toDate = $("#toDate").val();
             var plant = $("#plantFilter").val();
             var shift = $("#shiftFilter").val();
 
-            var finalUrl = baseUrl
-                + "?date=" + encodeURIComponent(selectedDate)
+            return baseUrl
+                + "?fromDate=" + encodeURIComponent(fromDate)
+                + "&toDate=" + encodeURIComponent(toDate)
                 + "&plant=" + encodeURIComponent(plant)
                 + "&shift=" + encodeURIComponent(shift)
                 + "&download=" + encodeURIComponent(isDownload);
-
-            return finalUrl;
         }
 
         $("#applyFilter").click(function () {
-
-            if (!validateFilters()) {
-                return;
-            }
-
-            // Alert removed
-            // Filter values are already selected and will be applied on View/Download click
+            validateFilters();
         });
 
         $(document).on("click", ".openReport", function () {
@@ -182,8 +204,10 @@
                 return;
             }
 
-            var baseUrl = $(this).data("url");
-            var finalUrl = buildReportUrl(baseUrl, false);
+            var finalUrl = buildReportUrl(
+                $(this).data("url"),
+                false
+            );
 
             window.open(finalUrl, "_blank");
         });
@@ -194,8 +218,10 @@
                 return;
             }
 
-            var baseUrl = $(this).data("url");
-            var finalUrl = buildReportUrl(baseUrl, true);
+            var finalUrl = buildReportUrl(
+                $(this).data("url"),
+                true
+            );
 
             window.open(finalUrl, "_blank");
         });

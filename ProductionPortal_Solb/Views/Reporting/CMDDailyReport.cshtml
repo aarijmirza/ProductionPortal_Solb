@@ -8,6 +8,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+
 <style>
     :root {
         --primary: #a6173f;
@@ -327,12 +328,35 @@
     }
 
     .donut-chart {
+        background: #e3e7eb;
         border-radius: 50%;
         box-shadow: 0 5px 14px rgba(31,41,51,.15);
         height: 132px;
         margin: 0 auto;
+        overflow: hidden;
         position: relative;
         width: 132px;
+    }
+
+    .donut-chart-svg {
+        display: block;
+        height: 132px;
+        transform: rotate(-90deg);
+        width: 132px;
+    }
+
+    .donut-track,
+    .donut-slice {
+        fill: none;
+        stroke-width: 28;
+    }
+
+    .donut-track {
+        stroke: #e3e7eb;
+    }
+
+    .donut-slice {
+        stroke-linecap: butt;
     }
 
     .donut-center {
@@ -349,6 +373,7 @@
         position: absolute;
         top: 28px;
         width: 76px;
+        z-index: 2;
     }
 
         .donut-center strong {
@@ -1157,6 +1182,136 @@
             grid-column: 1;
         }
     }
+
+    #cmdDashboardPDF {
+        transform-origin: top left;
+    }
+
+    .dashboard-toggle-section {
+        margin: 18px 0;
+        border: 1px solid #d8e1e9;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .dashboard-toggle-header {
+        width: 100%;
+        min-height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 18px;
+        border: 0;
+        background: linear-gradient(135deg, #991b1b 0%, #c1121f 100%);
+        color: #fff;
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
+        transition: filter .18s ease;
+    }
+
+        .dashboard-toggle-header:hover,
+        .dashboard-toggle-header:focus {
+            filter: brightness(1.05);
+            outline: none;
+        }
+
+    .dashboard-toggle-title {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: .1px;
+    }
+
+        .dashboard-toggle-title small {
+            color: rgba(255,255,255,.82);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+    .dashboard-toggle-icon {
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(255,255,255,.15);
+        transition: transform .2s ease;
+    }
+
+    .dashboard-toggle-section.is-open .dashboard-toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .dashboard-toggle-body {
+        display: none;
+        padding: 18px;
+        background: #f8fafc;
+    }
+
+    .dashboard-toggle-section.is-open .dashboard-toggle-body {
+        display: block;
+    }
+
+    .dashboard-toggle-body[hidden] {
+        display: none !important;
+    }
+
+    .dashboard-toggle-body .section-grid {
+        margin: 0;
+    }
+
+    .dashboard-toggle-body .delay-table {
+        margin-bottom: 0;
+    }
+
+    .pdf-exporting {
+        width: 1600px !important;
+        max-width: 1600px !important;
+        background: #eef2f6 !important;
+    }
+
+        .pdf-exporting .no-print {
+            display: none !important;
+        }
+
+        .pdf-exporting .top-grid,
+        .pdf-exporting .pie-grid,
+        .pdf-exporting .section-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+        }
+
+        .pdf-exporting .downtime-card,
+        .pdf-exporting .downtime-body,
+        .pdf-exporting .donut-panel,
+        .pdf-exporting .donut-chart,
+        .pdf-exporting .donut-chart-svg {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        .pdf-exporting .downtime-donuts {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+        }
+
+        .pdf-exporting .top-box,
+        .pdf-exporting .pie-box,
+        .pdf-exporting .chart-panel,
+        .pdf-exporting .legend,
+        .pdf-exporting .sub-heading,
+        .pdf-exporting .bottom-title,
+        .pdf-exporting .delay-table {
+            page-break-inside: avoid !important;
+        }
 </style>
 
 <div class="xp-breadcrumbbar no-print">
@@ -1176,7 +1331,7 @@
     </div>
 </div>
 
-<div class="xp-contentbar">
+<div class="xp-contentbar" id="cmdDashboardPDF">
 
     <div class="dashboard-header">
         <div class="row align-items-center">
@@ -1212,8 +1367,9 @@
 
                     <button type="button"
                             class="btn btn-light btn-sm"
-                            onclick="printCMDReport()">
-                        Print / Save PDF
+                            onclick="printCMDReport(event)">
+                        <i class="fa fa-file-pdf-o"></i>
+                        Download PDF
                     </button>
                 </form>
             </div>
@@ -1265,6 +1421,8 @@
                     RM1 @p.RM1.ToString("N0") MT<br />
                     RM2 @p.RM2.ToString("N0") MT
                 </div>
+
+
 
                 <!--<div class="plan-actual-box">
                     <div class="plan-actual-title">@card.Compare</div>
@@ -1323,61 +1481,6 @@
             decimal dtdTotal = downtimeRows.Sum(x => Math.Max(0m, x.DTD));
             decimal mtdTotal = downtimeRows.Sum(x => Math.Max(0m, x.MTD));
 
-            decimal dtdMechanicalEnd = dtdTotal > 0
-                ? Math.Max(0m, d.DTDMechanical) * 100m / dtdTotal
-                : 0m;
-
-            decimal dtdElectricalEnd = dtdMechanicalEnd + (
-                dtdTotal > 0
-                    ? Math.Max(0m, d.DTDElectrical) * 100m / dtdTotal
-                    : 0m
-            );
-
-            decimal dtdCranesEnd = dtdElectricalEnd + (
-                dtdTotal > 0
-                    ? Math.Max(0m, d.DTDCranes) * 100m / dtdTotal
-                    : 0m
-            );
-
-            decimal mtdMechanicalEnd = mtdTotal > 0
-                ? Math.Max(0m, d.MTDMechanical) * 100m / mtdTotal
-                : 0m;
-
-            decimal mtdElectricalEnd = mtdMechanicalEnd + (
-                mtdTotal > 0
-                    ? Math.Max(0m, d.MTDElectrical) * 100m / mtdTotal
-                    : 0m
-            );
-
-            decimal mtdCranesEnd = mtdElectricalEnd + (
-                mtdTotal > 0
-                    ? Math.Max(0m, d.MTDCranes) * 100m / mtdTotal
-                    : 0m
-            );
-
-            string dtdGradient = dtdTotal > 0
-                ? string.Format(
-                    CultureInfo.InvariantCulture,
-                    "conic-gradient(#4f8a10 0 {0:0.####}%, #e66b00 {0:0.####}% {1:0.####}%, #7250a8 {1:0.####}% {2:0.####}%, #0c6370 {2:0.####}% 100%)",
-                    dtdMechanicalEnd,
-                    dtdElectricalEnd,
-                    dtdCranesEnd
-                )
-                : "conic-gradient(#e3e7eb 0 100%)";
-
-            string mtdGradient = mtdTotal > 0
-                ? string.Format(
-                    CultureInfo.InvariantCulture,
-                    "conic-gradient(#4f8a10 0 {0:0.####}%, #e66b00 {0:0.####}% {1:0.####}%, #7250a8 {1:0.####}% {2:0.####}%, #0c6370 {2:0.####}% 100%)",
-                    mtdMechanicalEnd,
-                    mtdElectricalEnd,
-                    mtdCranesEnd
-                )
-                : "conic-gradient(#e3e7eb 0 100%)";
-
-            string dtdDonutStyle = "background:" + dtdGradient + ";";
-            string mtdDonutStyle = "background:" + mtdGradient + ";";
-
             <div class="pie-box downtime-card">
                 <div class="red-head pie-title">@plant Downtime %</div>
 
@@ -1390,8 +1493,47 @@
                         <div class="donut-panel">
                             <div class="donut-title">DTD</div>
                             <div class="donut-chart"
-                                 style="@dtdDonutStyle"
                                  title="DTD agency share of total downtime">
+                                <svg class="donut-chart-svg"
+                                     viewBox="0 0 132 132"
+                                     role="img"
+                                     aria-label="DTD agency share of total downtime">
+                                    <circle class="donut-track"
+                                            cx="66"
+                                            cy="66"
+                                            r="49"></circle>
+                                    @{
+                                        decimal dtdOffset = 0m;
+                                    }
+                                    @foreach (var row in downtimeRows)
+                                    {
+                                        decimal dtdSlice = dtdTotal > 0m
+                                            ? Math.Max(0m, row.DTD) * 100m / dtdTotal
+                                            : 0m;
+                                        string dtdDashArray = string.Format(
+                                            CultureInfo.InvariantCulture,
+                                            "{0:0.####} {1:0.####}",
+                                            dtdSlice,
+                                            100m - dtdSlice
+                                        );
+                                        string dtdDashOffset = (-dtdOffset)
+                                            .ToString("0.####", CultureInfo.InvariantCulture);
+
+                                        if (dtdSlice > 0m)
+                                        {
+                                            <circle class="donut-slice"
+                                                    cx="66"
+                                                    cy="66"
+                                                    r="49"
+                                                    pathLength="100"
+                                                    stroke="@row.Color"
+                                                    stroke-dasharray="@dtdDashArray"
+                                                    stroke-dashoffset="@dtdDashOffset"></circle>
+                                        }
+
+                                        dtdOffset += dtdSlice;
+                                    }
+                                </svg>
                                 <div class="donut-center">
                                     <strong>@dtdTotal.ToString("N2")%</strong>
                                     <span>Total DT</span>
@@ -1403,8 +1545,47 @@
                         <div class="donut-panel">
                             <div class="donut-title">MTD</div>
                             <div class="donut-chart"
-                                 style="@mtdDonutStyle"
                                  title="MTD agency share of total downtime">
+                                <svg class="donut-chart-svg"
+                                     viewBox="0 0 132 132"
+                                     role="img"
+                                     aria-label="MTD agency share of total downtime">
+                                    <circle class="donut-track"
+                                            cx="66"
+                                            cy="66"
+                                            r="49"></circle>
+                                    @{
+                                        decimal mtdOffset = 0m;
+                                    }
+                                    @foreach (var row in downtimeRows)
+                                    {
+                                        decimal mtdSlice = mtdTotal > 0m
+                                            ? Math.Max(0m, row.MTD) * 100m / mtdTotal
+                                            : 0m;
+                                        string mtdDashArray = string.Format(
+                                            CultureInfo.InvariantCulture,
+                                            "{0:0.####} {1:0.####}",
+                                            mtdSlice,
+                                            100m - mtdSlice
+                                        );
+                                        string mtdDashOffset = (-mtdOffset)
+                                            .ToString("0.####", CultureInfo.InvariantCulture);
+
+                                        if (mtdSlice > 0m)
+                                        {
+                                            <circle class="donut-slice"
+                                                    cx="66"
+                                                    cy="66"
+                                                    r="49"
+                                                    pathLength="100"
+                                                    stroke="@row.Color"
+                                                    stroke-dasharray="@mtdDashArray"
+                                                    stroke-dashoffset="@mtdDashOffset"></circle>
+                                        }
+
+                                        mtdOffset += mtdSlice;
+                                    }
+                                </svg>
                                 <div class="donut-center">
                                     <strong>@mtdTotal.ToString("N2")%</strong>
                                     <span>Total DT</span>
@@ -1423,7 +1604,7 @@
                                 <span class="donut-value-dot"></span>
                                 <span class="donut-value-name">@row.Agency</span>
                                 <span class="donut-value-numbers">
-                                    D @row.DTD.ToString("N2")% · M @row.MTD.ToString("N2")%
+                                    DTD - @row.DTD.ToString("N2")% · MTD - @row.MTD.ToString("N2")%
                                 </span>
                             </div>
                         }
@@ -1554,434 +1735,685 @@
             </div>
         }
 
-        <div class="sub-heading counter-measure-heading">
-            Current Month Counter Measures Closure Rate by Agency %
-            <small>
-                @Model.ToDate.ToString("MMMM yyyy") accumulated position · each agency shown separately
-            </small>
-        </div>
+    </div>
 
-        @foreach (var plant in new[] { "SMP", "RM1", "RM2" })
-        {
-            var plantClosureRows = (Model.ClosureRates ?? new List<DAL.Models.ClosureRateVM>())
-                .Where(x => x.Plant == plant)
-                .ToList();
+    <section class="dashboard-toggle-section"
+             id="counterMeasureToggleSection">
+        <button type="button"
+                class="dashboard-toggle-header"
+                aria-expanded="false"
+                aria-controls="counterMeasureToggleBody"
+                onclick="toggleCMDDashboardSection(this)">
+            <span class="dashboard-toggle-title">
+                Counter Measures Closure Rate
+                <small>Accumulated position - each agency shown separately</small>
+            </span>
+            <span class="dashboard-toggle-icon" aria-hidden="true">
+                <i class="fa fa-chevron-down"></i>
+            </span>
+        </button>
 
-            var items = plantClosureRows
-                .Where(x => x.MonthNumber == Model.ToDate.Month)
-                .Where(x => !string.Equals(
-                    string.IsNullOrWhiteSpace(x.Department) ? "" : x.Department.Trim(),
-                    "Total",
-                    StringComparison.OrdinalIgnoreCase
-                ))
-                .OrderBy(x => x.MonthNumber)
-                .ToList();
+        <div class="dashboard-toggle-body"
+             id="counterMeasureToggleBody"
+             hidden>
+            <div class="section-grid">
 
-            var dateWiseItems = plantClosureRows
-                .Where(x => x.MonthNumber == 13)
-                .Where(x => !string.Equals(
-                    string.IsNullOrWhiteSpace(x.Department) ? "" : x.Department.Trim(),
-                    "Total",
-                    StringComparison.OrdinalIgnoreCase
-                ))
-                .ToList();
+                @foreach (var plant in new[] { "SMP", "RM1", "RM2" })
+                {
+                    var plantClosureRows = (Model.ClosureRates ?? new List<DAL.Models.ClosureRateVM>())
+                        .Where(x => x.Plant == plant)
+                        .ToList();
 
-            var totalDateWiseItem = plantClosureRows
-                .FirstOrDefault(x =>
-                    x.MonthNumber == 13 &&
-                    string.Equals(
-                        string.IsNullOrWhiteSpace(x.Department) ? "" : x.Department.Trim(),
-                        "Total",
-                        StringComparison.OrdinalIgnoreCase
-                    )
-                );
+                    var items = plantClosureRows
+                        .Where(x => x.MonthNumber == Model.ToDate.Month)
+                        .Where(x => !string.Equals(
+                            string.IsNullOrWhiteSpace(x.Department) ? "" : x.Department.Trim(),
+                            "Total",
+                            StringComparison.OrdinalIgnoreCase
+                        ))
+                        .OrderBy(x => x.MonthNumber)
+                        .ToList();
 
-            string totalDateWisePercentage = totalDateWiseItem != null
-                ? totalDateWiseItem.ClosurePercentage.ToString("N1") + "%"
-                : "No data";
+                    var dateWiseItems = plantClosureRows
+                        .Where(x => x.MonthNumber == 13)
+                        .Where(x => !string.Equals(
+                            string.IsNullOrWhiteSpace(x.Department) ? "" : x.Department.Trim(),
+                            "Total",
+                            StringComparison.OrdinalIgnoreCase
+                        ))
+                        .ToList();
 
-            var months = items
-                .Select(x => x.MonthNumber)
-                .Where(x => x >= 1 && x <= 12)
-                .Distinct()
-                .OrderBy(x => x)
-                .ToList();
+                    var totalDateWiseItem = plantClosureRows
+                        .FirstOrDefault(x =>
+                            x.MonthNumber == 13 &&
+                            string.Equals(
+                                string.IsNullOrWhiteSpace(x.Department) ? "" : x.Department.Trim(),
+                                "Total",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        );
 
-            var departments = new[]
-            {
+                    string totalDateWisePercentage = totalDateWiseItem != null
+                        ? totalDateWiseItem.ClosurePercentage.ToString("N1") + "%"
+                        : "No data";
+
+                    var months = items
+                        .Select(x => x.MonthNumber)
+                        .Where(x => x >= 1 && x <= 12)
+                        .Distinct()
+                        .OrderBy(x => x)
+                        .ToList();
+
+                    var departments = new[]
+                    {
                 "Mechanical",
                 "Electrical",
                 "Utility",
                 "Cranes"
             }.ToList();
 
-            var lineColors = new[]
-            {
-                "#2563eb",
-                "#dc2626",
-                "#65a30d",
-                "#7c3aed"
+                    var lineColors = new[]
+                    {
+                "#4f8a10", // Mechanical
+                "#e66b00", // Electrical
+                "#0c6370", // Utility
+                "#7250a8"  // Cranes
             };
 
-            string plantTitle = plant == "SMP"
-                ? "STEEL MAKING PLANT"
-                : (plant == "RM1" ? "ROLLING MILL 1" : "ROLLING MILL 2");
+                    string plantTitle = plant == "SMP"
+                        ? "STEEL MAKING PLANT"
+                        : (plant == "RM1" ? "ROLLING MILL 1" : "ROLLING MILL 2");
 
-            string selectedPeriodTitle = Model.FromDate.Date == Model.ToDate.Date
-                ? "Selected date: " + Model.FromDate.ToString("dd MMM yyyy")
-                : "Selected period: " +
-                  Model.FromDate.ToString("dd MMM yyyy") +
-                  " to " +
-                  Model.ToDate.ToString("dd MMM yyyy");
+                    string selectedPeriodTitle = Model.FromDate.Date == Model.ToDate.Date
+                        ? "Selected date: " + Model.FromDate.ToString("dd MMM yyyy")
+                        : "Selected period: " +
+                          Model.FromDate.ToString("dd MMM yyyy") +
+                          " to " +
+                          Model.ToDate.ToString("dd MMM yyyy");
 
-            const decimal svgWidth = 720m;
-            const decimal svgHeight = 380m;
-            const decimal plotLeft = 54m;
-            const decimal plotTop = 27m;
-            const decimal plotRight = 22m;
-            const decimal plotBottom = 60m;
+                    const decimal svgWidth = 720m;
+                    const decimal svgHeight = 380m;
+                    const decimal plotLeft = 54m;
+                    const decimal plotTop = 27m;
+                    const decimal plotRight = 22m;
+                    const decimal plotBottom = 60m;
 
-            decimal plotWidth = svgWidth - plotLeft - plotRight;
-            decimal plotHeight = svgHeight - plotTop - plotBottom;
+                    decimal plotWidth = svgWidth - plotLeft - plotRight;
+                    decimal plotHeight = svgHeight - plotTop - plotBottom;
 
-            var totalChartValues = items
-                .Select(x => Math.Max(
-                    0m,
-                    Math.Min(100m, Convert.ToDecimal(x.ClosurePercentage))
-                ))
-                .ToList();
+                    var totalChartValues = items
+                        .Select(x => Math.Max(
+                            0m,
+                            Math.Min(100m, Convert.ToDecimal(x.ClosurePercentage))
+                        ))
+                        .ToList();
 
-            decimal chartMinimum = 0m;
-            decimal chartMaximum = 100m;
+                    decimal chartMinimum = 0m;
+                    decimal chartMaximum = 100m;
 
-            if (totalChartValues.Any())
-            {
-                decimal rawMaximum = totalChartValues.Max();
+                    if (totalChartValues.Any())
+                    {
+                        decimal rawMaximum = totalChartValues.Max();
 
-                chartMaximum = Math.Min(
-                    100m,
-                    Math.Max(
-                        10m,
-                        Math.Ceiling((rawMaximum + 8m) / 10m) * 10m
-                    )
-                );
-            }
+                        chartMaximum = Math.Min(
+                            100m,
+                            Math.Max(
+                                10m,
+                                Math.Ceiling((rawMaximum + 8m) / 10m) * 10m
+                            )
+                        );
+                    }
 
-            decimal chartRange = Math.Max(10m, chartMaximum - chartMinimum);
-            decimal monthGroupWidth = months.Any()
-                ? plotWidth / months.Count
-                : plotWidth;
-            decimal barGap = months.Count == 1 ? 34m : 5m;
-            decimal barWidth = months.Count == 1
-                ? 62m
-                : Math.Max(
-                    6m,
-                    Math.Min(
-                        18m,
-                        (monthGroupWidth - 12m - (departments.Count - 1) * barGap)
-                        / departments.Count
-                    )
-                );
-            decimal groupBarsWidth =
-                departments.Count * barWidth +
-                (departments.Count - 1) * barGap;
+                    decimal chartRange = Math.Max(10m, chartMaximum - chartMinimum);
+                    decimal monthGroupWidth = months.Any()
+                        ? plotWidth / months.Count
+                        : plotWidth;
+                    decimal barGap = months.Count == 1 ? 34m : 5m;
+                    decimal barWidth = months.Count == 1
+                        ? 62m
+                        : Math.Max(
+                            6m,
+                            Math.Min(
+                                18m,
+                                (monthGroupWidth - 12m - (departments.Count - 1) * barGap)
+                                / departments.Count
+                            )
+                        );
+                    decimal groupBarsWidth =
+                        departments.Count * barWidth +
+                        (departments.Count - 1) * barGap;
 
-            <div class="chart-panel closure-chart-panel">
-                <div class="panel-title">@plantTitle</div>
+                    <div class="chart-panel closure-chart-panel">
+                        <div class="panel-title">@plantTitle</div>
 
-                <div class="closure-period-summary">
-                    <div class="closure-period-title">
-                        @selectedPeriodTitle · date-wise closure %
-                    </div>
-                    <div class="closure-total-kpi">
-                        <span>Combined Total Closure</span>
-                        <strong>@totalDateWisePercentage</strong>
-                    </div>
-                    <div class="closure-period-grid">
-                        @for (int dateDepartmentIndex = 0; dateDepartmentIndex < departments.Count; dateDepartmentIndex++)
+                        <div class="closure-period-summary">
+                            @*<div class="closure-period-title">
+                                    @selectedPeriodTitle · date-wise closure %
+                                </div>*@
+                            <div class="closure-total-kpi">
+                                <span>Combined Total Closure</span>
+                                <strong>@totalDateWisePercentage</strong>
+                            </div>
+                            <div class="closure-period-grid">
+                                @for (int dateDepartmentIndex = 0; dateDepartmentIndex < departments.Count; dateDepartmentIndex++)
+                                {
+                                    string dateDepartment = departments[dateDepartmentIndex];
+                                    string dateSeriesColor = lineColors[dateDepartmentIndex % lineColors.Length];
+                                    string dateItemStyle = "--series-color:" + dateSeriesColor + ";";
+                                    var dateItem = dateWiseItems
+                                        .FirstOrDefault(x => string.Equals(
+                                            string.IsNullOrWhiteSpace(x.Department) ? "Overall" : x.Department.Trim(),
+                                            dateDepartment,
+                                            StringComparison.OrdinalIgnoreCase
+                                        ));
+                                    string datePercentage = dateItem != null
+                                        ? dateItem.ClosurePercentage.ToString("N1") + "%"
+                                        : "No data";
+
+                                    <div class="closure-period-item" style="@dateItemStyle">
+                                        <span class="closure-period-dot"></span>
+                                        <div class="closure-period-copy">
+                                            <span>@dateDepartment</span>
+                                            <strong>@datePercentage</strong>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @if (items.Any())
                         {
-                            string dateDepartment = departments[dateDepartmentIndex];
-                            string dateSeriesColor = lineColors[dateDepartmentIndex % lineColors.Length];
-                            string dateItemStyle = "--series-color:" + dateSeriesColor + ";";
-                            var dateItem = dateWiseItems
-                                .FirstOrDefault(x => string.Equals(
-                                    string.IsNullOrWhiteSpace(x.Department) ? "Overall" : x.Department.Trim(),
-                                    dateDepartment,
-                                    StringComparison.OrdinalIgnoreCase
-                                ));
-                            string datePercentage = dateItem != null
-                                ? dateItem.ClosurePercentage.ToString("N1") + "%"
-                                : "No data";
+                            <svg class="line-chart"
+                                 viewBox="0 0 720 380"
+                                 preserveAspectRatio="xMidYMid meet"
+                                 role="img"
+                                 aria-label="@plant counter measures accumulated closure rate grouped bar chart">
 
-                            <div class="closure-period-item" style="@dateItemStyle">
-                                <span class="closure-period-dot"></span>
-                                <div class="closure-period-copy">
-                                    <span>@dateDepartment</span>
-                                    <strong>@datePercentage</strong>
-                                </div>
+                                @for (int tickIndex = 0; tickIndex <= 4; tickIndex++)
+                                {
+                                    decimal percentageTick = chartMinimum +
+                                        (chartRange * tickIndex / 4m);
+                                    decimal tickY = plotTop +
+                                        ((chartMaximum - percentageTick) / chartRange * plotHeight);
+
+                                    <line class="grid-line"
+                                          x1="@plotLeft.ToString(CultureInfo.InvariantCulture)"
+                                          y1="@tickY.ToString(CultureInfo.InvariantCulture)"
+                                          x2="@((plotLeft + plotWidth).ToString(CultureInfo.InvariantCulture))"
+                                          y2="@tickY.ToString(CultureInfo.InvariantCulture)"></line>
+
+                                    @Html.Raw(
+                                        string.Format(
+                                            CultureInfo.InvariantCulture,
+                                            "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"end\">{2}%</text>",
+                                            plotLeft - 9m,
+                                            tickY + 4m,
+                                            Math.Round(percentageTick, 0)
+                                        )
+                                    )
+                                }
+
+                                <line class="axis-line"
+                                      x1="@plotLeft.ToString(CultureInfo.InvariantCulture)"
+                                      y1="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"
+                                      x2="@((plotLeft + plotWidth).ToString(CultureInfo.InvariantCulture))"
+                                      y2="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"></line>
+
+                                @for (int monthIndex = 0; monthIndex < months.Count; monthIndex++)
+                                {
+                                    int monthNumber = months[monthIndex];
+                                    string monthLabel = new DateTime(
+                                        Model.ToDate.Year,
+                                        monthNumber,
+                                        1
+                                    ).ToString(
+                                        "MMM yy",
+                                        CultureInfo.InvariantCulture
+                                    );
+
+                                    decimal monthX =
+                                        plotLeft +
+                                        monthIndex * monthGroupWidth +
+                                        monthGroupWidth / 2m;
+
+                                    <line class="grid-line"
+                                          x1="@monthX.ToString(CultureInfo.InvariantCulture)"
+                                          y1="@((plotTop + plotHeight - 8m).ToString(CultureInfo.InvariantCulture))"
+                                          x2="@monthX.ToString(CultureInfo.InvariantCulture)"
+                                          y2="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"></line>
+
+                                    @Html.Raw(
+                                        string.Format(
+                                            CultureInfo.InvariantCulture,
+                                            "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"middle\">{2}</text>",
+                                            monthX,
+                                            plotTop + plotHeight + 25m,
+                                            System.Web.HttpUtility.HtmlEncode(monthLabel)
+                                        )
+                                    )
+                                }
+
+                                @for (int monthIndex = 0; monthIndex < months.Count; monthIndex++)
+                                {
+                                    int monthNumber = months[monthIndex];
+                                    decimal groupStartX =
+                                        plotLeft +
+                                        monthIndex * monthGroupWidth +
+                                        (monthGroupWidth - groupBarsWidth) / 2m;
+
+                                    for (int departmentIndex = 0; departmentIndex < departments.Count; departmentIndex++)
+                                    {
+                                        string department = departments[departmentIndex];
+                                        string barColor = lineColors[departmentIndex % lineColors.Length];
+                                        var barItem = items.FirstOrDefault(x =>
+                                            x.MonthNumber == monthNumber &&
+                                            string.Equals(
+                                                string.IsNullOrWhiteSpace(x.Department) ? "" : x.Department.Trim(),
+                                                department,
+                                                StringComparison.OrdinalIgnoreCase
+                                            )
+                                        );
+
+                                        if (barItem != null)
+                                        {
+                                            decimal safePercentage = Math.Max(
+                                                0m,
+                                                Math.Min(
+                                                    chartMaximum,
+                                                    Convert.ToDecimal(barItem.ClosurePercentage)
+                                                )
+                                            );
+                                            decimal actualBarHeight =
+                                                safePercentage / chartRange * plotHeight;
+                                            decimal visibleBarHeight = safePercentage > 0m
+                                                ? Math.Max(3m, actualBarHeight)
+                                                : 2m;
+                                            decimal barX = groupStartX +
+                                                departmentIndex * (barWidth + barGap);
+                                            decimal barY = plotTop + plotHeight - visibleBarHeight;
+                                            decimal barCenterX = barX + barWidth / 2m;
+                                            bool showBarLabel =
+                                                safePercentage > 0m &&
+                                                (
+                                                    months.Count <= 4 ||
+                                                    monthIndex == months.Count - 1
+                                                );
+                                            decimal barLabelY = Math.Max(
+                                                plotTop + 10m,
+                                                barY - 10m
+                                            );
+
+                                            <rect class="closure-bar"
+                                                  x="@barX.ToString(CultureInfo.InvariantCulture)"
+                                                  y="@barY.ToString(CultureInfo.InvariantCulture)"
+                                                  width="@barWidth.ToString(CultureInfo.InvariantCulture)"
+                                                  height="@visibleBarHeight.ToString(CultureInfo.InvariantCulture)"
+                                                  rx="3"
+                                                  fill="@barColor">
+                                                <title>
+                                                    @department · @barItem.MonthName @Model.ToDate.Year · @barItem.ClosurePercentage.ToString("N1")%
+                                                </title>
+                                            </rect>
+
+                                            if (showBarLabel)
+                                            {
+                                                @Html.Raw(
+                                                    string.Format(
+                                                        CultureInfo.InvariantCulture,
+                                                        "<text class=\"closure-bar-label\" x=\"{0:0.##}\" y=\"{1:0.##}\">{2:0}%</text>",
+                                                        barCenterX,
+                                                        barLabelY,
+                                                        barItem.ClosurePercentage
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            </svg>
+
+                            <div class="line-legend">
+                                @for (int departmentIndex = 0; departmentIndex < departments.Count; departmentIndex++)
+                                {
+                                    string department = departments[departmentIndex];
+                                    string seriesColor = lineColors[departmentIndex % lineColors.Length];
+                                    string legendStyle = "--series-color:" + seriesColor + ";";
+                                    var latest = items
+                                        .Where(x => string.Equals(
+                                            string.IsNullOrWhiteSpace(x.Department) ? "Overall" : x.Department.Trim(),
+                                            department,
+                                            StringComparison.OrdinalIgnoreCase
+                                        ))
+                                        .OrderByDescending(x => x.MonthNumber)
+                                        .FirstOrDefault();
+                                    string latestValue = latest != null
+                                        ? latest.ClosurePercentage.ToString("N1") + "%"
+                                        : "No data";
+                                    string latestMonth = latest != null
+                                        ? new DateTime(Model.ToDate.Year, latest.MonthNumber, 1)
+                                            .ToString("MMM", CultureInfo.InvariantCulture)
+                                        : "";
+
+                                    <span class="line-legend-item" style="@legendStyle">
+                                        <span class="line-legend-color"></span>
+                                        <span>@department</span>
+                                        <strong>@latestValue</strong>
+                                        @if (!string.IsNullOrWhiteSpace(latestMonth))
+                                        {
+                                            <em>(Accum. @latestMonth)</em>
+                                        }
+                                    </span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="closure-empty-state">
+                                No accumulated counter-measure records found for this plant in @Model.ToDate.Year.
                             </div>
                         }
                     </div>
-                </div>
-
-                @if (items.Any())
-                {
-                    <svg class="line-chart"
-                         viewBox="0 0 720 380"
-                         preserveAspectRatio="xMidYMid meet"
-                         role="img"
-                         aria-label="@plant counter measures accumulated closure rate grouped bar chart">
-
-                        @for (int tickIndex = 0; tickIndex <= 4; tickIndex++)
-                        {
-                            decimal percentageTick = chartMinimum +
-                                (chartRange * tickIndex / 4m);
-                            decimal tickY = plotTop +
-                                ((chartMaximum - percentageTick) / chartRange * plotHeight);
-
-                            <line class="grid-line"
-                                  x1="@plotLeft.ToString(CultureInfo.InvariantCulture)"
-                                  y1="@tickY.ToString(CultureInfo.InvariantCulture)"
-                                  x2="@((plotLeft + plotWidth).ToString(CultureInfo.InvariantCulture))"
-                                  y2="@tickY.ToString(CultureInfo.InvariantCulture)"></line>
-
-                            @Html.Raw(
-                                string.Format(
-                                    CultureInfo.InvariantCulture,
-                                    "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"end\">{2}%</text>",
-                                    plotLeft - 9m,
-                                    tickY + 4m,
-                                    Math.Round(percentageTick, 0)
-                                )
-                            )
-                        }
-
-                        <line class="axis-line"
-                              x1="@plotLeft.ToString(CultureInfo.InvariantCulture)"
-                              y1="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"
-                              x2="@((plotLeft + plotWidth).ToString(CultureInfo.InvariantCulture))"
-                              y2="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"></line>
-
-                        @for (int monthIndex = 0; monthIndex < months.Count; monthIndex++)
-                        {
-                            int monthNumber = months[monthIndex];
-                            string monthLabel = new DateTime(
-                                Model.ToDate.Year,
-                                monthNumber,
-                                1
-                            ).ToString(
-                                "MMM yy",
-                                CultureInfo.InvariantCulture
-                            );
-
-                            decimal monthX =
-                                plotLeft +
-                                monthIndex * monthGroupWidth +
-                                monthGroupWidth / 2m;
-
-                            <line class="grid-line"
-                                  x1="@monthX.ToString(CultureInfo.InvariantCulture)"
-                                  y1="@((plotTop + plotHeight - 8m).ToString(CultureInfo.InvariantCulture))"
-                                  x2="@monthX.ToString(CultureInfo.InvariantCulture)"
-                                  y2="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"></line>
-
-                            @Html.Raw(
-                                string.Format(
-                                    CultureInfo.InvariantCulture,
-                                    "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"middle\">{2}</text>",
-                                    monthX,
-                                    plotTop + plotHeight + 25m,
-                                    System.Web.HttpUtility.HtmlEncode(monthLabel)
-                                )
-                            )
-                        }
-
-                        @for (int monthIndex = 0; monthIndex < months.Count; monthIndex++)
-                        {
-                            int monthNumber = months[monthIndex];
-                            decimal groupStartX =
-                                plotLeft +
-                                monthIndex * monthGroupWidth +
-                                (monthGroupWidth - groupBarsWidth) / 2m;
-
-                            for (int departmentIndex = 0; departmentIndex < departments.Count; departmentIndex++)
-                            {
-                                string department = departments[departmentIndex];
-                                string barColor = lineColors[departmentIndex % lineColors.Length];
-                                var barItem = items.FirstOrDefault(x =>
-                                    x.MonthNumber == monthNumber &&
-                                    string.Equals(
-                                        string.IsNullOrWhiteSpace(x.Department) ? "" : x.Department.Trim(),
-                                        department,
-                                        StringComparison.OrdinalIgnoreCase
-                                    )
-                                );
-
-                                if (barItem != null)
-                                {
-                                    decimal safePercentage = Math.Max(
-                                        0m,
-                                        Math.Min(
-                                            chartMaximum,
-                                            Convert.ToDecimal(barItem.ClosurePercentage)
-                                        )
-                                    );
-                                    decimal actualBarHeight =
-                                        safePercentage / chartRange * plotHeight;
-                                    decimal visibleBarHeight = safePercentage > 0m
-                                        ? Math.Max(3m, actualBarHeight)
-                                        : 2m;
-                                    decimal barX = groupStartX +
-                                        departmentIndex * (barWidth + barGap);
-                                    decimal barY = plotTop + plotHeight - visibleBarHeight;
-                                    decimal barCenterX = barX + barWidth / 2m;
-                                    bool showBarLabel =
-                                        safePercentage > 0m &&
-                                        (
-                                            months.Count <= 4 ||
-                                            monthIndex == months.Count - 1
-                                        );
-                                    decimal barLabelY = Math.Max(
-                                        plotTop + 10m,
-                                        barY - 10m
-                                    );
-
-                                    <rect class="closure-bar"
-                                          x="@barX.ToString(CultureInfo.InvariantCulture)"
-                                          y="@barY.ToString(CultureInfo.InvariantCulture)"
-                                          width="@barWidth.ToString(CultureInfo.InvariantCulture)"
-                                          height="@visibleBarHeight.ToString(CultureInfo.InvariantCulture)"
-                                          rx="3"
-                                          fill="@barColor">
-                                        <title>
-                                            @department · @barItem.MonthName @Model.ToDate.Year · @barItem.ClosurePercentage.ToString("N1")%
-                                        </title>
-                                    </rect>
-
-                                    if (showBarLabel)
-                                    {
-                                        @Html.Raw(
-                                            string.Format(
-                                                CultureInfo.InvariantCulture,
-                                                "<text class=\"closure-bar-label\" x=\"{0:0.##}\" y=\"{1:0.##}\">{2:0}%</text>",
-                                                barCenterX,
-                                                barLabelY,
-                                                barItem.ClosurePercentage
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    </svg>
-
-                    <div class="line-legend">
-                        @for (int departmentIndex = 0; departmentIndex < departments.Count; departmentIndex++)
-                        {
-                            string department = departments[departmentIndex];
-                            string seriesColor = lineColors[departmentIndex % lineColors.Length];
-                            string legendStyle = "--series-color:" + seriesColor + ";";
-                            var latest = items
-                                .Where(x => string.Equals(
-                                    string.IsNullOrWhiteSpace(x.Department) ? "Overall" : x.Department.Trim(),
-                                    department,
-                                    StringComparison.OrdinalIgnoreCase
-                                ))
-                                .OrderByDescending(x => x.MonthNumber)
-                                .FirstOrDefault();
-                            string latestValue = latest != null
-                                ? latest.ClosurePercentage.ToString("N1") + "%"
-                                : "No data";
-                            string latestMonth = latest != null
-                                ? new DateTime(Model.ToDate.Year, latest.MonthNumber, 1)
-                                    .ToString("MMM", CultureInfo.InvariantCulture)
-                                : "";
-
-                            <span class="line-legend-item" style="@legendStyle">
-                                <span class="line-legend-color"></span>
-                                <span>@department</span>
-                                <strong>@latestValue</strong>
-                                @if (!string.IsNullOrWhiteSpace(latestMonth))
-                                {
-                                    <em>(Accum. @latestMonth)</em>
-                                }
-                            </span>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="closure-empty-state">
-                        No accumulated counter-measure records found for this plant in @Model.ToDate.Year.
-                    </div>
                 }
             </div>
-        }
-    </div>
+        </div>
+    </section>
 
-    <div class="bottom-title">Description of Top 5 Delays on Date</div>
+    <section class="dashboard-toggle-section"
+             id="topDelayToggleSection">
+        <button type="button"
+                class="dashboard-toggle-header"
+                aria-expanded="false"
+                aria-controls="topDelayToggleBody"
+                onclick="toggleCMDDashboardSection(this)">
+            <span class="dashboard-toggle-title">
+                Description of Top 5 Delays on Date
+                <small>Click to show or hide the delay details</small>
+            </span>
+            <span class="dashboard-toggle-icon" aria-hidden="true">
+                <i class="fa fa-chevron-down"></i>
+            </span>
+        </button>
 
-    @{
-        var topFiveDelays =
-            (Model.TopDelays ?? new List<DAL.Models.CMDTopDelayVM>())
-                .OrderByDescending(x => x.TotalDuration)
-                .Take(5)
-                .ToList();
-    }
+        <div class="dashboard-toggle-body"
+             id="topDelayToggleBody"
+             hidden>
 
-    <table class="delay-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Plant</th>
-                <th>Shift</th>
-                <th>Agency</th>
-                <th>Total (Min)</th>
-                <th>Delay Code</th>
-                <th>Equipment Code</th>
-                <th>Description</th>
-                <th>Reason for Occurrence</th>
-                <th>Action Taken</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (topFiveDelays.Any())
-            {
-                int delayRank = 1;
+            @{
+                var topFiveDelays =
+                    (Model.TopDelays ?? new List<DAL.Models.CMDTopDelayVM>())
+                        .OrderByDescending(x => x.TotalDuration)
+                        .Take(5)
+                        .ToList();
+            }
 
-                foreach (var item in topFiveDelays)
-                {
+            <table class="delay-table">
+                <thead>
                     <tr>
-                        <td>@delayRank</td>
-                        <td>@item.Plant</td>
-                        <td>@item.Shift</td>
-                        <td>@item.AgencyName</td>
-                        <td>@item.TotalDuration.ToString("N1")</td>
-                        <td>@item.DelayCode</td>
-                        <td>@item.EquipmentCode</td>
-                        <td>@item.Description</td>
-                        <td>@item.ReasonForOccurrence</td>
-                        <td>@item.ActionTaken</td>
+                        <th>#</th>
+                        <th>Plant</th>
+                        <th>Shift</th>
+                        <th>Agency</th>
+                        <th>Total (Min)</th>
+                        <th>Delay Code</th>
+                        <th>Equipment Code</th>
+                        <th>Description</th>
+                        <th>Reason for Occurrence</th>
+                        <th>Action Taken</th>
                     </tr>
+                </thead>
+                <tbody>
+                    @if (topFiveDelays.Any())
+                    {
+                        int delayRank = 1;
 
-                    delayRank++;
-                }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="10">
-                        No delay records found for selected date range.
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                        foreach (var item in topFiveDelays)
+                        {
+                            <tr>
+                                <td>@delayRank</td>
+                                <td>@item.Plant</td>
+                                <td>@item.Shift</td>
+                                <td>@item.AgencyName</td>
+                                <td>@item.TotalDuration.ToString("N1")</td>
+                                <td>@item.DelayCode</td>
+                                <td>@item.EquipmentCode</td>
+                                <td>@item.Description</td>
+                                <td>@item.ReasonForOccurrence</td>
+                                <td>@item.ActionTaken</td>
+                            </tr>
+
+                            delayRank++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="10">
+                                No delay records found for selected date range.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
-    function printCMDReport() {
-        window.print();
+    function toggleCMDDashboardSection(button) {
+        if (!button) {
+            return;
+        }
+
+        var targetID = button.getAttribute('aria-controls');
+        var body = document.getElementById(targetID);
+        var section = button.closest('.dashboard-toggle-section');
+
+        if (!body || !section) {
+            return;
+        }
+
+        var isOpen =
+            button.getAttribute('aria-expanded') === 'true';
+
+        button.setAttribute(
+            'aria-expanded',
+            isOpen ? 'false' : 'true'
+        );
+
+        if (isOpen) {
+            body.setAttribute('hidden', 'hidden');
+            section.classList.remove('is-open');
+        }
+        else {
+            body.removeAttribute('hidden');
+            section.classList.add('is-open');
+        }
+    }
+
+    async function printCMDReport(e) {
+
+        var btn = e && e.currentTarget
+            ? e.currentTarget
+            : null;
+
+        var element =
+            document.getElementById('cmdDashboardPDF');
+
+        var noPrintElements = [];
+        var oldWidth = '';
+        var oldMaxWidth = '';
+        var oldBackground = '';
+
+        try {
+
+            if (!element) {
+                throw new Error('Dashboard section not found.');
+            }
+
+            if (!window.html2canvas ||
+                !window.jspdf ||
+                !window.jspdf.jsPDF) {
+                throw new Error('PDF libraries could not be loaded.');
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML =
+                    '<i class="fa fa-spinner fa-spin"></i> Preparing PDF...';
+            }
+
+            noPrintElements =
+                Array.prototype.slice.call(
+                    element.querySelectorAll('.no-print')
+                );
+
+            noPrintElements.forEach(function (x) {
+                x.setAttribute(
+                    'data-pdf-old-display',
+                    x.style.display || ''
+                );
+
+                x.style.display = 'none';
+            });
+
+            oldWidth = element.style.width;
+            oldMaxWidth = element.style.maxWidth;
+            oldBackground = element.style.background;
+
+            /*
+             * Keep the desktop dashboard proportions during capture.
+             */
+            element.classList.add('pdf-exporting');
+            element.style.width = '1600px';
+            element.style.maxWidth = '1600px';
+            element.style.background = '#eef2f6';
+
+            await new Promise(function (resolve) {
+                setTimeout(resolve, 350);
+            });
+
+            var captureWidth =
+                Math.ceil(element.scrollWidth);
+
+            var captureHeight =
+                Math.ceil(element.scrollHeight);
+
+            var canvas = await html2canvas(
+                element,
+                {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#eef2f6',
+                    width: captureWidth,
+                    height: captureHeight,
+                    windowWidth: 1600,
+                    windowHeight: captureHeight,
+                    scrollX: 0,
+                    scrollY: 0,
+                    logging: false
+                }
+            );
+
+            var imageData =
+                canvas.toDataURL('image/jpeg', 0.96);
+
+            var jsPDF = window.jspdf.jsPDF;
+            var canvasRatio = canvas.width / canvas.height;
+
+            /*
+             * Use a custom single-page landscape size matching the
+             * dashboard ratio. This removes unused right-side space
+             * without cropping or splitting any dashboard content.
+             */
+            var margin = 2;
+            var maximumPageWidth = 420;
+            var maximumPageHeight = 297;
+            var contentWidth = maximumPageWidth - (margin * 2);
+            var contentHeight = contentWidth / canvasRatio;
+
+            if (contentHeight > maximumPageHeight - (margin * 2)) {
+                contentHeight = maximumPageHeight - (margin * 2);
+                contentWidth = contentHeight * canvasRatio;
+            }
+
+            var pageWidth = contentWidth + (margin * 2);
+            var pageHeight = contentHeight + (margin * 2);
+
+            var pdf = new jsPDF({
+                orientation: pageWidth >= pageHeight
+                    ? 'landscape'
+                    : 'portrait',
+                unit: 'mm',
+                format: [pageWidth, pageHeight],
+                compress: true
+            });
+
+            pdf.addImage(
+                imageData,
+                'JPEG',
+                margin,
+                margin,
+                contentWidth,
+                contentHeight,
+                undefined,
+                'FAST'
+            );
+
+            /* Safety check: the generated document must remain one page. */
+            while (pdf.getNumberOfPages() > 1) {
+                pdf.deletePage(pdf.getNumberOfPages());
+            }
+
+            var fromDate =
+                '@Model.FromDate.ToString("yyyy-MM-dd")';
+
+            var toDate =
+                '@Model.ToDate.ToString("yyyy-MM-dd")';
+
+            pdf.save(
+                'CMD_Daily_Performance_'
+                + fromDate
+                + '_to_'
+                + toDate
+                + '.pdf'
+            );
+        }
+        catch (ex) {
+
+            console.error(ex);
+
+            alert(
+                ex && ex.message
+                    ? ex.message
+                    : 'PDF generation failed. Please check browser console.'
+            );
+        }
+        finally {
+
+            if (element) {
+                element.classList.remove('pdf-exporting');
+                element.style.width = oldWidth;
+                element.style.maxWidth = oldMaxWidth;
+                element.style.background = oldBackground;
+            }
+
+            noPrintElements.forEach(function (x) {
+                x.style.display =
+                    x.getAttribute('data-pdf-old-display') || '';
+
+                x.removeAttribute('data-pdf-old-display');
+            });
+
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML =
+                    '<i class="fa fa-file-pdf-o"></i> Download PDF';
+            }
+        }
     }
 </script>

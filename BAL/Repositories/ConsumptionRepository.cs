@@ -26,84 +26,6 @@ namespace BAL.Repositories
                 new DataSet();
         }
 
-
-        // =====================================================
-        // LIST
-        // =====================================================
-
-        //public List<PlantConsumptionBLL>
-        //    GetPlantConsumption(
-        //        DateTime fromDate,
-        //        DateTime toDate)
-        //{
-        //    try
-        //    {
-        //        List<PlantConsumptionBLL> list =
-        //            new List<PlantConsumptionBLL>();
-
-
-        //        SqlParameter[] p =
-        //        {
-        //            new SqlParameter(
-        //                "@FromDate",
-        //                SqlDbType.Date
-        //            )
-        //            {
-        //                Value =
-        //                    fromDate.Date
-        //            },
-
-        //            new SqlParameter(
-        //                "@ToDate",
-        //                SqlDbType.Date
-        //            )
-        //            {
-        //                Value =
-        //                    toDate.Date
-        //            }
-        //        };
-
-
-        //        DataTable dt =
-        //            new DBHelper()
-        //                .GetTableFromSP(
-        //                    "sp_GetPlantConsumption",
-        //                    p
-        //                );
-
-
-        //        if (
-        //            dt != null &&
-        //            dt.Rows.Count > 0
-        //        )
-        //        {
-        //            list =
-        //                JArray
-        //                    .Parse(
-        //                        JsonConvert
-        //                            .SerializeObject(
-        //                                dt
-        //                            )
-        //                    )
-        //                    .ToObject<
-        //                        List<PlantConsumptionBLL>
-        //                    >();
-        //        }
-
-
-        //        return list;
-        //    }
-        //    catch
-        //    {
-        //        throw;
-        //    }
-        //}
-
-
-        // =====================================================
-        // GET EDIT GROUP BY ID
-        // =====================================================
-
         public List<PlantConsumptionBLL>
             GetPlantConsumptionGroupByID(
                 int id)
@@ -794,9 +716,11 @@ namespace BAL.Repositories
 
         public UtilityDailyReportVM GetUtilityDailyReport(DateTime reportDate)
         {
+            DateTime selectedDate = reportDate.Date;
+
             UtilityDailyReportVM vm = new UtilityDailyReportVM
             {
-                ReportDate = reportDate.Date,
+                ReportDate = selectedDate,
                 Records = new List<PlantConsumptionBLL>(),
                 SMP = new PlantConsumptionBLL { Plant = "SMP" },
                 RM1 = new PlantConsumptionBLL { Plant = "RM1" },
@@ -805,95 +729,228 @@ namespace BAL.Repositories
 
             try
             {
-                SqlParameter[] p =
+                SqlParameter[] utilityParameters =
                 {
-            new SqlParameter("@Date", reportDate.Date)
+            new SqlParameter("@Date", SqlDbType.Date)
+            {
+                Value = selectedDate
+            }
         };
 
-                DataTable dt = new DBHelper().GetTableFromSP("sp_GetUtilityDailyReport", p);
+                DataTable utilityTable = new DBHelper().GetTableFromSP(
+                    "sp_GetUtilityDailyReport",
+                    utilityParameters
+                );
 
-                if (dt == null || dt.Rows.Count == 0)
-                    return vm;
-
-                foreach (DataRow row in dt.Rows)
+                if (utilityTable != null)
                 {
-                    PlantConsumptionBLL item = new PlantConsumptionBLL
+                    foreach (DataRow row in utilityTable.Rows)
                     {
-                        ID = GetInt(row, "ID"),
+                        PlantConsumptionBLL item = new PlantConsumptionBLL
+                        {
+                            ID = GetInt(row, "ID"),
+                            Date = GetDate(row, "Date"),
+                            Plant = GetString(row, "Plant"),
 
-                        Date = GetDate(row, "Date"),
+                            // Production is overwritten below from
+                            // sp_GetPlantProductionByDate.
+                            TotalProductBillet = 0m,
 
-                        Plant = GetString(row, "Plant"),
+                            LPG = GetNullableDecimal(row, "LPG"),
+                            Oxygen = GetNullableDecimal(row, "Oxygen"),
+                            Nitrogen = GetNullableDecimal(row, "Nitrogen"),
+                            Argon = GetNullableDecimal(row, "Argon"),
+                            WaterConsumption = GetNullableDecimal(row, "WaterConsumption"),
+                            PowerConsumption = GetNullableDecimal(row, "PowerConsumption"),
 
-                        TotalProductBillet = GetNullableDecimal(row, "TotalProductBillet"),
+                            LPGm3ton = GetNullableDecimal(row, "LPGm3ton"),
+                            LPGNm3tonTarget = GetNullableDecimal(row, "LPGNm3tonTarget"),
+                            OxygenNm3ton = GetNullableDecimal(row, "OxygenNm3ton"),
+                            OxygenNm3tonTarget = GetNullableDecimal(row, "OxygenNm3tonTarget"),
+                            NitrogenNm3ton = GetNullableDecimal(row, "NitrogenNm3ton"),
+                            NitrogenNm3tonTarget = GetNullableDecimal(row, "NitrogenNm3tonTarget"),
+                            ArgonNm3ton = GetNullableDecimal(row, "ArgonNm3ton"),
+                            ArgonNm3tonTarget = GetNullableDecimal(row, "ArgonNm3tonTarget"),
+                            PowerConsumptionKWHton = GetNullableDecimal(row, "PowerConsumptionKWHton"),
+                            PowerConsumptionKWHtarget = GetNullableDecimal(row, "PowerConsumptionKWHtarget"),
+                            WaterConsumptionM3 = GetNullableDecimal(row, "WaterConsumptionM3"),
+                            WaterConsumptionTarget = GetNullableDecimal(row, "WaterConsumptionTarget"),
+                            FuelConsumption = GetNullableDecimal(row, "FuelConsumption"),
+                            FuelConsumptionTarget = GetNullableDecimal(row, "FuelConsumptionTarget"),
 
-                        LPG = GetNullableDecimal(row, "LPG"),
-                        Oxygen = GetNullableDecimal(row, "Oxygen"),
-                        Nitrogen = GetNullableDecimal(row, "Nitrogen"),
-                        Argon = GetNullableDecimal(row, "Argon"),
+                            StatusID = GetNullableInt(row, "StatusID"),
+                            CreatedBy = GetString(row, "CreatedBy"),
+                            CreatedDate = GetDate(row, "CreatedDate"),
+                            UpdatedBy = GetString(row, "UpdatedBy"),
+                            UpdatedDate = GetDate(row, "UpdatedDate")
+                        };
 
-                        WaterConsumption = GetNullableDecimal(row, "WaterConsumption"),
-                        PowerConsumption = GetNullableDecimal(row, "PowerConsumption"),
+                        vm.Records.Add(item);
 
-                        LPGm3ton = GetNullableDecimal(row, "LPGm3ton"),
-                        LPGNm3tonTarget = GetNullableDecimal(row, "LPGNm3tonTarget"),
+                        string plantCode = NormalizePlantCode(item.Plant);
 
-                        OxygenNm3ton = GetNullableDecimal(row, "OxygenNm3ton"),
-                        OxygenNm3tonTarget = GetNullableDecimal(row, "OxygenNm3tonTarget"),
-
-                        NitrogenNm3ton = GetNullableDecimal(row, "NitrogenNm3ton"),
-                        NitrogenNm3tonTarget = GetNullableDecimal(row, "NitrogenNm3tonTarget"),
-
-                        ArgonNm3ton = GetNullableDecimal(row, "ArgonNm3ton"),
-                        ArgonNm3tonTarget = GetNullableDecimal(row, "ArgonNm3tonTarget"),
-
-                        PowerConsumptionKWHton = GetNullableDecimal(row, "PowerConsumptionKWHton"),
-                        PowerConsumptionKWHtarget = GetNullableDecimal(row, "PowerConsumptionKWHtarget"),
-
-                        WaterConsumptionM3 = GetNullableDecimal(row, "WaterConsumptionM3"),
-                        WaterConsumptionTarget = GetNullableDecimal(row, "WaterConsumptionTarget"),
-
-                        FuelConsumption = GetNullableDecimal(row, "FuelConsumption"),
-                        FuelConsumptionTarget =
-            GetNullableDecimal(
-                row,
-                "FuelConsumptionTarget"
-            ),
-
-                        StatusID = GetNullableInt(row, "StatusID"),
-
-                        CreatedBy = GetString(row, "CreatedBy"),
-                        CreatedDate = GetDate(row, "CreatedDate"),
-
-                        UpdatedBy = GetString(row, "UpdatedBy"),
-                        UpdatedDate = GetDate(row, "UpdatedDate")
-                    };
-
-                    vm.Records.Add(item);
-
-                    string plant = (item.Plant ?? "").Trim().ToUpper();
-
-                    if (plant == "SMP")
-                    {
-                        vm.SMP = item;
-                    }
-                    else if (plant == "RM1")
-                    {
-                        vm.RM1 = item;
-                    }
-                    else if (plant == "RM2")
-                    {
-                        vm.RM2 = item;
+                        if (plantCode == "SMP")
+                        {
+                            item.Plant = "SMP";
+                            vm.SMP = item;
+                        }
+                        else if (plantCode == "RM1")
+                        {
+                            item.Plant = "RM1";
+                            vm.RM1 = item;
+                        }
+                        else if (plantCode == "RM2")
+                        {
+                            item.Plant = "RM2";
+                            vm.RM2 = item;
+                        }
                     }
                 }
 
+                // Always execute this after utility binding. This replaces any old
+                // TotalProductBillet value returned by sp_GetUtilityDailyReport.
+                ApplyPlantProductionByDate(vm, selectedDate);
+
                 return vm;
             }
-            catch
+            catch (Exception ex)
             {
-                return vm;
+                // Do not silently return incorrect/zero production.
+                throw new DataException(
+                    "Utility Daily Report could not bind production for " +
+                    selectedDate.ToString("yyyy-MM-dd") + ".",
+                    ex
+                );
             }
         }
+
+        private void ApplyPlantProductionByDate(
+            UtilityDailyReportVM vm,
+            DateTime reportDate)
+        {
+            if (vm == null)
+            {
+                throw new ArgumentNullException("vm");
+            }
+
+            SqlParameter[] productionParameters =
+            {
+        new SqlParameter("@Date", SqlDbType.Date)
+        {
+            Value = reportDate.Date
+        }
+    };
+
+            DataTable productionTable = new DBHelper().GetTableFromSP(
+                "sp_GetPlantProductionByDate",
+                productionParameters
+            );
+
+            decimal smpProduction = 0m;
+            decimal rm1Production = 0m;
+            decimal rm2Production = 0m;
+
+            if (productionTable != null && productionTable.Rows.Count > 0)
+            {
+                DataRow productionRow = productionTable.Rows[0];
+
+                smpProduction = GetRequiredProductionDecimal(
+                    productionRow,
+                    "SMPProduction"
+                );
+
+                rm1Production = GetRequiredProductionDecimal(
+                    productionRow,
+                    "RM1Production"
+                );
+
+                rm2Production = GetRequiredProductionDecimal(
+                    productionRow,
+                    "RM2Production"
+                );
+            }
+
+            if (vm.SMP == null)
+            {
+                vm.SMP = new PlantConsumptionBLL { Plant = "SMP" };
+            }
+
+            if (vm.RM1 == null)
+            {
+                vm.RM1 = new PlantConsumptionBLL { Plant = "RM1" };
+            }
+
+            if (vm.RM2 == null)
+            {
+                vm.RM2 = new PlantConsumptionBLL { Plant = "RM2" };
+            }
+
+            vm.SMP.TotalProductBillet = Math.Round(smpProduction, 3);
+            vm.RM1.TotalProductBillet = Math.Round(rm1Production, 3);
+            vm.RM2.TotalProductBillet = Math.Round(rm2Production, 3);
+        }
+
+        private static decimal GetRequiredProductionDecimal(
+            DataRow row,
+            string columnName)
+        {
+            if (row == null ||
+                row.Table == null ||
+                !row.Table.Columns.Contains(columnName))
+            {
+                throw new DataException(
+                    "sp_GetPlantProductionByDate did not return column '" +
+                    columnName + "'."
+                );
+            }
+
+            if (row[columnName] == DBNull.Value)
+            {
+                return 0m;
+            }
+
+            decimal value;
+
+            if (!decimal.TryParse(
+                Convert.ToString(row[columnName]),
+                out value))
+            {
+                throw new DataException(
+                    "Invalid decimal value returned in column '" +
+                    columnName + "'."
+                );
+            }
+
+            return value;
+        }
+
+        private static string NormalizePlantCode(string plant)
+        {
+            string value = (plant ?? string.Empty)
+                .Trim()
+                .ToUpperInvariant()
+                .Replace(" ", string.Empty)
+                .Replace("-", string.Empty)
+                .Replace("_", string.Empty);
+
+            if (value == "SMP" || value == "STEELMAKINGPLANT")
+            {
+                return "SMP";
+            }
+
+            if (value == "RM1" || value == "ROLLINGMILL1")
+            {
+                return "RM1";
+            }
+
+            if (value == "RM2" || value == "ROLLINGMILL2")
+            {
+                return "RM2";
+            }
+
+            return value;
+        }
+
 
         private string GetString(DataRow row, string columnName)
         {

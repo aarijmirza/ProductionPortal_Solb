@@ -1,6 +1,60 @@
-﻿@{
+﻿@model DAL.Models.ExecutiveOperationsDashboardVM
+@using System
+@using System.Linq
+@using System.Collections.Generic
+@using Newtonsoft.Json
+
+@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Executive Operations Dashboard";
+
+    var dashboard = Model ?? new DAL.Models.ExecutiveOperationsDashboardVM();
+    var summary = dashboard.Summary ?? new DAL.Models.ExecutiveSummaryVM();
+    var selectedProduction = dashboard.SelectedProduction ?? new DAL.Models.ProductionPeriodVM();
+    var mtdProduction = dashboard.MTDProduction ?? new DAL.Models.ProductionPeriodVM();
+    var ytdProduction = dashboard.YTDProduction ?? new DAL.Models.ProductionPeriodVM();
+    var supply = dashboard.SupplyChain ?? new DAL.Models.SupplyChainSnapshotVM();
+    var departments = dashboard.Departments ?? new List<DAL.Models.DepartmentPerformanceVM>();
+    var utilities = dashboard.Utilities ?? new List<DAL.Models.UtilityComplianceVM>();
+    var risks = dashboard.TopRisks ?? new List<DAL.Models.OperationalRiskVM>();
+    var actions = dashboard.ManagementActions ?? new List<DAL.Models.ManagementActionVM>();
+    var productionTrend = dashboard.ProductionTrend ?? new List<DAL.Models.ProductionTrendVM>();
+    var validationIssues = dashboard.DataValidationIssues ?? new List<DAL.Models.DataValidationIssueVM>();
+
+    decimal supplyScore = summary.DispatchMTDTarget > 0
+        ? Math.Min(100m, summary.DispatchMTD * 100m / summary.DispatchMTDTarget)
+        : 0m;
+
+    decimal dataQualityScore = Math.Max(0m, Math.Min(100m, summary.DataQualityScore));
+
+    decimal selectedTotal = selectedProduction.Total;
+    decimal mtdTotal = mtdProduction.Total;
+    decimal ytdTotal = ytdProduction.Total;
+
+    decimal smpSelectedShare = selectedTotal > 0m
+        ? selectedProduction.SMP * 100m / selectedTotal
+        : 0m;
+    decimal rm1SelectedShare = selectedTotal > 0m
+        ? selectedProduction.RM1 * 100m / selectedTotal
+        : 0m;
+    decimal rm2SelectedShare = selectedTotal > 0m
+        ? selectedProduction.RM2 * 100m / selectedTotal
+        : 0m;
+
+    string assuranceClass = summary.DataQualityStatus == "Validated"
+        ? string.Empty
+        : (summary.DataQualityStatus == "Review" ? "review" : "attention");
+
+    string reportPeriod = dashboard.FromDate == dashboard.ToDate
+        ? dashboard.ToDate.ToString("dd MMM yyyy")
+        : dashboard.FromDate.ToString("dd MMM") + " - " + dashboard.ToDate.ToString("dd MMM yyyy");
+
+    Func<decimal, string> number0 = value => value.ToString("N0");
+    Func<decimal, string> number1 = value => value.ToString("N1");
+    Func<decimal, string> signed1 = value =>
+        (value > 0 ? "+" : string.Empty) + value.ToString("N1") + "%";
+    Func<decimal, string> scoreClass = value =>
+        value >= 90m ? "good" : (value >= 75m ? "warn" : "bad");
 }
 
 <link rel="stylesheet"
@@ -33,34 +87,33 @@
 
     body {
         background: var(--page-bg);
-    
         color: var(--text);
     }
 
     .xp-contentbar {
-/*        padding: 18px !important;
-*/        background: var(--page-bg) !important;
+        /*        padding: 18px !important;
+    */ background: var(--page-bg) !important;
     }
 
     .executive-dashboard {
         width: 100%;
-        max-width: 1580px;
+        max-width: 1640px;
         margin: 0 auto;
     }
 
     /* =========================================================
-       PAGE HEADER
-    ========================================================= */
+           PAGE HEADER
+        ========================================================= */
 
     .executive-header {
         position: relative;
         overflow: hidden;
-        min-height: 120px;
-        padding: 23px 25px;
-        border-radius: 15px;
-        background: linear-gradient( 120deg, var(--solb-maroon-dark) 0%, var(--solb-maroon) 55%, #bd2144 100% );
+        min-height: 142px;
+        padding: 28px 30px;
+        border-radius: 18px;
+        background: linear-gradient(120deg, #640018 0%, var(--solb-maroon) 58%, #c62d50 100%);
         color: #ffffff;
-        box-shadow: var(--shadow);
+        box-shadow: 0 14px 35px rgba(100, 0, 24, .20);
         display: grid;
         grid-template-columns: 1fr auto;
         align-items: center;
@@ -99,7 +152,7 @@
     .header-main h2 {
         margin: 0;
         color: #ffffff;
-        font-size: 29px;
+        font-size: 32px;
         line-height: 1.1;
         font-weight: 900;
         letter-spacing: -.3px;
@@ -108,24 +161,160 @@
     .header-main p {
         margin: 8px 0 0;
         color: rgba(255,255,255,.9);
-        font-size: 12px;
+        max-width: 680px;
+        font-size: 13px;
         font-weight: 600;
     }
 
     .header-side {
         position: relative;
         z-index: 2;
+        display: grid;
+        grid-template-columns: 170px 220px;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .executive-index,
+    .header-meta {
+        min-height: 88px;
+        padding: 13px 15px;
+        border-radius: 13px;
+        border: 1px solid rgba(255,255,255,.22);
+        background: rgba(255,255,255,.11);
+        backdrop-filter: blur(5px);
+    }
+
+        .executive-index small,
+        .executive-index span {
+            display: block;
+            color: rgba(255,255,255,.76);
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .45px;
+        }
+
+        .executive-index strong {
+            display: block;
+            margin: 5px 0 4px;
+            color: #fff;
+            font-size: 29px;
+            line-height: 1;
+            font-weight: 950;
+        }
+
+        .executive-index .index-status {
+            display: inline-flex;
+            padding: 3px 7px;
+            border-radius: 12px;
+            background: rgba(255,255,255,.16);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 850;
+            text-transform: none;
+        }
+
+    .report-toolbar {
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: space-between;
+        gap: 14px;
+        margin-top: 14px;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        background: #fff;
+        box-shadow: var(--shadow);
+    }
+
+    .toolbar-context {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .toolbar-context-icon {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #f7e9ed;
+        color: var(--solb-maroon);
+    }
+
+    .toolbar-context strong,
+    .toolbar-context small {
+        display: block;
+    }
+
+    .toolbar-context strong {
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .toolbar-context small {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-filter {
+        display: flex;
+        align-items: end;
+        gap: 8px;
+        padding: 9px 10px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+
+        .header-filter label {
+            display: block;
+            margin: 0;
+            color: var(--muted);
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .header-filter input {
+            width: 125px;
+            height: 34px;
+            margin-top: 3px;
+            padding: 5px 7px;
+            border: 1px solid #ccd4de;
+            border-radius: 7px;
+            background: #fff;
+            color: #263142;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+    .filter-btn {
+        height: 34px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 7px;
+        background: var(--solb-maroon);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 900;
+        cursor: pointer;
     }
 
     .header-meta {
-        min-width: 190px;
-        padding: 10px 13px;
-        border-radius: 10px;
-        border: 1px solid rgba(255,255,255,.2);
-        background: rgba(255,255,255,.1);
         text-align: right;
     }
 
@@ -149,9 +338,9 @@
     .print-btn {
         height: 42px;
         padding: 0 15px;
-        border: 1px solid rgba(255,255,255,.55);
+        border: 1px solid #e2c0c9;
         border-radius: 9px;
-        background: #ffffff;
+        background: #fff;
         color: var(--solb-maroon);
         font-size: 11px;
         font-weight: 900;
@@ -168,8 +357,8 @@
         }
 
     /* =========================================================
-       COMMON CARD
-    ========================================================= */
+           COMMON CARD
+        ========================================================= */
 
     .dashboard-card {
         background: var(--card-bg);
@@ -216,26 +405,32 @@
     }
 
     /* =========================================================
-       EXECUTIVE KPI CARDS
-    ========================================================= */
+           EXECUTIVE KPI CARDS
+        ========================================================= */
 
     .executive-kpis {
         display: grid;
-        grid-template-columns: repeat(8, minmax(0, 1fr));
-        gap: 11px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
         margin-top: 14px;
     }
 
     .executive-kpi {
         position: relative;
-        min-height: 125px;
-        padding: 15px;
+        min-height: 142px;
+        padding: 17px 18px;
         overflow: hidden;
         background: #ffffff;
         border: 1px solid var(--border);
-        border-radius: 12px;
-        box-shadow: var(--shadow);
+        border-radius: 14px;
+        box-shadow: 0 5px 18px rgba(22, 34, 50, .06);
+        transition: transform .18s ease, box-shadow .18s ease;
     }
+
+        .executive-kpi:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(22, 34, 50, .10);
+        }
 
         .executive-kpi::before {
             content: "";
@@ -268,7 +463,7 @@
 
     .kpi-label {
         color: var(--muted);
-        font-size: 10px;
+        font-size: 11px;
         line-height: 1.3;
         font-weight: 900;
         text-transform: uppercase;
@@ -301,7 +496,7 @@
     .kpi-value {
         margin-top: 12px;
         color: var(--text);
-        font-size: 24px;
+        font-size: 28px;
         line-height: 1;
         font-weight: 900;
     }
@@ -309,7 +504,7 @@
     .kpi-subtitle {
         margin-top: 8px;
         color: var(--muted);
-        font-size: 10px;
+        font-size: 11px;
         line-height: 1.35;
         font-weight: 650;
     }
@@ -321,7 +516,7 @@
         border-radius: 12px;
         background: #eef1f5;
         color: var(--muted);
-        font-size: 9px;
+        font-size: 10px;
         font-weight: 900;
     }
 
@@ -340,16 +535,251 @@
             color: var(--solb-maroon);
         }
 
+        .kpi-status.info {
+            background: #e8f1f9;
+            color: var(--solb-blue);
+        }
+
     /* =========================================================
-       TOP ANALYTICS
-    ========================================================= */
+           THREE-PLANT PORTFOLIO
+        ========================================================= */
+
+    .plant-portfolio-section {
+        margin-top: 14px;
+    }
+
+    .section-heading-row {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 10px;
+        padding: 0 2px;
+    }
+
+        .section-heading-row h3 {
+            margin: 0;
+            color: var(--text);
+            font-size: 19px;
+            font-weight: 950;
+        }
+
+        .section-heading-row p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+    .portfolio-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 11px;
+        border: 1px solid #d9e0e8;
+        border-radius: 20px;
+        background: #fff;
+        color: var(--text);
+        font-size: 9px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+        .portfolio-badge i {
+            color: var(--solb-maroon);
+        }
+
+    .plant-portfolio-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .plant-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: var(--shadow);
+    }
+
+        .plant-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 5px;
+            background: var(--plant-color);
+        }
+
+        .plant-card.smp {
+            --plant-color: var(--solb-maroon);
+        }
+
+        .plant-card.rm1 {
+            --plant-color: var(--solb-blue);
+        }
+
+        .plant-card.rm2 {
+            --plant-color: var(--solb-green);
+        }
+
+    .plant-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 15px 17px 11px 20px;
+    }
+
+    .plant-identity {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .plant-symbol {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        background: #f7e8ec;
+        color: var(--plant-color);
+        font-size: 14px;
+    }
+
+    .plant-card.rm1 .plant-symbol {
+        background: #e8f1f9;
+    }
+
+    .plant-card.rm2 .plant-symbol {
+        background: #e5f3ed;
+    }
+
+    .plant-title strong,
+    .plant-title span {
+        display: block;
+    }
+
+    .plant-title strong {
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 950;
+    }
+
+    .plant-title span {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 8px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .35px;
+    }
+
+    .plant-share {
+        padding: 5px 9px;
+        border-radius: 16px;
+        background: #f2f5f8;
+        color: var(--plant-color);
+        font-size: 10px;
+        font-weight: 950;
+    }
+
+    .plant-primary {
+        padding: 0 17px 12px 20px;
+    }
+
+        .plant-primary small {
+            display: block;
+            color: var(--muted);
+            font-size: 8px;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .plant-primary strong {
+            display: block;
+            margin-top: 3px;
+            color: var(--text);
+            font-size: 27px;
+            line-height: 1;
+            font-weight: 950;
+        }
+
+    .plant-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 0 17px 12px 20px;
+    }
+
+    .plant-metric {
+        padding: 9px 10px;
+        border: 1px solid #e5eaf0;
+        border-radius: 9px;
+        background: #f9fafc;
+    }
+
+        .plant-metric span,
+        .plant-metric strong {
+            display: block;
+        }
+
+        .plant-metric span {
+            color: var(--muted);
+            font-size: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .plant-metric strong {
+            margin-top: 3px;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+    .plant-context {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-height: 27px;
+        padding: 0 17px 8px 20px;
+    }
+
+        .plant-context span {
+            display: inline-flex;
+            padding: 4px 7px;
+            border-radius: 12px;
+            background: #eef2f6;
+            color: #566174;
+            font-size: 8px;
+            font-weight: 850;
+        }
+
+    .plant-trend-box {
+        height: 115px;
+        padding: 0 10px 10px 13px;
+        position: relative;
+    }
+
+    .portfolio-breakdown {
+        color: var(--muted) !important;
+        line-height: 1.35;
+    }
+
+    /* =========================================================
+           TOP ANALYTICS
+        ========================================================= */
 
     /*    .top-analytics {
-        display: grid;
-        grid-template-columns: 1.35fr 1fr .82fr;
-        gap: 13px;
-        margin-top: 14px;
-    }*/
+            display: grid;
+            grid-template-columns: 1.35fr 1fr .82fr;
+            gap: 13px;
+            margin-top: 14px;
+        }*/
 
     .top-analytics {
         display: grid;
@@ -370,15 +800,15 @@
         }
 
         .trend-health-column .chart-box {
-            height: 260px;
+            height: 285px;
         }
 
         .trend-health-column .health-score-layout {
-            min-height: 220px;
+            min-height: 255px;
         }
 
     .chart-box {
-        height: 255px;
+        height: 295px;
         position: relative;
     }
 
@@ -420,8 +850,8 @@
         }
 
     /* =========================================================
-       HEALTH SCORE
-    ========================================================= */
+           HEALTH SCORE
+        ========================================================= */
 
     .health-score-layout {
         display: grid;
@@ -508,9 +938,21 @@
             background: var(--solb-maroon);
         }
 
+        .health-track.smp span {
+            background: var(--solb-maroon);
+        }
+
+        .health-track.rm1 span {
+            background: var(--solb-blue);
+        }
+
+        .health-track.rm2 span {
+            background: var(--solb-green);
+        }
+
     /* =========================================================
-       DEPARTMENT PERFORMANCE
-    ========================================================= */
+           DEPARTMENT PERFORMANCE
+        ========================================================= */
 
     .department-section {
         margin-top: 14px;
@@ -548,6 +990,10 @@
         color: var(--solb-green);
     }
 
+        .department-score.info {
+            color: var(--solb-blue);
+        }
+
         .department-score.warn {
             color: var(--solb-orange);
         }
@@ -579,6 +1025,19 @@
             background: var(--solb-maroon);
         }
 
+        .department-progress.info span {
+            background: var(--solb-blue);
+        }
+
+    .department-metric {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 8px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .25px;
+    }
+
     .department-meta {
         margin-top: 8px;
         display: flex;
@@ -589,8 +1048,8 @@
     }
 
     /* =========================================================
-       MIDDLE GRID
-    ========================================================= */
+           MIDDLE GRID
+        ========================================================= */
 
     .middle-grid {
         display: grid;
@@ -600,8 +1059,8 @@
     }
 
     /* =========================================================
-       TOP RISKS
-    ========================================================= */
+           TOP RISKS
+        ========================================================= */
 
     .risk-list {
         display: grid;
@@ -658,8 +1117,8 @@
     }
 
     /* =========================================================
-       SUPPLY CHAIN SNAPSHOT
-    ========================================================= */
+           SUPPLY CHAIN SNAPSHOT
+        ========================================================= */
 
     .supply-grid {
         display: grid;
@@ -709,8 +1168,8 @@
     }
 
     /* =========================================================
-       UTILITY COMPLIANCE
-    ========================================================= */
+           UTILITY COMPLIANCE
+        ========================================================= */
 
     .utility-table {
         width: 100%;
@@ -771,9 +1230,23 @@
             color: var(--solb-maroon);
         }
 
+    .formula-note {
+        padding: 9px 12px;
+        border-top: 1px solid var(--line);
+        background: #f8fafc;
+        color: var(--muted);
+        font-size: 8px;
+        line-height: 1.35;
+        font-weight: 700;
+    }
+
+        .formula-note strong {
+            color: var(--text);
+        }
+
     /* =========================================================
-       BOTTOM TREND
-    ========================================================= */
+           BOTTOM TREND
+        ========================================================= */
 
     .bottom-grid {
         display: grid;
@@ -788,8 +1261,8 @@
     }
 
     /* =========================================================
-       MANAGEMENT ACTIONS TABLE
-    ========================================================= */
+           MANAGEMENT ACTIONS TABLE
+        ========================================================= */
 
     .action-table {
         width: 100%;
@@ -842,8 +1315,8 @@
         }
 
     /* =========================================================
-       FOOTER
-    ========================================================= */
+           FOOTER
+        ========================================================= */
 
     .dashboard-footer {
         margin-top: 14px;
@@ -860,8 +1333,133 @@
         }
 
     /* =========================================================
-       RESPONSIVE
-    ========================================================= */
+           DATA ASSURANCE
+        ========================================================= */
+
+    .data-assurance {
+        margin-top: 14px;
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        background: #fff;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .data-assurance-summary {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        gap: 12px;
+        align-items: center;
+        padding: 13px 15px;
+        cursor: pointer;
+        list-style: none;
+    }
+
+        .data-assurance-summary::-webkit-details-marker {
+            display: none;
+        }
+
+    .assurance-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #e6f4ed;
+        color: var(--solb-green);
+    }
+
+    .data-assurance.review .assurance-icon {
+        background: #fff2d9;
+        color: #a66500;
+    }
+
+    .data-assurance.attention .assurance-icon {
+        background: #f8e5e9;
+        color: var(--solb-maroon);
+    }
+
+    .assurance-copy strong,
+    .assurance-copy small {
+        display: block;
+    }
+
+    .assurance-copy strong {
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .assurance-copy small {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 650;
+    }
+
+    .assurance-score {
+        color: var(--text);
+        font-size: 18px;
+        font-weight: 950;
+    }
+
+    .assurance-pill {
+        padding: 5px 9px;
+        border-radius: 16px;
+        background: #e6f4ed;
+        color: var(--solb-green);
+        font-size: 9px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .data-assurance.review .assurance-pill {
+        background: #fff2d9;
+        color: #a66500;
+    }
+
+    .data-assurance.attention .assurance-pill {
+        background: #f8e5e9;
+        color: var(--solb-maroon);
+    }
+
+    .validation-list {
+        padding: 0 15px 14px;
+        border-top: 1px solid var(--line);
+    }
+
+    .validation-row {
+        display: grid;
+        grid-template-columns: 150px 150px 1fr 85px;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+        .validation-row:last-child {
+            border-bottom: 0;
+        }
+
+        .validation-row strong {
+            color: var(--text);
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .validation-row .validation-severity {
+            text-align: right;
+            color: var(--solb-maroon);
+            font-weight: 900;
+        }
+
+    /* =========================================================
+           RESPONSIVE
+        ========================================================= */
 
     @@media (max-width: 1450px) {
         .executive-kpis {
@@ -874,6 +1472,14 @@
     }
 
     @@media (max-width: 1150px) {
+        .executive-header {
+            grid-template-columns: 1fr;
+        }
+
+        .header-side {
+            grid-template-columns: 170px 220px;
+        }
+
         .top-analytics,
         .middle-grid,
         .bottom-grid {
@@ -882,6 +1488,10 @@
 
         .department-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .plant-portfolio-grid {
+            grid-template-columns: 1fr;
         }
     }
 
@@ -896,11 +1506,34 @@
 
         .header-side {
             align-items: stretch;
-            flex-direction: column;
+            grid-template-columns: 1fr 1fr;
         }
 
         .header-meta {
             text-align: left;
+        }
+
+        .header-filter {
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+
+        .report-toolbar,
+        .toolbar-actions {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .toolbar-context {
+            width: 100%;
+        }
+
+        .header-filter > div {
+            flex: 1 1 130px;
+        }
+
+        .header-filter input {
+            width: 100%;
         }
 
         .executive-kpis {
@@ -914,9 +1547,31 @@
         .department-grid {
             grid-template-columns: 1fr;
         }
+
+        .data-assurance-summary {
+            grid-template-columns: auto 1fr;
+        }
+
+        .assurance-score,
+        .assurance-pill {
+            grid-column: 2;
+        }
+
+        .validation-row {
+            grid-template-columns: 1fr;
+            gap: 3px;
+        }
+
+            .validation-row .validation-severity {
+                text-align: left;
+            }
     }
 
     @@media (max-width: 480px) {
+        .header-side {
+            grid-template-columns: 1fr;
+        }
+
         .executive-kpis {
             grid-template-columns: 1fr;
         }
@@ -925,11 +1580,16 @@
         .supply-grid {
             grid-template-columns: 1fr;
         }
+
+        .section-heading-row {
+            align-items: flex-start;
+            flex-direction: column;
+        }
     }
 
     /* =========================================================
-       PRINT
-    ========================================================= */
+           PRINT
+        ========================================================= */
 
     @@media print {
         @@page {
@@ -944,6 +1604,7 @@
         }
 
         .no-print,
+        .data-assurance,
         .xp-breadcrumbbar,
         .navbar,
         .sidebar,
@@ -1012,9 +1673,93 @@
         }
 
         .top-analytics {
-            grid-template-columns: 1.35fr 1fr .82fr !important;
+            grid-template-columns: 1.35fr 1fr !important;
             gap: 6px !important;
             margin-top: 7px !important;
+        }
+
+        .plant-portfolio-section {
+            margin-top: 7px !important;
+        }
+
+        .section-heading-row {
+            margin-bottom: 5px !important;
+        }
+
+            .section-heading-row h3 {
+                font-size: 10px !important;
+            }
+
+            .section-heading-row p,
+            .portfolio-badge {
+                font-size: 6px !important;
+            }
+
+        .plant-portfolio-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 6px !important;
+        }
+
+        .plant-card {
+            border-radius: 7px !important;
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+        }
+
+        .plant-card-head,
+        .plant-primary,
+        .plant-metrics,
+        .plant-context {
+            padding-left: 9px !important;
+            padding-right: 7px !important;
+        }
+
+        .plant-card-head {
+            padding-top: 6px !important;
+            padding-bottom: 4px !important;
+        }
+
+        .plant-symbol {
+            width: 22px !important;
+            height: 22px !important;
+            border-radius: 6px !important;
+            font-size: 8px !important;
+        }
+
+        .plant-title strong,
+        .plant-primary strong {
+            font-size: 10px !important;
+        }
+
+        .plant-title span,
+        .plant-primary small,
+        .plant-share,
+        .plant-metric span,
+        .plant-context span {
+            font-size: 5px !important;
+        }
+
+        .plant-metrics {
+            gap: 4px !important;
+            padding-bottom: 4px !important;
+        }
+
+        .plant-metric {
+            padding: 4px !important;
+        }
+
+            .plant-metric strong {
+                font-size: 7px !important;
+            }
+
+        .plant-context {
+            min-height: 16px !important;
+            gap: 3px !important;
+        }
+
+        .plant-trend-box {
+            height: 52px !important;
+            padding-bottom: 3px !important;
         }
 
         .department-section,
@@ -1130,21 +1875,68 @@
                 <h2>Executive Operations Dashboard</h2>
 
                 <p>
-                    Consolidated performance overview of Steel Making Plant,
-                    Rolling Mills, Supply Chain, Utilities and Maintenance.
+                    One executive view for Steel Making Plant, Rolling Mill 1
+                    and Rolling Mill 2 with supporting supply, utility and maintenance controls.
                 </p>
             </div>
 
             <div class="header-side">
-                <div class="header-meta">
-                    <small>Report Date</small>
-                    <strong>13-Jul-2026</strong>
-                    <small style="margin-top:5px;">Last Updated</small>
-                    <strong>12:45 PM</strong>
+                <div class="executive-index">
+                    <small>3-Plant Portfolio</small>
+                    <strong>@number0(selectedTotal) MT</strong>
+                    <span class="index-status">SMP + RM1 + RM2</span>
+                    <span style="margin-top:6px; text-transform:none;">
+                        Data confidence @number0(dataQualityScore)%
+                    </span>
                 </div>
 
+                <div class="header-meta">
+                    <small>Report Period</small>
+                    <strong>@reportPeriod</strong>
+                    <small style="margin-top:5px;">Last Updated</small>
+                    <strong>@dashboard.GeneratedOn.ToString("dd-MMM-yyyy hh:mm tt")</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="report-toolbar no-print">
+            <div class="toolbar-context">
+                <div class="toolbar-context-icon">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <strong>Reporting period: @reportPeriod</strong>
+                    <small>
+                        Data assurance: @(string.IsNullOrWhiteSpace(summary.DataQualityStatus) ? "Attention" : summary.DataQualityStatus)
+                        &nbsp;•&nbsp; @number0(dataQualityScore)% confidence
+                    </small>
+                </div>
+            </div>
+
+            <div class="toolbar-actions">
+                @using (Html.BeginForm("dashboard", null, FormMethod.Get, new { @class = "header-filter" }))
+                {
+                    <div>
+                        <label for="fromDate">From date</label>
+                        <input id="fromDate"
+                               name="fromDate"
+                               type="date"
+                               value="@dashboard.FromDate.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div>
+                        <label for="toDate">To date</label>
+                        <input id="toDate"
+                               name="toDate"
+                               type="date"
+                               value="@dashboard.ToDate.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <button type="submit" class="filter-btn">
+                        <i class="fa-solid fa-filter"></i> Load
+                    </button>
+                }
+
                 <button type="button"
-                        class="print-btn no-print"
+                        class="print-btn"
                         onclick="printExecutiveDashboard()">
                     <i class="fa-solid fa-print"></i>
                     Print / Save PDF
@@ -1155,46 +1947,52 @@
         <!-- EXECUTIVE KPI CARDS -->
         <section class="executive-kpis">
 
-            <div class="executive-kpi good">
+            <div class="executive-kpi info">
                 <div class="kpi-top">
-                    <div class="kpi-label">Total Daily Production</div>
+                    <div class="kpi-label">Selected Production</div>
                     <div class="kpi-icon">
                         <i class="fa-solid fa-industry"></i>
                     </div>
                 </div>
 
-                <div class="kpi-value">3,900 MT</div>
-                <div class="kpi-subtitle">SMP + RM1 + RM2 consolidated output</div>
-                <div class="kpi-status good">▲ 4.8% vs plan</div>
-            </div>
-
-            <div class="executive-kpi good">
-                <div class="kpi-top">
-                    <div class="kpi-label">Overall Yield</div>
-                    <div class="kpi-icon">
-                        <i class="fa-solid fa-percent"></i>
-                    </div>
+                <div class="kpi-value">@number0(selectedTotal) MT</div>
+                <div class="kpi-subtitle">Combined selected-period production</div>
+                <div class="kpi-status info">
+                    SMP @number0(selectedProduction.SMP) • RM1 @number0(selectedProduction.RM1) • RM2 @number0(selectedProduction.RM2)
                 </div>
-
-                <div class="kpi-value">89.4%</div>
-                <div class="kpi-subtitle">Weighted plant production yield</div>
-                <div class="kpi-status good">Target 88.0%</div>
             </div>
 
             <div class="executive-kpi info">
                 <div class="kpi-top">
-                    <div class="kpi-label">Plant Availability</div>
+                    <div class="kpi-label">Portfolio MTD Output</div>
                     <div class="kpi-icon">
-                        <i class="fa-solid fa-shield-halved"></i>
+                        <i class="fa-solid fa-calendar-days"></i>
                     </div>
                 </div>
 
-                <div class="kpi-value">92.6%</div>
-                <div class="kpi-subtitle">Operational availability across plants</div>
-                <div class="kpi-status good">Stable</div>
+                <div class="kpi-value">@number0(mtdTotal) MT</div>
+                <div class="kpi-subtitle">Combined month-to-date production</div>
+                <div class="kpi-status info">
+                    SMP @number0(mtdProduction.SMP) • RM1 @number0(mtdProduction.RM1) • RM2 @number0(mtdProduction.RM2)
+                </div>
             </div>
 
-            <div class="executive-kpi good">
+            <div class="executive-kpi info">
+                <div class="kpi-top">
+                    <div class="kpi-label">Portfolio YTD Output</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-calendar"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">@number0(ytdTotal) MT</div>
+                <div class="kpi-subtitle">Combined year-to-date production</div>
+                <div class="kpi-status info">
+                    SMP @number0(ytdProduction.SMP) • RM1 @number0(ytdProduction.RM1) • RM2 @number0(ytdProduction.RM2)
+                </div>
+            </div>
+
+            <div class="executive-kpi @scoreClass(supplyScore)">
                 <div class="kpi-top">
                     <div class="kpi-label">Dispatch MTD</div>
                     <div class="kpi-icon">
@@ -1202,12 +2000,14 @@
                     </div>
                 </div>
 
-                <div class="kpi-value">5,795 MT</div>
+                <div class="kpi-value">@number0(summary.DispatchMTD) MT</div>
                 <div class="kpi-subtitle">Customer dispatch month to date</div>
-                <div class="kpi-status warn">8% of target</div>
+                <div class="kpi-status @scoreClass(supplyScore)">
+                    @number1(supplyScore)% of @number0(summary.DispatchMTDTarget) MT target
+                </div>
             </div>
 
-            <div class="executive-kpi">
+            <div class="executive-kpi @(summary.PowerTarget > 0 && summary.PowerConsumption <= summary.PowerTarget ? "good" : "bad")">
                 <div class="kpi-top">
                     <div class="kpi-label">Power Consumption</div>
                     <div class="kpi-icon">
@@ -1215,12 +2015,14 @@
                     </div>
                 </div>
 
-                <div class="kpi-value">608</div>
-                <div class="kpi-subtitle">SMP power consumption kWh/t</div>
-                <div class="kpi-status warn">Target 602</div>
+                <div class="kpi-value">@number1(summary.PowerConsumption)</div>
+                <div class="kpi-subtitle">Weighted power consumption (kWh/t)</div>
+                <div class="kpi-status @(summary.PowerTarget > 0 && summary.PowerConsumption <= summary.PowerTarget ? "good" : "bad")">
+                    Target @number1(summary.PowerTarget)
+                </div>
             </div>
 
-            <div class="executive-kpi bad">
+            <div class="executive-kpi @(summary.TotalDowntimeMinutes > 0 ? "bad" : "good")">
                 <div class="kpi-top">
                     <div class="kpi-label">Total Downtime</div>
                     <div class="kpi-icon">
@@ -1228,12 +2030,14 @@
                     </div>
                 </div>
 
-                <div class="kpi-value">590 Min</div>
+                <div class="kpi-value">@number0(summary.TotalDowntimeMinutes) Min</div>
                 <div class="kpi-subtitle">Planned and unplanned downtime</div>
-                <div class="kpi-status bad">Action required</div>
+                <div class="kpi-status @(summary.TotalDowntimeMinutes > 0 ? "bad" : "good")">
+                    @(summary.TotalDowntimeMinutes > 0 ? "Review top risks" : "No downtime recorded")
+                </div>
             </div>
 
-            <div class="executive-kpi good">
+            <div class="executive-kpi @scoreClass(summary.MaintenanceClosure)">
                 <div class="kpi-top">
                     <div class="kpi-label">Maintenance Closure</div>
                     <div class="kpi-icon">
@@ -1241,24 +2045,171 @@
                     </div>
                 </div>
 
-                <div class="kpi-value">87%</div>
-                <div class="kpi-subtitle">Countermeasures closed on time</div>
-                <div class="kpi-status good">▲ 3%</div>
+                <div class="kpi-value">@number1(summary.MaintenanceClosure)%</div>
+                <div class="kpi-subtitle">Closed countermeasures in selected period</div>
+                <div class="kpi-status @scoreClass(summary.MaintenanceClosure)">DelayCounterMeasure</div>
             </div>
 
             <div class="executive-kpi info">
                 <div class="kpi-top">
-                    <div class="kpi-label">Executive Health Score</div>
+                    <div class="kpi-label">Raw Material Inventory</div>
                     <div class="kpi-icon">
-                        <i class="fa-solid fa-chart-simple"></i>
+                        <i class="fa-solid fa-boxes-stacked"></i>
                     </div>
                 </div>
 
-                <div class="kpi-value">88%</div>
-                <div class="kpi-subtitle">Combined weighted performance score</div>
-                <div class="kpi-status good">Good</div>
+                <div class="kpi-value">@number0(supply.RawMaterialStock) MT</div>
+                <div class="kpi-subtitle">Scrap + DRI + HBI available stock</div>
+                <div class="kpi-status info">
+                    Finished goods @number0(supply.FinishedGoodsStock) MT
+                </div>
             </div>
 
+        </section>
+
+        <!-- DATA ASSURANCE -->
+        <details class="data-assurance @assuranceClass">
+            <summary class="data-assurance-summary">
+                <div class="assurance-icon">
+                    <i class="fa-solid @(validationIssues.Any() ? "fa-triangle-exclamation" : "fa-shield-check")"></i>
+                </div>
+                <div class="assurance-copy">
+                    <strong>Data Assurance</strong>
+                    <small>
+                        Source completeness, numeric integrity and KPI prerequisites checked before presentation.
+                    </small>
+                </div>
+                <div class="assurance-score">@number0(dataQualityScore)%</div>
+                <div class="assurance-pill">
+                    @(string.IsNullOrWhiteSpace(summary.DataQualityStatus) ? "Attention" : summary.DataQualityStatus)
+                    &nbsp;•&nbsp; @summary.DataWarningCount issue@(summary.DataWarningCount == 1 ? string.Empty : "s")
+                </div>
+            </summary>
+
+            <div class="validation-list">
+                @if (validationIssues.Any())
+                {
+                    foreach (var issue in validationIssues)
+                    {
+                        <div class="validation-row">
+                            <strong>@issue.SourceName</strong>
+                            <span>@issue.FieldName</span>
+                            <span>@issue.IssueMessage</span>
+                            <span class="validation-severity">
+                                @issue.Severity
+                                @if (issue.AffectedRows > 0)
+                                {
+                                    <text>(@issue.AffectedRows)</text>
+                                }
+                            </span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="validation-row">
+                        <strong>All sources</strong>
+                        <span>Validation</span>
+                        <span>No data-quality exception was detected for the selected reporting context.</span>
+                        <span class="validation-severity" style="color:var(--solb-green);">Passed</span>
+                    </div>
+                }
+            </div>
+        </details>
+
+        <!-- THREE-PLANT PORTFOLIO -->
+        <section class="plant-portfolio-section">
+            <div class="section-heading-row">
+                <div>
+                    <h3>Three-Plant Production Portfolio</h3>
+                    <p>Equal plant-level visibility for SMP, Rolling Mill 1 and Rolling Mill 2.</p>
+                </div>
+                <div class="portfolio-badge">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                    Combined selected output: @number0(selectedTotal) MT
+                </div>
+            </div>
+
+            <div class="plant-portfolio-grid">
+                <article class="plant-card smp">
+                    <div class="plant-card-head">
+                        <div class="plant-identity">
+                            <div class="plant-symbol"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                            <div class="plant-title">
+                                <strong>Steel Making Plant</strong>
+                                <span>SMP production dashboard</span>
+                            </div>
+                        </div>
+                        <div class="plant-share">@number1(smpSelectedShare)% share</div>
+                    </div>
+                    <div class="plant-primary">
+                        <small>Selected-period output</small>
+                        <strong>@number0(selectedProduction.SMP) MT</strong>
+                    </div>
+                    <div class="plant-metrics">
+                        <div class="plant-metric"><span>MTD Output</span><strong>@number0(mtdProduction.SMP) MT</strong></div>
+                        <div class="plant-metric"><span>YTD Output</span><strong>@number0(ytdProduction.SMP) MT</strong></div>
+                    </div>
+                    <div class="plant-context">
+                        <span>Yield @number1(summary.SMPYield)%</span>
+                        <span>Availability @number1(summary.SMPAvailability)%</span>
+                        <span>Plan variance @signed1(summary.SMPPlanVariancePercentage)</span>
+                    </div>
+                    <div class="plant-trend-box"><canvas id="smpPlantTrendChart"></canvas></div>
+                </article>
+
+                <article class="plant-card rm1">
+                    <div class="plant-card-head">
+                        <div class="plant-identity">
+                            <div class="plant-symbol"><i class="fa-solid fa-gears"></i></div>
+                            <div class="plant-title">
+                                <strong>Rolling Mill 1</strong>
+                                <span>RM1 production dashboard</span>
+                            </div>
+                        </div>
+                        <div class="plant-share">@number1(rm1SelectedShare)% share</div>
+                    </div>
+                    <div class="plant-primary">
+                        <small>Selected-period output</small>
+                        <strong>@number0(selectedProduction.RM1) MT</strong>
+                    </div>
+                    <div class="plant-metrics">
+                        <div class="plant-metric"><span>MTD Output</span><strong>@number0(mtdProduction.RM1) MT</strong></div>
+                        <div class="plant-metric"><span>YTD Output</span><strong>@number0(ytdProduction.RM1) MT</strong></div>
+                    </div>
+                    <div class="plant-context">
+                        <span>Production source: Bundling Section</span>
+                        <span>Active records only</span>
+                    </div>
+                    <div class="plant-trend-box"><canvas id="rm1PlantTrendChart"></canvas></div>
+                </article>
+
+                <article class="plant-card rm2">
+                    <div class="plant-card-head">
+                        <div class="plant-identity">
+                            <div class="plant-symbol"><i class="fa-solid fa-industry"></i></div>
+                            <div class="plant-title">
+                                <strong>Rolling Mill 2</strong>
+                                <span>RM2 production dashboard</span>
+                            </div>
+                        </div>
+                        <div class="plant-share">@number1(rm2SelectedShare)% share</div>
+                    </div>
+                    <div class="plant-primary">
+                        <small>Selected-period output</small>
+                        <strong>@number0(selectedProduction.RM2) MT</strong>
+                    </div>
+                    <div class="plant-metrics">
+                        <div class="plant-metric"><span>MTD Output</span><strong>@number0(mtdProduction.RM2) MT</strong></div>
+                        <div class="plant-metric"><span>YTD Output</span><strong>@number0(ytdProduction.RM2) MT</strong></div>
+                    </div>
+                    <div class="plant-context">
+                        <span>Production source: Bundling Section</span>
+                        <span>Active records only</span>
+                    </div>
+                    <div class="plant-trend-box"><canvas id="rm2PlantTrendChart"></canvas></div>
+                </article>
+            </div>
         </section>
 
         <!-- TOP ANALYTICS -->
@@ -1268,29 +2219,29 @@
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fa-solid fa-chart-column"></i>
-                        Production Performance
+                        Portfolio Output Comparison
                     </h3>
-                    <span class="card-note">Daily / MTD / YTD</span>
+                    <span class="card-note">Selected-period output by plant</span>
                 </div>
 
                 <div class="card-body">
                     <div class="production-summary-grid">
                         <div class="production-mini">
-                            <small>Daily Output</small>
-                            <strong>3,900 MT</strong>
-                            <span>▲ 4.8%</span>
+                            <small>Selected Output</small>
+                            <strong>@number0(selectedProduction.Total) MT</strong>
+                            <span class="portfolio-breakdown">SMP @number0(selectedProduction.SMP) • RM1 @number0(selectedProduction.RM1) • RM2 @number0(selectedProduction.RM2)</span>
                         </div>
 
                         <div class="production-mini">
                             <small>MTD Output</small>
-                            <strong>99,130 MT</strong>
-                            <span>▲ 2.9%</span>
+                            <strong>@number0(mtdProduction.Total) MT</strong>
+                            <span class="portfolio-breakdown">SMP @number0(mtdProduction.SMP) • RM1 @number0(mtdProduction.RM1) • RM2 @number0(mtdProduction.RM2)</span>
                         </div>
 
                         <div class="production-mini">
                             <small>YTD Output</small>
-                            <strong>493,650 MT</strong>
-                            <span>▲ 3.7%</span>
+                            <strong>@number0(ytdProduction.Total) MT</strong>
+                            <span class="portfolio-breakdown">SMP @number0(ytdProduction.SMP) • RM1 @number0(ytdProduction.RM1) • RM2 @number0(ytdProduction.RM2)</span>
                         </div>
                     </div>
 
@@ -1306,7 +2257,7 @@
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="fa-solid fa-chart-line"></i>
-                            Production Trend
+                            Three-Plant Production Trend
                         </h3>
                         <span class="card-note">Last 12 months</span>
                     </div>
@@ -1321,54 +2272,46 @@
                 <div class="dashboard-card">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fa-solid fa-heart-pulse"></i>
-                            Operational Health
+                            <i class="fa-solid fa-chart-pie"></i>
+                            Selected Production Mix
                         </h3>
-                        <span class="card-note">Weighted score</span>
+                        <span class="card-note">Contribution by plant</span>
                     </div>
 
                     <div class="card-body">
                         <div class="health-score-layout">
 
                             <div class="health-donut-wrap">
-                                <canvas id="healthScoreChart"></canvas>
+                                <canvas id="portfolioMixChart"></canvas>
 
                                 <div class="donut-center">
-                                    <strong>88%</strong>
-                                    <span>Overall</span>
+                                    <strong>@number0(selectedTotal)</strong>
+                                    <span>Total MT</span>
                                 </div>
                             </div>
 
                             <div class="health-list">
                                 <div class="health-item">
-                                    <div class="health-name">Production</div>
-                                    <div class="health-value">94%</div>
-                                    <div class="health-track">
-                                        <span style="width:94%;"></span>
+                                    <div class="health-name">Steel Making Plant</div>
+                                    <div class="health-value">@number0(selectedProduction.SMP) MT • @number1(smpSelectedShare)%</div>
+                                    <div class="health-track smp">
+                                        <span style="width:@smpSelectedShare.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%;"></span>
                                     </div>
                                 </div>
 
                                 <div class="health-item">
-                                    <div class="health-name">Maintenance</div>
-                                    <div class="health-value">87%</div>
-                                    <div class="health-track">
-                                        <span style="width:87%;"></span>
+                                    <div class="health-name">Rolling Mill 1</div>
+                                    <div class="health-value">@number0(selectedProduction.RM1) MT • @number1(rm1SelectedShare)%</div>
+                                    <div class="health-track rm1">
+                                        <span style="width:@rm1SelectedShare.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%;"></span>
                                     </div>
                                 </div>
 
                                 <div class="health-item">
-                                    <div class="health-name">Supply Chain</div>
-                                    <div class="health-value">81%</div>
-                                    <div class="health-track warn">
-                                        <span style="width:81%;"></span>
-                                    </div>
-                                </div>
-
-                                <div class="health-item">
-                                    <div class="health-name">Utilities</div>
-                                    <div class="health-value">76%</div>
-                                    <div class="health-track bad">
-                                        <span style="width:76%;"></span>
+                                    <div class="health-name">Rolling Mill 2</div>
+                                    <div class="health-value">@number0(selectedProduction.RM2) MT • @number1(rm2SelectedShare)%</div>
+                                    <div class="health-track rm2">
+                                        <span style="width:@rm2SelectedShare.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%;"></span>
                                     </div>
                                 </div>
                             </div>
@@ -1378,81 +2321,6 @@
                 </div>
 
             </div>
-
-            @*<div class="dashboard-card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fa-solid fa-chart-line"></i>
-                            Production Trend
-                        </h3>
-                        <span class="card-note">Last 12 months</span>
-                    </div>
-
-                    <div class="card-body">
-                        <div class="chart-box">
-                            <canvas id="productionTrendChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="dashboard-card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fa-solid fa-heart-pulse"></i>
-                            Operational Health
-                        </h3>
-                        <span class="card-note">Weighted score</span>
-                    </div>
-
-                    <div class="card-body">
-                        <div class="health-score-layout">
-
-                            <div class="health-donut-wrap">
-                                <canvas id="healthScoreChart"></canvas>
-
-                                <div class="donut-center">
-                                    <strong>88%</strong>
-                                    <span>Overall</span>
-                                </div>
-                            </div>
-
-                            <div class="health-list">
-                                <div class="health-item">
-                                    <div class="health-name">Production</div>
-                                    <div class="health-value">94%</div>
-                                    <div class="health-track">
-                                        <span style="width:94%;"></span>
-                                    </div>
-                                </div>
-
-                                <div class="health-item">
-                                    <div class="health-name">Maintenance</div>
-                                    <div class="health-value">87%</div>
-                                    <div class="health-track">
-                                        <span style="width:87%;"></span>
-                                    </div>
-                                </div>
-
-                                <div class="health-item">
-                                    <div class="health-name">Supply Chain</div>
-                                    <div class="health-value">81%</div>
-                                    <div class="health-track warn">
-                                        <span style="width:81%;"></span>
-                                    </div>
-                                </div>
-
-                                <div class="health-item">
-                                    <div class="health-name">Utilities</div>
-                                    <div class="health-value">76%</div>
-                                    <div class="health-track bad">
-                                        <span style="width:76%;"></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>*@
 
         </section>
 
@@ -1461,94 +2329,53 @@
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="fa-solid fa-layer-group"></i>
-                    Department Performance Overview
+                    Operational Performance &amp; Contribution
                 </h3>
 
-                <span class="card-note">Current reporting period</span>
+                <span class="card-note">Benchmark-based metrics clearly identified</span>
             </div>
 
             <div class="card-body">
                 <div class="department-grid">
 
-                    <div class="department-card">
-                        <div class="department-head">
-                            <div class="department-name">Steel Making Plant</div>
-                            <div class="department-score">94%</div>
-                        </div>
+                    @if (departments.Any())
+                    {
+                        foreach (var department in departments)
+                        {
+                            decimal safeScore = Math.Max(0m, Math.Min(100m, department.Score));
+                            string cssClass = department.IsBenchmarkBased
+                                ? scoreClass(safeScore)
+                                : "info";
 
-                        <div class="department-progress">
-                            <span style="width:94%;"></span>
-                        </div>
+                            <div class="department-card">
+                                <div class="department-head">
+                                    <div class="department-name">@department.DepartmentName</div>
+                                    <div class="department-score @cssClass">@number1(safeScore)%</div>
+                                </div>
 
-                        <div class="department-meta">
-                            <span>Output 1,245 MT</span>
-                            <span>Yield 86.9%</span>
-                        </div>
-                    </div>
+                                <div class="department-metric">
+                                    @(string.IsNullOrWhiteSpace(department.MetricLabel)
+                                        ? "Reporting metric"
+                                        : department.MetricLabel)
+                                </div>
 
-                    <div class="department-card">
-                        <div class="department-head">
-                            <div class="department-name">Rolling Mill 1</div>
-                            <div class="department-score">91%</div>
-                        </div>
+                                <div class="department-progress @cssClass">
+                                    <span style="width:@safeScore.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%;"></span>
+                                </div>
 
-                        <div class="department-progress">
-                            <span style="width:91%;"></span>
+                                <div class="department-meta">
+                                    <span>@department.PrimaryText</span>
+                                    <span>@department.SecondaryText</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="department-card">
+                            <div class="department-name">No department data found.</div>
                         </div>
-
-                        <div class="department-meta">
-                            <span>Output 1,310 MT</span>
-                            <span>RRR 94%</span>
-                        </div>
-                    </div>
-
-                    <div class="department-card">
-                        <div class="department-head">
-                            <div class="department-name">Rolling Mill 2</div>
-                            <div class="department-score">90%</div>
-                        </div>
-
-                        <div class="department-progress">
-                            <span style="width:90%;"></span>
-                        </div>
-
-                        <div class="department-meta">
-                            <span>Output 1,345 MT</span>
-                            <span>RRR 92%</span>
-                        </div>
-                    </div>
-
-                    <div class="department-card">
-                        <div class="department-head">
-                            <div class="department-name">Supply Chain</div>
-                            <div class="department-score warn">81%</div>
-                        </div>
-
-                        <div class="department-progress warn">
-                            <span style="width:81%;"></span>
-                        </div>
-
-                        <div class="department-meta">
-                            <span>Dispatch 389 MT</span>
-                            <span>Gap -2,011 MT</span>
-                        </div>
-                    </div>
-
-                    <div class="department-card">
-                        <div class="department-head">
-                            <div class="department-name">CMD Maintenance</div>
-                            <div class="department-score warn">84%</div>
-                        </div>
-
-                        <div class="department-progress warn">
-                            <span style="width:84%;"></span>
-                        </div>
-
-                        <div class="department-meta">
-                            <span>Closure 87%</span>
-                            <span>Delay 590 Min</span>
-                        </div>
-                    </div>
+                    }
 
                 </div>
             </div>
@@ -1570,60 +2397,31 @@
                 <div class="card-body">
                     <div class="risk-list">
 
-                        <div class="risk-item">
-                            <div class="risk-rank warn">1</div>
-                            <div>
-                                <div class="risk-title">Planned Downtime</div>
-                                <div class="risk-detail">
-                                    Preventive maintenance and planned production stoppage.
+                        @if (risks.Any())
+                        {
+                            foreach (var risk in risks)
+                            {
+                                <div class="risk-item">
+                                    <div class="risk-rank @(risk.Severity == "High" ? "warn" : string.Empty)">@risk.Rank</div>
+                                    <div>
+                                        <div class="risk-title">@risk.RiskTitle</div>
+                                        <div class="risk-detail">@risk.RiskDetail</div>
+                                    </div>
+                                    <div class="risk-value">@risk.RiskValue</div>
                                 </div>
-                            </div>
-                            <div class="risk-value">480 Min</div>
-                        </div>
-
-                        <div class="risk-item">
-                            <div class="risk-rank">2</div>
-                            <div>
-                                <div class="risk-title">Dispatch Performance Gap</div>
-                                <div class="risk-detail">
-                                    Monthly dispatch remains below planned target.
+                            }
+                        }
+                        else
+                        {
+                            <div class="risk-item">
+                                <div class="risk-rank">✓</div>
+                                <div>
+                                    <div class="risk-title">No active risk found</div>
+                                    <div class="risk-detail">No qualifying risk was recorded for this period.</div>
                                 </div>
+                                <div class="risk-value">Clear</div>
                             </div>
-                            <div class="risk-value">-2,011 MT</div>
-                        </div>
-
-                        <div class="risk-item">
-                            <div class="risk-rank">3</div>
-                            <div>
-                                <div class="risk-title">Power Consumption</div>
-                                <div class="risk-detail">
-                                    SMP consumption is above configured target.
-                                </div>
-                            </div>
-                            <div class="risk-value">+6 kWh/t</div>
-                        </div>
-
-                        <div class="risk-item">
-                            <div class="risk-rank">4</div>
-                            <div>
-                                <div class="risk-title">CCM Downtime</div>
-                                <div class="risk-detail">
-                                    Casting equipment interruptions affecting output.
-                                </div>
-                            </div>
-                            <div class="risk-value">45 Min</div>
-                        </div>
-
-                        <div class="risk-item">
-                            <div class="risk-rank warn">5</div>
-                            <div>
-                                <div class="risk-title">Nitrogen Consumption</div>
-                                <div class="risk-detail">
-                                    Consumption variance requires leakage and purge review.
-                                </div>
-                            </div>
-                            <div class="risk-value">High</div>
-                        </div>
+                        }
 
                     </div>
                 </div>
@@ -1647,7 +2445,7 @@
                                 <i class="fa-solid fa-boxes-stacked"></i>
                             </div>
                             <div class="supply-label">Raw Material Stock</div>
-                            <div class="supply-value">1,490 MT</div>
+                            <div class="supply-value">@number0(supply.RawMaterialStock) MT</div>
                             <div class="supply-sub">Scrap + DRI + HBI</div>
                         </div>
 
@@ -1656,7 +2454,7 @@
                                 <i class="fa-solid fa-cubes"></i>
                             </div>
                             <div class="supply-label">Finished Goods</div>
-                            <div class="supply-value">7,319 MT</div>
+                            <div class="supply-value">@number0(supply.FinishedGoodsStock) MT</div>
                             <div class="supply-sub">Billet, rebar and coils</div>
                         </div>
 
@@ -1665,8 +2463,8 @@
                                 <i class="fa-solid fa-truck"></i>
                             </div>
                             <div class="supply-label">Daily Dispatch</div>
-                            <div class="supply-value">389 MT</div>
-                            <div class="supply-sub">13 trucks dispatched</div>
+                            <div class="supply-value">@number0(supply.DailyDispatch) MT</div>
+                            <div class="supply-sub">@number0(supply.DailyTruck) trucks dispatched</div>
                         </div>
 
                         <div class="supply-item">
@@ -1674,8 +2472,8 @@
                                 <i class="fa-solid fa-calendar-check"></i>
                             </div>
                             <div class="supply-label">MTD Dispatch</div>
-                            <div class="supply-value">5,795 MT</div>
-                            <div class="supply-sub">Target 74,400 MT</div>
+                            <div class="supply-value">@number0(supply.MTDDispatch) MT</div>
+                            <div class="supply-sub">Target @number0(supply.MTDDispatchTarget) MT</div>
                         </div>
 
                     </div>
@@ -1705,67 +2503,39 @@
                         </thead>
 
                         <tbody>
-                            <tr>
-                                <td>Power</td>
-                                <td>608</td>
-                                <td>602</td>
-                                <td>+1.0%</td>
-                                <td>
-                                    <span class="status-pill warn">Review</span>
-                                </td>
-                            </tr>
+                            @if (utilities.Any())
+                            {
+                                foreach (var utility in utilities)
+                                {
+                                    string utilityClass = utility.Status == "High"
+                                        ? "bad"
+                                        : (utility.Status == "Review" ? "warn" : string.Empty);
 
-                            <tr>
-                                <td>Oxygen</td>
-                                <td>89</td>
-                                <td>100</td>
-                                <td>-11%</td>
-                                <td>
-                                    <span class="status-pill">Good</span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Nitrogen</td>
-                                <td>315</td>
-                                <td>100</td>
-                                <td>+215%</td>
-                                <td>
-                                    <span class="status-pill bad">High</span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Argon</td>
-                                <td>13</td>
-                                <td>100</td>
-                                <td>-87%</td>
-                                <td>
-                                    <span class="status-pill">Good</span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>LPG</td>
-                                <td>159</td>
-                                <td>100</td>
-                                <td>+59%</td>
-                                <td>
-                                    <span class="status-pill bad">High</span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Water</td>
-                                <td>0.85</td>
-                                <td>0.90</td>
-                                <td>-5.6%</td>
-                                <td>
-                                    <span class="status-pill">Good</span>
-                                </td>
-                            </tr>
+                                    <tr>
+                                        <td>@utility.UtilityName <small>@utility.Unit</small></td>
+                                        <td>@number1(utility.Actual)</td>
+                                        <td>@number1(utility.Target)</td>
+                                        <td>@signed1(utility.VariancePercentage)</td>
+                                        <td>
+                                            <span class="status-pill @utilityClass">@utility.Status</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5">No utility data found for this date range.</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
+
+                    <div class="formula-note">
+                        <strong>Validation formula:</strong>
+                        Actual = total consumption ÷ total finished product;
+                        target = production-weighted target for available records.
+                    </div>
                 </div>
             </div>
 
@@ -1778,10 +2548,10 @@
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fa-solid fa-chart-area"></i>
-                        Executive Performance Trend
+                        Monthly Production Contribution
                     </h3>
                     <span class="card-note">
-                        Production, availability and maintenance
+                        SMP, RM1 and RM2 share of combined monthly output
                     </span>
                 </div>
 
@@ -1813,60 +2583,36 @@
                         </thead>
 
                         <tbody>
-                            <tr>
-                                <td>
-                                    <span class="priority">High</span>
-                                </td>
-                                <td>
-                                    Review nitrogen leakage and purge-cycle controls.
-                                </td>
-                                <td>Utility / SMP</td>
-                                <td>15-Jul-2026</td>
-                            </tr>
+                            @if (actions.Any())
+                            {
+                                foreach (var action in actions)
+                                {
+                                    string priorityClass = action.Priority == "Medium"
+                                        ? "medium"
+                                        : (action.Priority == "Low" ? "low" : string.Empty);
 
-                            <tr>
-                                <td>
-                                    <span class="priority">High</span>
-                                </td>
-                                <td>
-                                    Recover monthly dispatch gap and prioritize customer orders.
-                                </td>
-                                <td>Supply Chain</td>
-                                <td>17-Jul-2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>
-                                    <span class="priority medium">Medium</span>
-                                </td>
-                                <td>
-                                    Analyse CCM downtime and implement equipment countermeasure.
-                                </td>
-                                <td>CMD / SMP</td>
-                                <td>18-Jul-2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>
-                                    <span class="priority medium">Medium</span>
-                                </td>
-                                <td>
-                                    Review EAF and LF power consumption cycle.
-                                </td>
-                                <td>SMP Production</td>
-                                <td>20-Jul-2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>
-                                    <span class="priority low">Low</span>
-                                </td>
-                                <td>
-                                    Continue monitoring RM1 and RM2 rolling performance.
-                                </td>
-                                <td>Rolling Mill</td>
-                                <td>Ongoing</td>
-                            </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="priority @priorityClass">@action.Priority</span>
+                                        </td>
+                                        <td>@action.Action</td>
+                                        <td>
+                                            @action.Owner
+                                            @if (!string.IsNullOrWhiteSpace(action.Plant))
+                                            {
+                                                <small>(@action.Plant)</small>
+                                            }
+                                        </td>
+                                        <td>@(action.DueDate.HasValue ? action.DueDate.Value.ToString("dd-MMM-yyyy") : "No target date")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4">No open countermeasure found.</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
@@ -1875,7 +2621,7 @@
         </section>
 
         <div class="dashboard-footer">
-            <strong>© 2026 SOLB Steel</strong>
+            <strong>© @DateTime.Today.Year SOLB Steel</strong>
             &nbsp;•&nbsp; Executive Operations Dashboard
             &nbsp;•&nbsp; Management Confidential
         </div>
@@ -1896,6 +2642,47 @@
     const grey = "#9ca3af";
     const gridColor = "#e9edf2";
 
+    const selectedProductionData = @Html.Raw(JsonConvert.SerializeObject(new decimal[]
+    {
+        selectedProduction.SMP,
+        selectedProduction.RM1,
+        selectedProduction.RM2
+    }));
+
+    const productionTrendLabels = @Html.Raw(JsonConvert.SerializeObject(
+        productionTrend.Select(x => x.MonthLabel).ToList()));
+    const productionTrendSMP = @Html.Raw(JsonConvert.SerializeObject(
+        productionTrend.Select(x => x.SMP).ToList()));
+    const productionTrendRM1 = @Html.Raw(JsonConvert.SerializeObject(
+        productionTrend.Select(x => x.RM1).ToList()));
+    const productionTrendRM2 = @Html.Raw(JsonConvert.SerializeObject(
+        productionTrend.Select(x => x.RM2).ToList()));
+
+    function plantContribution(series, index) {
+        if (series[index] === null || series[index] === undefined) {
+            return null;
+        }
+
+        const smp = productionTrendSMP[index] === null ? 0 : Number(productionTrendSMP[index] || 0);
+        const rm1 = productionTrendRM1[index] === null ? 0 : Number(productionTrendRM1[index] || 0);
+        const rm2 = productionTrendRM2[index] === null ? 0 : Number(productionTrendRM2[index] || 0);
+        const total = smp + rm1 + rm2;
+
+        return total > 0
+            ? Math.round((Number(series[index]) * 100 / total) * 10) / 10
+            : null;
+    }
+
+    const contributionSMP = productionTrendSMP.map(function (_, index) {
+        return plantContribution(productionTrendSMP, index);
+    });
+    const contributionRM1 = productionTrendRM1.map(function (_, index) {
+        return plantContribution(productionTrendRM1, index);
+    });
+    const contributionRM2 = productionTrendRM2.map(function (_, index) {
+        return plantContribution(productionTrendRM2, index);
+    });
+
     const valueLabelPlugin = {
         id: "executiveValueLabels",
 
@@ -1905,8 +2692,9 @@
             ctx.save();
             ctx.fillStyle = "#263142";
             ctx.font = "700 9px Segoe UI";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "bottom";
+            const isHorizontal = chart.options.indexAxis === "y";
+            ctx.textAlign = isHorizontal ? "left" : "center";
+            ctx.textBaseline = isHorizontal ? "middle" : "bottom";
 
             chart.data.datasets.forEach(function (dataset, datasetIndex) {
                 if (dataset.type === "line") {
@@ -1927,9 +2715,9 @@
                     }
 
                     ctx.fillText(
-                        Number(value).toLocaleString(),
-                        element.x,
-                        element.y - 5
+                        Number(value).toLocaleString() + (isHorizontal ? " MT" : ""),
+                        isHorizontal ? element.x + 8 : element.x,
+                        isHorizontal ? element.y : element.y - 5
                     );
                 });
             });
@@ -1937,6 +2725,78 @@
             ctx.restore();
         }
     };
+
+    function createPlantTrendChart(canvasId, label, data, color) {
+        const canvas = document.getElementById(canvasId);
+
+        if (!canvas) {
+            return;
+        }
+
+        new Chart(canvas, {
+            type: "line",
+            data: {
+                labels: productionTrendLabels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    borderColor: color,
+                    backgroundColor: color,
+                    borderWidth: 2.5,
+                    pointRadius: 2.5,
+                    pointHoverRadius: 4,
+                    fill: false,
+                    spanGaps: false,
+                    tension: .32
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                interaction: {
+                    mode: "index",
+                    intersect: false
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return " " + label + ": " + Number(context.raw || 0).toLocaleString() + " MT";
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxTicksLimit: 6,
+                            font: { size: 7, weight: "bold" }
+                        },
+                        border: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: "rgba(220,226,233,.65)" },
+                        ticks: {
+                            maxTicksLimit: 3,
+                            font: { size: 7 },
+                            callback: function (value) {
+                                return value >= 1000 ? (value / 1000) + "k" : value;
+                            }
+                        },
+                        border: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    createPlantTrendChart("smpPlantTrendChart", "SMP", productionTrendSMP, maroon);
+    createPlantTrendChart("rm1PlantTrendChart", "RM1", productionTrendRM1, blue);
+    createPlantTrendChart("rm2PlantTrendChart", "RM2", productionTrendRM2, green);
 
     /* PRODUCTION COMPARISON */
 
@@ -1950,18 +2810,131 @@
 
                 datasets: [
                     {
-                        label: "Daily",
-                        data: [1245, 1310, 1345],
-                        backgroundColor: maroon,
-                        borderRadius: 5,
-                        barThickness: 25
+                        label: "Selected output",
+                        data: selectedProductionData,
+                        backgroundColor: [maroon, blue, green],
+                        borderRadius: 7,
+                        borderSkipped: false,
+                        barThickness: 32
+                    }
+                ]
+            },
+
+            plugins: [valueLabelPlugin],
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                indexAxis: "y",
+                layout: {
+                    padding: {
+                        right: 70
+                    }
+                },
+
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return " " + Number(context.raw || 0).toLocaleString() + " MT";
+                            }
+                        }
+                    }
+                },
+
+                scales: {
+                    x: {
+                        beginAtZero: true,
+
+                        ticks: {
+                            font: {
+                                size: 8
+                            },
+
+                            callback: function (value) {
+                                if (value >= 1000) {
+                                    return (value / 1000) + "k";
+                                }
+
+                                return value;
+                            }
+                        },
+
+                        grid: {
+                            color: gridColor
+                        },
+
+                        border: {
+                            display: false
+                        }
+                    },
+
+                    y: {
+                        grid: {
+                            display: false
+                        },
+
+                        ticks: {
+                            font: {
+                                size: 11,
+                                weight: "bold"
+                            }
+                        },
+
+                        border: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    /* PRODUCTION TREND */
+
+    new Chart(
+        document.getElementById("productionTrendChart"),
+        {
+            type: "line",
+
+            data: {
+                labels: productionTrendLabels,
+
+                datasets: [
+                    {
+                        label: "SMP",
+                        data: productionTrendSMP,
+                        borderColor: maroon,
+                        backgroundColor: "rgba(168,20,53,.08)",
+                        fill: false,
+                        borderWidth: 3,
+                        pointRadius: 3,
+                        spanGaps: false,
+                        tension: .32
                     },
                     {
-                        label: "MTD",
-                        data: [35150, 32450, 31530],
+                        label: "RM1",
+                        data: productionTrendRM1,
+                        borderColor: blue,
                         backgroundColor: blue,
-                        borderRadius: 5,
-                        barThickness: 25
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        spanGaps: false,
+                        tension: .25
+                    },
+                    {
+                        label: "RM2",
+                        data: productionTrendRM2,
+                        borderColor: green,
+                        backgroundColor: green,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        spanGaps: false,
+                        tension: .25
                     }
                 ]
             },
@@ -1990,123 +2963,8 @@
                         beginAtZero: true,
 
                         ticks: {
-                            font: {
-                                size: 8
-                            },
-
                             callback: function (value) {
-                                if (value >= 1000) {
-                                    return (value / 1000) + "k";
-                                }
-
-                                return value;
-                            }
-                        },
-
-                        grid: {
-                            color: gridColor
-                        },
-
-                        border: {
-                            display: false
-                        }
-                    },
-
-                    x: {
-                        grid: {
-                            display: false
-                        },
-
-                        ticks: {
-                            font: {
-                                size: 9,
-                                weight: "bold"
-                            }
-                        },
-
-                        border: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        }
-    );
-
-    /* PRODUCTION TREND */
-
-    new Chart(
-        document.getElementById("productionTrendChart"),
-        {
-            type: "line",
-
-            data: {
-                labels: [
-                    "Aug", "Sep", "Oct", "Nov",
-                    "Dec", "Jan", "Feb", "Mar",
-                    "Apr", "May", "Jun", "Jul"
-                ],
-
-                datasets: [
-                    {
-                        label: "Actual",
-                        data: [
-                            86, 88, 87, 90,
-                            91, 89, 92, 93,
-                            91, 94, 95, 96
-                        ],
-                        borderColor: maroon,
-                        backgroundColor: "rgba(168,20,53,.08)",
-                        fill: true,
-                        borderWidth: 3,
-                        pointRadius: 3,
-                        tension: .32
-                    },
-                    {
-                        label: "Plan",
-                        data: [
-                            88, 88, 89, 89,
-                            90, 90, 91, 91,
-                            92, 92, 93, 93
-                        ],
-                        borderColor: blue,
-                        backgroundColor: blue,
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        borderDash: [6, 4],
-                        tension: .25
-                    }
-                ]
-            },
-
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-
-                plugins: {
-                    legend: {
-                        position: "bottom",
-
-                        labels: {
-                            boxWidth: 12,
-                            font: {
-                                size: 9,
-                                weight: "bold"
-                            }
-                        }
-                    }
-                },
-
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        min: 75,
-                        max: 100,
-
-                        ticks: {
-                            callback: function (value) {
-                                return value + "%";
+                                return Number(value).toLocaleString();
                             },
 
                             font: {
@@ -2143,21 +3001,23 @@
         }
     );
 
-    /* HEALTH SCORE */
+    /* SELECTED PRODUCTION MIX */
 
     new Chart(
-        document.getElementById("healthScoreChart"),
+        document.getElementById("portfolioMixChart"),
         {
             type: "doughnut",
 
             data: {
-                labels: ["Achieved", "Gap"],
+                labels: ["SMP", "RM1", "RM2"],
 
                 datasets: [
                     {
-                        data: [88, 12],
-                        backgroundColor: [maroon, "#dfe3e8"],
-                        borderWidth: 0
+                        data: selectedProductionData,
+                        backgroundColor: [maroon, blue, green],
+                        borderColor: "#ffffff",
+                        borderWidth: 3,
+                        hoverOffset: 4
                     }
                 ]
             },
@@ -2174,14 +3034,23 @@
                     },
 
                     tooltip: {
-                        enabled: false
+                        callbacks: {
+                            label: function (context) {
+                                const value = Number(context.raw || 0);
+                                const total = selectedProductionData.reduce(function (sum, item) {
+                                    return sum + Number(item || 0);
+                                }, 0);
+                                const share = total > 0 ? (value * 100 / total).toFixed(1) : "0.0";
+                                return " " + context.label + ": " + value.toLocaleString() + " MT (" + share + "%)";
+                            }
+                        }
                     }
                 }
             }
         }
     );
 
-    /* EXECUTIVE TREND */
+    /* MONTHLY PRODUCTION CONTRIBUTION */
 
     new Chart(
         document.getElementById("executiveTrendChart"),
@@ -2189,46 +3058,37 @@
             type: "line",
 
             data: {
-                labels: [
-                    "Jan", "Feb", "Mar", "Apr",
-                    "May", "Jun", "Jul"
-                ],
+                labels: productionTrendLabels,
 
                 datasets: [
                     {
-                        label: "Production",
-                        data: [82, 85, 87, 86, 90, 92, 94],
+                        label: "SMP share",
+                        data: contributionSMP,
                         borderColor: maroon,
                         backgroundColor: maroon,
                         borderWidth: 3,
                         pointRadius: 3,
+                        spanGaps: false,
                         tension: .25
                     },
                     {
-                        label: "Availability",
-                        data: [88, 89, 90, 91, 91, 92, 93],
+                        label: "RM1 share",
+                        data: contributionRM1,
                         borderColor: blue,
                         backgroundColor: blue,
                         borderWidth: 2,
                         pointRadius: 3,
+                        spanGaps: false,
                         tension: .25
                     },
                     {
-                        label: "Maintenance Closure",
-                        data: [72, 75, 78, 81, 82, 85, 87],
+                        label: "RM2 share",
+                        data: contributionRM2,
                         borderColor: green,
                         backgroundColor: green,
                         borderWidth: 2,
                         pointRadius: 3,
-                        tension: .25
-                    },
-                    {
-                        label: "Supply Chain",
-                        data: [76, 78, 79, 77, 80, 79, 81],
-                        borderColor: orange,
-                        backgroundColor: orange,
-                        borderWidth: 2,
-                        pointRadius: 3,
+                        spanGaps: false,
                         tension: .25
                     }
                 ]
@@ -2250,13 +3110,20 @@
                                 weight: "bold"
                             }
                         }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return " " + context.dataset.label + ": " + Number(context.raw || 0).toFixed(1) + "%";
+                            }
+                        }
                     }
                 },
 
                 scales: {
                     y: {
-                        beginAtZero: false,
-                        min: 60,
+                        beginAtZero: true,
+                        min: 0,
                         max: 100,
 
                         ticks: {

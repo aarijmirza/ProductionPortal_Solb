@@ -176,20 +176,21 @@
                     <ul class="xp-vertical-menu">
 
                         @* DASHBOARDS - Visible for all department roles *@
-                        @if (canViewDashboardReports)
-                        {
-                            <li>
-                                <a href="javascript:void(0);">
-                                    <span>DASHBOARD'S</span><i class="icon-arrow-right pull-right"></i>
-                                </a>
+
+                        <li>
+                            <a href="javascript:void(0);">
+                                <span>DASHBOARD'S</span><i class="icon-arrow-right pull-right"></i>
+                            </a>
+                            @if (canViewDashboardReports)
+                            {
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("ReportingSection", "Reporting")">OPERATION DASHBOARD</a></li>
                                 </ul>
-                                <ul class="xp-vertical-submenu">
-                                    <li><a href="@Url.Action("list", "Executive")">EXECUTIVE DASHBOARD</a></li>
-                                </ul>
-                            </li>
-                        }
+                            }
+                            <ul class="xp-vertical-submenu">
+                                <li><a href="@Url.Action("list", "Executive")">EXECUTIVE DASHBOARD</a></li>
+                            </ul>
+                        </li>
 
                         @* STEEL MAKING PLANT - Only Admin, Steel Making and QC *@
                         @if (isAdmin || isSteelMaking || isQC)
@@ -221,6 +222,10 @@
 
                                 <ul class="xp-vertical-submenu">
                                     <li><a href="@Url.Action("Index", "SMPDayWiseProduction")">DAY WISE PRODUCTION</a></li>
+                                </ul>
+
+                                <ul class="xp-vertical-submenu">
+                                    <li><a href="@Url.Action("Index", "SMPProductionDelay")">DAY WISE DELAYS</a></li>
                                 </ul>
 
                                 <ul class="xp-vertical-submenu">

@@ -188,9 +188,9 @@
                             <div class="form-group col-md-2">
                                 <label>Heat #</label>
                                 @Html.DropDownListFor(m => m.HeatNo,
-                                         (IEnumerable<SelectListItem>)ViewBag.HeatNo,
-                                         "-- Select Heat --",
-                                         new { @class = "form-control select2-heat", id = "ddlHeat" })
+                                              (IEnumerable<SelectListItem>)ViewBag.HeatNo,
+                                              "-- Select Heat --",
+                                              new { @class = "form-control select2-heat", id = "ddlHeat" })
                             </div>
                             <div class="form-group col-md-2">
                                 <label>Boarding #</label>
@@ -406,31 +406,38 @@
 <script>
     $(document).ready(function () {
 
+        /*
+         * Charging Weight is the source of truth.
+         * Discharging TotalWeight is ALWAYS:
+         *
+         * TotalBillet * CURRENT Charging Wt/Billet
+         */
         let chargingWeightPerBillet = 0;
-        let originalBilletQty = 0;
-        let originalTotalWeight = 0;
 
         function calculateTotalWeight() {
-            var currentBillet = toNum($("#txtTotalBillet").val());
 
-            if (currentBillet <= 0) {
+            var currentBillet =
+                toNum(
+                    $("#txtTotalBillet").val()
+                );
+
+            if (
+                currentBillet <= 0 ||
+                chargingWeightPerBillet <= 0
+            ) {
                 $("#txtTotalWeight").val("0.000");
                 return;
             }
 
-            // Agar billet quantity same hai, old/backend total weight same rahega
-            if (currentBillet === originalBilletQty && originalTotalWeight > 0) {
-                $("#txtTotalWeight").val(originalTotalWeight.toFixed(3));
-                return;
-            }
+            var calculatedWeight =
+                currentBillet
+                *
+                chargingWeightPerBillet;
 
-            // Agar billet quantity change hui hai, charging weight per billet se calculate hoga
-            if (chargingWeightPerBillet > 0) {
-                var calculatedWeight = currentBillet * chargingWeightPerBillet;
-                $("#txtTotalWeight").val(calculatedWeight.toFixed(3));
-            } else {
-                $("#txtTotalWeight").val("0.000");
-            }
+            $("#txtTotalWeight")
+                .val(
+                    calculatedWeight.toFixed(3)
+                );
         }
 
         let isSubmitting = false;
@@ -595,15 +602,29 @@ $.ajax({
             return;
         }
 
-        // Store original charging values
-        originalBilletQty = remainingBillet;
-        originalTotalWeight = remainingWeight;
+        /*
+         * CURRENT Wt/Billet direct from Charging.
+         * Controller returns WeightPerBillet explicitly.
+         */
+        chargingWeightPerBillet =
+            toNum(
+                res.WeightPerBillet
+            );
 
-        // Weight per billet from charging
-        chargingWeightPerBillet = remainingBillet > 0
-            ? (remainingWeight / remainingBillet)
-            : 0;
-        debugger
+        /*
+         * Backward-compatible fallback.
+         */
+        if (
+            chargingWeightPerBillet <= 0 &&
+            remainingBillet > 0 &&
+            remainingWeight > 0
+        ) {
+            chargingWeightPerBillet =
+                remainingWeight
+                /
+                remainingBillet;
+        }
+
         $("#txtBoarding").val(res.BoardingNo || '');
         $("#txtGrade").val(res.SteelGrade || '');
         $("#txtProductSpecs").val(
@@ -618,14 +639,16 @@ $.ajax({
             .attr("max", remainingBillet)
             .attr("data-remaining", remainingBillet);
 
-        // Pehle jo charging/backend se total weight aa raha hai woh same set hoga
-        $("#txtTotalWeight").val(remainingWeight.toFixed(3));
+        /*
+         * Calculate with CURRENT Charging Wt/Billet.
+         */
+        calculateTotalWeight();
 
         $("#remainingBilletText").text(
             "Charged: " + chargedBillet +
             " | Discharged: " + alreadyDischargedBillet +
             " | Remaining: " + remainingBillet +
-            " | Wt/Billet: " + chargingWeightPerBillet.toFixed(3)
+            " | Current Wt/Billet: " + chargingWeightPerBillet.toFixed(3)
         );
     },
     error: function () {
@@ -644,7 +667,6 @@ $.ajax({
         // EDIT BUTTON
         // ==============================
  $(document).on("click", ".btn-edit", function () {
-     debugger
     isEditMode = true;
 
     var id = $(this).data("id");
@@ -691,56 +713,142 @@ $.ajax({
         .removeAttr("max")
         .removeAttr("data-remaining");
 
-    $("#txtTotalWeight").val(totalWeight.toFixed(3));
+    /*
+     * OLD Discharging TotalWeight ko source mat banao.
+     * Current Charging Wt/Billet load hone ke baad recalculate hoga.
+     */
+    $("#txtTotalWeight").val("0.000");
     $("#txtDischargingSequence").val(sequence || "");
 
-    // ✅ Important: edit mode formula ke liye original values set karo
-    originalBilletQty = billet;
-    originalTotalWeight = totalWeight;
+    chargingWeightPerBillet = 0;
 
-    // ✅ Fallback: old total weight / old billet se per billet weight
-    chargingWeightPerBillet = billet > 0 ? (totalWeight / billet) : 0;
+    $("#remainingBilletText").text(
+        "Edit mode: loading current Charging Wt/Billet..."
+    );
 
-    // ✅ Better: charging se actual weight per billet fetch karo
     $.ajax({
         url: '@Url.Action("GetChargingByHeat", "RollingMill")',
         type: 'GET',
-        data: { heatNo: heat },
+        cache: false,
+        data: {
+            heatNo: heat
+        },
+
         success: function (res) {
 
-            if (res) {
-                var remainingBillet = toNum(res.RemainingBillet);
-                var remainingWeight = toNum(res.TotalWeight);
+            if (!res) {
+                $("#txtTotalWeight")
+                    .val(
+                        totalWeight.toFixed(3)
+                    );
 
-                if (remainingBillet > 0 && remainingWeight > 0) {
-                    chargingWeightPerBillet = remainingWeight / remainingBillet;
+                Swal.fire({
+                    icon: "warning",
+                    title: "Charging Data Not Found",
+                    text: "Current charging weight could not be loaded for this heat."
+                });
+
+                return;
+            }
+
+            /*
+             * MAIN SOURCE:
+             * CURRENT Weight field from Charging.
+             */
+            chargingWeightPerBillet =
+                toNum(
+                    res.WeightPerBillet
+                );
+
+            /*
+             * Fallback for old backend/data only.
+             */
+            if (
+                chargingWeightPerBillet <= 0
+            ) {
+                var currentRemainingBillet =
+                    toNum(
+                        res.RemainingBillet
+                    );
+
+                var currentRemainingWeight =
+                    toNum(
+                        res.TotalWeight
+                    );
+
+                if (
+                    currentRemainingBillet > 0 &&
+                    currentRemainingWeight > 0
+                ) {
+                    chargingWeightPerBillet =
+                        currentRemainingWeight
+                        /
+                        currentRemainingBillet;
                 }
+            }
 
-                /*
-                 * Product Specs / Product Code:
-                 * Prefer current charging response.
-                 * If backend uses ProductCode instead of ProductSpecs,
-                 * both names are supported.
-                 */
-                var chargingProductSpecs =
-                    res.ProductSpecs ||
-                    res.ProductCode ||
-                    productSpecs ||
-                    "";
+            if (
+                chargingWeightPerBillet <= 0
+            ) {
+                $("#txtTotalWeight")
+                    .val(
+                        totalWeight.toFixed(3)
+                    );
 
-                $("#txtProductSpecs").val(
+                Swal.fire({
+                    icon: "warning",
+                    title: "Weight Not Available",
+                    text: "Current Wt/Billet is not available in Charging."
+                });
+
+                return;
+            }
+
+            /*
+             * Existing discharge TotalBillet stays same.
+             * TotalWeight gets CURRENT charging Weight.
+             *
+             * Example:
+             * 45 * 2.331 = 104.895
+             */
+            calculateTotalWeight();
+
+            var chargingProductSpecs =
+                res.ProductSpecs ||
+                res.ProductCode ||
+                productSpecs ||
+                "";
+
+            $("#txtProductSpecs")
+                .val(
                     chargingProductSpecs
                 );
-            }
-            else {
-                $("#txtProductSpecs").val(
-                    productSpecs || ""
-                );
-            }
 
             $("#remainingBilletText").text(
-                "Edit mode: update existing discharge record. Wt/Billet: " + chargingWeightPerBillet.toFixed(3)
+                "Edit mode | Current Charging Wt/Billet: "
+                +
+                chargingWeightPerBillet.toFixed(3)
+                +
+                " | Total Weight: "
+                +
+                toNum(
+                    $("#txtTotalWeight").val()
+                ).toFixed(3)
             );
+        },
+
+        error: function () {
+
+            $("#txtTotalWeight")
+                .val(
+                    totalWeight.toFixed(3)
+                );
+
+            Swal.fire({
+                icon: "error",
+                title: "Charging Weight Load Failed",
+                text: "Current charging Wt/Billet could not be loaded."
+            });
         }
     });
 
