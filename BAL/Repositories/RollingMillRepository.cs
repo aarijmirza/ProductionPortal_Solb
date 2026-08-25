@@ -656,5 +656,69 @@ namespace BAL.Repositories
                 return 0;
             }
         }
+
+        public int SyncDischargingWeightByHeat(
+            string heatNo,
+            decimal weightPerBillet,
+            string updatedBy)
+        {
+            try
+            {
+                if (
+                    string.IsNullOrWhiteSpace(heatNo) ||
+                    weightPerBillet <= 0M
+                )
+                {
+                    return 0;
+                }
+
+                SqlParameter[] p =
+                    new SqlParameter[3];
+
+                p[0] =
+                    new SqlParameter(
+                        "@HeatNo",
+                        heatNo.Trim()
+                    );
+
+                p[1] =
+                    new SqlParameter(
+                        "@WeightPerBillet",
+                        weightPerBillet
+                    );
+
+                p[2] =
+                    new SqlParameter(
+                        "@UpdatedBy",
+                        string.IsNullOrWhiteSpace(updatedBy)
+                            ? (object)DBNull.Value
+                            : updatedBy.Trim()
+                    );
+
+                DataTable dt =
+                    (new DBHelper().GetTableFromSP)(
+                        "sp_RM_SyncDischargingWeightByHeat",
+                        p
+                    );
+
+                if (
+                    dt != null &&
+                    dt.Rows.Count > 0 &&
+                    dt.Columns.Contains("AffectedRows")
+                )
+                {
+                    return Convert.ToInt32(
+                        dt.Rows[0]["AffectedRows"]
+                    );
+                }
+
+                return 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
     }
 }

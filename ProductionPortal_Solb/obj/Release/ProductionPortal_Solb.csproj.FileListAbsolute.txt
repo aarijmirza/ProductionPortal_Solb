@@ -287,3 +287,9 @@ D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Release\ProductionPor
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Release\Producti.ECDD0488.Up2Date
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Release\ProductionPortal_Solb.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Release\ProductionPortal_Solb.pdb
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.DataSet.dll
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.dll
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.pdb
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.xml
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.DataSet.pdb
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.DataSet.xml

@@ -1,418 +1,629 @@
-﻿@{
+﻿@model DAL.Models.SMPDashboardVM
+
+@{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var m =
+        Model ?? new DAL.Models.SMPDashboardVM
+        {
+            FromDate = DateTime.Today,
+            ToDate = DateTime.Today
+        };
+
+    var topDelays =
+        m.TopDelays ?? new List<DAL.Models.SMPDelayItemBLL>();
+
+    var dailyProduction =
+        m.DailyProduction ?? new List<DAL.Models.SMPDailyProductionPointBLL>();
+
+    decimal dailyVariance =
+        m.DailyActual - m.DailyTarget;
+
+    decimal mtdVariance =
+        m.MTDActual - m.MTDTarget;
+
+    decimal ytdVariance =
+        m.YTDActual - m.YTDTarget;
+
+    decimal maxDelay = 0;
+
+    /*
+     * Use the HeatTarget returned by the SP.  The PeriodTarget fallback
+     * also protects the card when an older repository mapper has not yet
+     * mapped the HeatTarget column.
+     */
+    decimal heatTarget =
+        Convert.ToDecimal(m.HeatTarget);
+
+    decimal periodTarget =
+        Convert.ToDecimal(m.PeriodTarget);
+
+    if (heatTarget <= 0 && periodTarget > 0)
+    {
+        heatTarget = Math.Round(
+            periodTarget / 140m,
+            0,
+            MidpointRounding.AwayFromZero
+        );
+    }
+
+    for (int i = 0; i < topDelays.Count; i++)
+    {
+        if (topDelays[i].Minutes > maxDelay)
+        {
+            maxDelay = topDelays[i].Minutes;
+        }
+    }
+
+    var dayLabels =
+        new List<string>();
+
+    var actualValues =
+        new List<string>();
+
+    DateTime chartToDate = m.ToDate.Date;
+    DateTime chartFromDate = new DateTime(
+        chartToDate.Year,
+        chartToDate.Month,
+        1
+    );
+
+    /*
+     * Build a continuous month-to-date series up to the selected ToDate.
+     * Missing dates remain zero and previous dates keep their production.
+     */
+    for (
+        DateTime chartDate = chartFromDate;
+        chartDate <= chartToDate;
+        chartDate = chartDate.AddDays(1)
+    )
+    {
+        decimal dayActual = 0;
+        string dateLabel = chartDate.ToString("dd-MMM");
+
+        for (int i = 0; i < dailyProduction.Count; i++)
+        {
+            if (dailyProduction[i].ProductionDate.Date != chartDate)
+            {
+                continue;
+            }
+
+            dayActual += dailyProduction[i].Actual;
+
+            if (!string.IsNullOrWhiteSpace(dailyProduction[i].DateLabel))
+            {
+                dateLabel = dailyProduction[i].DateLabel;
+            }
+        }
+
+        dayLabels.Add("\"" + dateLabel + "\"");
+
+        actualValues.Add(
+            dayActual.ToString(
+                System.Globalization.CultureInfo.InvariantCulture
+            )
+        );
+
+    }
+
+    string dayLabelsJson =
+        "[" + string.Join(",", dayLabels.ToArray()) + "]";
+
+    string actualValuesJson =
+        "[" + string.Join(",", actualValues.ToArray()) + "]";
+
+    string pdfFileName =
+        "SMP_Daily_Dashboard_" +
+        m.FromDate.ToString("yyyyMMdd") +
+        "_to_" +
+        m.ToDate.ToString("yyyyMMdd") +
+        ".pdf";
 }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
     :root {
-        --brand: #8b1029;
-        --brand-dark: #52000f;
-        --brand-soft: #f8e8ed;
-        --bg: #f2f4f7;
-        --panel: #ffffff;
-        --panel-dark: #151923;
-        --border: #dde3eb;
-        --text: #1f2937;
-        --muted: #667085;
-        --green: #13895a;
-        --amber: #d89000;
-        --blue: #1d65a6;
-        --red: #c1121f;
-        --gray: #98a2b3;
-        --shadow: 0 10px 26px rgba(15, 23, 42, .07);
-        --radius: 16px;
+        --brand: #a91435;
+        --brand-dark: #76001d;
+        --red: #d60000;
+        --green: #158f63;
+        --orange: #efa500;
+        --blue: #245f96;
+        --page-bg: #eef1f5;
+        --card-bg: #ffffff;
+        --border: #d8dee8;
+        --grid: #e8ecf1;
+        --text: #1d2430;
+        --muted: #697386;
+        --radius: 13px;
+        --shadow: 0 5px 18px rgba(17, 24, 39, .06);
+    }
+
+    * {
+        box-sizing: border-box;
     }
 
     body {
-        background: var(--bg);
-        font-family: "Segoe UI", Arial, sans-serif;
+        background: var(--page-bg);
+        color: var(--text);
     }
 
     .xp-contentbar {
-        background: var(--bg) !important;
-        padding: 22px !important;
+        padding: 20px !important;
+        background: var(--page-bg) !important;
     }
 
-    .smp-board {
-        max-width: 1500px;
+    .smp-dashboard {
+        width: 100%;
+        max-width: 1480px;
         margin: 0 auto;
-        color: var(--text);
     }
 
-    /* ================= HEADER ================= */
+    /* ============================
+       ACTIONS
+    ============================ */
 
-    .board-header {
-        background: linear-gradient(135deg, #151923 0%, #2b1119 55%, #8b1029 100%);
-        border-radius: 18px;
-        padding: 22px 24px;
+    .dashboard-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
+    }
+
+    .print-btn {
+        background: var(--brand);
         color: #fff;
-        box-shadow: var(--shadow);
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 20px;
-        align-items: center;
-        position: relative;
-        overflow: hidden;
+        border: 0;
+        border-radius: 8px;
+        padding: 9px 16px;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .2s ease;
     }
 
-        .board-header:after {
-            content: "";
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.07);
-            right: -90px;
-            top: -120px;
+        .print-btn:hover {
+            background: var(--brand-dark);
         }
 
-    .header-left {
-        position: relative;
-        z-index: 2;
+        .print-btn i {
+            margin-right: 6px;
+        }
+
+    /* ============================
+       MAIN SHELL
+    ============================ */
+
+    .dashboard-shell {
+        background: #f6f7f9;
+        border: 1px solid #cfd5de;
+        border-top: 8px solid var(--brand);
+        padding: 22px;
+        box-shadow: 0 8px 28px rgba(17, 24, 39, .08);
     }
 
-    .plant-tag {
-        display: inline-flex;
+    /* ============================
+       HEADER
+    ============================ */
+
+    .dashboard-header {
+        display: grid;
+        grid-template-columns: 135px 1fr 235px;
+        gap: 20px;
         align-items: center;
-        gap: 8px;
-        background: rgba(255,255,255,.12);
-        border: 1px solid rgba(255,255,255,.18);
-        padding: 6px 11px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 11px;
+        margin-bottom: 20px;
     }
 
-    .board-header h2 {
+    .header-logo {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+        .header-logo img {
+            width: 118px;
+            max-height: 88px;
+            object-fit: contain;
+        }
+
+    .header-title h1 {
         margin: 0;
-        font-size: 30px;
+        color: #172033;
+        font-size: 34px;
+        line-height: 1.05;
         font-weight: 900;
-        letter-spacing: .2px;
+        letter-spacing: -.7px;
     }
 
-    .board-header p {
-        margin: 7px 0 0;
+    .header-title p {
+        margin: 8px 0 0;
         font-size: 13px;
-        color: rgba(255,255,255,.86);
-        font-weight: 600;
+        color: #303846;
+        font-weight: 650;
     }
 
     .header-meta {
-        position: relative;
-        z-index: 2;
         text-align: right;
-        display: grid;
-        gap: 8px;
-    }
-
-    .meta-card {
-        background: rgba(255,255,255,.12);
-        border: 1px solid rgba(255,255,255,.16);
-        border-radius: 14px;
-        padding: 10px 14px;
-        min-width: 185px;
-    }
-
-    .meta-label {
-        font-size: 11px;
-        color: rgba(255,255,255,.72);
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .meta-value {
-        margin-top: 3px;
-        font-size: 16px;
-        font-weight: 900;
-        color: #fff;
-    }
-
-    /* ================= EXEC SUMMARY ================= */
-
-    .exec-strip {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 14px;
-        margin-top: 14px;
-    }
-
-    .exec-card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 15px;
-        box-shadow: var(--shadow);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-    }
-
-    .exec-title {
         color: var(--muted);
-        font-size: 11px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: .45px;
+        font-size: 12px;
+        line-height: 1.65;
     }
 
-    .exec-value {
-        color: var(--text);
-        font-size: 23px;
-        font-weight: 900;
-        margin-top: 4px;
-        line-height: 1;
-    }
+        .header-meta strong {
+            display: block;
+            margin-bottom: 2px;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 900;
+        }
 
-    .exec-sub {
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 700;
-        margin-top: 5px;
-    }
+        .header-meta i {
+            margin-right: 5px;
+            color: var(--brand);
+        }
 
-    .exec-icon {
-        width: 45px;
-        height: 45px;
-        border-radius: 14px;
-        background: var(--brand-soft);
-        color: var(--brand);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        flex-shrink: 0;
-    }
-
-    .exec-card.good .exec-icon {
-        background: #e8f5ef;
-        color: var(--green);
-    }
-
-    .exec-card.warn .exec-icon {
-        background: #fff4dc;
-        color: var(--amber);
-    }
-
-    /* ================= KPI ================= */
+    /* ============================
+       KPI GRID
+    ============================ */
 
     .kpi-grid {
-        margin-top: 14px;
         display: grid;
-        grid-template-columns: repeat(8, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 12px;
+        margin-bottom: 16px;
     }
 
     .kpi-card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 14px;
-        min-height: 128px;
-        box-shadow: var(--shadow);
         position: relative;
+        min-height: 112px;
+        padding: 15px 15px 13px 18px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        box-shadow: var(--shadow);
         overflow: hidden;
     }
 
-        .kpi-card:before {
+        .kpi-card::before {
             content: "";
             position: absolute;
             left: 0;
             top: 0;
-            height: 4px;
-            width: 100%;
-            background: var(--gray);
+            bottom: 0;
+            width: 5px;
+            background: var(--orange);
         }
 
-        .kpi-card.good:before {
+        .kpi-card.good::before {
             background: var(--green);
         }
 
-        .kpi-card.warn:before {
-            background: var(--amber);
-        }
-
-        .kpi-card.bad:before {
+        .kpi-card.bad::before {
             background: var(--brand);
         }
 
-    .kpi-top {
+    .kpi-head {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 8px;
+        gap: 10px;
     }
 
     .kpi-name {
         font-size: 11px;
+        color: #202632;
         font-weight: 900;
-        color: var(--muted);
-        text-transform: uppercase;
         line-height: 1.25;
     }
 
     .kpi-badge {
-        width: 28px;
-        height: 28px;
-        border-radius: 10px;
-        background: #f4f6f8;
-        color: var(--brand);
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background: var(--orange);
+        color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
+        flex-shrink: 0;
+        font-size: 10px;
+        font-weight: 900;
+    }
+
+    .kpi-card.good .kpi-badge {
+        background: var(--green);
+    }
+
+    .kpi-card.bad .kpi-badge {
+        background: var(--brand);
     }
 
     .kpi-value {
-        margin-top: 12px;
-        font-size: 24px;
+        margin-top: 10px;
+        color: #111827;
+        font-size: 26px;
         line-height: 1;
         font-weight: 900;
-        color: var(--text);
     }
 
     .kpi-target {
-        margin-top: 6px;
+        margin-top: 8px;
         color: var(--muted);
         font-size: 11px;
         font-weight: 700;
     }
 
-    .kpi-track {
-        margin-top: 11px;
-        height: 6px;
-        border-radius: 999px;
-        background: #edf0f4;
-        overflow: hidden;
-    }
+    /* ============================
+       COMMON CARDS
+    ============================ */
 
-    .kpi-fill {
-        height: 100%;
-        background: var(--brand);
-        border-radius: 999px;
-        display: block;
-    }
-
-    .kpi-card.good .kpi-fill {
-        background: var(--green);
-    }
-
-    .kpi-card.warn .kpi-fill {
-        background: var(--amber);
-    }
-
-    /* ================= MAIN GRID ================= */
-
-    .main-grid {
-        margin-top: 14px;
-        display: grid;
-        grid-template-columns: 1.05fr 1.05fr 360px;
-        gap: 14px;
-        align-items: start;
-    }
-
-    .column {
-        display: grid;
-        gap: 14px;
-    }
-
-    .panel {
-        background: var(--panel);
+    .dashboard-card {
+        background: var(--card-bg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
-        padding: 16px;
         overflow: hidden;
     }
 
-    .panel-header {
+    .card-header {
+        min-height: 49px;
+        padding: 13px 16px;
+        border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 14px;
-        padding-bottom: 11px;
-        border-bottom: 1px solid var(--border);
+        gap: 12px;
     }
 
-    .panel-title {
+    .card-title {
         margin: 0;
+        color: var(--text);
         font-size: 16px;
         font-weight: 900;
-        color: var(--text);
         display: flex;
         align-items: center;
         gap: 9px;
     }
 
-        .panel-title i {
+        .card-title i {
             color: var(--brand);
-            font-size: 15px;
         }
 
-    .panel-note {
+    .card-note {
         color: var(--muted);
         font-size: 11px;
         font-weight: 700;
         white-space: nowrap;
     }
 
-    .chart-box {
-        height: 260px;
-        position: relative;
+    .card-body {
+        padding: 16px;
     }
 
-        .chart-box.small {
-            height: 235px;
-        }
+    /* ============================
+       OVERVIEW
+    ============================ */
 
-    /* ================= VARIANCE TABLE ================= */
+    .overview-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(280px, .8fr);
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+    .variance-card .card-body {
+        padding: 0;
+    }
 
     .variance-table {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        border: 1px solid var(--border);
-        border-radius: 13px;
-        overflow: hidden;
+        border-collapse: collapse;
+        font-size: 13px;
     }
 
         .variance-table th {
-            background: #f0f3f7;
-            color: var(--text);
-            padding: 12px;
-            font-size: 12px;
-            font-weight: 900;
+            background: #e4e8ee;
+            padding: 12px 10px;
             text-align: center;
+            color: #202632;
+            font-weight: 900;
         }
 
         .variance-table td {
-            padding: 13px 12px;
-            border-top: 1px solid #edf0f4;
-            font-size: 13px;
-            font-weight: 800;
+            padding: 14px 10px;
             text-align: center;
-            color: var(--text);
+            border-bottom: 1px solid #edf0f4;
+            font-weight: 700;
         }
 
             .variance-table td:first-child {
                 text-align: left;
+                padding-left: 20px;
                 color: var(--muted);
-                font-weight: 900;
+                font-weight: 800;
             }
+
+        .variance-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .variance-table tbody tr:last-child {
+            background: #f8fafc;
+        }
+
+            .variance-table tbody tr:last-child td {
+                padding-top: 11px;
+                padding-bottom: 11px;
+            }
+
+    .variance-value {
+        min-width: 92px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 6px 10px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: .1px;
+    }
+
+        .variance-value .variance-arrow {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            flex: 0 0 20px;
+        }
+
+        .variance-value.up {
+            color: #087a50;
+            background: #e9f8f1;
+            border-color: #bcebd7;
+        }
+
+            .variance-value.up .variance-arrow {
+                background: #159565;
+            }
+
+                .variance-value.up .variance-arrow::before {
+                    content: "";
+                    position: absolute;
+                    left: 9px;
+                    top: 9px;
+                    width: 2px;
+                    height: 7px;
+                    background: #fff;
+                    border-radius: 2px;
+                }
+
+                .variance-value.up .variance-arrow::after {
+                    content: "";
+                    position: absolute;
+                    left: 6px;
+                    top: 4px;
+                    width: 0;
+                    height: 0;
+                    border-left: 4px solid transparent;
+                    border-right: 4px solid transparent;
+                    border-bottom: 6px solid #fff;
+                }
+
+        .variance-value.down {
+            color: #b42335;
+            background: #fff0f2;
+            border-color: #f3c5cd;
+        }
+
+            .variance-value.down .variance-arrow {
+                background: #c83248;
+            }
+
+                .variance-value.down .variance-arrow::before {
+                    content: "";
+                    position: absolute;
+                    left: 9px;
+                    top: 4px;
+                    width: 2px;
+                    height: 7px;
+                    background: #fff;
+                    border-radius: 2px;
+                }
+
+                .variance-value.down .variance-arrow::after {
+                    content: "";
+                    position: absolute;
+                    left: 6px;
+                    top: 10px;
+                    width: 0;
+                    height: 0;
+                    border-left: 4px solid transparent;
+                    border-right: 4px solid transparent;
+                    border-top: 6px solid #fff;
+                }
+
+        .variance-value.flat {
+            color: #5f6b7a;
+            background: #f1f4f7;
+            border-color: #d9e0e8;
+        }
+
+            .variance-value.flat .variance-arrow {
+                background: #778395;
+            }
+
+                .variance-value.flat .variance-arrow::before {
+                    content: "";
+                    position: absolute;
+                    left: 5px;
+                    top: 9px;
+                    width: 10px;
+                    height: 2px;
+                    background: #fff;
+                    border-radius: 2px;
+                }
 
     .positive {
         color: var(--green) !important;
     }
 
     .negative {
-        color: var(--red) !important;
+        color: #e00000 !important;
     }
 
-    /* ================= DELAYS ================= */
+    .yearly-body {
+        height: 202px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .single-donut-wrap {
+        width: 168px;
+        height: 168px;
+        position: relative;
+    }
+
+    .donut-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        color: #111827;
+        font-size: 28px;
+        font-weight: 900;
+    }
+
+    /* ============================
+       MAIN ANALYTICS
+    ============================ */
+
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+    .chart-box {
+        height: 265px;
+        position: relative;
+    }
+
+    /* ============================
+       DELAYS
+    ============================ */
 
     .delay-list {
         display: grid;
@@ -421,288 +632,306 @@
 
     .delay-row {
         display: grid;
-        grid-template-columns: 34px 1fr 92px 48px;
-        gap: 10px;
+        grid-template-columns: 28px minmax(105px, 1fr) 76px 40px minmax(95px, 1fr);
+        gap: 8px;
         align-items: center;
-        padding: 10px;
-        border-radius: 12px;
-        background: #fbfcfd;
+        padding: 9px 8px;
         border: 1px solid #edf0f4;
+        border-radius: 9px;
+        background: #fbfcfd;
     }
 
     .delay-rank {
-        width: 26px;
-        height: 26px;
-        border-radius: 9px;
+        width: 23px;
+        height: 23px;
+        border-radius: 50%;
         background: var(--brand);
         color: #fff;
-        font-size: 11px;
-        font-weight: 900;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 10px;
+        font-weight: 900;
     }
 
-        .delay-rank.top {
-            background: var(--amber);
+        .delay-rank.orange {
+            background: var(--orange);
         }
 
     .delay-name {
-        font-size: 12px;
-        font-weight: 900;
-        color: var(--text);
+        color: #202632;
+        font-size: 11px;
+        font-weight: 850;
     }
 
-    .delay-area {
-        font-size: 10px;
-        color: var(--muted);
-        font-weight: 700;
-        margin-top: 2px;
-    }
-
-    .delay-bar {
-        height: 7px;
-        border-radius: 999px;
-        background: #edf0f4;
+    .delay-track {
+        height: 6px;
+        border-radius: 20px;
+        background: #e9edf2;
         overflow: hidden;
     }
 
-        .delay-bar span {
+        .delay-track span {
             display: block;
             height: 100%;
-            border-radius: 999px;
             background: var(--brand);
+            border-radius: 20px;
         }
 
-        .delay-bar.top span {
-            background: var(--amber);
+        .delay-track.orange span {
+            background: var(--orange);
         }
 
     .delay-min {
         text-align: right;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 900;
-        color: var(--text);
     }
 
-    /* ================= RIGHT PANEL ================= */
+    .delay-area {
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.2;
+        font-weight: 650;
+    }
 
-    .right-column {
+    .delay-note {
+        margin-top: 12px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #f5f6f8;
+        color: #303846;
+        font-size: 10px;
+        line-height: 1.4;
+        font-weight: 700;
+    }
+
+    /* ============================
+       LOWER GRID
+    ============================ */
+
+    .lower-grid {
         display: grid;
+        grid-template-columns: minmax(300px, .8fr) minmax(360px, 1fr) minmax(0, 1.8fr);
         gap: 14px;
+        margin-bottom: 14px;
     }
 
-    .health-panel {
+    .utility-chart-box {
+        height: 250px;
+        position: relative;
+    }
+
+    .composition-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .mini-donut-card {
+        min-height: 250px;
+        padding: 14px 12px;
+        border: 1px solid #e2e6ec;
+        border-radius: 10px;
+        background: #fafbfc;
         text-align: center;
     }
 
-    .health-title {
-        font-size: 14px;
-        font-weight: 900;
+    .mini-donut-title {
+        margin-bottom: 10px;
         color: var(--text);
-        margin-bottom: 13px;
-    }
-
-    .donut-wrap {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 18px;
-    }
-
-    .donut {
-        width: 132px;
-        height: 132px;
-        border-radius: 50%;
-        background: conic-gradient(var(--brand) 0 70%, #d8d8d8 70% 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-        .donut.charge {
-            background: conic-gradient(var(--brand) 0 42%, var(--blue) 42% 74%, #c9c9c9 74% 100%);
-        }
-
-        .donut.availability {
-            background: conic-gradient(var(--brand) 0 38%, var(--blue) 38% 64%, #c9c9c9 64% 100%);
-        }
-
-    .donut-inner {
-        width: 76px;
-        height: 76px;
-        background: var(--bg);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--text);
-        font-size: 24px;
+        font-size: 13px;
         font-weight: 900;
+    }
+
+    .mini-donut-wrap {
+        width: 125px;
+        height: 125px;
+        position: relative;
+        margin: 0 auto 11px;
+    }
+
+    .mini-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 21px;
+        font-weight: 900;
+        pointer-events: none;
     }
 
     .legend-list {
         display: grid;
-        gap: 7px;
+        gap: 5px;
         text-align: left;
-        font-size: 11px;
-        color: var(--text);
-        font-weight: 800;
+        font-size: 9px;
+        color: #303846;
+        font-weight: 750;
     }
 
     .legend-item {
         display: flex;
         align-items: center;
-        gap: 7px;
-        white-space: nowrap;
+        gap: 6px;
     }
 
     .legend-color {
-        width: 12px;
-        height: 12px;
-        border-radius: 3px;
+        width: 9px;
+        height: 9px;
         display: inline-block;
+        flex-shrink: 0;
     }
 
-    /* ================= PRODUCTION CHART ================= */
-
-    .production-panel {
-        margin-top: 14px;
-    }
-
-    .production-chart {
-        height: 285px;
+    .production-chart-box {
+        height: 250px;
         position: relative;
     }
 
-    .footer-line {
-        margin-top: 14px;
-        padding: 14px;
-        border-top: 1px solid var(--border);
-        text-align: right;
-        font-size: 12px;
+    /* ============================
+       FOOTER
+    ============================ */
+
+    .dashboard-footer {
+        margin-top: 8px;
+        padding-top: 12px;
+        border-top: 1px solid #cfd5de;
         color: var(--muted);
+        text-align: right;
+        font-size: 10px;
         font-weight: 700;
     }
 
-    .print-btn {
-        background: #ffffff;
-        color: #8b1029;
-        border: 1px solid rgba(255,255,255,.45);
-        border-radius: 10px;
-        padding: 8px 14px;
-        font-size: 12px;
-        font-weight: 900;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,.12);
+        .dashboard-footer strong {
+            color: var(--brand);
+        }
+
+
+    .header-filter {
+        margin-top: 9px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 7px;
     }
 
-        .print-btn i {
-            margin-right: 6px;
+        .header-filter input {
+            height: 34px;
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #fff;
+            font-size: 12px;
         }
 
-        .print-btn:hover {
-            background: #f8e8ed;
-            color: #52000f;
+        .header-filter button {
+            height: 34px;
+            padding: 5px 12px;
+            border: 0;
+            border-radius: 7px;
+            background: var(--brand);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
         }
 
-    /* ================= RESPONSIVE ================= */
+    .empty-delay {
+        padding: 18px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+    }
 
-    @@media (max-width: 1400px) {
-        .exec-strip {
-            grid-template-columns: repeat(3, 1fr);
-        }
+    /* ============================
+       RESPONSIVE
+    ============================ */
 
+    @@media (max-width: 1250px) {
         .kpi-grid {
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .main-grid {
+        .analytics-grid {
             grid-template-columns: 1fr 1fr;
         }
 
-        .right-column {
+            .analytics-grid > :last-child {
+                grid-column: 1 / -1;
+            }
+
+        .lower-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .production-card {
             grid-column: 1 / -1;
-            grid-template-columns: repeat(3, 1fr);
         }
     }
 
-    @@media (max-width: 992px) {
-        .board-header {
+    @@media (max-width: 850px) {
+        .dashboard-header {
             grid-template-columns: 1fr;
+            text-align: center;
+        }
+
+        .header-logo {
+            justify-content: center;
         }
 
         .header-meta {
-            text-align: left;
+            text-align: center;
         }
 
-        .exec-strip {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .kpi-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .main-grid,
-        .right-column {
+        .overview-grid,
+        .analytics-grid,
+        .lower-grid {
             grid-template-columns: 1fr;
         }
 
-        .donut-wrap {
-            flex-direction: column;
-        }
+            .analytics-grid > :last-child,
+            .production-card {
+                grid-column: auto;
+            }
     }
 
-    @@media (max-width: 576px) {
+    @@media (max-width: 600px) {
         .xp-contentbar {
-            padding: 10px !important;
+            padding: 8px !important;
         }
 
-        .board-header h2 {
-            font-size: 23px;
+        .dashboard-shell {
+            padding: 12px;
         }
 
-        .exec-strip,
+        .header-title h1 {
+            font-size: 27px;
+        }
+
         .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .composition-grid {
             grid-template-columns: 1fr;
         }
 
         .delay-row {
-            grid-template-columns: 34px 1fr 48px;
+            grid-template-columns: 28px 1fr 40px;
         }
 
-        .delay-bar {
+        .delay-track,
+        .delay-area {
             display: none;
         }
     }
 
+    /* ============================
+       PRINT
+    ============================ */
+
     @@media print {
-        * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-
-        .xp-breadcrumbbar,
-        .no-print {
-            display: none !important;
-        }
-
-        body,
-        .xp-contentbar {
-            background: #fff !important;
-        }
-
-        .panel,
-        .kpi-card,
-        .exec-card,
-        .board-header {
-            box-shadow: none !important;
-        }
-    }
-
-/*    @@media print {
         @@page {
             size: A4 landscape;
             margin: 5mm;
@@ -712,11 +941,6 @@
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
-        }
-
-        body,
-        .xp-contentbar {
-            background: #ffffff !important;
         }
 
         .no-print,
@@ -730,31 +954,230 @@
             display: none !important;
         }
 
+        html,
+        body,
         .xp-contentbar {
+            background: #fff !important;
             padding: 0 !important;
             margin: 0 !important;
         }
 
-        .smp-board {
+        .smp-dashboard {
             max-width: none !important;
             width: 100% !important;
-            margin: 0 !important;
         }
 
-        .board-header,
-        .exec-card,
-        .kpi-card,
-        .panel {
+        .dashboard-shell {
+            border: 1px solid #bbb !important;
+            border-top: 7px solid #a91435 !important;
+            padding: 10px !important;
+            box-shadow: none !important;
+        }
+
+        .dashboard-header {
+            margin-bottom: 9px !important;
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 6px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .kpi-card {
+            min-height: 78px !important;
+            padding: 8px 8px 7px 11px !important;
+            box-shadow: none !important;
+        }
+
+        .kpi-value {
+            font-size: 18px !important;
+            margin-top: 5px !important;
+        }
+
+        .overview-grid {
+            grid-template-columns: 2fr .7fr !important;
+            gap: 7px !important;
+            margin-bottom: 7px !important;
+        }
+
+        .analytics-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 7px !important;
+            margin-bottom: 7px !important;
+        }
+
+        .lower-grid {
+            grid-template-columns: .8fr 1fr 1.8fr !important;
+            gap: 7px !important;
+        }
+
+        .dashboard-card,
+        .kpi-card {
             box-shadow: none !important;
             page-break-inside: avoid !important;
         }
 
-        .main-grid,
-        .exec-strip,
-        .kpi-grid {
-            page-break-inside: avoid !important;
+        .card-header {
+            min-height: 34px !important;
+            padding: 8px 9px !important;
         }
-    }*/
+
+        .card-title {
+            font-size: 12px !important;
+        }
+
+        .card-body {
+            padding: 8px !important;
+        }
+
+        .chart-box,
+        .utility-chart-box,
+        .production-chart-box {
+            height: 165px !important;
+        }
+
+        .yearly-body {
+            height: 145px !important;
+        }
+
+        .single-donut-wrap {
+            width: 130px !important;
+            height: 130px !important;
+        }
+
+        .composition-grid {
+            gap: 5px !important;
+        }
+
+        .mini-donut-card {
+            min-height: 165px !important;
+            padding: 6px !important;
+        }
+
+        .mini-donut-wrap {
+            width: 88px !important;
+            height: 88px !important;
+        }
+
+        .legend-list {
+            font-size: 7px !important;
+        }
+    }
+
+    /* Used only while generating the one-page PDF. */
+    #smpPdfReport.pdf-export-mode {
+        width: 1800px !important;
+        max-width: none !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 12px !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+    }
+
+        #smpPdfReport.pdf-export-mode .dashboard-header {
+            grid-template-columns: 135px 1fr 235px !important;
+            margin-bottom: 12px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .kpi-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin-bottom: 9px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .kpi-card {
+            min-height: 82px !important;
+            padding: 8px 11px 8px 14px !important;
+            box-shadow: none !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .kpi-value {
+            margin-top: 6px !important;
+            font-size: 20px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .overview-grid {
+            grid-template-columns: 2fr .7fr !important;
+            gap: 9px !important;
+            margin-bottom: 9px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .analytics-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 9px !important;
+            margin-bottom: 9px !important;
+        }
+
+            #smpPdfReport.pdf-export-mode .analytics-grid > :last-child {
+                grid-column: auto !important;
+            }
+
+        #smpPdfReport.pdf-export-mode .lower-grid {
+            grid-template-columns: .8fr 1fr 1.8fr !important;
+            gap: 9px !important;
+            margin-bottom: 8px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .production-card {
+            grid-column: auto !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .dashboard-card {
+            box-shadow: none !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .card-header {
+            min-height: 40px !important;
+            padding: 9px 11px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .card-body {
+            padding: 10px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .chart-box,
+        #smpPdfReport.pdf-export-mode .utility-chart-box,
+        #smpPdfReport.pdf-export-mode .production-chart-box {
+            height: 205px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .yearly-body {
+            height: 172px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .single-donut-wrap {
+            width: 150px !important;
+            height: 150px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .variance-table th,
+        #smpPdfReport.pdf-export-mode .variance-table td {
+            padding-top: 9px !important;
+            padding-bottom: 9px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .delay-row {
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .dashboard-footer {
+            margin-top: 4px !important;
+            padding-top: 6px !important;
+        }
+
+        #smpPdfReport.pdf-export-mode .no-print {
+            display: none !important;
+        }
+
+        /* Web-font icons can become square boxes in html2canvas. */
+        #smpPdfReport.pdf-export-mode .card-title i,
+        #smpPdfReport.pdf-export-mode .header-meta i {
+            display: none !important;
+        }
 </style>
 
 <div class="xp-breadcrumbbar no-print">
@@ -772,372 +1195,541 @@
             </ol>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-10">
-        </div>
-        <div class="col-md-2">
-            <div class="no-print" style="position:relative; z-index:2; text-align:right; margin-top:8px;">
-                <button type="button" class="print-btn" onclick="printSMPDashboard()">
-                    <i class="fa-solid fa-print"></i> Print / Save PDF
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <div class="xp-contentbar">
+    <div class="smp-dashboard">
 
-    <div class="smp-board">
-
-
-        <!-- HEADER -->
-        <div class="board-header">
-            <div class="header-left">
-                <div class="plant-tag">
-                    <i class="fa-solid fa-industry"></i>
-                    Steel Melting Plant
-                </div>
-                <h2>SMP Operations Performance Dashboard</h2>
-                <p>Executive overview of production, delays, utilities, charge mix and operational reliability.</p>
-            </div>
-
-            <div class="header-meta">
-                <div class="meta-card">
-                    <div class="meta-label">Report Date</div>
-                    <div class="meta-value">10-Jun-2026</div>
-                </div>
-                <div class="meta-card">
-                    <div class="meta-label">Report Type</div>
-                    <div class="meta-value">Daily Management View</div>
-                </div>
-            </div>
+        <div class="dashboard-actions no-print">
+            <button type="button"
+                    class="print-btn"
+                    onclick="downloadSMPDashboardPDF(this)">
+                <i class="fa-solid fa-file-pdf"></i>
+                Download Single Page PDF
+            </button>
         </div>
 
-        <!-- EXECUTIVE SUMMARY -->
-        <div class="exec-strip">
-            <div class="exec-card good">
-                <div>
-                    <div class="exec-title">Daily Output</div>
-                    <div class="exec-value">2,980 MT</div>
-                    <div class="exec-sub">Target: 3,000 MT</div>
+        <div class="dashboard-shell" id="smpPdfReport">
+
+            <!-- HEADER -->
+            <header class="dashboard-header">
+                <div class="header-logo">
+                    <img src="~/assets/images/logo.png" alt="SOLB Steel" />
                 </div>
-                <div class="exec-icon"><i class="fa-solid fa-cubes"></i></div>
-            </div>
 
-            <div class="exec-card">
-                <div>
-                    <div class="exec-title">Yield</div>
-                    <div class="exec-value">86.9%</div>
-                    <div class="exec-sub">Target: 87%</div>
+                <div class="header-title">
+                    <h1>Steel Making Plant Dashboard</h1>
+                    <p>Production / Utilities / Reliability</p>
                 </div>
-                <div class="exec-icon"><i class="fa-solid fa-percent"></i></div>
-            </div>
 
-            <div class="exec-card warn">
-                <div>
-                    <div class="exec-title">Total Delay</div>
-                    <div class="exec-value">590 Min</div>
-                    <div class="exec-sub">Top delay: Planned DT</div>
+                <div class="header-meta">
+                    <strong>
+                        <i class="fa-regular fa-calendar-days"></i>
+                        From: @m.FromDate.ToString("dd-MMM-yyyy")
+                        &nbsp; To: @m.ToDate.ToString("dd-MMM-yyyy")
+                    </strong>
+
+                    <form method="get"
+                          action="@Url.Action("SMPDailyDashboard", "SMPReports")"
+                          class="header-filter no-print">
+
+                        <input type="date"
+                               name="fromDate"
+                               value="@m.FromDate.ToString("yyyy-MM-dd")" />
+
+                        <input type="date"
+                               name="toDate"
+                               value="@m.ToDate.ToString("yyyy-MM-dd")" />
+
+                        <button type="submit">Load</button>
+                    </form>
+
+                    Date Range Management View
                 </div>
-                <div class="exec-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            </div>
+            </header>
 
-            <div class="exec-card good">
-                <div>
-                    <div class="exec-title">Availability</div>
-                    <div class="exec-value">90%</div>
-                    <div class="exec-sub">Stable operation</div>
-                </div>
-                <div class="exec-icon"><i class="fa-solid fa-shield-halved"></i></div>
-            </div>
+            <!-- KPI CARDS -->
+            <section class="kpi-grid">
 
-            <div class="exec-card">
-                <div>
-                    <div class="exec-title">Year Achievement</div>
-                    <div class="exec-value">70%</div>
-                    <div class="exec-sub">YTD progress</div>
-                </div>
-                <div class="exec-icon"><i class="fa-solid fa-chart-pie"></i></div>
-            </div>
-        </div>
-
-        <!-- KPI CARDS -->
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-top">
-                    <div class="kpi-name">Heat Count</div>
-                    <div class="kpi-badge"><i class="fa-solid fa-fire"></i></div>
-                </div>
-                <div class="kpi-value">22</div>
-                <div class="kpi-target">Target: 24 heats</div>
-                <div class="kpi-track"><span class="kpi-fill" style="width:92%;"></span></div>
-            </div>
-
-            <div class="kpi-card good">
-                <div class="kpi-top">
-                    <div class="kpi-name">Billet Output</div>
-                    <div class="kpi-badge"><i class="fa-solid fa-cubes"></i></div>
-                </div>
-                <div class="kpi-value">2,980</div>
-                <div class="kpi-target">Target: 3,000 MT</div>
-                <div class="kpi-track"><span class="kpi-fill" style="width:99%;"></span></div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-top">
-                    <div class="kpi-name">Yield</div>
-                    <div class="kpi-badge"><i class="fa-solid fa-percent"></i></div>
-                </div>
-                <div class="kpi-value">86.9%</div>
-                <div class="kpi-target">Target: 87%</div>
-                <div class="kpi-track"><span class="kpi-fill" style="width:99%;"></span></div>
-            </div>
-
-            <div class="kpi-card good">
-                <div class="kpi-top">
-                    <div class="kpi-name">Productivity</div>
-                    <div class="kpi-badge"><i class="fa-solid fa-gauge-high"></i></div>
-                </div>
-                <div class="kpi-value">141</div>
-                <div class="kpi-target">Target: 140 t/hr</div>
-                <div class="kpi-track"><span class="kpi-fill" style="width:100%;"></span></div>
-            </div>
-
-            <div class="kpi-card warn">
-                <div class="kpi-top">
-                    <div class="kpi-name">Power Consumption</div>
-                    <div class="kpi-badge"><i class="fa-solid fa-bolt"></i></div>
-                </div>
-                <div class="kpi-value">608</div>
-                <div class="kpi-target">Target: 602 kWh/t</div>
-                <div class="kpi-track"><span class="kpi-fill" style="width:100%;"></span></div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-top">
-                    <div class="kpi-name">TTT Time</div>
-                    <div class="kpi-badge"><i class="fa-regular fa-clock"></i></div>
-                </div>
-                <div class="kpi-value">60.2</div>
-                <div class="kpi-target">Target: 60 min</div>
-                <div class="kpi-track"><span class="kpi-fill" style="width:100%;"></span></div>
-            </div>
-
-            <div class="kpi-card warn">
-                <div class="kpi-top">
-                    <div class="kpi-name">Power-on Time</div>
-                    <div class="kpi-badge"><i class="fa-solid fa-plug-circle-bolt"></i></div>
-                </div>
-                <div class="kpi-value">60.2</div>
-                <div class="kpi-target">Target: 48 min</div>
-                <div class="kpi-track"><span class="kpi-fill" style="width:100%;"></span></div>
-            </div>
-
-            <div class="kpi-card warn">
-                <div class="kpi-top">
-                    <div class="kpi-name">Heat Weight</div>
-                    <div class="kpi-badge"><i class="fa-solid fa-weight-hanging"></i></div>
-                </div>
-                <div class="kpi-value">136</div>
-                <div class="kpi-target">Target: 140 t</div>
-                <div class="kpi-track"><span class="kpi-fill" style="width:97%;"></span></div>
-            </div>
-        </div>
-
-        <!-- MAIN -->
-        <div class="main-grid">
-
-            <!-- LEFT -->
-            <div class="column">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title"><i class="fa-solid fa-table"></i> Production Variance</h3>
-                        <div class="panel-note">Daily / MTD / YTD</div>
+                <div class="kpi-card">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Heat Count</div>
+                        <div class="kpi-badge">H</div>
                     </div>
-
-                    <table class="variance-table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Daily</th>
-                                <th>MTD</th>
-                                <th>YTD</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Actual</td>
-                                <td>2,500</td>
-                                <td>20,000</td>
-                                <td>50,000</td>
-                            </tr>
-                            <tr>
-                                <td>Target</td>
-                                <td>2,510</td>
-                                <td>21,000</td>
-                                <td>60,000</td>
-                            </tr>
-                            <tr>
-                                <td>Variance</td>
-                                <td class="positive">+10</td>
-                                <td class="positive">+1,000</td>
-                                <td class="negative">-10,000</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="kpi-value">@m.HeatCount.ToString("N0")</div>
+                    <div class="kpi-target">Target: @heatTarget.ToString("N0") heats</div>
                 </div>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title"><i class="fa-solid fa-chart-column"></i> Performance KPIs</h3>
-                        <div class="panel-note">Target vs Actual</div>
+                <div class="kpi-card good">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Billet Output (MT)</div>
+                        <div class="kpi-badge">B</div>
                     </div>
-
-                    <div class="chart-box small">
-                        <canvas id="performanceChart"></canvas>
+                    <div class="kpi-value">@m.BilletOutput.ToString("N0")</div>
+                    <div class="kpi-target">
+                        Target: @m.PeriodTarget.ToString("N0") MT
                     </div>
                 </div>
-            </div>
 
-            <!-- MIDDLE -->
-            <div class="column">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Top 5 Delays</h3>
-                        <div class="panel-note">Minutes</div>
+                <div class="kpi-card">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Yield (%)</div>
+                        <div class="kpi-badge">Y</div>
+                    </div>
+                    <div class="kpi-value">@m.Yield.ToString("N0")</div>
+                    <div class="kpi-target">Target: 87%</div>
+                </div>
+
+                <div class="kpi-card good">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Productivity (t/hr)</div>
+                        <div class="kpi-badge">P</div>
+                    </div>
+                    <div class="kpi-value">@m.Productivity.ToString("N0")</div>
+                    <div class="kpi-target">Target: 140 t/hr</div>
+                </div>
+
+                <div class="kpi-card bad">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Power Consumption (EAF-LF)</div>
+                        <div class="kpi-badge">E</div>
+                    </div>
+                    <div class="kpi-value">@m.PowerConsumption.ToString("N0")</div>
+                    <div class="kpi-target">Target: 602 kWh/t</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-head">
+                        <div class="kpi-name">TTT Time (min)</div>
+                        <div class="kpi-badge">T</div>
+                    </div>
+                    <div class="kpi-value">@m.TapToTap.ToString("N0")</div>
+                    <div class="kpi-target">Target: 60 min</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Power-on Time (min)</div>
+                        <div class="kpi-badge">O</div>
+                    </div>
+                    <div class="kpi-value">@m.PowerOnTime.ToString("N0")</div>
+                    <div class="kpi-target">Target: 48 min</div>
+                </div>
+
+                <div class="kpi-card bad">
+                    <div class="kpi-head">
+                        <div class="kpi-name">Heat Weight (t)</div>
+                        <div class="kpi-badge">W</div>
+                    </div>
+                    <div class="kpi-value">@m.HeatWeight.ToString("N0")</div>
+                    <div class="kpi-target">Target: 140 t</div>
+                </div>
+
+            </section>
+
+            <!-- OVERVIEW -->
+            <section class="overview-grid">
+
+                <div class="dashboard-card variance-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-column"></i>
+                            Production Variance
+                        </h3>
+                        <span class="card-note">Daily / MTD / YTD</span>
                     </div>
 
-                    <div class="delay-list">
-                        <div class="delay-row">
-                            <div class="delay-rank top">1</div>
-                            <div>
-                                <div class="delay-name">Planned DT</div>
-                                <div class="delay-area">PM / planned stop</div>
+                    <div class="card-body">
+                        <table class="variance-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Daily</th>
+                                    <th>MTD</th>
+                                    <th>YTD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Actual</td>
+                                    <td>@m.DailyActual.ToString("N0")</td>
+                                    <td>@m.MTDActual.ToString("N0")</td>
+                                    <td>@m.YTDActual.ToString("N0")</td>
+                                </tr>
+                                <tr>
+                                    <td>Target</td>
+                                    <td>@m.DailyTarget.ToString("N0")</td>
+                                    <td>@m.MTDTarget.ToString("N0")</td>
+                                    <td>@m.YTDTarget.ToString("N0")</td>
+                                </tr>
+                                <tr>
+                                    <td>Variance</td>
+                                    <td>
+                                        <span class="variance-value @(dailyVariance > 0 ? "up" : dailyVariance < 0 ? "down" : "flat")">
+                                            <span class="variance-arrow" aria-hidden="true"></span>
+                                            @dailyVariance.ToString("+#,##0;-#,##0;0")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="variance-value @(mtdVariance > 0 ? "up" : mtdVariance < 0 ? "down" : "flat")">
+                                            <span class="variance-arrow" aria-hidden="true"></span>
+                                            @mtdVariance.ToString("+#,##0;-#,##0;0")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="variance-value @(ytdVariance > 0 ? "up" : ytdVariance < 0 ? "down" : "flat")">
+                                            <span class="variance-arrow" aria-hidden="true"></span>
+                                            @ytdVariance.ToString("+#,##0;-#,##0;0")
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Yearly Production Achievement</h3>
+                    </div>
+
+                    <div class="yearly-body">
+                        <div>
+                            <div class="single-donut-wrap">
+                                <canvas id="yearlyChart"></canvas>
+                                <div class="donut-center">@m.YearlyAchievement.ToString("0.0")%</div>
                             </div>
-                            <div class="delay-bar top"><span style="width:100%;"></span></div>
-                            <div class="delay-min">480</div>
-                        </div>
 
-                        <div class="delay-row">
-                            <div class="delay-rank">2</div>
-                            <div>
-                                <div class="delay-name">CCM Downtime</div>
-                                <div class="delay-area">Casting area</div>
+                            <div style="text-align:center;
+                                        margin-top:6px;
+                                        font-size:10px;
+                                        font-weight:700;
+                                        color:#697386;">
+                                YTD Actual: @m.YTDActual.ToString("N1") MT
+                                <br />
+                                Target: @m.YearlyTarget.ToString("N1") MT
                             </div>
-                            <div class="delay-bar"><span style="width:20%;"></span></div>
-                            <div class="delay-min">45</div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ANALYTICS -->
+            <section class="analytics-grid">
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-column"></i>
+                            Performance KPIs
+                        </h3>
+                        <span class="card-note">(%)</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="chart-box">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-regular fa-clock"></i>
+                            Top 5 Delays
+                        </h3>
+                        <span class="card-note">Minutes</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="delay-list">
+                            @if (topDelays.Count > 0)
+                            {
+                                for (int i = 0; i < topDelays.Count; i++)
+                                {
+                                    var delay = topDelays[i];
+
+                                    decimal width =
+                                        maxDelay > 0
+                                            ? (delay.Minutes / maxDelay) * 100
+                                            : 0;
+
+                                    <div class="delay-row">
+                                        <div class="delay-rank @(i == 0 || i == 4 ? "orange" : "")">
+                                            @(i + 1)
+                                        </div>
+
+                                        <div class="delay-name">@delay.DelayName</div>
+
+                                        <div class="delay-track @(i == 0 || i == 4 ? "orange" : "")">
+                                            <span style="width:@width.ToString("0.##")%;"></span>
+                                        </div>
+
+                                        <div class="delay-min">@delay.Minutes.ToString("N0")</div>
+                                        <div class="delay-area">@delay.Area</div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="empty-delay">
+                                    No delay records found for the selected date.
+                                </div>
+                            }
                         </div>
 
-                        <div class="delay-row">
-                            <div class="delay-rank">3</div>
-                            <div>
-                                <div class="delay-name">Other Unplanned</div>
-                                <div class="delay-area">Balance of DT</div>
+                        <div class="delay-note">
+                            Top delays are calculated from SMP day-wise delay columns.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-flask"></i>
+                            Raw Material Consumption
+                        </h3>
+                        <span class="card-note">Kg/t</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="chart-box">
+                            <canvas id="rawMaterialChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- LOWER SECTION -->
+            <section class="lower-grid">
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-bolt"></i>
+                            Utility Consumption
+                        </h3>
+                        <span class="card-note">Nm³/t</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="utility-chart-box">
+                            <canvas id="utilityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            Operational Composition
+                        </h3>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="composition-grid">
+
+                            <div class="mini-donut-card">
+                                <div class="mini-donut-title">Charge Mix</div>
+
+                                <div class="mini-donut-wrap">
+                                    <canvas id="chargeMixChart"></canvas>
+                                </div>
+
+                                <div class="legend-list">
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#d60000;"></span>
+                                        DRI — @m.DRIShare.ToString("0.0")%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#245f96;"></span>
+                                        HBI — @m.HBIShare.ToString("0.0")%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#c7c7c7;"></span>
+                                        Scrap — @m.ScrapShare.ToString("0.0")%
+                                    </div>
+                                </div>
                             </div>
-                            <div class="delay-bar"><span style="width:12%;"></span></div>
-                            <div class="delay-min">30</div>
-                        </div>
 
-                        <div class="delay-row">
-                            <div class="delay-rank">4</div>
-                            <div>
-                                <div class="delay-name">EAF Downtime</div>
-                                <div class="delay-area">Furnace area</div>
+                            <div class="mini-donut-card">
+                                <div class="mini-donut-title">Availability Breakdown</div>
+
+                                <div class="mini-donut-wrap">
+                                    <canvas id="availabilityChart"></canvas>
+                                    <div class="mini-center">@m.Availability.ToString("0.0")%</div>
+                                </div>
+
+                                <div class="legend-list">
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#a91435;"></span>
+                                        Operation — @m.OperationShare.ToString("0.0")%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#245f96;"></span>
+                                        Mechanical — @m.MechanicalShare.ToString("0.0")%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#bfc5ce;"></span>
+                                        Electrical — @m.ElectricalShare.ToString("0.0")%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#5d9138;"></span>
+                                        Refractory — @m.RefractoryShare.ToString("0.0")%
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background:#efa500;"></span>
+                                        Other — @m.OtherShare.ToString("0.0")%
+                                    </div>
+                                </div>
                             </div>
-                            <div class="delay-bar"><span style="width:8%;"></span></div>
-                            <div class="delay-min">20</div>
-                        </div>
 
-                        <div class="delay-row">
-                            <div class="delay-rank top">5</div>
-                            <div>
-                                <div class="delay-name">LRF Downtime</div>
-                                <div class="delay-area">Refining area</div>
-                            </div>
-                            <div class="delay-bar top"><span style="width:5%;"></span></div>
-                            <div class="delay-min">15</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title"><i class="fa-solid fa-flask"></i> Raw Material Consumption</h3>
-                        <div class="panel-note">Kg/t</div>
+                <div class="dashboard-card production-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-chart-line"></i>
+                            Day Wise Production
+                        </h3>
+                        <span class="card-note">
+                            MT
+                        </span>
                     </div>
 
-                    <div class="chart-box">
-                        <canvas id="rawMaterialChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT -->
-            <div class="right-column">
-                <div class="panel health-panel">
-                    <div class="health-title">Yearly Production Achievement</div>
-                    <div class="donut">
-                        <div class="donut-inner">70%</div>
-                    </div>
-                </div>
-
-                <div class="panel health-panel">
-                    <div class="health-title">Charge Mix</div>
-                    <div class="donut-wrap">
-                        <div class="donut charge">
-                            <div class="donut-inner"></div>
-                        </div>
-
-                        <div class="legend-list">
-                            <div class="legend-item"><span class="legend-color" style="background:#8b1029;"></span>DRI 1,250</div>
-                            <div class="legend-item"><span class="legend-color" style="background:#1d65a6;"></span>HBI 950</div>
-                            <div class="legend-item"><span class="legend-color" style="background:#c9c9c9;"></span>Scrap 780</div>
+                    <div class="card-body">
+                        <div class="production-chart-box">
+                            <canvas id="dailyProductionChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <div class="panel health-panel">
-                    <div class="health-title">Availability Breakdown</div>
-                    <div class="donut-wrap">
-                        <div class="donut availability">
-                            <div class="donut-inner">90%</div>
-                        </div>
+            </section>
 
-                        <div class="legend-list">
-                            <div class="legend-item"><span class="legend-color" style="background:#8b1029;"></span>Operation 2%</div>
-                            <div class="legend-item"><span class="legend-color" style="background:#1d65a6;"></span>Mechanical 3%</div>
-                            <div class="legend-item"><span class="legend-color" style="background:#c9c9c9;"></span>Electrical 1%</div>
-                            <div class="legend-item"><span class="legend-color" style="background:#13895a;"></span>Refractory 4%</div>
-                            <div class="legend-item"><span class="legend-color" style="background:#c1121f;"></span>Utility 4%</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <footer class="dashboard-footer">
+                <strong>Solb Steel</strong> &nbsp;•&nbsp; SMP Dashboard
+            </footer>
 
         </div>
-
-        <!-- PRODUCTION TREND -->
-        <div class="panel production-panel">
-            <div class="panel-header">
-                <h3 class="panel-title"><i class="fa-solid fa-chart-line"></i> Daily Production Actual Vs Plan</h3>
-                <div class="panel-note">Current month trend</div>
-            </div>
-
-            <div class="production-chart">
-                <canvas id="dailyProductionChart"></canvas>
-            </div>
-        </div>
-
-        <div class="footer-line">
-            Solb Steel • SMP Operations Performance Dashboard
-        </div>
-
     </div>
+</div>
 </div>
 
 <script>
     Chart.defaults.font.family = "Segoe UI, Arial, sans-serif";
-    Chart.defaults.color = "#1f2937";
+    Chart.defaults.color = "#384152";
+
+    const gridColor = "#e8ecf1";
+    const redColor = "#d60000";
+    const grayColor = "#9da3ab";
+    const blueColor = "#245f96";
+
+    const valueLabelPlugin = {
+        id: "valueLabelPlugin",
+
+        afterDatasetsDraw(chart) {
+
+            const ctx = chart.ctx;
+
+            ctx.save();
+            ctx.fillStyle = "#202632";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+            ctx.font = "700 9px Segoe UI";
+
+            chart.data.datasets.forEach(function (dataset, datasetIndex) {
+
+                if (dataset.type === "line") {
+                    return;
+                }
+
+                const meta =
+                    chart.getDatasetMeta(datasetIndex);
+
+                if (
+                    !meta ||
+                    meta.hidden
+                ) {
+                    return;
+                }
+
+                meta.data.forEach(function (element, index) {
+
+                    const value =
+                        Number(dataset.data[index] || 0);
+
+                    if (!Number.isFinite(value)) {
+                        return;
+                    }
+
+                    const label =
+                        value.toLocaleString(
+                            undefined,
+                            {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 1
+                            }
+                        );
+
+                    /*
+                     * When Target + Actual are both very small,
+                     * stagger labels slightly so they do not overlap.
+                     */
+                    const yOffset =
+                        datasetIndex % 2 === 0
+                            ? 5
+                            : 16;
+
+                    ctx.fillText(
+                        label,
+                        element.x,
+                        Math.max(
+                            element.y - yOffset,
+                            10
+                        )
+                    );
+                });
+            });
+
+            ctx.restore();
+        }
+    };
+
+    new Chart(document.getElementById("yearlyChart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Achievement", "Remaining"],
+            datasets: [{
+                data: [
+                    @m.YearlyAchievement.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @(Math.Max(0, 100 - m.YearlyAchievement).ToString(System.Globalization.CultureInfo.InvariantCulture))
+                ],
+                backgroundColor: [redColor, "#d8d8d8"],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "58%",
+            animation: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            }
+        }
+    });
 
     new Chart(document.getElementById("performanceChart"), {
         type: "bar",
@@ -1147,28 +1739,42 @@
                 {
                     label: "Target",
                     data: [85, 87, 99],
-                    backgroundColor: "#98a2b3",
-                    borderRadius: 6,
-                    barThickness: 26
+                    backgroundColor: grayColor,
+                    borderRadius: 4,
+                    barThickness: 25
                 },
                 {
                     label: "Actual",
-                    data: [75, 61, 100],
-                    backgroundColor: "#8b1029",
-                    borderRadius: 6,
-                    barThickness: 26
+                    data: [
+                        @m.Performance.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Availability.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.QualityYield.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    ],
+                    backgroundColor: redColor,
+                    borderRadius: 4,
+                    barThickness: 25
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
+            layout: {
+                padding: {
+                    top: 15
+                }
+            },
             plugins: {
                 legend: {
                     position: "bottom",
                     labels: {
                         boxWidth: 12,
-                        font: { weight: "bold" }
+                        usePointStyle: false,
+                        font: {
+                            size: 10,
+                            weight: "bold"
+                        }
                     }
                 }
             },
@@ -1176,64 +1782,309 @@
                 y: {
                     beginAtZero: true,
                     max: 110,
-                    grid: { color: "#edf0f4" }
+                    ticks: {
+                        display: false
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        display: false
+                    }
                 },
                 x: {
-                    grid: { display: false },
-                    ticks: { font: { weight: "bold" } }
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 10,
+                            weight: "bold"
+                        }
+                    },
+                    border: {
+                        display: false
+                    }
                 }
             }
-        }
+        },
+        plugins: [valueLabelPlugin]
     });
 
     new Chart(document.getElementById("rawMaterialChart"), {
         type: "bar",
         data: {
-            labels: ["FeSi", "SiMn", "Flourspar", "Calcined C", "Charge Coal", "Rice Husk", "Lime", "Dolo Lime"],
+            labels: [
+                "FeSi",
+                "SiMn",
+                "Fluorspar",
+                "Calcined C",
+                "Charge Coal",
+                "Rice Husk",
+                "Lime",
+                "Dolo Lime"
+            ],
             datasets: [
                 {
-                    label: "Actual",
-                    data: [2.1, 10.4, 0.65, 11, 9.4, 0.26, 22, 31],
-                    backgroundColor: "#8b1029",
-                    borderRadius: 6,
-                    barThickness: 20
+                    label: "Target",
+                    data: [
+                        2,      // FeSi
+                        11,     // SiMn
+                        0.80,   // Flourspar
+                        16,     // Calcined Carbon
+                        10,     // Charge Coal
+                        0.25,   // Rice Husk
+                        40,     // Lime
+                        30      // Dolo Lime
+                    ],
+                    backgroundColor: grayColor,
+                    borderColor: "#7d8794",
+                    borderWidth: 1,
+                    borderRadius: 3,
+                    barThickness: 25,
+                    minBarLength: 3
                 },
                 {
-                    label: "Target",
-                    data: [2, 11, 0.8, 13, 10, 0.25, 20, 30],
-                    type: "line",
-                    borderColor: "#1d65a6",
-                    backgroundColor: "#1d65a6",
-                    borderWidth: 3,
-                    pointRadius: 3,
-                    tension: .25
+                    label: "Actual",
+                    data: [
+                        @m.FeSi.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.SiMn.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Fluorspar.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.CalcinedCarbon.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.ChargeCoal.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.RiceHusk.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Lime.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.DoloLime.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    ],
+                    backgroundColor: redColor,
+                    borderRadius: 3,
+                    barThickness: 25,
+                    minBarLength: 3
                 }
+
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
+            layout: {
+                padding: {
+                    top: 30
+                }
+            },
             plugins: {
                 legend: {
                     position: "bottom",
                     labels: {
-                        boxWidth: 12,
-                        font: { weight: "bold" }
+                        boxWidth: 16,
+                        font: {
+                            size: 10,
+                            weight: "bold"
+                        }
                     }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: "#edf0f4" }
+                    suggestedMax: 45,
+                    ticks: {
+                        display: false
+                        //stepSize: 5,
+                        //font: {
+                        //    size: 9
+                        //}
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        display: false
+                    }
                 },
                 x: {
-                    grid: { display: false },
+                    grid: {
+                        display: false
+                    },
                     ticks: {
-                        font: { size: 10, weight: "bold" },
                         maxRotation: 45,
-                        minRotation: 45
+                        minRotation: 45,
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    },
+                    border: {
+                        display: false
                     }
+                }
+            }
+        },
+        plugins: [valueLabelPlugin]
+    });
+
+    new Chart(document.getElementById("utilityChart"), {
+        type: "bar",
+        data: {
+            labels: ["LPG", "O₂", "Argon", "N₂"],
+            datasets: [
+                {
+                    label: "Target",
+                    data: [
+                        7,      // LPG nm3/ton
+                        30,     // Oxygen nm3/ton
+                        0.16,   // Argon nm3/ton
+                        1       // Nitrogen nm3/ton
+                    ],
+                    backgroundColor: grayColor,
+                    borderRadius: 3,
+                    barThickness: 25,
+                    minBarLength: 4
+                },
+                {
+                    label: "Actual",
+                    data: [
+                        @m.LPG.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Oxygen.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Argon.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        @m.Nitrogen.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    ],
+                    backgroundColor: redColor,
+                    borderRadius: 3,
+                    barThickness: 25,
+                    minBarLength: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            layout: {
+                padding: {
+                    top: 15
+                }
+            },
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    suggestedMax: 35,
+                    ticks: {
+                        display: false
+                        //stepSize: 5,
+                        //font: {
+                        //    size: 9
+                        //}
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            }
+        },
+        plugins: [valueLabelPlugin]
+    });
+
+    new Chart(document.getElementById("chargeMixChart"), {
+        type: "doughnut",
+        data: {
+            labels: ["DRI", "HBI", "Scrap"],
+            datasets: [{
+                data: [
+                    @m.DRIShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.HBIShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.ScrapShare.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                ],
+                backgroundColor: [
+                    redColor,
+                    blueColor,
+                    "#c7c7c7"
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "57%",
+            animation: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("availabilityChart"), {
+        type: "doughnut",
+        data: {
+            labels: [
+                "Available",
+                "Operation",
+                "Mechanical",
+                "Electrical",
+                "Refractory",
+                "Other"
+            ],
+            datasets: [{
+                data: [
+                    @m.AvailableShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.OperationShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.MechanicalShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.ElectricalShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.RefractoryShare.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    @m.OtherShare.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                ],
+                backgroundColor: [
+                    "#d8d8d8",
+                    "#a91435",
+                    blueColor,
+                    "#bfc5ce",
+                    "#5d9138",
+                    "#efa500"
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "57%",
+            animation: false,
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
         }
@@ -1242,53 +2093,217 @@
     new Chart(document.getElementById("dailyProductionChart"), {
         type: "bar",
         data: {
-            labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"],
-            datasets: [
-                {
-                    label: "Actual",
-                    data: [1800, 1500, 2000, 2100, 2200, 1500, 1000, 500, 2400, 1800, 1500, 2000, 2100, 2200, 1500, 1000, 500, 2400, 1800, 1500, 2000],
-                    backgroundColor: "#8b1029",
-                    borderRadius: 4,
-                    barThickness: 16
-                },
-                {
-                    label: "Plan",
-                    data: [2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000],
-                    type: "line",
-                    borderColor: "#1d65a6",
-                    backgroundColor: "#1d65a6",
-                    borderWidth: 3,
-                    pointRadius: 0,
-                    tension: 0
-                }
-            ]
+            labels: @Html.Raw(dayLabelsJson),
+            datasets: [{
+                label: "Actual",
+                data: @Html.Raw(actualValuesJson),
+                backgroundColor: redColor,
+                borderRadius: 3,
+                maxBarThickness: 28,
+                categoryPercentage: 0.72,
+                barPercentage: 0.9,
+                minBarLength: 3
+            }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
+            layout: {
+                padding: {
+                    top: 15
+                }
+            },
             plugins: {
                 legend: {
-                    position: "bottom",
-                    labels: {
-                        boxWidth: 12,
-                        font: { weight: "bold" }
-                    }
+                    display: false
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: "#edf0f4" }
+                    suggestedMax: 3500,
+                    ticks: {
+                        display: false
+                        //precision: 0,
+                        //font: {
+                        //    size: 9
+                        //}
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        display: false
+                    }
                 },
                 x: {
-                    grid: { display: false }
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        display: true,
+                        autoSkip: false,
+                        maxRotation: 45,
+                        minRotation: 0,
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    },
+                    border: {
+                        display: false
+                    }
                 }
             }
-        }
+        },
+        plugins: [valueLabelPlugin]
     });
-</script>
-<script>
-    function printSMPDashboard() {
-        window.print();
+
+    async function downloadSMPDashboardPDF(button) {
+
+        const report =
+            document.getElementById("smpPdfReport");
+
+        if (!report) {
+            alert("Report area was not found.");
+            return;
+        }
+
+        const originalButtonHtml =
+            button ? button.innerHTML : "";
+
+        if (button) {
+            button.disabled = true;
+            button.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin"></i> Preparing PDF...';
+        }
+
+        try {
+            if (!window.html2canvas || !window.jspdf) {
+                throw new Error("PDF libraries could not be loaded.");
+            }
+
+            report.classList.add("pdf-export-mode");
+
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+
+            /* Finish chart animations before taking the snapshot. */
+            if (window.Chart && typeof Chart.getChart === "function") {
+                report.querySelectorAll("canvas").forEach(function (canvas) {
+                    const chart = Chart.getChart(canvas);
+
+                    if (chart) {
+                        chart.stop();
+                        chart.resize();
+                        chart.update("none");
+                    }
+                });
+            }
+
+            await new Promise(function (resolve) {
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(resolve);
+                });
+            });
+
+            const reportWidth =
+                Math.ceil(report.scrollWidth);
+
+            const reportHeight =
+                Math.ceil(report.scrollHeight);
+
+            const canvas = await html2canvas(report, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: false,
+                backgroundColor: "#ffffff",
+                logging: false,
+                width: reportWidth,
+                height: reportHeight,
+                windowWidth: reportWidth,
+                windowHeight: reportHeight,
+                scrollX: 0,
+                scrollY: 0,
+                ignoreElements: function (element) {
+                    return element.classList &&
+                        element.classList.contains("no-print");
+                }
+            });
+
+            const jsPDF = window.jspdf.jsPDF;
+
+            const pdf = new jsPDF({
+                orientation: "landscape",
+                unit: "mm",
+                format: "a4",
+                compress: true
+            });
+
+            const pageWidth =
+                pdf.internal.pageSize.getWidth();
+
+            const pageHeight =
+                pdf.internal.pageSize.getHeight();
+
+            const margin = 1.5;
+            const availableWidth = pageWidth - (margin * 2);
+            const availableHeight = pageHeight - (margin * 2);
+
+            const fitRatio = Math.min(
+                availableWidth / canvas.width,
+                availableHeight / canvas.height
+            );
+
+            const imageWidth = canvas.width * fitRatio;
+            const imageHeight = canvas.height * fitRatio;
+            const imageX = (pageWidth - imageWidth) / 2;
+            const imageY = (pageHeight - imageHeight) / 2;
+
+            const imageData =
+                canvas.toDataURL("image/png");
+
+            pdf.addImage(
+                imageData,
+                "PNG",
+                imageX,
+                imageY,
+                imageWidth,
+                imageHeight,
+                undefined,
+                "FAST"
+            );
+
+            pdf.save("@pdfFileName");
+        }
+        catch (error) {
+            console.error(error);
+            alert(
+                "PDF could not be generated. Please refresh the page and try again."
+            );
+        }
+        finally {
+            report.classList.remove("pdf-export-mode");
+
+            if (window.Chart && typeof Chart.getChart === "function") {
+                requestAnimationFrame(function () {
+                    report.querySelectorAll("canvas").forEach(function (canvas) {
+                        const chart = Chart.getChart(canvas);
+
+                        if (chart) {
+                            chart.resize();
+                            chart.update("none");
+                        }
+                    });
+                });
+            }
+
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = originalButtonHtml;
+            }
+        }
     }
 </script>

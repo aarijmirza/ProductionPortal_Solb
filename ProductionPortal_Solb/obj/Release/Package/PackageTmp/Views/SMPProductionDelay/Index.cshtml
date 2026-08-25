@@ -1,0 +1,460 @@
+﻿@model IEnumerable<DAL.Models.SMPProductionDelayBLL>
+@using System
+@using System.Collections.Generic
+@using System.Linq
+
+@{
+    ViewBag.Title = "SMP Production Delay";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var records = Model != null
+        ? Model.ToList()
+        : new List<DAL.Models.SMPProductionDelayBLL>();
+}
+
+<style>
+    .smp-delay-page-title {
+        color: #7f1d1d;
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 14px;
+    }
+
+    .upload-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
+        margin-bottom: 18px;
+        padding: 18px;
+    }
+
+        .upload-card .section-title {
+            color: #111827;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .upload-card label {
+            color: #374151;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .upload-card .form-control {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            min-height: 38px;
+        }
+
+    .btn-upload-smp {
+        background: #16815b;
+        border-color: #16815b;
+        color: #fff;
+        font-weight: 600;
+        min-height: 38px;
+    }
+
+        .btn-upload-smp:hover,
+        .btn-upload-smp:focus {
+            background: #116747;
+            border-color: #116747;
+            color: #fff;
+        }
+
+    .upload-warning {
+        background: #fff7ed;
+        border-left: 4px solid #f59e0b;
+        border-radius: 5px;
+        color: #92400e;
+        font-size: 12px;
+        line-height: 1.5;
+        margin-top: 12px;
+        padding: 9px 11px;
+    }
+
+    .upload-note {
+        background: #ecfdf5;
+        border-left: 4px solid #10b981;
+        border-radius: 5px;
+        color: #065f46;
+        font-size: 12px;
+        line-height: 1.5;
+        margin-top: 8px;
+        padding: 9px 11px;
+    }
+
+    .smp-filter-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+        .smp-filter-actions .btn {
+            min-height: 38px;
+        }
+
+    .production-table-wrap {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        max-height: 650px;
+        overflow: auto;
+    }
+
+    .production-table {
+        font-size: 11px;
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+
+        .production-table thead th {
+            background: #7f1230;
+            color: #fff;
+            min-width: 90px;
+            position: sticky;
+            text-align: center;
+            top: 0;
+            vertical-align: middle;
+            z-index: 3;
+        }
+
+        .production-table tbody td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+    .delay-description-cell {
+        max-width: 280px;
+        overflow: hidden;
+        text-align: left !important;
+        text-overflow: ellipsis;
+    }
+
+    .record-count {
+        color: #7f1230;
+        font-weight: 700;
+    }
+
+    .analysis-light {
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, .05);
+        display: inline-block;
+        height: 13px;
+        margin-right: 5px;
+        vertical-align: -2px;
+        width: 13px;
+    }
+
+        .analysis-light.complete {
+            background: #16a34a;
+        }
+
+        .analysis-light.pending {
+            background: #dc2626;
+        }
+
+    @@media (max-width: 767px) {
+        .upload-card {
+            padding: 14px;
+        }
+
+        .smp-filter-actions {
+            display: block;
+        }
+
+            .smp-filter-actions .btn {
+                margin-bottom: 7px;
+                width: 100%;
+            }
+    }
+</style>
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-8">
+            <h4 class="smp-delay-page-title">
+                <i class="fa fa-industry"></i>
+                SMP Production Delay &amp; Failure Analysis
+            </h4>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="upload-card">
+        <div class="row">
+            <div class="col-md-7">
+                <div class="section-title">
+                    <i class="fa fa-file-excel-o text-success"></i>
+                    Upload Failure Analysis Excel
+                </div>
+
+                @using (Html.BeginForm(
+                    "UploadExcel",
+                    "SMPProductionDelay",
+                    FormMethod.Post,
+                    new
+                    {
+                        enctype = "multipart/form-data",
+                        id = "smpDelayUploadForm"
+                    }
+                ))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="row align-items-end">
+                        <div class="form-group col-md-8 mb-md-0">
+                            <label for="excelFile">
+                                Select Excel File (.xlsx)
+                            </label>
+
+                            <input type="file"
+                                   id="excelFile"
+                                   name="excelFile"
+                                   class="form-control"
+                                   accept=".xlsx"
+                                   required />
+                        </div>
+
+                        <div class="form-group col-md-4 mb-0">
+                            <button type="submit"
+                                    id="btnUploadSMPDelay"
+                                    class="btn btn-upload-smp btn-block">
+                                <i class="fa fa-upload"></i>
+                                Upload &amp; Import
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                @*<div class="upload-warning">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    Sheet name must be <b>Delays analysis</b> and it must
+                    contain the approved 19 columns. Maximum file size: 10 MB.
+                </div>
+
+                <div class="upload-note">
+                    <i class="fa fa-info-circle"></i>
+                    Codes are generated as <b>SS-SMP-001</b>. If the uploaded
+                    dates already exist for SteelMaking/SMP, their records are
+                    updated from the file. Active rows omitted from those dates
+                    are closed with StatusID 3.
+                </div>*@
+            </div>
+
+            <div class="col-md-5 mt-4 mt-md-0">
+                <div class="section-title">
+                    <i class="fa fa-filter text-danger"></i>
+                    Filter Records
+                </div>
+
+                @using (Html.BeginForm(
+                    "Index",
+                    "SMPProductionDelay",
+                    FormMethod.Get,
+                    new { id = "smpDelayFilterForm" }
+                ))
+                {
+                    <div class="row">
+                        <div class="form-group col-sm-6">
+                            <label for="fromDate">From Date</label>
+                            <input type="date"
+                                   id="fromDate"
+                                   name="fromDate"
+                                   value="@ViewBag.FromDate"
+                                   class="form-control" />
+                        </div>
+
+                        <div class="form-group col-sm-6">
+                            <label for="toDate">To Date</label>
+                            <input type="date"
+                                   id="toDate"
+                                   name="toDate"
+                                   value="@ViewBag.ToDate"
+                                   class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="smp-filter-actions">
+                        <button type="submit" class="btn btn-danger flex-fill">
+                            <i class="fa fa-search"></i>
+                            Search
+                        </button>
+
+                        <a href="@Url.Action("Index", "SMPProductionDelay")"
+                           class="btn btn-outline-secondary flex-fill">
+                            <i class="fa fa-refresh"></i>
+                            Reset
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="upload-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0 font-weight-bold">
+                SMP Production Delay Data
+            </h5>
+
+            <div>
+                Total Records:
+                <span class="record-count">@records.Count</span>
+            </div>
+        </div>
+
+        <div class="production-table-wrap">
+            <table class="table table-bordered table-striped production-table">
+                <thead>
+                    <tr>
+                        <th>Delay Code</th>
+                        <th>Date</th>
+                        <th>Shift</th>
+                        <th>Start</th>
+                        <th>Finish</th>
+                        <th>Total Min.</th>
+                        <th>Agency</th>
+                        <th>Area</th>
+                        <th>Equipment</th>
+                        <th>Delay Description</th>
+                        <th>Failure Analysis</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (records.Any())
+                    {
+                        foreach (var item in records)
+                        {
+                            <tr>
+                                <td class="font-weight-bold">
+                                    @item.DelayCode
+                                </td>
+                                <td>@item.ProductionDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@item.ShiftGroup</td>
+                                <td>
+                                    @(item.DelayStart.HasValue
+                                        ? item.DelayStart.Value.ToString(@"hh\:mm")
+                                        : "-")
+                                </td>
+                                <td>
+                                    @(item.DelayFinish.HasValue
+                                        ? item.DelayFinish.Value.ToString(@"hh\:mm")
+                                        : "-")
+                                </td>
+                                <td>@item.TotalMinutes</td>
+                                <td>@item.Agency</td>
+                                <td>@item.Area</td>
+                                <td>@item.Equipment</td>
+                                <td class="delay-description-cell"
+                                    title="@item.DelayDescription">
+                                    @item.DelayDescription
+                                </td>
+                                <td>
+                                    @if (item.IsFailureAnalysisFilled)
+                                    {
+                                        <span class="analysis-light complete"></span>
+                                        <span class="text-success font-weight-bold">
+                                            Completed
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="analysis-light pending"></span>
+                                        <span class="text-danger font-weight-bold">
+                                            Pending
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="11" class="text-center text-muted p-4">
+                                No SMP production-delay data found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    (function () {
+        var form = document.getElementById('smpDelayUploadForm');
+        var file = document.getElementById('excelFile');
+        var button = document.getElementById('btnUploadSMPDelay');
+
+        if (form && file && button) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                if (!file.files || file.files.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'File required',
+                        text: 'Please select the Failure Analysis Excel file.',
+                        confirmButtonColor: '#991b1b'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Upload Excel file?',
+                    text: 'Existing SteelMaking data for the uploaded dates will be synchronized with this file.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, upload',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#16815b'
+                }).then(function (result) {
+                    if (!result.isConfirmed) {
+                        return;
+                    }
+
+                    button.disabled = true;
+                    button.innerHTML =
+                        '<i class="fa fa-spinner fa-spin"></i> Uploading...';
+
+                    form.submit();
+                });
+            });
+        }
+
+        @if (TempData["Success"] != null)
+        {
+            <text>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Upload completed',
+                    text: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                        System.Convert.ToString(TempData["Success"])
+                    )),
+                    confirmButtonColor: '#16815b'
+                });
+            </text>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <text>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Upload failed',
+                    text: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                        System.Convert.ToString(TempData["Error"])
+                    )),
+                    confirmButtonColor: '#991b1b'
+                });
+            </text>
+        }
+    })();
+</script>

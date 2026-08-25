@@ -53,6 +53,7 @@
     <Compile Include="Repositories\ConsumptionRepository.cs" />
     <Compile Include="Repositories\DelayCounterMeasureRepository.cs" />
     <Compile Include="Repositories\DelayRepository.cs" />
+    <Compile Include="Repositories\ExecutiveDashboardRepository.cs" />
     <Compile Include="Repositories\LFMeltShopRepository.cs" />
     <Compile Include="Repositories\EAFMeltShopRepository.cs" />
     <Compile Include="Repositories\MaintenanceRepository.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="Repositories\RMReportsRepository.cs" />
     <Compile Include="Repositories\RollingMillTargetsRepository.cs" />
     <Compile Include="Repositories\SMPDayWiseProductionRepository.cs" />
+    <Compile Include="Repositories\SMPProductionDelayRepository.cs" />
     <Compile Include="Repositories\SMPReportsRepository.cs" />
     <Compile Include="Repositories\ScrapyardRepository.cs" />
     <Compile Include="Repositories\StockRepository.cs" />

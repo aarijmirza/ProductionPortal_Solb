@@ -465,12 +465,16 @@ namespace ProductionPortal_Solb.Controllers
             return View("~/Views/RollingMill/Discharging/list.cshtml", data);
         }
 
+
         [HttpGet]
         public JsonResult GetChargingByHeat(string heatNo)
         {
             if (string.IsNullOrWhiteSpace(heatNo))
             {
-                return Json(null, JsonRequestBehavior.AllowGet);
+                return Json(
+                    null,
+                    JsonRequestBehavior.AllowGet
+                );
             }
 
             heatNo = heatNo.Trim();
@@ -478,58 +482,96 @@ namespace ProductionPortal_Solb.Controllers
             var chargingRows = repo.GetAllCharging()
                 .Where(x =>
                     !string.IsNullOrWhiteSpace(x.HeatNo) &&
-                    x.HeatNo.Trim().Equals(heatNo, StringComparison.OrdinalIgnoreCase) &&
+                    x.HeatNo.Trim().Equals(
+                        heatNo,
+                        StringComparison.OrdinalIgnoreCase
+                    ) &&
                     x.StatusID == 1
                 )
                 .ToList();
 
             if (!chargingRows.Any())
             {
-                return Json(null, JsonRequestBehavior.AllowGet);
+                return Json(
+                    null,
+                    JsonRequestBehavior.AllowGet
+                );
             }
 
-            var first = chargingRows.OrderByDescending(x => x.ID).FirstOrDefault();
+            // Latest active Charging row = current Wt/Billet source
+            var currentCharging = chargingRows
+                .OrderByDescending(x => x.ID)
+                .FirstOrDefault();
 
-            decimal chargedBillet = chargingRows.Sum(x => Convert.ToDecimal(x.TotalBillet));
-            decimal chargedWeight = chargingRows.Sum(x => Convert.ToDecimal(x.TotalWeight));
+            decimal chargedBillet = chargingRows
+                .Sum(x => Convert.ToDecimal(x.TotalBillet));
+
+            decimal chargedWeight = chargingRows
+                .Sum(x => Convert.ToDecimal(x.TotalWeight));
+
+            decimal currentWeightPerBillet =
+                currentCharging != null
+                    ? Convert.ToDecimal(currentCharging.Weight)
+                    : 0M;
+
+            // Old-data fallback only
+            if (currentWeightPerBillet <= 0M && chargedBillet > 0M)
+            {
+                currentWeightPerBillet =
+                    chargedWeight / chargedBillet;
+            }
 
             decimal alreadyDischargedBillet = rm.GetDichargedHeat2()
                 .Where(x =>
                     !string.IsNullOrWhiteSpace(x.HeatNo) &&
-                    x.HeatNo.Trim().Equals(heatNo, StringComparison.OrdinalIgnoreCase) &&
+                    x.HeatNo.Trim().Equals(
+                        heatNo,
+                        StringComparison.OrdinalIgnoreCase
+                    ) &&
                     x.StatusID == 1
                 )
                 .Sum(x => Convert.ToDecimal(x.TotalBillet));
 
-            decimal remainingBillet = chargedBillet - alreadyDischargedBillet;
+            decimal remainingBillet =
+                chargedBillet - alreadyDischargedBillet;
 
-            if (remainingBillet < 0)
-                remainingBillet = 0;
+            if (remainingBillet < 0M)
+            {
+                remainingBillet = 0M;
+            }
 
-            decimal weightPerBillet = chargedBillet > 0
-                ? chargedWeight / chargedBillet
-                : 0;
-
-            decimal remainingWeight = remainingBillet * weightPerBillet;
+            decimal remainingWeight =
+                Math.Round(
+                    remainingBillet * currentWeightPerBillet,
+                    3
+                );
 
             var data = new
             {
-                HeatNo = first.HeatNo,
-                BoardingNo = first.BoardingNo,
-                SteelGrade = first.SteelGrade,
-                Profile = first.Profile,
-                ProductSpecs = first.ProductSpecs,
+                HeatNo = currentCharging.HeatNo,
+                BoardingNo = currentCharging.BoardingNo,
+                SteelGrade = currentCharging.SteelGrade,
+                Profile = currentCharging.Profile,
+                ProductSpecs = currentCharging.ProductSpecs,
 
                 ChargedBillet = chargedBillet,
                 AlreadyDischargedBillet = alreadyDischargedBillet,
                 RemainingBillet = remainingBillet,
 
                 TotalBillet = remainingBillet,
+
+                // Main field required by Discharging Edit
+                WeightPerBillet = currentWeightPerBillet,
+
                 TotalWeight = remainingWeight
             };
 
-            return Json(data, JsonRequestBehavior.AllowGet);
+            return Json(
+                data,
+                JsonRequestBehavior.AllowGet
+            );
         }
+
 
         public ActionResult AddDischarge()
         {
@@ -686,173 +728,455 @@ namespace ProductionPortal_Solb.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult AddDischarge(BilletDischargingBLL data)
+        public ActionResult AddDischarge(
+    BilletDischargingBLL data)
         {
             try
             {
-                if (Session["RM_Date"] == null || Session["RM_Plant"] == null || Session["RM_Shift"] == null || Session["RM_ShiftDetailID"] == null)
+                if (
+                    Session["RM_Date"] == null ||
+                    Session["RM_Plant"] == null ||
+                    Session["RM_Shift"] == null ||
+                    Session["RM_ShiftDetailID"] == null
+                )
                 {
-                    TempData["ErrorMessage"] = "Please select Rolling Mill Details first.";
-                    return RedirectToAction("AddDetails", "RollingMill");
+                    TempData["ErrorMessage"] =
+                        "Please select Rolling Mill Details first.";
+
+                    return RedirectToAction(
+                        "AddDetails",
+                        "RollingMill"
+                    );
                 }
 
-                DateTime selectedDate = Convert.ToDateTime(Session["RM_Date"]).Date;
-                DateTime start = selectedDate.Date;
-                DateTime end = start.AddDays(1);
-
-                string selectedPlant = Convert.ToString(Session["RM_Plant"]);
-                string selectedShift = Convert.ToString(Session["RM_Shift"]);
 
                 if (data == null)
                 {
-                    TempData["ErrorMessage"] = "Invalid data.";
-                    return RedirectToAction("AddDischarge");
+                    TempData["ErrorMessage"] =
+                        "Invalid data.";
+
+                    return RedirectToAction(
+                        "AddDischarge"
+                    );
                 }
 
-                if (string.IsNullOrWhiteSpace(data.HeatNo))
+
+                if (
+                    string.IsNullOrWhiteSpace(
+                        data.HeatNo
+                    )
+                )
                 {
-                    TempData["ErrorMessage"] = "Please select Heat No.";
-                    return RedirectToAction("AddDischarge");
+                    TempData["ErrorMessage"] =
+                        "Please select Heat No.";
+
+                    return RedirectToAction(
+                        "AddDischarge"
+                    );
                 }
 
-                if (data.TotalBillet <= 0)
+
+                if (
+                    Convert.ToDecimal(
+                        data.TotalBillet
+                    ) <= 0M
+                )
                 {
-                    TempData["ErrorMessage"] = "Please enter valid Total Billet.";
-                    return RedirectToAction("AddDischarge");
+                    TempData["ErrorMessage"] =
+                        "Please enter valid Total Billet.";
+
+                    return RedirectToAction(
+                        "AddDischarge"
+                    );
                 }
 
-                int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
 
-                var shiftDetails = rm.RollingMillDetails()
-                 .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
-                 .FirstOrDefault();
+                int shiftDetailId =
+                    Convert.ToInt32(
+                        Session[
+                            "RM_ShiftDetailID"
+                        ]
+                    );
+
+
+                var shiftDetails =
+                    rm.RollingMillDetails()
+                        .Where(
+                            x =>
+                                x.ID == shiftDetailId
+                                &&
+                                x.StatusID == 1
+                        )
+                        .FirstOrDefault();
+
 
                 if (shiftDetails == null)
                 {
-                    TempData["ErrorMessage"] = "Selected shift details not found.";
-                    return RedirectToAction("AddDetails", "RollingMill");
+                    TempData["ErrorMessage"] =
+                        "Selected shift details not found.";
+
+                    return RedirectToAction(
+                        "AddDetails",
+                        "RollingMill"
+                    );
                 }
 
-                data.HeatNo = data.HeatNo.Trim();
 
-                bool isUpdate = data.ID > 0;
+                data.HeatNo =
+                    data.HeatNo.Trim();
 
-                var chargingRows = repo.GetAllCharging()
-                    .Where(x =>
-                        !string.IsNullOrWhiteSpace(x.HeatNo) &&
-                        x.HeatNo.Trim().Equals(data.HeatNo, StringComparison.OrdinalIgnoreCase) &&
-                        x.StatusID == 1
-                    )
-                    .ToList();
+
+                bool isUpdate =
+                    data.ID > 0;
+
+
+                var chargingRows =
+                    repo.GetAllCharging()
+                        .Where(
+                            x =>
+                                !string.IsNullOrWhiteSpace(
+                                    x.HeatNo
+                                )
+                                &&
+                                x.HeatNo.Trim().Equals(
+                                    data.HeatNo,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                                &&
+                                x.StatusID == 1
+                        )
+                        .ToList();
+
 
                 if (!chargingRows.Any())
                 {
-                    TempData["ErrorMessage"] = "Charging record not found against this Heat No.";
-                    return RedirectToAction("AddDischarge");
+                    TempData["ErrorMessage"] =
+                        "Charging record not found against this Heat No.";
+
+                    return RedirectToAction(
+                        "AddDischarge"
+                    );
                 }
 
-                decimal chargedBillet = chargingRows.Sum(x => Convert.ToDecimal(x.TotalBillet));
 
-                decimal alreadyDischargedBillet = rm.GetDichargedHeat2()
-                    .Where(x =>
-                        x.StatusID == 1 &&
-                        x.ID != data.ID &&
-                        !string.IsNullOrWhiteSpace(x.HeatNo) &&
-                        x.HeatNo.Trim().Equals(data.HeatNo, StringComparison.OrdinalIgnoreCase)
+                var currentCharging =
+                    chargingRows
+                        .OrderByDescending(
+                            x => x.ID
+                        )
+                        .FirstOrDefault();
+
+
+                decimal currentWeightPerBillet =
+                    currentCharging != null
+                        ? Convert.ToDecimal(
+                            currentCharging.Weight
+                        )
+                        : 0M;
+
+
+                /*
+                 * Fallback for old data.
+                 */
+                if (
+                    currentWeightPerBillet <= 0M
+                )
+                {
+                    decimal totalChargedQty =
+                        chargingRows.Sum(
+                            x =>
+                                Convert.ToDecimal(
+                                    x.TotalBillet
+                                )
+                        );
+
+                    decimal totalChargedWeight =
+                        chargingRows.Sum(
+                            x =>
+                                Convert.ToDecimal(
+                                    x.TotalWeight
+                                )
+                        );
+
+                    if (
+                        totalChargedQty > 0M
                     )
-                    .Sum(x => Convert.ToDecimal(x.TotalBillet));
-
-                decimal currentBillet = Convert.ToDecimal(data.TotalBillet);
-                decimal remainingBillet = chargedBillet - alreadyDischargedBillet;
-
-                if (remainingBillet < 0)
-                    remainingBillet = 0;
-
-                if (remainingBillet <= 0)
-                {
-                    TempData["ErrorMessage"] = "This Heat No is already fully discharged.";
-                    return RedirectToAction("AddDischarge");
+                    {
+                        currentWeightPerBillet =
+                            totalChargedWeight
+                            /
+                            totalChargedQty;
+                    }
                 }
 
-                if (currentBillet > remainingBillet)
+
+                if (
+                    currentWeightPerBillet <= 0M
+                )
                 {
-                    TempData["ErrorMessage"] = "Only " + remainingBillet + " billet remaining for discharge. You cannot discharge " + currentBillet + ".";
-                    return RedirectToAction("AddDischarge");
+                    TempData["ErrorMessage"] =
+                        "Current Wt/Billet is not available in Charging.";
+
+                    return RedirectToAction(
+                        "AddDischarge"
+                    );
                 }
 
-                data.Date = shiftDetails.Date;
-                data.Shift = shiftDetails.Shift;
-                data.Plant = shiftDetails.Plant;
-                data.StatusID = 1;
+
+                decimal chargedBillet =
+                    chargingRows.Sum(
+                        x =>
+                            Convert.ToDecimal(
+                                x.TotalBillet
+                            )
+                    );
+
+
+                /*
+                 * Edit par current discharge row ko already-discharged
+                 * calculation se exclude karo.
+                 */
+                decimal alreadyDischargedBillet =
+                    rm.GetDichargedHeat2()
+                        .Where(
+                            x =>
+                                x.StatusID == 1
+                                &&
+                                x.ID != data.ID
+                                &&
+                                !string.IsNullOrWhiteSpace(
+                                    x.HeatNo
+                                )
+                                &&
+                                x.HeatNo.Trim().Equals(
+                                    data.HeatNo,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                        )
+                        .Sum(
+                            x =>
+                                Convert.ToDecimal(
+                                    x.TotalBillet
+                                )
+                        );
+
+
+                decimal currentBillet =
+                    Convert.ToDecimal(
+                        data.TotalBillet
+                    );
+
+
+                decimal remainingBillet =
+                    chargedBillet
+                    -
+                    alreadyDischargedBillet;
+
+
+                if (remainingBillet < 0M)
+                {
+                    remainingBillet = 0M;
+                }
+
+
+                if (remainingBillet <= 0M)
+                {
+                    TempData["ErrorMessage"] =
+                        "This Heat No is already fully discharged.";
+
+                    return RedirectToAction(
+                        "AddDischarge"
+                    );
+                }
+
+
+                if (
+                    currentBillet >
+                    remainingBillet
+                )
+                {
+                    TempData["ErrorMessage"] =
+                        "Only "
+                        +
+                        remainingBillet
+                        +
+                        " billet remaining for discharge. You cannot discharge "
+                        +
+                        currentBillet
+                        +
+                        ".";
+
+                    return RedirectToAction(
+                        "AddDischarge"
+                    );
+                }
+
+
+                data.Date =
+                    shiftDetails.Date;
+
+                data.Shift =
+                    shiftDetails.Shift;
+
+                data.Plant =
+                    shiftDetails.Plant;
+
+                data.StatusID =
+                    1;
+
+
+                /*
+                 * CRITICAL RULE:
+                 * Always calculate Discharging TotalWeight from the
+                 * CURRENT Charging Wt/Billet.
+                 */
+                data.TotalWeight =
+                    Math.Round(
+                        currentBillet
+                        *
+                        currentWeightPerBillet,
+                        3
+                    );
+
+
+                // ==========================
+                // UPDATE MODE
+                // ==========================
 
                 if (isUpdate)
                 {
-                    data.UpdatedBy = User.Identity.Name;
-                    data.UpdatedDate = DateTime.Now;
+                    data.UpdatedBy =
+                        User.Identity.Name;
 
-                    int update = rm.UpdateDischarging(data);
+                    data.UpdatedDate =
+                        DateTime.Now;
+
+
+                    int update =
+                        rm.UpdateDischarging(
+                            data
+                        );
+
 
                     if (update < 0)
-                        TempData["SuccessMessage"] = "Discharge record updated successfully.";
+                    {
+                        TempData["SuccessMessage"] =
+                            "Discharge record updated successfully. "
+                            +
+                            "Wt/Billet: "
+                            +
+                            currentWeightPerBillet.ToString("0.###")
+                            +
+                            ".";
+                    }
                     else
-                        TempData["ErrorMessage"] = "Discharge record not updated.";
+                    {
+                        TempData["ErrorMessage"] =
+                            "Discharge record not updated.";
+                    }
 
-                    return RedirectToAction("AddDischarge");
+
+                    return RedirectToAction(
+                        "AddDischarge"
+                    );
                 }
 
-                //var existingDischarge = rm.GetDichargedHeat2()
-                //    .Where(x =>
-                //        x.Date >= start &&
-                //        x.Date < end &&
-                //        !string.IsNullOrWhiteSpace(x.Shift) &&
-                //        x.Shift.Trim().Equals(selectedShift.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                //        !string.IsNullOrWhiteSpace(x.PlantName) &&
-                //        x.PlantName.Trim().Equals(selectedPlant.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                //        x.StatusID == 1
-                //    )
-                //    .ToList();
 
-                //int nextSequence = existingDischarge
-                //    .Select(x => x.DischargingSequence)
-                //    .Where(x => x > 0)
-                //    .DefaultIfEmpty(0)
-                //    .Max() + 1;
+                // ==========================
+                // INSERT MODE
+                // ==========================
 
-                // Insert mode: sequence next generate hogi
-                var existingHeats = rm.GetDichargedHeat2()
-                    .Where(x =>
-                        x.Date >= shiftDetails.Date.Date &&
-                        x.Date < shiftDetails.Date.Date.AddDays(1) &&
-                        !string.IsNullOrEmpty(x.Shift) &&
-                        x.Shift.Trim().Equals(shiftDetails.Shift.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                        x.StatusID == 1
-                    )
-                    .ToList();
-
-                int nextSequence = existingHeats
-                    .Select(x => x.DischargingSequence)
-                    .Where(x => x > 0)
-                    .DefaultIfEmpty(0)
-                    .Max() + 1;
+                var existingHeats =
+                    rm.GetDichargedHeat2()
+                        .Where(
+                            x =>
+                                x.Date >=
+                                    shiftDetails.Date.Date
+                                &&
+                                x.Date <
+                                    shiftDetails.Date.Date.AddDays(
+                                        1
+                                    )
+                                &&
+                                !string.IsNullOrEmpty(
+                                    x.Shift
+                                )
+                                &&
+                                x.Shift.Trim().Equals(
+                                    shiftDetails.Shift.Trim(),
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                                &&
+                                x.StatusID == 1
+                        )
+                        .ToList();
 
 
-                data.DischargingSequence = nextSequence;
-                data.CreatedOn = DateTime.Now;
-                data.CreatedBy = User.Identity.Name;
+                int nextSequence =
+                    existingHeats
+                        .Select(
+                            x =>
+                                x.DischargingSequence
+                        )
+                        .Where(
+                            x => x > 0
+                        )
+                        .DefaultIfEmpty(
+                            0
+                        )
+                        .Max()
+                    +
+                    1;
 
-                int rtn = rm.InsertDischarging(data);
+
+                data.DischargingSequence =
+                    nextSequence;
+
+                data.CreatedOn =
+                    DateTime.Now;
+
+                data.CreatedBy =
+                    User.Identity.Name;
+
+
+                int rtn =
+                    rm.InsertDischarging(
+                        data
+                    );
+
 
                 if (rtn < 0)
-                    TempData["SuccessMessage"] = "Heat discharged successfully.";
+                {
+                    TempData["SuccessMessage"] =
+                        "Heat discharged successfully. "
+                        +
+                        "Wt/Billet: "
+                        +
+                        currentWeightPerBillet.ToString("0.###")
+                        +
+                        ".";
+                }
                 else
-                    TempData["ErrorMessage"] = "Data not saved.";
+                {
+                    TempData["ErrorMessage"] =
+                        "Data not saved.";
+                }
 
-                return RedirectToAction("AddDischarge");
+
+                return RedirectToAction(
+                    "AddDischarge"
+                );
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Error: " + ex.Message;
-                return RedirectToAction("AddDischarge");
+                TempData["ErrorMessage"] =
+                    "Error: "
+                    +
+                    ex.Message;
+
+                return RedirectToAction(
+                    "AddDischarge"
+                );
             }
         }
 
