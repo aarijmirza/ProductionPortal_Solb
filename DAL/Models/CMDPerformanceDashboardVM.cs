@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace DAL.Models
 {
+    /*
+     * Replace the existing CMD dashboard model definitions with these,
+     * or merge any missing properties into the existing model classes.
+     */
     public class CMDPerformanceDashboardVM
     {
         public CMDPerformanceDashboardVM()
@@ -111,6 +115,8 @@ namespace DAL.Models
 
     public class CMDTopDelayVM
     {
+        public DateTime? DelayDate { get; set; }
+
         public string Plant { get; set; }
 
         public string Shift { get; set; }

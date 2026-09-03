@@ -16,9 +16,226 @@
         ? Model.DischargedHeats
         : new List<DAL.Models.BilletDischargingBLL>();
 
-    var delays = Model != null && Model.Delays != null
+    // =========================================================
+    // DOWNTIME OPERATIONAL DAY RULE
+    // Operational day starts at 07:00 AM (Morning / Long Morning).
+    // Example:
+    // 31-Aug operational downtime = 31-Aug 07:00 to 01-Sep 06:59:59.
+    // Any delay before 07:00 belongs to the PREVIOUS operational day.
+    // =========================================================
+
+    var rawDelays = Model != null && Model.Delays != null
         ? Model.Delays
         : new List<DAL.Models.PlantDelayBLL>();
+
+    var rawMonthlyDelays = Model != null && Model.MonthlyDelayData != null
+        ? Model.MonthlyDelayData
+        : new List<DAL.Models.PlantDelayBLL>();
+
+    TimeSpan downtimeDayStart = new TimeSpan(7, 0, 0);
+
+    // StartTime can be string, TimeSpan or DateTime depending on DAL mapping.
+    // Convert.ToString keeps this view safe for all three cases.
+    Func<object, TimeSpan?> ParseDelayTime = value =>
+    {
+        if (value == null || value == DBNull.Value)
+        {
+            return null;
+        }
+
+        string text = Convert.ToString(value).Trim();
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        TimeSpan parsedTime;
+        if (TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out parsedTime))
+        {
+            return parsedTime;
+        }
+
+        DateTime parsedDateTime;
+        if (DateTime.TryParse(
+            text,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AllowWhiteSpaces,
+            out parsedDateTime))
+        {
+            return parsedDateTime.TimeOfDay;
+        }
+
+        if (DateTime.TryParse(text, out parsedDateTime))
+        {
+            return parsedDateTime.TimeOfDay;
+        }
+
+        return null;
+    };
+
+    // Converts physical delay date/time to its 07:00-based operational date.
+    Func<DAL.Models.PlantDelayBLL, DateTime?> GetDowntimeOperationalDate = delay =>
+    {
+        if (delay == null || !delay.Date.HasValue)
+        {
+            return null;
+        }
+
+        DateTime physicalDate = delay.Date.Value.Date;
+        TimeSpan? startTime = ParseDelayTime(delay.StartTime);
+
+        // If StartTime is unavailable, keep the record on its stored date
+        // instead of dropping it from the dashboard.
+        if (!startTime.HasValue)
+        {
+            return physicalDate;
+        }
+
+        return startTime.Value < downtimeDayStart
+            ? physicalDate.AddDays(-1)
+            : physicalDate;
+    };
+
+    // Sort time inside each operational day.
+    // 07:00 = first minute of the day, 06:59 = last minute of the day.
+    Func<DAL.Models.PlantDelayBLL, int> GetDowntimeOperationalTimeOrder = delay =>
+    {
+        if (delay == null)
+        {
+            return int.MaxValue;
+        }
+
+        TimeSpan? startTime = ParseDelayTime(delay.StartTime);
+
+        if (!startTime.HasValue)
+        {
+            return int.MaxValue;
+        }
+
+        int minutes = (int)startTime.Value.TotalMinutes;
+        int dayStartMinutes = 7 * 60;
+
+        return minutes >= dayStartMinutes
+            ? minutes - dayStartMinutes
+            : (24 * 60 - dayStartMinutes) + minutes;
+    };
+
+    Func<object, DateTime?> ParseDashboardDate = value =>
+    {
+        string text = Convert.ToString(value ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        DateTime parsed;
+
+        if (DateTime.TryParseExact(
+            text,
+            new[] { "yyyy-MM-dd", "dd/MM/yyyy", "dd-MM-yyyy", "MM/dd/yyyy" },
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out parsed))
+        {
+            return parsed.Date;
+        }
+
+        if (DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsed))
+        {
+            return parsed.Date;
+        }
+
+        if (DateTime.TryParse(text, out parsed))
+        {
+            return parsed.Date;
+        }
+
+        return null;
+    };
+
+    // Resolve selected downtime date range.
+    // ViewBag.FromDate is used when multiple dates are selected.
+    // Fallbacks preserve current single-date behavior.
+    DateTime? downtimeToDateNullable = ParseDashboardDate((object)ViewBag.ToDate);
+
+    if (!downtimeToDateNullable.HasValue)
+    {
+        downtimeToDateNullable = ParseDashboardDate((object)ViewBag.ReportDate);
+    }
+
+    if (!downtimeToDateNullable.HasValue)
+    {
+        var availableOperationalDates = rawDelays
+            .Select(x => GetDowntimeOperationalDate(x))
+            .Where(x => x.HasValue)
+            .Select(x => x.Value.Date)
+            .ToList();
+
+        if (availableOperationalDates.Any())
+        {
+            downtimeToDateNullable = availableOperationalDates.Max();
+        }
+    }
+
+    DateTime downtimeToDate = downtimeToDateNullable ?? DateTime.Today;
+
+    DateTime? downtimeFromDateNullable = ParseDashboardDate((object)ViewBag.FromDate);
+    DateTime downtimeFromDate = downtimeFromDateNullable ?? downtimeToDate;
+
+    if (downtimeFromDate > downtimeToDate)
+    {
+        DateTime tempDate = downtimeFromDate;
+        downtimeFromDate = downtimeToDate;
+        downtimeToDate = tempDate;
+    }
+
+    // Main report downtime:
+    // only operational dates inside selected From/To range are included.
+    var delays = rawDelays
+        .Where(x =>
+        {
+            DateTime? operationalDate = GetDowntimeOperationalDate(x);
+
+            // Preserve records whose date/time cannot be interpreted.
+            if (!operationalDate.HasValue)
+            {
+                return true;
+            }
+
+            return operationalDate.Value.Date >= downtimeFromDate.Date
+                && operationalDate.Value.Date <= downtimeToDate.Date;
+        })
+        // IMPORTANT:
+        // Every report date starts from 07:00 AM.
+        // Example for 31-Aug:
+        // 31-Aug 07:00 ... 23:59, then 01-Sep 00:00 ... 06:59.
+        .OrderBy(x => GetDowntimeOperationalDate(x) ?? DateTime.MaxValue)
+        .ThenBy(x => GetDowntimeOperationalTimeOrder(x))
+        .ThenBy(x => Convert.ToString(x.EndTime))
+        .ToList();
+
+    // Monthly accumulated downtime also follows 07:00-to-07:00 operational days.
+    DateTime monthlyDowntimeFromDate =
+        new DateTime(downtimeToDate.Year, downtimeToDate.Month, 1);
+
+    var monthlyDelays = rawMonthlyDelays
+        .Where(x =>
+        {
+            DateTime? operationalDate = GetDowntimeOperationalDate(x);
+
+            if (!operationalDate.HasValue)
+            {
+                return true;
+            }
+
+            return operationalDate.Value.Date >= monthlyDowntimeFromDate.Date
+                && operationalDate.Value.Date <= downtimeToDate.Date;
+        })
+        .OrderBy(x => GetDowntimeOperationalDate(x) ?? DateTime.MaxValue)
+        .ThenBy(x => GetDowntimeOperationalTimeOrder(x))
+        .ThenBy(x => Convert.ToString(x.EndTime))
+        .ToList();
 
     decimal totalDischarge = data.Sum(x => x.TotalBillet ?? 0);
     decimal totalRolled = data.Sum(x => x.TotalBillet ?? 0);
@@ -382,7 +599,7 @@
     Func<string, string> NormalizeAgencyCode = agency =>
     {
         if (string.IsNullOrWhiteSpace(agency))
-            return "OTH";
+            return string.Empty;
 
         string value = agency
             .Trim()
@@ -395,55 +612,94 @@
 
         switch (value)
         {
+            case "GP":
             case "GUIDE":
             case "GUIDEPASS":
             case "GUIDEPASSCHANGE":
                 return "GP";
 
+            case "QA":
             case "QUALITY":
             case "QUALITYMAINTENANCE":
                 return "QA";
 
+            case "MD":
             case "MAINTENANCEDOWNDAY":
             case "DOWNDAY":
                 return "MD";
 
+            case "PRD":
             case "PRODUCTION":
                 return "PRD";
 
+            case "RS":
             case "ROLLSHOP":
                 return "RS";
 
+            case "EL":
             case "ELECTRICAL":
                 return "EL";
 
+            case "ME":
             case "MECHANICAL":
                 return "ME";
 
+            case "CR":
             case "CRANE":
                 return "CR";
 
+            case "DP":
             case "DISPATCH":
                 return "DP";
 
+            case "UT":
             case "UTILITY":
                 return "UT";
 
+            case "SC":
             case "SIZECHANGE":
                 return "SC";
 
+            case "PF":
             case "POWERFAILURE":
                 return "PF";
 
+            case "NB":
             case "NOBILLET":
                 return "NB";
 
+            case "AS":
             case "ANNUALSHUTDOWN":
                 return "AS";
 
+            case "OTH":
+            case "OTHER":
+            case "OTHERS":
+                return string.Empty;
+
             default:
-                return "OTH";
+                return string.Empty;
         }
+    };
+
+    // Sirf agency charts ke liye AgencyCode first priority hai.
+    Func<DAL.Models.PlantDelayBLL, string> GetChartAgencyCode = delay =>
+    {
+        if (delay == null)
+            return string.Empty;
+
+        string code = string.IsNullOrWhiteSpace(delay.AgencyCode)
+            ? NormalizeAgencyCode(delay.AgencyName)
+            : delay.AgencyCode.Trim().ToUpperInvariant();
+
+        if (code.Equals("OTH", StringComparison.OrdinalIgnoreCase) ||
+            code.Equals("OTHER", StringComparison.OrdinalIgnoreCase) ||
+            code.Equals("OTHERS", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        return code;
     };
 
     // Available operating time:
@@ -460,9 +716,9 @@
     // Scheduled + Unscheduled delays are included agency-wise.
     var actualDowntimeLookup = delays
         .Where(x =>
-            (x.TotalDuration ?? 0) > 0
+            !string.IsNullOrWhiteSpace(GetChartAgencyCode(x))
         )
-        .GroupBy(x => NormalizeAgencyCode(x.AgencyName))
+        .GroupBy(x => GetChartAgencyCode(x))
         .Select(g => new
         {
             Code = g.Key,
@@ -490,22 +746,32 @@
         new { Code = "SC",  Name = "Size Change",         TargetPercentage = rollingMillTarget.SizeChangeTarget },
         new { Code = "PF",  Name = "Power Failure",       TargetPercentage = rollingMillTarget.PowerFailureTarget },
         new { Code = "NB",  Name = "No Billet",           TargetPercentage = rollingMillTarget.NoBilletTarget },
-        new { Code = "AS",  Name = "Annual Shutdown",     TargetPercentage = rollingMillTarget.AnnualShutdownTarget },
-        new { Code = "OTH", Name = "Others",              TargetPercentage = rollingMillTarget.OthersTarget }
+        new { Code = "AS",  Name = "Annual Shutdown",     TargetPercentage = rollingMillTarget.AnnualShutdownTarget }
     }.ToList();
 
-    // Agencies with Scheduled or Unscheduled delay will be shown.
-    var availableDowntimeTargets = downtimeTargets
-        .Where(x =>
-            actualDowntimeLookup.Any(a =>
+    // Filtered delays mein maujood har valid agency code show hoga.
+    // New/unconfigured code ka target zero rahega.
+    var availableDowntimeTargets = actualDowntimeLookup
+        .Select(x =>
+        {
+            var target = downtimeTargets.FirstOrDefault(t =>
                 string.Equals(
-                    a.Code,
+                    t.Code,
                     x.Code,
                     StringComparison.OrdinalIgnoreCase
-                ) &&
-                a.ActualMinutes > 0
-            )
-        )
+                )
+            );
+
+            return new
+            {
+                Code = x.Code,
+                Name = x.Code,
+                TargetPercentage = target != null
+                    ? target.TargetPercentage
+                    : 0m
+            };
+        })
+        .OrderBy(x => x.Code)
         .ToList();
 
     var downtimeAgencyLabels = availableDowntimeTargets
@@ -513,7 +779,7 @@
         .ToList();
 
     var downtimeAgencyNames = availableDowntimeTargets
-        .Select(x => x.Name)
+        .Select(x => x.Code)
         .ToList();
 
     // Target directly percentage table se.
@@ -562,17 +828,20 @@
         )
         .ToList();
 
-    // Monthly accumulated delays grouped agency-wise.
-    var monthlyDelayAgencyData = delays
-        .Where(x => (x.TotalDuration ?? 0) > 0)
-        .GroupBy(x =>
-            string.IsNullOrWhiteSpace(x.AgencyName)
-                ? "Others"
-                : x.AgencyName.Trim()
+    // Monthly accumulated delay chart only:
+    // selected To Date ke month ki 1st date se To Date tak accumulation.
+    decimal monthlyShiftMinutes = ViewBag.MonthlyShiftMinutes != null
+        ? Convert.ToDecimal(ViewBag.MonthlyShiftMinutes)
+        : totalTimeMins;
+
+    var monthlyDelayAgencyData = monthlyDelays
+        .Where(x =>
+            !string.IsNullOrWhiteSpace(GetChartAgencyCode(x))
         )
+        .GroupBy(x => GetChartAgencyCode(x))
         .Select(g => new
         {
-            Agency = g.Key,
+            AgencyCode = g.Key,
             TotalMinutes = g.Sum(
                 x => Convert.ToDecimal(
                     x.TotalDuration ?? 0
@@ -586,17 +855,34 @@
         monthlyDelayAgencyData.Sum(x => x.TotalMinutes);
 
     var monthlyDelayAgencyLabels = monthlyDelayAgencyData
-        .Select(x => x.Agency)
+        .Select(x => x.AgencyCode)
+        .ToList();
+
+    var monthlyDelayAgencyTargetData = monthlyDelayAgencyData
+        .Select(x =>
+        {
+            var target = downtimeTargets.FirstOrDefault(t =>
+                string.Equals(
+                    t.Code,
+                    x.AgencyCode,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+
+            return target != null
+                ? Math.Round(target.TargetPercentage, 2)
+                : 0m;
+        })
         .ToList();
 
     // Correct accumulated percentage:
     // Agency delay minutes / total selected period minutes * 100.
     var monthlyDelayAgencyPercentages = monthlyDelayAgencyData
         .Select(x =>
-            totalTimeMins > 0
+            monthlyShiftMinutes > 0
                 ? Math.Round(
                     (x.TotalMinutes /
-                     totalTimeMins) * 100,
+                     monthlyShiftMinutes) * 100,
                     2
                 )
                 : 0
@@ -1970,7 +2256,10 @@
     </div>
     <div class="card section-card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Downtime Details</span>
+            <span>
+                Downtime Details
+                <small class="text-muted ml-2">Operational day: 07:00 AM to next day 07:00 AM</small>
+            </span>
 
             <button type="button"
                     class="btn btn-sm btn-outline-secondary no-print"
@@ -2006,9 +2295,13 @@
                             {
                                 <tr>
                                     <td>
-                                        @(item.Date.HasValue
-                                        ? item.Date.Value.ToString("dd/MM/yyyy", gregorian)
-                                        : "-")
+                                        @{
+                                            DateTime? operationalDisplayDate =
+                                                GetDowntimeOperationalDate(item);
+                                        }
+                                        @(operationalDisplayDate.HasValue
+                                            ? operationalDisplayDate.Value.ToString("dd/MM/yyyy", gregorian)
+                                            : "-")
                                     </td>
 
                                     <td>@item.StartTime</td>
@@ -2483,6 +2776,9 @@
 
         var monthlyDelayAgencyLabels =
             @Html.Raw(JsonConvert.SerializeObject(monthlyDelayAgencyLabels));
+
+        var monthlyDelayAgencyTargetData =
+            @Html.Raw(JsonConvert.SerializeObject(monthlyDelayAgencyTargetData));
 
         var monthlyDelayAgencyPercentages =
             @Html.Raw(JsonConvert.SerializeObject(monthlyDelayAgencyPercentages));
@@ -3302,7 +3598,7 @@
                                 title: function (items) {
                                     if (!items || items.length === 0) return "";
                                     var index = items[0].dataIndex;
-                                    return downtimeAgencyLabels[index] + " - " + downtimeAgencyNames[index];
+                                    return downtimeAgencyLabels[index];
                                 },
                                 label: function (context) {
                                     return context.dataset.label + ": " +
@@ -3369,21 +3665,21 @@
             if (!canvas) return;
 
             var labels =
-                downtimeAgencyNames &&
-                downtimeAgencyNames.length > 0
-                    ? downtimeAgencyNames
+                monthlyDelayAgencyLabels &&
+                monthlyDelayAgencyLabels.length > 0
+                    ? monthlyDelayAgencyLabels
                     : ["No Delay"];
 
             var targetValues =
-                downtimeAgencyTargetData &&
-                downtimeAgencyTargetData.length > 0
-                    ? downtimeAgencyTargetData
+                monthlyDelayAgencyTargetData &&
+                monthlyDelayAgencyTargetData.length > 0
+                    ? monthlyDelayAgencyTargetData
                     : [0];
 
             var actualValues =
-                downtimeAgencyActualData &&
-                downtimeAgencyActualData.length > 0
-                    ? downtimeAgencyActualData
+                monthlyDelayAgencyPercentages &&
+                monthlyDelayAgencyPercentages.length > 0
+                    ? monthlyDelayAgencyPercentages
                     : [0];
 
             var highestValue = Math.max.apply(

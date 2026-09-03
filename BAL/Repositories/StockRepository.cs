@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WebAPICode.Helpers;
+using static DAL.Models.ViewModel;
 
 namespace BAL.Repositories
 {

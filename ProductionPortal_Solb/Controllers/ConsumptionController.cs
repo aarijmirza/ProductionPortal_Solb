@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web.Mvc;
+using static DAL.Models.ViewModel;
 
 namespace ProductionPortal_Solb.Controllers
 {

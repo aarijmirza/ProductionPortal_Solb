@@ -3,7 +3,7 @@
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>D:\Published\Production Portal</_PublishTargetUrl>
-    <History>True|2026-08-24T09:52:33.7852602Z||;True|2026-08-23T16:58:56.5795273+03:00||;</History>
+    <History>True|2026-09-03T06:42:43.1213433Z||;True|2026-09-02T13:40:27.5723172+03:00||;True|2026-08-31T11:08:54.2898309+03:00||;True|2026-08-26T10:21:42.3492453+03:00||;True|2026-08-24T12:52:33.7852602+03:00||;True|2026-08-23T16:58:56.5795273+03:00||;</History>
     <LastFailureDetails />
   </PropertyGroup>
   <ItemGroup>
@@ -5687,13 +5687,13 @@
       <publishTime>08/21/2026 14:30:26</publishTime>
     </File>
     <File Include="bin/BAL.dll">
-      <publishTime>08/24/2026 12:52:18</publishTime>
+      <publishTime>09/03/2026 09:42:21</publishTime>
     </File>
     <File Include="bin/BAL.dll.config">
       <publishTime>08/21/2026 14:29:52</publishTime>
     </File>
     <File Include="bin/BAL.pdb">
-      <publishTime>08/24/2026 12:52:18</publishTime>
+      <publishTime>09/03/2026 09:42:21</publishTime>
     </File>
     <File Include="bin/BouncyCastle.Cryptography.dll">
       <publishTime>08/21/2026 14:30:26</publishTime>
@@ -5708,13 +5708,13 @@
       <publishTime>08/21/2026 14:30:27</publishTime>
     </File>
     <File Include="bin/DAL.dll">
-      <publishTime>08/24/2026 12:52:17</publishTime>
+      <publishTime>09/03/2026 09:42:20</publishTime>
     </File>
     <File Include="bin/DAL.dll.config">
       <publishTime>08/21/2026 14:29:54</publishTime>
     </File>
     <File Include="bin/DAL.pdb">
-      <publishTime>08/24/2026 12:52:17</publishTime>
+      <publishTime>09/03/2026 09:42:20</publishTime>
     </File>
     <File Include="bin/DocumentFormat.OpenXml.dll">
       <publishTime>08/21/2026 14:30:27</publishTime>
@@ -5981,10 +5981,10 @@
       <publishTime>08/21/2026 14:30:36</publishTime>
     </File>
     <File Include="bin/ProductionPortal_Solb.dll">
-      <publishTime>08/24/2026 12:52:21</publishTime>
+      <publishTime>09/03/2026 09:42:23</publishTime>
     </File>
     <File Include="bin/ProductionPortal_Solb.pdb">
-      <publishTime>08/24/2026 12:52:21</publishTime>
+      <publishTime>09/03/2026 09:42:23</publishTime>
     </File>
     <File Include="bin/RBush.dll">
       <publishTime>08/21/2026 14:30:36</publishTime>
@@ -6313,6 +6313,9 @@
     <File Include="Views/CCMProduction/PdfReport.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
+    <File Include="Views/CMDDashboard/dashboard.cshtml">
+      <publishTime>09/02/2026 16:46:13</publishTime>
+    </File>
     <File Include="Views/Consumption/add.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
@@ -6326,7 +6329,7 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/DelayCounterMeasure/add.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>09/02/2026 19:07:48</publishTime>
     </File>
     <File Include="Views/Executive/dashboard.cshtml">
       <publishTime>08/24/2026 12:19:04</publishTime>
@@ -6340,8 +6343,11 @@
     <File Include="Views/Login/login.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
+    <File Include="Views/Maintenance/countermeasurelist.cshtml">
+      <publishTime>09/02/2026 18:56:42</publishTime>
+    </File>
     <File Include="Views/Maintenance/detail.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>09/02/2026 18:38:55</publishTime>
     </File>
     <File Include="Views/Maintenance/list.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6398,13 +6404,13 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Quality/HBIDRIAnalysis/AddHBIDRIAnalysis.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>09/01/2026 13:58:20</publishTime>
     </File>
     <File Include="Views/Quality/HBIDRIAnalysis/HBIDRIAnalysisDetail.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Quality/HBIDRIAnalysis/HBIDRIlist.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>09/01/2026 13:50:53</publishTime>
     </File>
     <File Include="Views/Quality/HeatChemistry/AddChemistry.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6416,7 +6422,7 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Quality/QCInspectionRM/AddInspectionRM.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>09/01/2026 16:45:49</publishTime>
     </File>
     <File Include="Views/Quality/QCInspectionRM/InspectionRMlist.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6440,13 +6446,13 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Reporting/CMDDailyReport.cshtml">
-      <publishTime>08/23/2026 16:40:54</publishTime>
+      <publishTime>08/27/2026 17:08:05</publishTime>
     </File>
     <File Include="Views/Reporting/DailyProductionRM - Copy.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Reporting/ReportingSection.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>09/02/2026 13:48:33</publishTime>
     </File>
     <File Include="Views/Reporting/RMMonthlyPerformanceReport - Copy.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6458,10 +6464,10 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Reporting/ShiftProductionDashboard.cshtml">
-      <publishTime>08/23/2026 12:59:23</publishTime>
+      <publishTime>08/31/2026 11:06:18</publishTime>
     </File>
     <File Include="Views/Reporting/ShiftProductionReport.cshtml">
-      <publishTime>08/23/2026 12:59:23</publishTime>
+      <publishTime>08/31/2026 11:02:32</publishTime>
     </File>
     <File Include="Views/Reporting/SMPDailySummary.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6470,7 +6476,7 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Reporting/SupplyChainReport.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>09/01/2026 13:07:43</publishTime>
     </File>
     <File Include="Views/Reporting/UtilityDailyReport - Copy.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6479,7 +6485,7 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/RMReports/list.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>08/25/2026 10:31:13</publishTime>
     </File>
     <File Include="Views/RollingMill/AddDetails.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6536,7 +6542,7 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Shared/_Layout.cshtml">
-      <publishTime>08/24/2026 11:19:26</publishTime>
+      <publishTime>09/02/2026 15:36:42</publishTime>
     </File>
     <File Include="Views/SMPDayWiseProduction/Details.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>

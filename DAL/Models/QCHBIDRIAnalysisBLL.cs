@@ -38,12 +38,11 @@ namespace DAL.Models
 
         public string UpdatedBy { get; set; }
 
-        // ✅ ADD THIS
-        public List<SampleHBIDRIBLL> Samples { get; set; }
 
-        public QCHBIDRIAnalysisBLL()
+        public List<SampleHBIDRIBLL> Samples
         {
-            Samples = new List<SampleHBIDRIBLL>();
+            get;
+            set;
         }
     }
 

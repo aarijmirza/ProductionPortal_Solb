@@ -1,4 +1,6 @@
-﻿@model DAL.Models.DelayCounterMeasureVM
+﻿@model DAL.Models.ViewModel.DelayCounterMeasureVM
+@using System
+@using System.Linq
 
 @{
     ViewBag.Title = "Delay Countermeasures";
@@ -6,6 +8,11 @@
 
     var delayDetail = Model != null ? Model.DelayDetail : null;
     var analysis = ViewBag.Analysis as DAL.Models.FailureAnalysisBLL;
+
+    int analysisID =
+        analysis != null
+            ? analysis.ID
+            : 0;
 
     string counterMeasureA =
         analysis != null && !string.IsNullOrWhiteSpace(analysis.FailureCategory1Component)
@@ -50,6 +57,28 @@
     string responsible =
         delayDetail != null && !string.IsNullOrWhiteSpace(delayDetail.AgencyName)
             ? delayDetail.AgencyName
+            : "";
+
+    var existingCounterMeasure1 =
+        Model != null &&
+        Model.ExistingCounterMeasures != null
+            ? Model.ExistingCounterMeasures
+                .FirstOrDefault(x =>
+                    x != null &&
+                    !string.IsNullOrWhiteSpace(x.CounterMeasure) &&
+                    string.Equals(
+                        x.CounterMeasure.Trim(),
+                        increaseMTBF.Trim(),
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+              ?? Model.ExistingCounterMeasures.FirstOrDefault()
+            : null;
+
+    string counterMeasure1ReasonForNotClosing =
+        existingCounterMeasure1 != null &&
+        !string.IsNullOrWhiteSpace(existingCounterMeasure1.ReasonForNotClosing)
+            ? existingCounterMeasure1.ReasonForNotClosing
             : "";
 }
 
@@ -100,7 +129,7 @@
         }
 
     .summary-value.description {
-        white-space: pre-wrap;
+        /*white-space: pre-wrap;*/
         font-weight: 600;
         line-height: 1.55;
     }
@@ -162,6 +191,28 @@
     .status-overdue {
         color: #b91c1c;
         font-weight: 700;
+    }
+
+    .analysis-id-box {
+        background: #f8fafc;
+        font-weight: 800;
+    }
+
+    .evidence-file-box {
+        padding: 8px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+    }
+
+        .evidence-file-box small {
+            display: block;
+            margin-top: 5px;
+            color: #64748b;
+        }
+
+    .evidence-link {
+        white-space: nowrap;
     }
 </style>
 
@@ -299,24 +350,30 @@
                             </div>
                         </div>
 
-                        <div class="col-12 summary-item wide">
+                        <div class="col-2 summary-item wide">
                             <div class="summary-label">Failure Description</div>
                             <div class="summary-value description">
                                 @(string.IsNullOrWhiteSpace(delayDetail.DelayDescription) ? "-" : delayDetail.DelayDescription)
                             </div>
                         </div>
 
-                        <div class="col-md-6 summary-item wide">
+                        <div class="col-md-5 summary-item wide">
                             <div class="summary-label">Reason for Occurrence</div>
                             <div class="summary-value description">
                                 @(string.IsNullOrWhiteSpace(delayDetail.ReasonForOccurence) ? "-" : delayDetail.ReasonForOccurence)
                             </div>
                         </div>
 
-                        <div class="col-md-6 summary-item wide">
+                        <div class="col-md-5 summary-item wide">
                             <div class="summary-label">Action Taken</div>
                             <div class="summary-value description">
                                 @(string.IsNullOrWhiteSpace(delayDetail.ActionTaken) ? "-" : delayDetail.ActionTaken)
+                            </div>
+                        </div>
+                        <div class="col-md-4 summary-item wide">
+                            <div class="summary-label">SAP Order No.</div>
+                            <div class="summary-value description">
+                                @sapBreakdownOrder
                             </div>
                         </div>
                     </div>
@@ -328,11 +385,30 @@
 
     <div class="card-body">
 
-        @using (Html.BeginForm("SaveMultiple", "DelayCounterMeasure", FormMethod.Post, new { id = "counterMeasureForm" }))
+        @using (Html.BeginForm(
+            "SaveMultiple",
+            "DelayCounterMeasure",
+            FormMethod.Post,
+            new
+            {
+                id = "counterMeasureForm",
+                enctype = "multipart/form-data"
+            }))
         {
             @Html.AntiForgeryToken()
 
             @Html.HiddenFor(x => x.PlantDelayID)
+
+            <input type="hidden"
+                   name="AnalysisID"
+                   value="@analysisID" />
+
+            if (analysisID <= 0)
+            {
+                <div class="alert alert-warning">
+                    Failure Analysis ID is not available. Please save Failure Analysis before adding countermeasures.
+                </div>
+            }
 
             if (delayDetail != null)
             {
@@ -357,100 +433,6 @@
 
                 <div class="card-body">
 
-                    @*<div class="card mb-3">
-                        <div class="card-header">
-                            Failure Analysis Information
-                        </div>
-
-                        <div class="card-body">
-                            <div class="row">
-
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Countermeasure A</label>
-                                        <textarea name="CounterMeasures[0].CounterMeasureA"
-                                                  class="form-control"
-                                                  rows="3"
-                                                  readonly>@counterMeasureA</textarea>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Increase MTBF</label>
-                                        <textarea name="CounterMeasures[0].IncreaseMTBF"
-                                                  class="form-control"
-                                                  rows="3"
-                                                  readonly>@increaseMTBF</textarea>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Decrease MTTR</label>
-                                        <textarea name="CounterMeasures[0].DecreaseMTTR"
-                                                  class="form-control"
-                                                  rows="3"
-                                                  readonly>@decreaseMTTR</textarea>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Additional MTBF Action</label>
-                                        <textarea name="CounterMeasures[0].IncreaseMTBF1"
-                                                  class="form-control"
-                                                  rows="2"
-                                                  readonly>@increaseMTBF1</textarea>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Additional MTTR Action</label>
-                                        <textarea name="CounterMeasures[0].DecreaseMTTR1"
-                                                  class="form-control"
-                                                  rows="2"
-                                                  readonly>@decreaseMTTR1</textarea>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Root Cause</label>
-                                        <textarea name="CounterMeasures[0].RootCause"
-                                                  class="form-control"
-                                                  rows="2"
-                                                  readonly>@rootCause</textarea>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>SAP Breakdown Order</label>
-                                        <input type="text"
-                                               name="CounterMeasures[0].SAPBreakdownOrder"
-                                               class="form-control"
-                                               value="@sapBreakdownOrder"
-                                               readonly />
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>Failure Report Status</label>
-                                        <input type="text"
-                                               name="CounterMeasures[0].FailureReportStatus"
-                                               class="form-control"
-                                               value="@failureReportStatus"
-                                               readonly />
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>*@
-
                     <div id="counterMeasureContainer">
 
                         <!-- Countermeasure 1 - MTBF -->
@@ -470,6 +452,21 @@
 
                             <div class="row">
 
+                                @*<div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Analysis ID</label>
+
+                                            <input type="text"
+                                                   class="form-control analysis-id-box"
+                                                   value="@analysisID"
+                                                   readonly />
+
+                                            <input type="hidden"
+                                                   name="CounterMeasures[0].AnalysisID"
+                                                   value="@analysisID" />
+                                        </div>
+                                    </div>*@
+
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>
@@ -481,17 +478,6 @@
                                                   class="form-control"
                                                   rows="3"
                                                   required>@increaseMTBF</textarea>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>SAP Order No.</label>
-
-                                        <input type="text"
-                                               name="CounterMeasures[0].SAPOrderNo"
-                                               class="form-control"
-                                               value="@sapBreakdownOrder" />
                                     </div>
                                 </div>
 
@@ -518,7 +504,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>Target Date</label>
 
@@ -528,7 +514,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>Status</label>
 
@@ -542,7 +528,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Evidence for Completion</label>
 
@@ -553,6 +539,23 @@
                                     </div>
                                 </div>
 
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Evidence Attachment</label>
+
+                                        <div class="evidence-file-box">
+                                            <input type="file"
+                                                   name="EvidenceFiles[0]"
+                                                   class="form-control-file evidence-file"
+                                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
+
+                                            <small>
+                                                PDF, Word, Excel or image. Maximum 10 MB.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="col-md-12 reason-section">
                                     <div class="form-group">
                                         <label>Reason for Not Closing</label>
@@ -560,7 +563,7 @@
                                         <textarea name="CounterMeasures[0].ReasonForNotClosing"
                                                   class="form-control"
                                                   rows="2"
-                                                  placeholder="Enter reason for not closing"></textarea>
+                                                  placeholder="Enter reason for not closing">@counterMeasure1ReasonForNotClosing</textarea>
                                     </div>
                                 </div>
 
@@ -584,6 +587,21 @@
 
                             <div class="row">
 
+                                @*<div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Analysis ID</label>
+
+                                            <input type="text"
+                                                   class="form-control analysis-id-box"
+                                                   value="@analysisID"
+                                                   readonly />
+
+                                            <input type="hidden"
+                                                   name="CounterMeasures[1].AnalysisID"
+                                                   value="@analysisID" />
+                                        </div>
+                                    </div>*@
+
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>
@@ -598,16 +616,16 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>SAP Order No.</label>
+                                @*<div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>SAP Order No.</label>
 
-                                        <input type="text"
-                                               name="CounterMeasures[1].SAPOrderNo"
-                                               class="form-control"
-                                               value="@sapBreakdownOrder" />
-                                    </div>
-                                </div>
+                                            <input type="text"
+                                                   name="CounterMeasures[1].SAPOrderNo"
+                                                   class="form-control"
+                                                   value="@sapBreakdownOrder" />
+                                        </div>
+                                    </div>*@
 
                                 <div class="col-md-3">
                                     <div class="form-group">
@@ -632,7 +650,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>Target Date</label>
 
@@ -642,7 +660,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>Status</label>
 
@@ -656,7 +674,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Evidence for Completion</label>
 
@@ -664,6 +682,23 @@
                                                   class="form-control"
                                                   rows="2"
                                                   placeholder="Enter evidence for completion"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Evidence Attachment</label>
+
+                                        <div class="evidence-file-box">
+                                            <input type="file"
+                                                   name="EvidenceFiles[1]"
+                                                   class="form-control-file evidence-file"
+                                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
+
+                                            <small>
+                                                PDF, Word, Excel or image. Maximum 10 MB.
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -687,7 +722,7 @@
 
                         <button type="submit"
                                 class="btn btn-primary"
-                                @(delayDetail == null ? "disabled" : "")>
+                                @(delayDetail == null || analysisID <= 0 ? "disabled" : "")>
                             <i class="fa fa-save"></i>
                             Save All Countermeasures
                         </button>
@@ -717,12 +752,14 @@
                     <thead>
                         <tr>
                             <th>#</th>
+                            @*<th>Analysis ID</th>*@
                             <th>Countermeasure</th>
                             <th>SAP Order No.</th>
                             <th>Sub Order Number</th>
                             <th>Responsible</th>
                             <th>Target Date</th>
                             <th>Evidence for Completion</th>
+                            <th>Evidence File</th>
                             <th>Status</th>
                             <th>Reason for Not Closing</th>
                             <th>Action</th>
@@ -750,6 +787,12 @@
                                         @serial
                                     </td>
 
+                                    @*<td class="text-center">
+                                            @(item.AnalysisID.HasValue
+                                                ? item.AnalysisID.Value.ToString()
+                                                : "-")
+                                        </td>*@
+
                                     <td>
                                         @item.CounterMeasure
                                     </td>
@@ -774,6 +817,24 @@
 
                                     <td>
                                         @item.EvidenceForCompletion
+                                    </td>
+
+                                    <td class="text-center">
+                                        @if (!string.IsNullOrWhiteSpace(item.EvidenceFile))
+                                        {
+                                            <a href="@Url.Content(item.EvidenceFile)"
+                                               target="_blank"
+                                               class="btn btn-sm btn-outline-primary evidence-link">
+                                                <i class="fa fa-paperclip"></i>
+                                                @(string.IsNullOrWhiteSpace(item.EvidenceFileName)
+                                                    ? "View File"
+                                                    : item.EvidenceFileName)
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
                                     </td>
 
                                     <td class="@statusClass">
@@ -805,7 +866,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="10"
+                                <td colspan="12"
                                     class="text-center text-muted">
                                     No countermeasure entered against this delay.
                                 </td>
@@ -823,7 +884,8 @@
 <script>
     $(document).ready(function () {
 
-        var counterIndex = 1;
+        var analysisID = @analysisID;
+        var counterIndex = $(".countermeasure-entry").length;
 
         $("#btnAddCounterMeasure").on("click", function () {
 
@@ -843,7 +905,22 @@
 
                     <div class="row">
 
-                        <div class="col-md-6">
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Analysis ID</label>
+
+                                <input type="text"
+                                       class="form-control analysis-id-box"
+                                       value="${analysisID}"
+                                       readonly />
+
+                                <input type="hidden"
+                                       name="CounterMeasures[${counterIndex}].AnalysisID"
+                                       value="${analysisID}" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>
                                     Countermeasure
@@ -913,7 +990,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Evidence for Completion</label>
 
@@ -921,6 +998,23 @@
                                           class="form-control"
                                           rows="2"
                                           placeholder="Enter evidence for completion"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Evidence Attachment</label>
+
+                                <div class="evidence-file-box">
+                                    <input type="file"
+                                           name="EvidenceFiles[${counterIndex}]"
+                                           class="form-control-file evidence-file"
+                                           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
+
+                                    <small>
+                                        PDF, Word, Excel or image. Maximum 10 MB.
+                                    </small>
+                                </div>
                             </div>
                         </div>
 
@@ -1013,10 +1107,15 @@
                         }
 
                         var updatedName =
-                            name.replace(
-                                /CounterMeasures\[\d+\]/,
-                                "CounterMeasures[" + index + "]"
-                            );
+                            name
+                                .replace(
+                                    /CounterMeasures\[\d+\]/,
+                                    "CounterMeasures[" + index + "]"
+                                )
+                                .replace(
+                                    /EvidenceFiles\[\d+\]/,
+                                    "EvidenceFiles[" + index + "]"
+                                );
 
                         $(this).attr("name", updatedName);
                     });

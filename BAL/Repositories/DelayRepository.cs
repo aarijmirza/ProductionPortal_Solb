@@ -22,6 +22,385 @@ namespace BAL.Repositories
             _ds = new DataSet();
         }
 
+        public List<string> GetMaintenanceEquipmentListByPlant(
+    string plant,
+    string selectedEquipment = null)
+        {
+            var list =
+                new List<string>();
+
+            try
+            {
+                SqlParameter[] parameters =
+                {
+            new SqlParameter(
+                "@Plant",
+                SqlDbType.NVarChar,
+                100
+            )
+            {
+                Value =
+                    string.IsNullOrWhiteSpace(
+                        plant
+                    )
+                        ? (object)DBNull.Value
+                        : plant.Trim()
+            }
+        };
+
+                DataTable dt =
+                    new DBHelper().GetTableFromSP(
+                        "sp_GetMaintenanceEquipmentByPlant",
+                        parameters
+                    );
+
+                if (dt != null)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        if (!dt.Columns.Contains("EquipmentName"))
+                        {
+                            continue;
+                        }
+
+                        string equipmentName =
+                            Convert.ToString(
+                                row["EquipmentName"]
+                            );
+
+                        equipmentName =
+                            string.IsNullOrWhiteSpace(
+                                equipmentName
+                            )
+                                ? null
+                                : equipmentName.Trim();
+
+                        if (string.IsNullOrWhiteSpace(
+                            equipmentName
+                        ))
+                        {
+                            continue;
+                        }
+
+                        if (!list.Any(
+                            x =>
+                                string.Equals(
+                                    x,
+                                    equipmentName,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                        ))
+                        {
+                            list.Add(
+                                equipmentName
+                            );
+                        }
+                    }
+                }
+
+                /*
+                 * Keep the current saved equipment visible/selected even if
+                 * historic data for the plant has changed.
+                 */
+                if (
+                    !string.IsNullOrWhiteSpace(
+                        selectedEquipment
+                    )
+                    &&
+                    !list.Any(
+                        x =>
+                            string.Equals(
+                                x,
+                                selectedEquipment.Trim(),
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                    )
+                )
+                {
+                    list.Insert(
+                        0,
+                        selectedEquipment.Trim()
+                    );
+                }
+
+                return list
+                    .OrderBy(x => x)
+                    .ToList();
+            }
+            catch
+            {
+                return list;
+            }
+        }
+
+
+        public int UpdateDelayEquipment(
+            int delayID,
+            string equipments,
+            string updatedBy)
+        {
+            try
+            {
+                SqlParameter[] parameters =
+                {
+            new SqlParameter(
+                "@DelayID",
+                SqlDbType.Int
+            )
+            {
+                Value = delayID
+            },
+
+            new SqlParameter(
+                "@Equipments",
+                SqlDbType.NVarChar,
+                250
+            )
+            {
+                Value =
+                    string.IsNullOrWhiteSpace(
+                        equipments
+                    )
+                        ? (object)DBNull.Value
+                        : equipments.Trim()
+            },
+
+            new SqlParameter(
+                "@UpdatedBy",
+                SqlDbType.NVarChar,
+                100
+            )
+            {
+                Value =
+                    string.IsNullOrWhiteSpace(
+                        updatedBy
+                    )
+                        ? (object)DBNull.Value
+                        : updatedBy.Trim()
+            }
+        };
+
+                DataTable dt =
+                    new DBHelper().GetTableFromSP(
+                        "sp_UpdateMaintenanceDelayEquipment",
+                        parameters
+                    );
+
+                if (
+                    dt != null
+                    && dt.Rows.Count > 0
+                    && dt.Columns.Contains(
+                        "AffectedRows"
+                    )
+                    && dt.Rows[0]["AffectedRows"] != DBNull.Value
+                )
+                {
+                    return Convert.ToInt32(
+                        dt.Rows[0]["AffectedRows"]
+                    );
+                }
+
+                return 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        // Add this method INSIDE DelayCounterMeasureRepository
+
+        public List<CounterMeasureFollowupVM> GetFollowupTracker(
+            DateTime? fromDate,
+            DateTime? toDate,
+            string plant,
+            string status)
+        {
+            try
+            {
+                List<CounterMeasureFollowupVM> list =
+                    new List<CounterMeasureFollowupVM>();
+
+                SqlParameter[] parameters =
+                {
+            new SqlParameter(
+                "@FromDate",
+                SqlDbType.Date
+            )
+            {
+                Value =
+                    fromDate.HasValue
+                        ? (object)fromDate.Value.Date
+                        : DBNull.Value
+            },
+
+            new SqlParameter(
+                "@ToDate",
+                SqlDbType.Date
+            )
+            {
+                Value =
+                    toDate.HasValue
+                        ? (object)toDate.Value.Date
+                        : DBNull.Value
+            },
+
+            new SqlParameter(
+                "@Plant",
+                SqlDbType.NVarChar,
+                50
+            )
+            {
+                Value =
+                    string.IsNullOrWhiteSpace(plant)
+                        ? (object)DBNull.Value
+                        : plant.Trim()
+            },
+
+            new SqlParameter(
+                "@Status",
+                SqlDbType.NVarChar,
+                50
+            )
+            {
+                Value =
+                    string.IsNullOrWhiteSpace(status)
+                        ? (object)DBNull.Value
+                        : status.Trim()
+            }
+        };
+
+                DataTable dt =
+                    DBHelper.ExecuteDataTable(
+                        "sp_GetCounterMeasureFollowupTracker",
+                        CommandType.StoredProcedure,
+                        parameters
+                    );
+
+                if (
+                    dt == null ||
+                    dt.Rows.Count == 0
+                )
+                {
+                    return list;
+                }
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    CounterMeasureFollowupVM item =
+                        new CounterMeasureFollowupVM
+                        {
+                            SrNo =
+                                row.Table.Columns.Contains("SrNo") &&
+                                row["SrNo"] != DBNull.Value
+                                    ? Convert.ToInt32(row["SrNo"])
+                                    : 0,
+
+                            DelayID =
+                                row.Table.Columns.Contains("DelayID") &&
+                                row["DelayID"] != DBNull.Value
+                                    ? Convert.ToInt32(row["DelayID"])
+                                    : 0,
+
+                            DelayDate =
+                                row.Table.Columns.Contains("DelayDate") &&
+                                row["DelayDate"] != DBNull.Value
+                                    ? (DateTime?)Convert.ToDateTime(row["DelayDate"])
+                                    : null,
+
+                            Plant =
+                                row.Table.Columns.Contains("Plant") &&
+                                row["Plant"] != DBNull.Value
+                                    ? Convert.ToString(row["Plant"])
+                                    : "",
+
+                            Agency =
+                                row.Table.Columns.Contains("Agency") &&
+                                row["Agency"] != DBNull.Value
+                                    ? Convert.ToString(row["Agency"])
+                                    : "",
+
+                            EquipmentName =
+                                row.Table.Columns.Contains("EquipmentName") &&
+                                row["EquipmentName"] != DBNull.Value
+                                    ? Convert.ToString(row["EquipmentName"])
+                                    : "",
+
+                            DelayDescription =
+                                row.Table.Columns.Contains("DelayDescription") &&
+                                row["DelayDescription"] != DBNull.Value
+                                    ? Convert.ToString(row["DelayDescription"])
+                                    : "",
+
+                            CounterMeasureID =
+                                row.Table.Columns.Contains("CounterMeasureID") &&
+                                row["CounterMeasureID"] != DBNull.Value
+                                    ? Convert.ToInt32(row["CounterMeasureID"])
+                                    : 0,
+
+                            Countermeasure =
+                                row.Table.Columns.Contains("Countermeasure") &&
+                                row["Countermeasure"] != DBNull.Value
+                                    ? Convert.ToString(row["Countermeasure"])
+                                    : "",
+
+                            SubOrderNumber =
+                                row.Table.Columns.Contains("SubOrderNumber") &&
+                                row["SubOrderNumber"] != DBNull.Value
+                                    ? Convert.ToString(row["SubOrderNumber"])
+                                    : "",
+
+                            Responsible =
+                                row.Table.Columns.Contains("Responsible") &&
+                                row["Responsible"] != DBNull.Value
+                                    ? Convert.ToString(row["Responsible"])
+                                    : "",
+
+                            TargetDate =
+                                row.Table.Columns.Contains("TargetDate") &&
+                                row["TargetDate"] != DBNull.Value
+                                    ? (DateTime?)Convert.ToDateTime(row["TargetDate"])
+                                    : null,
+
+                            EvidenceAttachmentLink =
+                                row.Table.Columns.Contains("EvidenceAttachmentLink") &&
+                                row["EvidenceAttachmentLink"] != DBNull.Value
+                                    ? Convert.ToString(row["EvidenceAttachmentLink"])
+                                    : "",
+
+                            EvidenceFileName =
+                                row.Table.Columns.Contains("EvidenceFileName") &&
+                                row["EvidenceFileName"] != DBNull.Value
+                                    ? Convert.ToString(row["EvidenceFileName"])
+                                    : "",
+
+                            Status =
+                                row.Table.Columns.Contains("Status") &&
+                                row["Status"] != DBNull.Value
+                                    ? Convert.ToString(row["Status"])
+                                    : "",
+
+                            ReasonForNotClosing =
+                                row.Table.Columns.Contains("ReasonForNotClosing") &&
+                                row["ReasonForNotClosing"] != DBNull.Value
+                                    ? Convert.ToString(row["ReasonForNotClosing"])
+                                    : ""
+                        };
+
+                    list.Add(item);
+                }
+
+                return list;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    "Unable to load Counter Measure Follow-up Tracker.",
+                    ex
+                );
+            }
+        }
+
         public List<PlantDelayBLL> GetAllRMDelay(DateTime startDate, DateTime endDate, string shift)
         {
             try
@@ -1531,77 +1910,133 @@ new SqlParameter(
             }
         }
 
-        public string GenerateFailureActionCode()
+        public int InsertFailureAnalysisAction(
+            FailureAnalysisActionBLL model)
         {
             try
             {
-                SqlParameter[] p = new SqlParameter[0];
-
-                DataTable dt = new DBHelper().GetTableFromSP("sp_GenerateFailureActionCode", p);
-
-                if (dt != null && dt.Rows.Count > 0)
+                if (
+                    model == null ||
+                    model.DelayID <= 0 ||
+                    !model.AnalysisID.HasValue ||
+                    model.AnalysisID.Value <= 0 ||
+                    string.IsNullOrWhiteSpace(
+                        model.ActionType
+                    ) ||
+                    string.IsNullOrWhiteSpace(
+                        model.ActionRemarks
+                    )
+                )
                 {
-                    return Convert.ToString(dt.Rows[0]["ActionCode"]);
+                    return 0;
                 }
 
-                return "SS-CMD-" + DateTime.Now.Year + "-0001";
-            }
-            catch
-            {
-                return "SS-CMD-" + DateTime.Now.Year + "-0001";
-            }
-        }
+                /*
+                 * ActionCode is NOT supplied by C#.
+                 * sp_InsertFailureAnalysisAction inserts the row first,
+                 * obtains the identity ActionID, then generates a unique
+                 * code from that ID.
+                 */
+                SqlParameter[] p =
+                    new SqlParameter[7];
 
-        public int InsertFailureAnalysisAction(FailureAnalysisActionBLL model)
-        {
-            try
-            {
-                SqlParameter[] p = new SqlParameter[8];
+                p[0] =
+                    new SqlParameter(
+                        "@DelayID",
+                        model.DelayID
+                    );
 
-                p[0] = new SqlParameter("@ActionCode",
-                    string.IsNullOrWhiteSpace(model.ActionCode)
-                        ? (object)DBNull.Value
-                        : model.ActionCode);
+                p[1] =
+                    new SqlParameter(
+                        "@AnalysisID",
+                        model.AnalysisID.Value
+                    );
 
-                p[1] = new SqlParameter("@DelayID", model.DelayID);
+                p[2] =
+                    new SqlParameter(
+                        "@ActionType",
+                        model.ActionType.Trim()
+                    );
 
-                p[2] = new SqlParameter("@AnalysisID",
-                    model.AnalysisID.HasValue
-                        ? (object)model.AnalysisID.Value
-                        : DBNull.Value);
+                p[3] =
+                    new SqlParameter(
+                        "@ActionRemarks",
+                        model.ActionRemarks.Trim()
+                    );
 
-                p[3] = new SqlParameter("@ActionType",
-                    string.IsNullOrWhiteSpace(model.ActionType)
-                        ? (object)DBNull.Value
-                        : model.ActionType);
+                p[4] =
+                    new SqlParameter(
+                        "@StatusID",
+                        model.StatusID.HasValue
+                            ? (object)model.StatusID.Value
+                            : 1
+                    );
 
-                p[4] = new SqlParameter("@ActionRemarks",
-                    string.IsNullOrWhiteSpace(model.ActionRemarks)
-                        ? (object)DBNull.Value
-                        : model.ActionRemarks);
+                p[5] =
+                    new SqlParameter(
+                        "@CreatedBy",
+                        string.IsNullOrWhiteSpace(
+                            model.CreatedBy
+                        )
+                            ? (object)DBNull.Value
+                            : model.CreatedBy.Trim()
+                    );
 
-                p[5] = new SqlParameter("@StatusID",
-                    model.StatusID.HasValue
-                        ? (object)model.StatusID.Value
-                        : 1);
+                p[6] =
+                    new SqlParameter(
+                        "@CreatedDate",
+                        model.CreatedDate.HasValue
+                            ? (object)model.CreatedDate.Value
+                            : DateTime.Now
+                    );
 
-                p[6] = new SqlParameter("@CreatedBy",
-                    string.IsNullOrWhiteSpace(model.CreatedBy)
-                        ? (object)DBNull.Value
-                        : model.CreatedBy);
+                DataTable dt =
+                    new DBHelper().GetTableFromSP(
+                        "sp_InsertFailureAnalysisAction",
+                        p
+                    );
 
-                p[7] = new SqlParameter("@CreatedDate",
-                    model.CreatedDate.HasValue
-                        ? (object)model.CreatedDate.Value
-                        : DateTime.Now);
+                if (
+                    dt == null ||
+                    dt.Rows.Count == 0 ||
+                    !dt.Columns.Contains(
+                        "ActionID"
+                    ) ||
+                    dt.Rows[0]["ActionID"] == DBNull.Value
+                )
+                {
+                    return 0;
+                }
 
-                return new DBHelper().ExecuteNonQueryReturn("sp_InsertFailureAnalysisAction", p);
+                int actionID =
+                    Convert.ToInt32(
+                        dt.Rows[0]["ActionID"]
+                    );
+
+                model.ID =
+                    actionID;
+
+                if (
+                    dt.Columns.Contains(
+                        "ActionCode"
+                    ) &&
+                    dt.Rows[0]["ActionCode"] != DBNull.Value
+                )
+                {
+                    model.ActionCode =
+                        Convert.ToString(
+                            dt.Rows[0]["ActionCode"]
+                        );
+                }
+
+                return actionID;
             }
             catch
             {
                 return 0;
             }
         }
+
 
         public List<FailureAnalysisActionBLL> GetFailureAnalysisActionsByDelayID(int delayID)
         {
@@ -1892,4 +2327,7 @@ new SqlParameter(
 
         public string Remarks { get; set; }
     }
+
+
+
 }

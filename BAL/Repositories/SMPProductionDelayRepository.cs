@@ -32,7 +32,7 @@ namespace BAL.Repositories
             };
 
             DataTable dt = new DBHelper().GetTableFromSP(
-                "sp_GetSMPProductionDelays",
+                "sp_GetSMPDelayDaywises",
                 parameters
             );
 
@@ -63,7 +63,7 @@ namespace BAL.Repositories
             SqlParameter rowsParameter =
                 new SqlParameter("@Rows", SqlDbType.Structured)
                 {
-                    TypeName = "dbo.SMPProductionDelayUploadType",
+                    TypeName = "dbo.SMPDelayDaywiseUploadType",
                     Value = uploadTable
                 };
 
@@ -77,7 +77,7 @@ namespace BAL.Repositories
 
             DataTable resultTable =
                 new DBHelper().GetTableFromSP(
-                    "sp_ImportSMPProductionDelays",
+                    "sp_ImportSMPDelayDaywises",
                     new[]
                     {
                         rowsParameter,
@@ -97,18 +97,10 @@ namespace BAL.Repositories
             return new SMPProductionDelayImportResultBLL
             {
                 ProcessedRows = ReadInt(result, "ProcessedRows"),
-                InsertedPlantDelays = ReadInt(
-                    result,
-                    "InsertedPlantDelays"
-                ),
-                UpdatedPlantDelays = ReadInt(
-                    result,
-                    "UpdatedPlantDelays"
-                ),
-                DeactivatedPlantDelays = ReadInt(
-                    result,
-                    "DeactivatedPlantDelays"
-                ),
+                InsertedPlantDelays = ReadInt(result, "InsertedPlantDelays"),
+                UpdatedPlantDelays = ReadInt(result, "UpdatedPlantDelays"),
+                DeactivatedPlantDelays = ReadInt(result, "DeactivatedPlantDelays"),
+
                 InsertedSMPProductionDelays = ReadInt(
                     result,
                     "InsertedSMPProductionDelays"
@@ -121,6 +113,7 @@ namespace BAL.Repositories
                     result,
                     "DeactivatedSMPProductionDelays"
                 ),
+
                 InsertedFailureAnalyses = ReadInt(
                     result,
                     "InsertedFailureAnalyses"
@@ -129,6 +122,7 @@ namespace BAL.Repositories
                     result,
                     "UpdatedFailureAnalyses"
                 ),
+
                 GeneratedDelayCodes = ReadInt(
                     result,
                     "GeneratedDelayCodes"
@@ -149,6 +143,7 @@ namespace BAL.Repositories
         {
             var table = new DataTable();
 
+            // Must match dbo.SMPDelayDaywiseUploadType in this exact order.
             table.Columns.Add("RowNo", typeof(int));
             table.Columns.Add("Plant", typeof(string));
             table.Columns.Add("ShiftGroup", typeof(string));

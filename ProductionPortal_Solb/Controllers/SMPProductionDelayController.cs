@@ -117,18 +117,9 @@ namespace ProductionPortal_Solb.Controllers
 
                 TempData["Success"] =
                     result.ProcessedRows + " Excel row(s) processed. " +
-                    result.InsertedPlantDelays + " new delay(s), " +
-                    result.UpdatedPlantDelays + " existing delay(s) updated, " +
-                    result.DeactivatedPlantDelays + " old delay(s) closed, " +
-                    result.InsertedSMPProductionDelays +
-                    " source row(s) inserted, " +
-                    result.UpdatedSMPProductionDelays +
-                    " source row(s) updated, " +
-                    result.DeactivatedSMPProductionDelays +
-                    " source row(s) closed, " +
-                    result.InsertedFailureAnalyses +
-                    " failure analysis row(s) inserted and " +
-                    result.UpdatedFailureAnalyses + " updated." +
+                    result.InsertedSMPProductionDelays + " new row(s) inserted, " +
+                    result.UpdatedSMPProductionDelays + " existing row(s) updated, " +
+                    result.DeactivatedSMPProductionDelays + " old row(s) closed." +
                     codeMessage;
 
                 return RedirectToAction(

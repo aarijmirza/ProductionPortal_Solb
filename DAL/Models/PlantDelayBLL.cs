@@ -30,6 +30,7 @@ namespace DAL.Models
         public string Component { get; set; }
         public string Equipments { get; set; }
         public string Reason { get; set; }
+        public string DelayReason { get; set; }
         public string DelayDescription { get; set; }
         public string DelayDescription1 { get; set; }
         public string ReasonForOccurence { get; set; }
@@ -110,6 +111,7 @@ namespace DAL.Models
         public List<DelayAgencyBLL> Agency { get; set; }
         public List<DelayEquipmentBLL> Equipments { get; set; }
         public List<DelayComponentBLL> Components { get; set; }
+        public List<PlantDelayBLL> MonthlyDelayData { get; set; }
     }
 
 }

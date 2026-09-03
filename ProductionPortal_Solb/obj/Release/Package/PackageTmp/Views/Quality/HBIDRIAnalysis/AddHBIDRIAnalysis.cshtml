@@ -1,408 +1,527 @@
 ﻿@model DAL.Models.QCHBIDRIAnalysisBLL
+@using System.Globalization
 
 @{
-    ViewBag.Title = "Add / Edit HBI DRI Analysis";
+    ViewBag.Title = Model != null && Model.ID > 0
+        ? "Edit HBI / DRI Analysis"
+        : "Add HBI / DRI Analysis";
+
+    var samples = Model != null && Model.Samples != null
+        ? Model.Samples
+        : new List<DAL.Models.SampleHBIDRIBLL>();
 }
 
 <div class="xp-breadcrumbbar">
     <div class="row">
-        <div class="col-md-6">
-            <h4 class="xp-page-title">HBI DRI Analysis</h4>
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">
+                @(Model != null && Model.ID > 0
+                    ? "Edit HBI / DRI Analysis"
+                    : "Add HBI / DRI Analysis")
+            </h4>
+        </div>
+
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("HBIDRIlist", "Quality")">
+                            HBI / DRI Analysis
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item active">
+                        @(Model != null && Model.ID > 0 ? "Edit" : "Add")
+                    </li>
+                </ol>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="xp-contentbar">
 
-    <form action="/Quality/AddHBIDRIAnalysis" method="post" id="addprofileform">
-
+    @using (Html.BeginForm(
+        "AddHBIDRIAnalysis",
+        "Quality",
+        FormMethod.Post,
+        new
+        {
+            id = "addprofileform",
+            autocomplete = "off"
+        }))
+    {
+        @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.ID)
 
-        <!-- ================= MASTER SECTION ================= -->
+        <!-- ========================================================= -->
+        <!-- MASTER SECTION                                            -->
+        <!-- ========================================================= -->
+
         <div class="row">
             <div class="col-lg-12">
+
                 <div class="card m-b-30">
-                    <div class="card-header bg-white text-right">
-                        <button type="submit" class="btn btn-primary">Submit</button>
+
+                    <div class="card-header bg-white">
+
+                        <h5 class="card-title d-inline">
+                            Receiving Information
+                        </h5>
+
+                        <div class="float-right">
+
+                            <a href="@Url.Action("HBIDRIlist", "Quality")"
+                               class="btn btn-secondary">
+                                <i class="mdi mdi-arrow-left"></i>
+                                Back
+                            </a>
+
+                            <button type="submit"
+                                    id="submitBtn"
+                                    class="btn btn-primary">
+
+                                <i class="mdi mdi-content-save"></i>
+
+                                @(Model != null && Model.ID > 0
+                                    ? "Update"
+                                    : "Save")
+                            </button>
+
+                        </div>
                     </div>
 
                     <div class="card-body">
 
+                        @Html.ValidationSummary(
+                            false,
+                            "",
+                            new { @class = "text-danger mb-3" })
+
                         <div class="form-row">
+
+                            <!-- Receiving Date -->
                             <div class="form-group col-md-2">
-                                <label>Receiving Date</label>
-                                @Html.TextBoxFor(m => m.ReceivingDate, "{0:yyyy-MM-dd}",
-                                    new { @class = "form-control", type = "date" })
+
+                                <label>
+                                    Receiving Date
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                @Html.TextBoxFor(
+                                    m => m.ReceivingDate,
+                                    "{0:yyyy-MM-dd}",
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        type = "date",
+                                        required = "required"
+                                    })
+
                             </div>
 
+                            <!-- Material -->
                             <div class="form-group col-md-2">
-                                <label>Material</label>
-                                @Html.TextBoxFor(m => m.Material,
-                                    new { @class = "form-control" })
+
+                                <label>
+                                    Material
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                @Html.TextBoxFor(
+                                    m => m.Material,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        maxlength = "100",
+                                        required = "required"
+                                    })
+
                             </div>
 
+                            <!-- Shipment Code -->
                             <div class="form-group col-md-2">
-                                <label>Shipment Code No</label>
-                                @Html.TextBoxFor(m => m.ShipmentCodeNo,
-                                    new { @class = "form-control" })
+
+                                <label>
+                                    Shipment Code No
+                                </label>
+
+                                @Html.TextBoxFor(
+                                    m => m.ShipmentCodeNo,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        maxlength = "100"
+                                    })
+
                             </div>
 
+                            <!-- Supplier -->
                             <div class="form-group col-md-2">
-                                <label>Supplier</label>
-                                @Html.TextBoxFor(m => m.Supplier,
-                                    new { @class = "form-control" })
+
+                                <label>
+                                    Supplier
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                @Html.TextBoxFor(
+                                    m => m.Supplier,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        maxlength = "200",
+                                        required = "required"
+                                    })
+
                             </div>
 
+                            <!-- Quantity -->
                             <div class="form-group col-md-2">
-                                <label>Quantity</label>
-                                @Html.TextBoxFor(m => m.Quantity,
-                                    new { @class = "form-control" })
+
+                                <label>
+                                    Quantity
+                                </label>
+
+                                @Html.TextBoxFor(
+                                    m => m.Quantity,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        type = "number",
+                                        min = "0",
+                                        step = "1"
+                                    })
+
                             </div>
 
+                            <!-- Analysis Date -->
                             <div class="form-group col-md-2">
-                                <label>Analysis Date</label>
-                                @Html.TextBoxFor(m => m.AnalysisDate, "{0:yyyy-MM-dd}",
-                                    new { @class = "form-control", type = "date" })
+
+                                <label>
+                                    Analysis Date
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                @Html.TextBoxFor(
+                                    m => m.AnalysisDate,
+                                    "{0:yyyy-MM-dd}",
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        type = "date",
+                                        required = "required"
+                                    })
+
                             </div>
+
                         </div>
 
                         <div class="form-row">
+
+                            <!-- Received Quantity -->
                             <div class="form-group col-md-2">
-                                <label>Received Quantity</label>
-                                @Html.TextBoxFor(m => m.ReceivedQuantity,
-                                    new { @class = "form-control" })
+
+                                <label>
+                                    Received Quantity
+                                </label>
+
+                                @Html.TextBoxFor(
+                                    m => m.ReceivedQuantity,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        maxlength = "100"
+                                    })
+
                             </div>
 
+                            <!-- Reference No -->
                             <div class="form-group col-md-2">
-                                <label>Reference No</label>
-                                @Html.TextBoxFor(m => m.ReferenceNo,
-                                    new { @class = "form-control" })
+
+                                <label>
+                                    Reference No
+                                </label>
+
+                                @Html.TextBoxFor(
+                                    m => m.ReferenceNo,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        maxlength = "100"
+                                    })
+
                             </div>
 
-                            <div class="form-group col-md-6">
-                                <label>Physical Analysis</label>
-                                @Html.TextAreaFor(m => m.PhysicalAnalysis,
-                                    new { @class = "form-control", rows = 3 })
+                            <!-- Physical Analysis -->
+                            <div class="form-group col-md-8">
+
+                                <label>
+                                    Physical Analysis
+                                </label>
+
+                                @Html.TextAreaFor(
+                                    m => m.PhysicalAnalysis,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        rows = "3",
+                                        maxlength = "1000"
+                                    })
+
                             </div>
+
                         </div>
 
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- ================= DETAIL SECTION ================= -->
+        <!-- ========================================================= -->
+        <!-- SAMPLE SECTION                                            -->
+        <!-- ========================================================= -->
+
         <div class="row">
             <div class="col-lg-12">
+
                 <div class="card m-b-30">
+
                     <div class="card-header bg-white">
-                        <h5 class="card-title d-inline">Analysis Result</h5>
-                        <button type="button" class="btn btn-success btn-sm float-right" id="addSample">
-                            + Add Sample
+
+                        <h5 class="card-title d-inline">
+                            Analysis Results
+                        </h5>
+
+                        <button type="button"
+                                class="btn btn-success btn-sm float-right"
+                                id="addSample">
+
+                            <i class="fa fa-plus-circle"></i>
+                            Add Sample
+
                         </button>
+
                     </div>
-                    <div class="card-body" id="samplesContainer">
-                        <!-- Samples Container -->
-                        @if (Model?.Samples != null)
-                        {
-                            for (int i = 0; i < Model.Samples.Count; i++)
+
+                    <div class="card-body">
+
+                        <div id="samplesContainer">
+
+                            @if (samples.Count > 0)
                             {
-                                <div class="sample-block border p-2 mb-2">
-                                    <!-- 🔥 REQUIRED FOR MVC -->
-                                    <input type="hidden" name="Samples.Index" value="@i" />
-                                    <input type="hidden" name="Samples[@i].ID" value="@Model.Samples[i].ID" />
+                                for (int i = 0; i < samples.Count; i++)
+                                {
+                                    var sample = samples[i];
 
-                                    <div class="form-row">
+                                    <div class="sample-block border rounded p-3 mb-3">
 
-                                        <!-- Sample Code -->
-                                        <div class="form-group col-md-2">
-                                            <label>Sample Code</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].SampleCode"
-                                                   value="@Model.Samples[i].SampleCode" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>Fe Total</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].FeTotal"
-                                                   value="@Model.Samples[i].FeTotal" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>Fe Metallic</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].FeMetallic"
-                                                   value="@Model.Samples[i].FeMetallic" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>Metallization</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].Metallization"
-                                                   value="@Model.Samples[i].Metallization" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>C %</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].C"
-                                                   value="@Model.Samples[i].C" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>S %</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].S"
-                                                   value="@Model.Samples[i].S" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>P %</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].P"
-                                                   value="@Model.Samples[i].P" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>SiO2</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].SiO2"
-                                                   value="@Model.Samples[i].SiO2" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>Al2O3</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].Al2O3"
-                                                   value="@Model.Samples[i].Al2O3" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>MgO</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].MgO"
-                                                   value="@Model.Samples[i].MgO" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>CaO</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].CaO"
-                                                   value="@Model.Samples[i].CaO" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>Total Gangue</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].TotalGangue"
-                                                   value="@Model.Samples[i].TotalGangue" />
-                                        </div>
-                                        <div class="form-group col-md-1">
-                                            <label>Grain Size</label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   name="Samples[@i].GrainSize"
-                                                   value="@Model.Samples[i].GrainSize" />
-                                        </div>
-                                        <div class="form-group col-md-7">
-                                            <label>Comments</label>
-                                            <textarea class="form-control"
-                                                      rows="2"
-                                                      name="Samples[@i].Comment">@Model.Samples[i].Comment</textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="sample-block border p-2 mb-2">
-                                <!-- 🔥 REQUIRED FOR MVC -->
-                                <input type="hidden" name="Samples.Index" value="0" />
+                                        <input type="hidden"
+                                               name="Samples.Index"
+                                               value="@i" />
 
-                                <div class="form-row">
+                                        <div class="d-flex justify-content-between mb-2">
 
-                                    <!-- Sample Code -->
-                                    <div class="form-group col-md-2">
-                                        <label>Sample Code</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].SampleCode" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Fe Total</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].FeTotal" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Fe Metallic</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].FeMetallic" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Metallization</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].Metallization" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>C %</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].C" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>S %</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].S" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>P %</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].P" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>SiO2</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].SiO2" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Al2O3</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].Al2O3" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>MgO</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].MgO" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>CaO</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].CaO" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Total Gangue</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].TotalGangue" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Grain Size</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[0].GrainSize" />
-                                    </div>
-                                    <div class="form-group col-md-7">
-                                        <label>Comments</label>
-                                        <textarea class="form-control"
-                                                  rows="2"
-                                                  name="Samples[0].Comment"></textarea>
-                                    </div>
+                                            <strong class="sample-title">
+                                                Sample @(i + 1)
+                                            </strong>
 
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-        @*<div class="row">
-                <div class="col-lg-12">
-                    <div class="card m-b-30">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title d-inline">Analysis Result</h5>
-                            <button type="button" class="btn btn-success btn-sm float-right" id="addRowBtn">
-                                + Add Sample
-                            </button>
-                        </div>
+                                            <button type="button"
+                                                    class="btn btn-danger btn-sm removeSample">
 
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Sample Code</th>
-                                            <th>Fe Total</th>
-                                            <th>Fe Metallic</th>
-                                            <th>Met %</th>
-                                            <th>C</th>
-                                            <th>S</th>
-                                            <th>P</th>
-                                            <th>SiO2</th>
-                                            <th>Al2O3</th>
-                                            <th>MgO</th>
-                                            <th>CaO</th>
-                                            <th>Total Gangue</th>
-                                            <th>Grain Size</th>
-                                            <th>Comment</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
+                                                <i class="mdi mdi-delete"></i>
+                                                Remove
 
-                                    <tbody id="tableBody">
-                                        @if (Model.Samples != null)
-                                        {
-                                            for (int i = 0; i < Model.Samples.Count; i++)
-                                            {
-                                                <tr>
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].SampleCode, new { @class = "form-control" })</td>
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].FeTotal, new { @class = "form-control", type = "number" })</td>
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].FeMetallic, new { @class = "form-control", type = "number" })</td>
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].Metallization, new { @class = "form-control", type = "number" })</td>
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].C, new { @class = "form-control", type = "number" })</td>
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].S, new { @class = "form-control", type = "number" })</td>
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].P, new { @class = "form-control", type = "number" })</td>
+                                            </button>
 
-                                                    <td>
-                                                        @Html.TextBoxFor(m => m.Samples[i].SiO2,
-                                                    new { @class = "form-control siO2" })
-                                                    </td>
+                                        </div>
 
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].Al2O3, new { @class = "form-control", type = "number" })</td>
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].MgO, new { @class = "form-control", type = "number" })</td>
+                                        <div class="form-row">
 
-                                                    <td>
-                                                        @Html.TextBoxFor(m => m.Samples[i].CaO,
-                                                    new { @class = "form-control caO" })
-                                                    </td>
+                                            <div class="form-group col-md-2">
+                                                <label>Sample Code</label>
 
-                                                    <td>
-                                                        @Html.TextBoxFor(m => m.Samples[i].TotalGangue,
-                                                    new { @class = "form-control totalGangue" })
-                                                    </td>
+                                                <input type="text"
+                                                       class="form-control sample-code"
+                                                       name="Samples[@i].SampleCode"
+                                                       value="@sample.SampleCode"
+                                                       maxlength="100" />
+                                            </div>
 
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].GrainSize, new { @class = "form-control" })</td>
-                                                    <td>@Html.TextBoxFor(m => m.Samples[i].Comment, new { @class = "form-control" })</td>
+                                            <div class="form-group col-md-2">
+                                                <label>Fe Total</label>
 
-                                                    <td>
-                                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button>
-                                                    </td>
-                                                </tr>
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].FeTotal"
+                                                       value="@(sample.FeTotal?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-2">
+                                                <label>Fe Metallic</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].FeMetallic"
+                                                       value="@(sample.FeMetallic?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-2">
+                                                <label>Metallization</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].Metallization"
+                                                       value="@(sample.Metallization?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-1">
+                                                <label>C %</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].C"
+                                                       value="@(sample.C?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-1">
+                                                <label>S %</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].S"
+                                                       value="@(sample.S?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-1">
+                                                <label>P %</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].P"
+                                                       value="@(sample.P?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-1">
+                                                <label>SiO2</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].SiO2"
+                                                       value="@(sample.SiO2?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                        </div>
+
+                                        <div class="form-row">
+
+                                            <div class="form-group col-md-2">
+                                                <label>Al2O3</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].Al2O3"
+                                                       value="@(sample.Al2O3?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-2">
+                                                <label>MgO</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].MgO"
+                                                       value="@(sample.MgO?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-2">
+                                                <label>CaO</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].CaO"
+                                                       value="@(sample.CaO?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-2">
+                                                <label>Total Gangue</label>
+
+                                                <input type="number"
+                                                       step="any"
+                                                       min="0"
+                                                       class="form-control"
+                                                       name="Samples[@i].TotalGangue"
+                                                       value="@(sample.TotalGangue?.ToString(CultureInfo.InvariantCulture))" />
+                                            </div>
+
+                                            <div class="form-group col-md-2">
+                                                <label>Grain Size</label>
+
+                                                <input type="text"
+                                                       class="form-control"
+                                                       name="Samples[@i].GrainSize"
+                                                       value="@sample.GrainSize"
+                                                       maxlength="100" />
+                                            </div>
+
+                                        </div>
+
+                                        <div class="form-row">
+
+                                            <div class="form-group col-md-12">
+
+                                                <label>
+                                                    Comments
+                                                </label>
+
+                                                <textarea class="form-control"
+                                                          rows="2"
+                                                          maxlength="1000"
+                                                          name="Samples[@i].Comment">@sample.Comment</textarea>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
                                 }
                             }
-                                    </tbody>
-                                </table>
-                            </div>
+
                         </div>
+
                     </div>
                 </div>
-            </div>*@
 
-    </form>
+            </div>
+        </div>
+    }
+
 </div>
-
-<!-- ================= SCRIPT ================= -->
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -410,185 +529,442 @@
 <script>
 
     $(document).ready(function () {
-        $("input[type='number']").attr({
-            step: "any",
-            min: "0"
+
+        /*
+         * If somehow no sample exists on page,
+         * create the first blank sample.
+         */
+        if ($('#samplesContainer .sample-block').length === 0) {
+            addNewSample();
+        }
+
+        updateSampleTitles();
+
+
+        /*
+         * Add new sample.
+         */
+        $('#addSample').on('click', function () {
+            addNewSample();
         });
-    });
 
-    $(document).ready(function () {
 
-        let isSubmitting = false;   // 🔐 double-submit lock
+        /*
+         * Remove sample.
+         */
+        $(document).on('click', '.removeSample', function () {
 
-        $("#addprofileform").on("submit", function (e) {
-            e.preventDefault(); // ❗ pehle submit roko
+            var total =
+                $('#samplesContainer .sample-block').length;
 
-            if (isSubmitting) return; // already submitting
+            if (total <= 1) {
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sample Required',
+                    text: 'At least one sample row must remain.'
+                });
+
+                return;
+            }
+
+            $(this)
+                .closest('.sample-block')
+                .remove();
+
+            reIndexSamples();
+        });
+
+
+        /*
+         * Form submit confirmation.
+         */
+        var isSubmitting = false;
+
+        $('#addprofileform').on('submit', function (e) {
+
+            if (isSubmitting) {
+                return;
+            }
+
+            e.preventDefault();
+
+            reIndexSamples();
+
+            /*
+             * Duplicate Sample Code validation.
+             */
+            var duplicateCodes =
+                getDuplicateSampleCodes();
+
+            if (duplicateCodes.length > 0) {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Duplicate Sample Code',
+                    text:
+                        'Duplicate Sample Code(s): ' +
+                        duplicateCodes.join(', ')
+                });
+
+                return;
+            }
+
+            var isEdit =
+                parseInt($('#ID').val() || '0') > 0;
 
             Swal.fire({
-                title: 'Confirm Submission',
-                text: 'Are you sure you want to submit this Heat Record?',
-                icon: 'warning',
+                title:
+                    isEdit
+                        ? 'Confirm Update'
+                        : 'Confirm Submission',
+
+                text:
+                    isEdit
+                        ? 'Are you sure you want to update this HBI / DRI Analysis?'
+                        : 'Are you sure you want to save this HBI / DRI Analysis?',
+
+                icon: 'question',
+
                 showCancelButton: true,
-                confirmButtonText: 'Yes, Submit',
+
+                confirmButtonText:
+                    isEdit
+                        ? 'Yes, Update'
+                        : 'Yes, Save',
+
                 cancelButtonText: 'Cancel',
+
                 allowOutsideClick: false,
                 allowEscapeKey: false
-            }).then((result) => {
 
-                if (result.isConfirmed) {
+            }).then(function (result) {
 
-                    isSubmitting = true; // 🔒 lock
-
-                    // Disable submit button
-                    $("#addprofileform")
-                        .find("button[type='submit']")
-                        .prop("disabled", true)
-                        .text("Submitting...");
-
-                    // Finally submit form
-                    $("#addprofileform")[0].submit();
+                if (!result.isConfirmed) {
+                    return;
                 }
+
+                isSubmitting = true;
+
+                $('#submitBtn')
+                    .prop('disabled', true)
+                    .html(
+                        '<i class="fa fa-spinner fa-spin"></i> Saving...'
+                    );
+
+                $('#addprofileform')[0].submit();
+
             });
+
         });
 
     });
-</script>
-<script>
 
-    $("input[type='number']").attr("step", "any");
-    // Set current date
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById("date").value = today;
-</script>
-<script>
-    let sampleIndex = $('#samplesContainer .sample-block').length;
 
-    $('#addSample').click(function () {
+    function addNewSample() {
 
-        let html = `
-        <div class="sample-block border p-2 mb-2">
-        <!-- 🔥 REQUIRED FOR MVC -->
-        <input type="hidden" name="Samples.Index" value="0" />
-        <div class="form-row">
-        <!-- Sample Code -->
-        <div class="form-group col-md-2">
-           <label>Sample Code</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].SampleCode" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Fe Total</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].FeTotal" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Fe Metallic</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].FeMetallic" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Metallization</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].Metallization" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>C %</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].C" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>S %</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].S" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>P %</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].P" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>SiO2</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].SiO2" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Al2O3</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].Al2O3" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>MgO</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].MgO" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>CaO</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].CaO" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Total Gangue</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].TotalGangue" />
-                                    </div>
-                                    <div class="form-group col-md-1">
-                                        <label>Grain Size</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               name="Samples[${sampleIndex}].GrainSize" />
-                                    </div>
-          <div class="form-group col-md-7">
-           <label>Comments</label>
-           <textarea class="form-control"
-              rows="2"
-              name="Samples[${sampleIndex}].Comment"></textarea>
-           </div>
+        var index =
+            $('#samplesContainer .sample-block').length;
 
-           <div class="form-group col-md-2 d-flex align-items-end">
-    <button type="button"
-            class="btn btn-danger btn-sm removeSample">
-        Remove
-    </button>
-</div>
+        var html = `
 
-          </div>
-        </div>
-        `;
+        <div class="sample-block border rounded p-3 mb-3">
+
+            <input type="hidden"
+                   name="Samples.Index"
+                   value="${index}" />
+
+            <div class="d-flex justify-content-between mb-2">
+
+                <strong class="sample-title">
+                    Sample ${index + 1}
+                </strong>
+
+                <button type="button"
+                        class="btn btn-danger btn-sm removeSample">
+
+                    <i class="mdi mdi-delete"></i>
+                    Remove
+
+                </button>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group col-md-2">
+
+                    <label>Sample Code</label>
+
+                    <input type="text"
+                           class="form-control sample-code"
+                           maxlength="100"
+                           name="Samples[${index}].SampleCode" />
+
+                </div>
+
+                <div class="form-group col-md-2">
+
+                    <label>Fe Total</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].FeTotal" />
+
+                </div>
+
+                <div class="form-group col-md-2">
+
+                    <label>Fe Metallic</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].FeMetallic" />
+
+                </div>
+
+                <div class="form-group col-md-2">
+
+                    <label>Metallization</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].Metallization" />
+
+                </div>
+
+                <div class="form-group col-md-1">
+
+                    <label>C %</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].C" />
+
+                </div>
+
+                <div class="form-group col-md-1">
+
+                    <label>S %</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].S" />
+
+                </div>
+
+                <div class="form-group col-md-1">
+
+                    <label>P %</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].P" />
+
+                </div>
+
+                <div class="form-group col-md-1">
+
+                    <label>SiO2</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].SiO2" />
+
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group col-md-2">
+
+                    <label>Al2O3</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].Al2O3" />
+
+                </div>
+
+                <div class="form-group col-md-2">
+
+                    <label>MgO</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].MgO" />
+
+                </div>
+
+                <div class="form-group col-md-2">
+
+                    <label>CaO</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].CaO" />
+
+                </div>
+
+                <div class="form-group col-md-2">
+
+                    <label>Total Gangue</label>
+
+                    <input type="number"
+                           step="any"
+                           min="0"
+                           class="form-control"
+                           name="Samples[${index}].TotalGangue" />
+
+                </div>
+
+                <div class="form-group col-md-2">
+
+                    <label>Grain Size</label>
+
+                    <input type="text"
+                           class="form-control"
+                           maxlength="100"
+                           name="Samples[${index}].GrainSize" />
+
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group col-md-12">
+
+                    <label>Comments</label>
+
+                    <textarea class="form-control"
+                              rows="2"
+                              maxlength="1000"
+                              name="Samples[${index}].Comment"></textarea>
+
+                </div>
+
+            </div>
+
+        </div>`;
 
         $('#samplesContainer').append(html);
-        sampleIndex++;
-    });
 
-    $(document).on('click', '.removeSample', function () {
-        $(this).closest('.sample-block').remove();
-        reIndex();
-    });
+        updateSampleTitles();
+    }
 
-    function reIndex() {
-        $('#samplesContainer .sample-block').each(function (i) {
 
-            $(this).find('input[name="Samples.Index"]').val(i);
+    function reIndexSamples() {
 
-            $(this).find('input, textarea').each(function () {
-                let name = $(this).attr('name');
-                if (name)
-                    $(this).attr('name', name.replace(/Samples\[\d+\]/, 'Samples[' + i + ']'));
+        $('#samplesContainer .sample-block')
+            .each(function (index) {
+
+                var block =
+                    $(this);
+
+                block
+                    .find('input[name="Samples.Index"]')
+                    .val(index);
+
+                block
+                    .find('input, textarea, select')
+                    .each(function () {
+
+                        var name =
+                            $(this).attr('name');
+
+                        if (!name) {
+                            return;
+                        }
+
+                        name =
+                            name.replace(
+                                /Samples\[\d+\]/g,
+                                'Samples[' + index + ']'
+                            );
+
+                        $(this).attr(
+                            'name',
+                            name
+                        );
+
+                    });
+
             });
+
+        updateSampleTitles();
+    }
+
+
+    function updateSampleTitles() {
+
+        $('#samplesContainer .sample-block')
+            .each(function (index) {
+
+                $(this)
+                    .find('.sample-title')
+                    .text(
+                        'Sample ' +
+                        (index + 1)
+                    );
+
+            });
+    }
+
+
+    function getDuplicateSampleCodes() {
+
+        var seen = {};
+        var duplicates = [];
+
+        $('.sample-code').each(function () {
+
+            var value =
+                $.trim(
+                    $(this).val()
+                ).toUpperCase();
+
+            if (!value) {
+                return;
+            }
+
+            if (seen[value]) {
+
+                if (
+                    duplicates.indexOf(value) === -1
+                ) {
+                    duplicates.push(value);
+                }
+
+            }
+            else {
+                seen[value] = true;
+            }
+
         });
 
-        sampleIndex = $('#samplesContainer .sample-block').length;
+        return duplicates;
     }
+
 </script>

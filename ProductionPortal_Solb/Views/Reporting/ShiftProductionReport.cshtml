@@ -24,10 +24,22 @@
             : (24 * 60 - shiftStartMinutes) + minutes;
     };
 
+    /*
+     * DOWNTIME ORDER
+     * 1. Multiple dates always remain in date sequence.
+     * 2. Inside every date, operational day starts at 07:00 AM.
+     * 3. Morning / Long Morning delays therefore appear first.
+     * 4. Early-morning delays (00:00-06:59) appear at the end of that
+     *    report date's operational sequence.
+     */
     var alignedDelays =
         delays != null
             ? delays
-                .OrderBy(x => ShiftDelayOrder(x.StartTime))
+                .OrderBy(x =>
+                    x.Date.HasValue
+                        ? x.Date.Value.Date
+                        : DateTime.MaxValue.Date)
+                .ThenBy(x => ShiftDelayOrder(x.StartTime))
                 .ThenBy(x => ShiftDelayOrder(x.EndTime))
                 .ToList()
             : new List<DAL.Models.PlantDelayBLL>();

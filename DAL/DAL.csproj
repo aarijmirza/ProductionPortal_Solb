@@ -96,6 +96,7 @@
     <Compile Include="Models\CCMBLL.cs" />
     <Compile Include="Models\CCMChemicalAnalysisBLL.cs" />
     <Compile Include="Models\CMDPerformanceDashboardVM.cs" />
+    <Compile Include="Models\CounterMeasureFollowupVM.cs" />
     <Compile Include="Models\DailySummaryReportBLL.cs" />
     <Compile Include="Models\DelayAgencyBLL.cs" />
     <Compile Include="Models\DelayComponentBLL.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="Models\QCInspectionDataRMBLL.cs" />
     <Compile Include="Models\QCInspectionRMPageVM.cs" />
     <Compile Include="Models\RawStockBLL.cs" />
+    <Compile Include="Models\RMBundlingQCRowBLL.cs" />
     <Compile Include="Models\RMChemicalAnalysisBLL.cs" />
     <Compile Include="Models\RMHourlyDischargeBLL.cs" />
     <Compile Include="Models\RMMechanicalTestBLL.cs" />
@@ -134,6 +136,7 @@
     <Compile Include="Models\SlagByProductAnalysisBLL.cs" />
     <Compile Include="Models\SMPDailyPerformanceReportBLL.cs" />
     <Compile Include="Models\SMPDashboardVM.cs" />
+    <Compile Include="Models\SMPDaywiseDelays.cs" />
     <Compile Include="Models\SMPDayWiseProductionBLL.cs" />
     <Compile Include="Models\SMPProductionDelayUploadBLL.cs" />
     <Compile Include="Models\SupplyChainDailyBLL.cs" />

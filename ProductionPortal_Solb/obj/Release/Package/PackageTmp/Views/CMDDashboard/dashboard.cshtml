@@ -780,7 +780,7 @@
 
     .rca-chart-panel {
         border: 1px solid #dbe3ea;
-        min-height: 330px;
+        min-height: 400px;
         overflow: visible;
     }
 
@@ -799,13 +799,13 @@
         align-items: center;
         display: grid;
         gap: 10px;
-        grid-template-columns: minmax(105px, 34%) minmax(80px, 1fr) 48px;
-        margin: 20px 0;
+        grid-template-columns: minmax(105px, 34%) minmax(80px, 1fr) 105px;
+        margin: 15px 0;
     }
 
     .rca-horizontal-label {
         color: #18212b;
-        font-size: 11px;
+        font-size: 14px;
         font-weight: 850;
         line-height: 1.2;
         overflow: hidden;
@@ -844,10 +844,21 @@
 
     .rca-horizontal-value {
         color: #111827;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 950;
-        padding-left: 20px;
+        padding-left: 8px;
         white-space: nowrap;
+    }
+
+    .rca-horizontal-hours {
+        color: #111827;
+        font-weight: 950;
+    }
+
+    .rca-horizontal-percentage {
+        color: #7f1010;
+        font-weight: 950;
+        margin-left: 15px;
     }
 
     .rca-axis-title {
@@ -934,7 +945,7 @@
         border: 1px solid #d8e1e9;
         border-radius: 16px;
         box-shadow: 0 8px 22px rgba(15,23,42,.09);
-        min-height: 545px;
+        min-height: 415px;
         overflow: hidden;
         padding: 0 9px 12px;
     }
@@ -1517,7 +1528,7 @@
 
             <div class="col-md-4 text-right no-print">
                 <form method="get"
-                      action="@Url.Action("CMDDailyReport")"
+                      action="@Url.Action("dashboard")"
                       class="form-inline justify-content-end">
 
                     <input type="date"
@@ -1573,60 +1584,71 @@
         @foreach (var card in cards)
         {
             var p = card.Data ?? new DAL.Models.ProductionSummaryVM();
+
+            bool isDailyCard =
+                object.ReferenceEquals(card.Data, Model.DailyProduction);
+
+            bool isMTDCard =
+                object.ReferenceEquals(card.Data, Model.MTDProduction);
+
+            bool isYTDCard =
+                object.ReferenceEquals(card.Data, Model.YTDProduction);
+
             var maxValue = Math.Max(p.SMP, Math.Max(p.RM1, p.RM2));
             var rm1Height = maxValue > 0 ? Math.Max(8, Convert.ToInt32((p.RM1 / maxValue) * 105)) : 0;
             var rm2Height = maxValue > 0 ? Math.Max(8, Convert.ToInt32((p.RM2 / maxValue) * 105)) : 0;
             var smpHeight = maxValue > 0 ? Math.Max(8, Convert.ToInt32((p.SMP / maxValue) * 105)) : 0;
 
-            // SMP plan is already supplied by the current model through ComparisonPercentage.
-            decimal smpPlan = Math.Max(0m, Convert.ToDecimal(p.ComparisonPercentage));
+            decimal smpPlan = 0m;
+            decimal rm1Plan = 0m;
+            decimal rm2Plan = 0m;
 
-            // RM1/RM2 plan fields are read safely if they exist in ProductionSummaryVM.
-            // This keeps the view compile-safe while supporting common plan/target property names.
-            Func<object, string[], decimal?> getOptionalPlan = (obj, names) =>
+            if (isDailyCard)
             {
-                if (obj == null) return null;
+                smpPlan = ViewBag.SMPProductionPlan != null
+                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.SMPProductionPlan))
+                    : 0m;
 
-                var type = obj.GetType();
-                foreach (var name in names)
-                {
-                    var prop = type.GetProperty(name);
-                    if (prop == null) continue;
+                rm1Plan = ViewBag.RM1ProductionPlan != null
+                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.RM1ProductionPlan))
+                    : 0m;
 
-                    var value = prop.GetValue(obj, null);
-                    if (value == null || value == DBNull.Value) continue;
-
-                    decimal parsed;
-                    if (decimal.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture),
-                        NumberStyles.Any,
-                        CultureInfo.InvariantCulture,
-                        out parsed))
-                    {
-                        return Math.Max(0m, parsed);
-                    }
-
-                    if (decimal.TryParse(Convert.ToString(value), out parsed))
-                    {
-                        return Math.Max(0m, parsed);
-                    }
-                }
-
-                return null;
-            };
-
-            decimal? rm1Plan = getOptionalPlan(p, new[]
+                rm2Plan = ViewBag.RM2ProductionPlan != null
+                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.RM2ProductionPlan))
+                    : 0m;
+            }
+            else if (isMTDCard)
             {
-                "RM1Plan", "RM1ProductionPlan", "RM1Target", "RM1ProductionTarget", "RM1ComparisonPercentage"
-            });
+                smpPlan = ViewBag.SMPMTDProductionPlan != null
+                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.SMPMTDProductionPlan))
+                    : 0m;
 
-            decimal? rm2Plan = getOptionalPlan(p, new[]
+                rm1Plan = ViewBag.RM1MTDProductionPlan != null
+                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.RM1MTDProductionPlan))
+                    : 0m;
+
+                rm2Plan = ViewBag.RM2MTDProductionPlan != null
+                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.RM2MTDProductionPlan))
+                    : 0m;
+            }
+            else if (isYTDCard)
             {
-                "RM2Plan", "RM2ProductionPlan", "RM2Target", "RM2ProductionTarget", "RM2ComparisonPercentage"
-            });
+                smpPlan = ViewBag.SMPYTDProductionPlan != null
+                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.SMPYTDProductionPlan))
+                    : 0m;
+
+                rm1Plan = ViewBag.RM1YTDProductionPlan != null
+                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.RM1YTDProductionPlan))
+                    : 0m;
+
+                rm2Plan = ViewBag.RM2YTDProductionPlan != null
+                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.RM2YTDProductionPlan))
+                    : 0m;
+            }
 
             var productionRows = new[]
             {
-                new { Plant = "SMP", Actual = p.SMP, Plan = (decimal?)smpPlan },
+                new { Plant = "SMP", Actual = p.SMP, Plan = smpPlan },
                 new { Plant = "RM1", Actual = p.RM1, Plan = rm1Plan },
                 new { Plant = "RM2", Actual = p.RM2, Plan = rm2Plan }
             };
@@ -1665,35 +1687,26 @@
 
                     @foreach (var row in productionRows)
                     {
-                        if (row.Plan.HasValue)
+                        if (row.Plan >= 0m)
                         {
-                            decimal variance = row.Actual - row.Plan.Value;
-                            decimal variancePct = row.Plan.Value > 0m
-                                ? Math.Round((variance / row.Plan.Value) * 100m, 1)
+                            decimal variance = row.Actual - row.Plan;
+                            decimal variancePct = row.Plan > 0m
+                                ? Math.Round((variance / row.Plan) * 100m, 1)
                                 : 0m;
                             bool positive = variance >= 0m;
 
                             <div class="production-variance-row">
                                 <span class="plant-name">@row.Plant</span>
-                                <span class="metric-value">@row.Plan.Value.ToString("N0") MT</span>
+                                <span class="metric-value">@row.Plan.ToString("N0") MT</span>
                                 <span class="metric-value">@row.Actual.ToString("N0") MT</span>
                                 <span class="metric-value @(positive ? "variance-positive" : "variance-negative") variance-chip">
                                     <span class="variance-arrow @(positive ? "up" : "down")"></span>
                                     @variance.ToString("+#,##0;-#,##0;0") MT
-                                    @if (row.Plan.Value > 0m)
+                                    @if (row.Plan > 0m)
                                     {
                                         <small>(@variancePct.ToString("+#,##0.0;-#,##0.0;0.0")%)</small>
                                     }
                                 </span>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="production-variance-row">
-                                <span class="plant-name">@row.Plant</span>
-                                <span class="metric-value variance-na">N/A</span>
-                                <span class="metric-value">@row.Actual.ToString("N0") MT</span>
-                                <span class="metric-value variance-na">Plan required</span>
                             </div>
                         }
                     }
@@ -1938,63 +1951,150 @@
 
         @foreach (var plant in new[] { "SMP", "RM1", "RM2" })
         {
-            var items = (Model.RCAFailures ?? new List<DAL.Models.TopFailureVM>())
-                .Where(x => x.Plant == plant)
-                .OrderByDescending(x => x.DelayHours)
-                .Take(5)
-                .ToList();
+            /*
+             * Controller returns normalized RCA rows.
+             *
+             * Here we:
+             * 1. Keep only this plant.
+             * 2. Hide causes whose value is 0.
+             * 3. Calculate total RCA hours for the plant.
+             * 4. Calculate each cause % of total RCA delay.
+             */
+            var items =
+                (Model.RCAFailures ?? new List<DAL.Models.TopFailureVM>())
+                    .Where(x =>
+                        x != null &&
+                        x.DelayHours > 0m &&
+                        string.Equals(
+                            string.IsNullOrWhiteSpace(x.Plant)
+                                ? ""
+                                : x.Plant.Trim(),
+                            plant,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .OrderByDescending(x => x.DelayHours)
+                    .ThenBy(x => x.Name)
+                    .ToList();
 
-            var max = items.Any() ? items.Max(x => x.DelayHours) : 0;
-            string rcaPlantTitle = plant == "SMP"
-                ? "STEEL MAKING PLANT"
-                : (plant == "RM1" ? "ROLLING MILL 1" : "ROLLING MILL 2");
+            decimal totalRcaHours =
+                items.Any()
+                    ? items.Sum(x => x.DelayHours)
+                    : 0m;
+
+            string rcaPlantTitle =
+                plant == "SMP"
+                    ? "STEEL MAKING PLANT"
+                    : (
+                        plant == "RM1"
+                            ? "ROLLING MILL 1"
+                            : "ROLLING MILL 2"
+                    );
 
             <div class="chart-panel rca-chart-panel">
-                <div class="panel-title">@rcaPlantTitle</div>
 
-                @if (items.Any())
+                <div class="panel-title">
+                    @rcaPlantTitle
+                </div>
+
+                @if (items.Any() && totalRcaHours > 0m)
                 {
                     <div class="rca-horizontal-chart">
+
                         @foreach (var item in items)
                         {
-                            decimal barWidth = max > 0
-                                ? Math.Max(3m, (item.DelayHours / max) * 96m)
-                                : 0m;
-                            string barStyle = string.Format(
-                                CultureInfo.InvariantCulture,
-                                "width:{0:0.##}%;",
-                                barWidth
-                            );
+                            /*
+                             * DelayHours has already been converted from:
+                             * SUM(TotalDuration minutes) / 60
+                             *
+                             * Percentage is each RCA's share of this
+                             * plant's total RCA delay hours.
+                             */
+                            decimal causePercentage =
+                                totalRcaHours > 0m
+                                    ? Math.Round(
+                                        (item.DelayHours / totalRcaHours) * 100m,
+                                        1
+                                    )
+                                    : 0m;
 
-                            string barTitle = string.Format(
-                                CultureInfo.CurrentCulture,
-                                "{0} - {1:N1} hours",
-                                item.Name,
-                                item.DelayHours
-                            );
+                            /*
+                             * Bar length represents percentage contribution.
+                             */
+                            decimal barWidth =
+                                Math.Max(
+                                    3m,
+                                    Math.Min(
+                                        100m,
+                                        causePercentage
+                                    )
+                                );
+
+                            string barStyle =
+                                string.Format(
+                                    CultureInfo.InvariantCulture,
+                                    "width:{0:0.##}%;",
+                                    barWidth
+                                );
+
+                            string rootCauseName =
+                                string.IsNullOrWhiteSpace(item.Name)
+                                    ? "-"
+                                    : item.Name.Trim();
+
+                            string barTitle =
+                                string.Format(
+                                    CultureInfo.CurrentCulture,
+                                    "{0} - {1:N1} Hours ({2:N1}%)",
+                                    rootCauseName,
+                                    item.DelayHours,
+                                    causePercentage
+                                );
 
                             <div class="rca-horizontal-row">
-                                <div class="rca-horizontal-label" title="@item.Name">
-                                    @item.Name
+
+                                <div class="rca-horizontal-label"
+                                     title="@rootCauseName">
+                                    @rootCauseName
                                 </div>
-                                <div class="rca-track" title="@barTitle">
+
+                                <div class="rca-track"
+                                     title="@barTitle">
+
                                     <div class="rca-bar"
                                          style="@barStyle">
                                     </div>
+
                                 </div>
+
                                 <div class="rca-horizontal-value">
-                                    @item.DelayHours.ToString("N1")
+                                    <span class="rca-horizontal-hours">
+                                        @item.DelayHours.ToString("N1")h
+                                    </span>
+                                    <span class="rca-horizontal-percentage">
+                                        (@causePercentage.ToString("N1")%)
+                                    </span>
                                 </div>
+
                             </div>
                         }
 
-                        <div class="rca-axis-title">Total Delay Hours</div>
+                        <div class="rca-axis-title">
+                            Total RCA Delay:
+                            @totalRcaHours.ToString("N1") Hours
+                            &nbsp;|&nbsp;
+                            100%
+                        </div>
+
                     </div>
                 }
                 else
                 {
-                    <div class="closure-empty-state">No RCA delay data for this plant.</div>
+                    <div class="closure-empty-state">
+                        No RCA delay data for this plant.
+                    </div>
                 }
+
             </div>
         }
 
@@ -2149,19 +2249,19 @@
                     <div class="chart-panel closure-chart-panel">
                         <div class="panel-title">@plantTitle</div>
 
-                        <div class="closure-period-summary">
+                        <!--<div class="closure-period-summary">-->
                             @*<div class="closure-period-title">
                                     @selectedPeriodTitle · date-wise closure %
                                 </div>*@
-                            <div class="closure-total-kpi">
+                            <!--<div class="closure-total-kpi">
                                 <span>Combined Total Closure</span>
-                                <strong>@totalDateWisePercentage</strong>
+                                <strong>totalDateWisePercentage</strong>
                             </div>
                             <div class="card">
                                 <div class="card-body">
                                     <h6 style=" text-align: center; font-size:12px;">DTD Accumulated</h6>
                                     <div class="closure-period-grid">
-                                        @for (int dateDepartmentIndex = 0; dateDepartmentIndex < departments.Count; dateDepartmentIndex++)
+                                        for (int dateDepartmentIndex = 0; dateDepartmentIndex < departments.Count; dateDepartmentIndex++)
                                         {
                                             string dateDepartment = departments[dateDepartmentIndex];
                                             string dateSeriesColor = lineColors[dateDepartmentIndex % lineColors.Length];
@@ -2176,18 +2276,18 @@
                                                 ? dateItem.ClosurePercentage.ToString("N1") + "%"
                                                 : "No data";
 
-                                            <div class="closure-period-item" style="@dateItemStyle">
+                                            <div class="closure-period-item" style="dateItemStyle">
                                                 <span class="closure-period-dot"></span>
                                                 <div class="closure-period-copy">
-                                                    <span>@dateDepartment</span>
-                                                    <strong>@datePercentage</strong>
+                                                    <span>dateDepartment</span>
+                                                    <strong>datePercentage</strong>
                                                 </div>
                                             </div>
                                         }
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div>-->
 
                         @if (items.Any())
                         {
@@ -2211,14 +2311,14 @@
                                           y2="@tickY.ToString(CultureInfo.InvariantCulture)"></line>
 
                                     @Html.Raw(
-                                                                 string.Format(
-                                                                     CultureInfo.InvariantCulture,
-                                                                     "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"end\">{2}%</text>",
-                                                                     plotLeft - 9m,
-                                                                     tickY + 4m,
-                                                                     Math.Round(percentageTick, 0)
-                                                                 )
-                                                             )
+                                                                                          string.Format(
+                                                                                              CultureInfo.InvariantCulture,
+                                                                                              "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"end\">{2}%</text>",
+                                                                                              plotLeft - 9m,
+                                                                                              tickY + 4m,
+                                                                                              Math.Round(percentageTick, 0)
+                                                                                          )
+                                                                                      )
                                 }
 
                                 <line class="axis-line"
@@ -2251,14 +2351,14 @@
                                           y2="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"></line>
 
                                     @Html.Raw(
-                                                                 string.Format(
-                                                                     CultureInfo.InvariantCulture,
-                                                                     "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"middle\">{2}</text>",
-                                                                     monthX,
-                                                                     plotTop + plotHeight + 25m,
-                                                                     System.Web.HttpUtility.HtmlEncode(monthLabel)
-                                                                 )
-                                                             )
+                                                                                          string.Format(
+                                                                                              CultureInfo.InvariantCulture,
+                                                                                              "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"middle\">{2}</text>",
+                                                                                              monthX,
+                                                                                              plotTop + plotHeight + 25m,
+                                                                                              System.Web.HttpUtility.HtmlEncode(monthLabel)
+                                                                                          )
+                                                                                      )
                                 }
 
                                 @for (int monthIndex = 0; monthIndex < months.Count; monthIndex++)
@@ -2326,14 +2426,14 @@
                                             if (showBarLabel)
                                             {
                                                 @Html.Raw(
-                                                                             string.Format(
-                                                                                 CultureInfo.InvariantCulture,
-                                                                                 "<text class=\"closure-bar-label\" x=\"{0:0.##}\" y=\"{1:0.##}\">{2:0}%</text>",
-                                                                                 barCenterX,
-                                                                                 barLabelY,
-                                                                                 barItem.ClosurePercentage
-                                                                             )
-                                                                         )
+                                                                                                      string.Format(
+                                                                                                          CultureInfo.InvariantCulture,
+                                                                                                          "<text class=\"closure-bar-label\" x=\"{0:0.##}\" y=\"{1:0.##}\">{2:0}%</text>",
+                                                                                                          barCenterX,
+                                                                                                          barLabelY,
+                                                                                                          barItem.ClosurePercentage
+                                                                                                      )
+                                                                                                  )
                                             }
                                         }
                                     }
@@ -2418,6 +2518,7 @@
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>Delay Date</th>
                         <th>Plant</th>
                         <th>Shift</th>
                         <th>Agency</th>
@@ -2438,15 +2539,20 @@
                         {
                             <tr>
                                 <td>@delayRank</td>
+                                <td>
+                                    @(item.DelayDate.HasValue
+                                        ? item.DelayDate.Value.ToString("dd-MMM-yyyy")
+                                        : "-")
+                                </td>
                                 <td>@item.Plant</td>
                                 <td>@item.Shift</td>
                                 <td>@item.AgencyName</td>
                                 <td>@item.TotalDuration.ToString("N1")</td>
                                 <td>@item.DelayCode</td>
                                 <td>@item.EquipmentCode</td>
-                                <td>@item.Description</td>
-                                <td>@item.ReasonForOccurrence</td>
-                                <td>@item.ActionTaken</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.Description) ? "-" : item.Description)</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.ReasonForOccurrence) ? "-" : item.ReasonForOccurrence)</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.ActionTaken) ? "-" : item.ActionTaken)</td>
                             </tr>
 
                             delayRank++;
@@ -2455,7 +2561,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="10">
+                            <td colspan="11">
                                 No delay records found for selected date range.
                             </td>
                         </tr>

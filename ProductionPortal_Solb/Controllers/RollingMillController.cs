@@ -13,6 +13,7 @@ using System.Web.Mvc;
 using System.Web.SessionState;
 using WebAPICode.Helpers;
 using static DAL.Models.ViewModel;
+using static DAL.Models.ViewModel.RollingMillChargeVM;
 using static iTextSharp.text.pdf.AcroFields;
 
 namespace ProductionPortal_Solb.Controllers

@@ -361,7 +361,7 @@
     }
 
     .chart-wrap {
-        height: 235px;
+        height: 285px;
         position: relative;
     }
 
@@ -602,14 +602,100 @@
         margin-bottom: 12px;
     }
 
+    /* ============================================================
+       A4 PDF / PRINT FIX
+       ------------------------------------------------------------
+       Screen dashboard is 980px wide. A4 portrait printable width
+       is smaller, therefore Chrome was cutting the left/right side.
+
+       For print/PDF only:
+       - keep the original 980px dashboard layout
+       - scale it to A4 portrait
+       - remove Bootstrap/layout side spacing
+       - preserve colors
+       - keep the complete dashboard together as much as possible
+       ============================================================ */
     @@media print {
+
         @@page {
             size: A4 portrait;
-            margin: 0;
+            margin: 5mm;
+        }
+
+        html,
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            width: auto !important;
+            min-width: 0 !important;
+            overflow: visible !important;
         }
 
         .no-print {
             display: none !important;
+        }
+        /*
+         * Remove application-layout spacing which otherwise consumes
+         * part of the printable width.
+         */
+        .xp-contentbar {
+            margin: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+        }
+        /*
+         * Original dashboard = 980px.
+         * 76% gives approx. 745px printable width, which safely fits
+         * A4 portrait with 5mm margins.
+         *
+         * Chrome / Edge Save as PDF support zoom in print CSS.
+         */
+        .supply-dashboard {
+            width: 980px !important;
+            min-width: 980px !important;
+            max-width: 980px !important;
+            margin: 0 auto !important;
+            zoom: 0.76;
+            border: 1px solid var(--solb-red) !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid-page !important;
+        }
+
+        .dashboard-body {
+            overflow: visible !important;
+        }
+        /*
+         * Prevent individual blocks from being split whenever the
+         * browser needs to paginate.
+         */
+        .screenshot-header,
+        .inventory-grid,
+        .inventory-box,
+        .chart-panel,
+        .dispatch-row,
+        .dispatch-card,
+        .performance-box,
+        .received-grid,
+        .byproduct-grid,
+        .small-card {
+            page-break-inside: avoid !important;
+            break-inside: avoid-page !important;
+        }
+        /*
+         * Canvas must remain inside its parent after print layout
+         * changes.
+         */
+        .chart-wrap,
+        .chart-wrap canvas {
+            max-width: 100% !important;
         }
 
         :root {
@@ -620,11 +706,8 @@
             --muted: #555555;
         }
 
-        body {
-            background: #f4f5f7;
-        }
-
         * {
+            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
@@ -1166,7 +1249,26 @@
     const inventoryData = @Html.Raw(JsonConvert.SerializeObject(inventoryData));
 
     var maxInventory = Math.max.apply(null, inventoryData);
-    var chartMax = maxInventory > 0 ? Math.ceil(maxInventory / 5000) * 5000 : 30000;
+
+    var chartStep;
+
+    if (maxInventory <= 1000) {
+        chartStep = 200;
+    }
+    else if (maxInventory <= 5000) {
+        chartStep = 500;
+    }
+    else if (maxInventory <= 15000) {
+        chartStep = 1000;
+    }
+    else {
+        chartStep = 5000;
+    }
+
+    var chartMax =
+        maxInventory > 0
+            ? Math.ceil((maxInventory * 1.20) / chartStep) * chartStep
+            : 10000;
 
     var inventoryChartInstance = new Chart(document.getElementById("inventoryChart"), {
         type: "bar",
@@ -1182,10 +1284,14 @@
                     "#0e8da8",
                     "#5b21b6",
                     "#7a4a12",
-                    "#b91c1c"
+                    "#b91c1c",
+                    "#2f5597"
                 ],
-                borderRadius: 0,
-                barThickness: 16
+                borderRadius: 2,
+                barThickness: 18,
+                maxBarThickness: 18,
+                categoryPercentage: 0.78,
+                barPercentage: 0.90
             }]
         },
         options: {
@@ -1193,6 +1299,14 @@
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
+            layout: {
+                padding: {
+                    left: 4,
+                    right: 18,
+                    top: 4,
+                    bottom: 0
+                }
+            },
             plugins: {
                 legend: {
                     display: false
@@ -1216,12 +1330,13 @@
                     },
                     ticks: {
                         color: "#111",
+                        stepSize: chartStep,
                         font: {
-                            size: 12,
+                            size: 11,
                             weight: "bold"
                         },
                         callback: function (value) {
-                            return value.toLocaleString();
+                            return Number(value).toLocaleString();
                         }
                     },
                     grid: {
@@ -1231,8 +1346,9 @@
                 y: {
                     ticks: {
                         color: "#111",
+                        padding: 6,
                         font: {
-                            size: 12,
+                            size: 11,
                             weight: "bold"
                         }
                     },
@@ -1246,34 +1362,96 @@
             id: "valueLabels",
             afterDatasetsDraw(chart) {
                 const ctx = chart.ctx;
+                const chartArea = chart.chartArea;
+                const meta = chart.getDatasetMeta(0);
+
                 ctx.save();
-                ctx.font = "bold 12px Segoe UI";
-                ctx.fillStyle = "#111";
-                ctx.textAlign = "left";
+                ctx.font = "bold 11px Segoe UI";
                 ctx.textBaseline = "middle";
 
                 chart.data.datasets[0].data.forEach(function (value, index) {
-                    const meta = chart.getDatasetMeta(0);
                     const bar = meta.data[index];
 
                     if (!bar) {
                         return;
                     }
 
-                    let label = Number(value).toLocaleString(undefined, {
+                    const label = Number(value || 0).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 3
                     });
 
-                    ctx.fillText(label, bar.x + 8, bar.y);
+                    const labelWidth = ctx.measureText(label).width;
+                    const outsideX = bar.x + 8;
+                    const outsideFits =
+                        outsideX + labelWidth <= chartArea.right - 2;
+
+                    if (outsideFits) {
+                        ctx.textAlign = "left";
+                        ctx.fillStyle = "#111";
+                        ctx.fillText(label, outsideX, bar.y);
+                    }
+                    else {
+                        ctx.textAlign = "right";
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillText(
+                            label,
+                            Math.max(
+                                bar.x - 8,
+                                chartArea.left + labelWidth + 4
+                            ),
+                            bar.y
+                        );
+                    }
                 });
 
                 ctx.restore();
             }
         }]
     });
+    /*
+     * Re-size Chart.js after the browser applies print CSS.
+     * This prevents the canvas from keeping its old screen width
+     * and getting clipped in the generated PDF.
+     */
+    window.addEventListener("beforeprint", function () {
+
+        if (
+            typeof inventoryChartInstance !== "undefined" &&
+            inventoryChartInstance
+        ) {
+            inventoryChartInstance.resize();
+        }
+    });
+
+
+    window.addEventListener("afterprint", function () {
+
+        if (
+            typeof inventoryChartInstance !== "undefined" &&
+            inventoryChartInstance
+        ) {
+            inventoryChartInstance.resize();
+        }
+    });
+
+
     function printSupplyChainReport() {
-        window.print();
+
+        /*
+         * Force one layout pass before opening Chrome/Edge
+         * Print / Save as PDF dialog.
+         */
+        if (
+            typeof inventoryChartInstance !== "undefined" &&
+            inventoryChartInstance
+        ) {
+            inventoryChartInstance.resize();
+        }
+
+        setTimeout(function () {
+            window.print();
+        }, 150);
     }
 
 </script>

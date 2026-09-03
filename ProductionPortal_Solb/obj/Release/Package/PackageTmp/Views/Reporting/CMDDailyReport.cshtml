@@ -67,39 +67,75 @@
     }
 
     .top-box {
-        background: #fff;
-        border-radius: 14px;
-        box-shadow: var(--shadow);
-        min-height: 355px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+        min-height: 520px;
         position: relative;
-        padding: 0 14px 14px;
+        padding: 0 16px 16px;
         overflow: hidden;
-        border: none;
+        border: 1px solid #e7edf3;
     }
 
     .red-head {
-        background: #991b1b;
+        background: linear-gradient(135deg, #8b2b1f 0%, #a43123 100%);
         color: #fff;
         text-align: center;
         font-size: 15px;
-        font-weight: 800;
-        padding: 10px 8px;
-        margin: 0 -14px 12px;
+        font-weight: 900;
+        padding: 12px 10px;
+        margin: 0 -16px 14px;
+        letter-spacing: .15px;
     }
 
     .mini-values {
-        font-size: 13px;
-        font-weight: 800;
-        line-height: 24px;
-        color: #333;
-        margin-bottom: 8px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
     }
 
+    .summary-pill {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 10px 12px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+    }
+
+    .summary-pill-label {
+        display: block;
+        color: #7b8794;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .summary-pill-value {
+        display: block;
+        color: #17212b;
+        font-size: 22px;
+        font-weight: 950;
+        line-height: 1.05;
+        white-space: nowrap;
+    }
+
+        .summary-pill-value small {
+            color: #475569;
+            font-size: 11px;
+            font-weight: 900;
+            margin-left: 2px;
+        }
+
     .compare-label {
-        font-weight: 800;
-        font-size: 13px;
-        color: #555;
-        margin-top: 8px;
+        font-weight: 900;
+        font-size: 12px;
+        color: #52606d;
+        margin: 2px 0 8px;
+        text-transform: uppercase;
+        letter-spacing: .35px;
     }
 
     .big-up {
@@ -174,42 +210,142 @@
             border-top: 8px solid #c1121f;
         }
 
+    .production-variance-grid {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid #dbe5ee;
+        border-radius: 14px;
+        margin-top: 14px;
+        overflow: hidden;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+    }
+
+    .production-variance-head,
+    .production-variance-row {
+        display: grid;
+        grid-template-columns: .8fr 1fr 1fr 1.35fr;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 11px;
+    }
+
+    .production-variance-head {
+        background: linear-gradient(135deg, #eef3f8 0%, #e9eef5 100%);
+        color: #607086;
+        font-size: 14px;
+        font-weight: 950;
+        letter-spacing: .35px;
+        text-transform: uppercase;
+    }
+
+    .production-variance-row {
+        border-top: 1px solid #e7ebef;
+        color: #1f2937;
+        font-size: 10px;
+        font-weight: 850;
+        background: #fff;
+    }
+
+        .production-variance-row:nth-child(even) {
+            background: #fcfdff;
+        }
+
+        .production-variance-row:hover {
+            background: #f8fbff;
+        }
+
+        .production-variance-row .plant-name {
+            font-weight: 950;
+            color: #0f172a;
+            font-size: 13px;
+        }
+
+        .production-variance-row .metric-value {
+            text-align: right;
+            white-space: nowrap;
+            font-weight: 900;
+            font-size: 12px;
+        }
+
+        .production-variance-row .variance-positive {
+            color: #198754;
+            font-weight: 950;
+        }
+
+        .production-variance-row .variance-negative {
+            color: #c1121f;
+            font-weight: 950;
+        }
+
+        .production-variance-row .variance-na {
+            color: #7b8794;
+            font-weight: 800;
+        }
+
+    .variance-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        width: 100%;
+    }
+
     .bar-wrap {
-        height: 120px;
-        border-bottom: 1px solid #ddd;
+        height: 200px;
+        border: 1px solid #e6edf3;
+        border-radius: 16px;
         display: flex;
         align-items: flex-end;
         justify-content: center;
-        gap: 28px;
-        padding: 0 15px;
-        margin-top: 8px;
+        gap: 34px;
+        padding: 18px 22px 20px;
+        margin-top: 6px;
+        background: linear-gradient(180deg, #fcfdff 0%, #f3f7fb 100%);
+        position: relative;
+        overflow: hidden;
     }
+
+        .bar-wrap::before {
+            content: "";
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 21px;
+            border-top: 1px solid #d5dde6;
+        }
 
     .bar-col {
         text-align: center;
         font-size: 11px;
-        font-weight: 800;
-        color: #333;
+        font-weight: 900;
+        color: #273444;
+        position: relative;
+        z-index: 1;
     }
 
     .bar {
-        width: 42px;
-        background: #c1121f;
-        border-radius: 8px 8px 0 0;
+        width: 44px;
+        background: linear-gradient(180deg, #c23a2d 0%, #a52f24 55%, #8f271d 100%);
+        border-radius: 12px 12px 0 0;
         position: relative;
         display: block;
-        margin: 0 auto 6px;
+        margin: 0 auto 8px;
+        box-shadow: 0 10px 16px rgba(149, 41, 30, .16);
     }
 
         .bar span {
             position: absolute;
-            top: -18px;
+            top: -28px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 10px;
-            color: #111;
-            font-weight: 900;
+            color: #0f172a;
+            font-weight: 950;
             white-space: nowrap;
+            background: #fff;
+            border: 1px solid #dbe5ee;
+            border-radius: 999px;
+            padding: 2px 8px;
+            box-shadow: 0 4px 10px rgba(15,23,42,.08);
         }
 
     .pie-grid {
@@ -437,6 +573,40 @@
         font-size: 12px;
         font-weight: 900;
         white-space: nowrap;
+    }
+
+    .downtime-target {
+        color: #34495e;
+        font-weight: 900;
+        margin-right: 75px;
+    }
+
+    .downtime-actual {
+        font-weight: 950;
+    }
+
+        .downtime-actual.target-ok {
+            color: #198754;
+        }
+
+        .downtime-actual.target-exceeded {
+            color: #c1121f;
+        }
+
+    .donut-center strong.target-ok {
+        color: #198754;
+    }
+
+    .donut-center strong.target-exceeded {
+        color: #c1121f;
+    }
+
+    .donut-target-note {
+        color: #6b7280;
+        font-size: 8px;
+        font-weight: 850;
+        margin-top: 5px;
+        text-align: center;
     }
 
     .downtime-available {
@@ -1082,7 +1252,7 @@
         }
 
         .top-box {
-            min-height: 355px !important;
+            min-height: 455px !important;
             background: #fff !important;
             border-radius: 14px !important;
             overflow: hidden !important;
@@ -1407,52 +1577,126 @@
             var rm1Height = maxValue > 0 ? Math.Max(8, Convert.ToInt32((p.RM1 / maxValue) * 105)) : 0;
             var rm2Height = maxValue > 0 ? Math.Max(8, Convert.ToInt32((p.RM2 / maxValue) * 105)) : 0;
             var smpHeight = maxValue > 0 ? Math.Max(8, Convert.ToInt32((p.SMP / maxValue) * 105)) : 0;
+
+            // SMP plan is already supplied by the current model through ComparisonPercentage.
             decimal smpPlan = Math.Max(0m, Convert.ToDecimal(p.ComparisonPercentage));
-            decimal smpVariance = p.SMP - smpPlan;
-            decimal smpVariancePercentage = smpPlan > 0
-                ? Math.Round((smpVariance / smpPlan) * 100m, 1)
-                : 0m;
-            bool isPositiveVariance = smpVariance >= 0;
+
+            // RM1/RM2 plan fields are read safely if they exist in ProductionSummaryVM.
+            // This keeps the view compile-safe while supporting common plan/target property names.
+            Func<object, string[], decimal?> getOptionalPlan = (obj, names) =>
+            {
+                if (obj == null) return null;
+
+                var type = obj.GetType();
+                foreach (var name in names)
+                {
+                    var prop = type.GetProperty(name);
+                    if (prop == null) continue;
+
+                    var value = prop.GetValue(obj, null);
+                    if (value == null || value == DBNull.Value) continue;
+
+                    decimal parsed;
+                    if (decimal.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture),
+                        NumberStyles.Any,
+                        CultureInfo.InvariantCulture,
+                        out parsed))
+                    {
+                        return Math.Max(0m, parsed);
+                    }
+
+                    if (decimal.TryParse(Convert.ToString(value), out parsed))
+                    {
+                        return Math.Max(0m, parsed);
+                    }
+                }
+
+                return null;
+            };
+
+            decimal? rm1Plan = getOptionalPlan(p, new[]
+            {
+                "RM1Plan", "RM1ProductionPlan", "RM1Target", "RM1ProductionTarget", "RM1ComparisonPercentage"
+            });
+
+            decimal? rm2Plan = getOptionalPlan(p, new[]
+            {
+                "RM2Plan", "RM2ProductionPlan", "RM2Target", "RM2ProductionTarget", "RM2ComparisonPercentage"
+            });
+
+            var productionRows = new[]
+            {
+                new { Plant = "SMP", Actual = p.SMP, Plan = (decimal?)smpPlan },
+                new { Plant = "RM1", Actual = p.RM1, Plan = rm1Plan },
+                new { Plant = "RM2", Actual = p.RM2, Plan = rm2Plan }
+            };
 
             <div class="top-box">
                 <div class="red-head">@card.Title</div>
                 <div class="mini-values">
-                    SMP <span style="color:#c1000b">@p.SMP.ToString("N0")</span> MT<br />
-                    RM1 @p.RM1.ToString("N0") MT<br />
-                    RM2 @p.RM2.ToString("N0") MT
+                    <div class="summary-pill">
+                        <span class="summary-pill-label">SMP Actual</span>
+                        <span class="summary-pill-value">@p.SMP.ToString("N0") <small>MT</small></span>
+                    </div>
+                    <div class="summary-pill">
+                        <span class="summary-pill-label">RM1 Actual</span>
+                        <span class="summary-pill-value">@p.RM1.ToString("N0") <small>MT</small></span>
+                    </div>
+                    <div class="summary-pill">
+                        <span class="summary-pill-label">RM2 Actual</span>
+                        <span class="summary-pill-value">@p.RM2.ToString("N0") <small>MT</small></span>
+                    </div>
                 </div>
 
-
-
-                <!--<div class="plan-actual-box">
-                    <div class="plan-actual-title">@card.Compare</div>
-
-                    <div class="plan-actual-metric">
-                        Plan
-                        <strong>@smpPlan.ToString("N0") MT</strong>
-                    </div>
-
-                    <div class="plan-actual-metric">
-                        Actual
-                        <strong>@p.SMP.ToString("N0") MT</strong>
-                    </div>-->
-                @*<div class="plan-actual-metric @(isPositiveVariance ? "positive" : "negative")">
-                        Variance
-                        <strong>
-                            <span class="variance-arrow @(isPositiveVariance ? "up" : "down")"></span>
-                            @smpVariance.ToString("+#,##0;-#,##0;0") MT
-                            @if (smpPlan > 0)
-                            {
-                                <small>(@smpVariancePercentage.ToString("+#,##0.0;-#,##0.0;0.0")%)</small>
-                            }
-                        </strong>
-                    </div>*@
-                <!--</div>-->
-
+                <div class="compare-label">Actual Production Comparison</div>
                 <div class="bar-wrap">
                     <div class="bar-col"><div class="bar" style="height:@(rm1Height)px"><span>@p.RM1.ToString("N0")</span></div>RM1</div>
                     <div class="bar-col"><div class="bar" style="height:@(rm2Height)px"><span>@p.RM2.ToString("N0")</span></div>RM2</div>
                     <div class="bar-col"><div class="bar" style="height:@(smpHeight)px"><span>@p.SMP.ToString("N0")</span></div>SMP</div>
+                </div>
+
+                <div class="production-variance-grid">
+                    <div class="production-variance-head">
+                        <span>Plant</span>
+                        <span style="text-align:right;">Plan</span>
+                        <span style="text-align:right;">Actual</span>
+                        <span style="text-align:right;">Variance</span>
+                    </div>
+
+                    @foreach (var row in productionRows)
+                    {
+                        if (row.Plan.HasValue)
+                        {
+                            decimal variance = row.Actual - row.Plan.Value;
+                            decimal variancePct = row.Plan.Value > 0m
+                                ? Math.Round((variance / row.Plan.Value) * 100m, 1)
+                                : 0m;
+                            bool positive = variance >= 0m;
+
+                            <div class="production-variance-row">
+                                <span class="plant-name">@row.Plant</span>
+                                <span class="metric-value">@row.Plan.Value.ToString("N0") MT</span>
+                                <span class="metric-value">@row.Actual.ToString("N0") MT</span>
+                                <span class="metric-value @(positive ? "variance-positive" : "variance-negative") variance-chip">
+                                    <span class="variance-arrow @(positive ? "up" : "down")"></span>
+                                    @variance.ToString("+#,##0;-#,##0;0") MT
+                                    @if (row.Plan.Value > 0m)
+                                    {
+                                        <small>(@variancePct.ToString("+#,##0.0;-#,##0.0;0.0")%)</small>
+                                    }
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="production-variance-row">
+                                <span class="plant-name">@row.Plant</span>
+                                <span class="metric-value variance-na">N/A</span>
+                                <span class="metric-value">@row.Actual.ToString("N0") MT</span>
+                                <span class="metric-value variance-na">Plan required</span>
+                            </div>
+                        }
+                    }
                 </div>
             </div>
         }
@@ -1470,16 +1714,29 @@
                 d = new DAL.Models.DowntimeSummaryVM { Plant = plant };
             }
 
+            // Downtime targets as per approved target table
+            // SMP: Mechanical 3.80%, Electrical 3.80%, Cranes 0.40%, Utility 0.20%
+            // RM1: Mechanical 3.40%, Electrical 3.40%, Cranes 0.10%, Utility 0.20%
+            // RM2: Mechanical 3.90%, Electrical 3.90%, Cranes 0.10%, Utility 0.20%
+            decimal mechanicalTarget = plant == "SMP" ? 3.80m : (plant == "RM1" ? 3.40m : 3.90m);
+            decimal electricalTarget = plant == "SMP" ? 3.80m : (plant == "RM1" ? 3.40m : 3.90m);
+            decimal cranesTarget = plant == "SMP" ? 0.40m : 0.10m;
+            decimal utilityTarget = 0.20m;
+
             var downtimeRows = new[]
             {
-                new { Agency = "Mechanical", DTD = d.DTDMechanical, MTD = d.MTDMechanical, Color = "#4f8a10" },
-                new { Agency = "Electrical", DTD = d.DTDElectrical, MTD = d.MTDElectrical, Color = "#e66b00" },
-                new { Agency = "Cranes", DTD = d.DTDCranes, MTD = d.MTDCranes, Color = "#7250a8" },
-                new { Agency = "Utility", DTD = d.DTDUtilities, MTD = d.MTDUtilities, Color = "#0c6370" }
+                new { Agency = "Mechanical", DTD = d.DTDMechanical, MTD = d.MTDMechanical, Target = mechanicalTarget, Color = "#4f8a10" },
+                new { Agency = "Electrical", DTD = d.DTDElectrical, MTD = d.MTDElectrical, Target = electricalTarget, Color = "#e66b00" },
+                new { Agency = "Cranes", DTD = d.DTDCranes, MTD = d.MTDCranes, Target = cranesTarget, Color = "#7250a8" },
+                new { Agency = "Utility", DTD = d.DTDUtilities, MTD = d.MTDUtilities, Target = utilityTarget, Color = "#0c6370" }
             };
 
             decimal dtdTotal = downtimeRows.Sum(x => Math.Max(0m, x.DTD));
             decimal mtdTotal = downtimeRows.Sum(x => Math.Max(0m, x.MTD));
+            decimal totalTarget = downtimeRows.Sum(x => x.Target);
+
+            string dtdTotalStatusClass = dtdTotal > totalTarget ? "target-exceeded" : "target-ok";
+            string mtdTotalStatusClass = mtdTotal > totalTarget ? "target-exceeded" : "target-ok";
 
             <div class="pie-box downtime-card">
                 <div class="red-head pie-title">@plant Downtime %</div>
@@ -1535,10 +1792,11 @@
                                     }
                                 </svg>
                                 <div class="donut-center">
-                                    <strong>@dtdTotal.ToString("N2")%</strong>
+                                    <strong class="@dtdTotalStatusClass">@dtdTotal.ToString("N2")%</strong>
                                     <span>Total DT</span>
                                 </div>
                             </div>
+                            <div class="donut-target-note">Target: @totalTarget.ToString("N2")%</div>
                             <div class="donut-subtitle">Selected date</div>
                         </div>
 
@@ -1587,10 +1845,11 @@
                                     }
                                 </svg>
                                 <div class="donut-center">
-                                    <strong>@mtdTotal.ToString("N2")%</strong>
+                                    <strong class="@mtdTotalStatusClass">@mtdTotal.ToString("N2")%</strong>
                                     <span>Total DT</span>
                                 </div>
                             </div>
+                            <div class="donut-target-note">Target: @totalTarget.ToString("N2")%</div>
                             <div class="donut-subtitle">Month to date</div>
                         </div>
                     </div>
@@ -1599,12 +1858,16 @@
                         @foreach (var row in downtimeRows)
                         {
                             string agencyStyle = "--agency-color:" + row.Color + ";";
+                            string dtdStatusClass = row.DTD > row.Target ? "target-exceeded" : "target-ok";
+                            string mtdStatusClass = row.MTD > row.Target ? "target-exceeded" : "target-ok";
 
                             <div class="donut-value-item" style="@agencyStyle">
                                 <span class="donut-value-dot"></span>
                                 <span class="donut-value-name">@row.Agency</span>
                                 <span class="donut-value-numbers">
-                                    DTD - @row.DTD.ToString("N2")% · MTD - @row.MTD.ToString("N2")%
+                                    <span class="downtime-target">Target - @row.Target.ToString("N2")%</span>
+                                    <span class="downtime-actual @dtdStatusClass">DTD - @row.DTD.ToString("N2")%</span>
+                                    · <span class="downtime-actual @mtdStatusClass">MTD - @row.MTD.ToString("N2")%</span>
                                 </span>
                             </div>
                         }
@@ -1671,7 +1934,7 @@
             </div>
         }
 
-        <div class="sub-heading">FAILURE RCA WISE (MTD) - TOP 5</div>
+        <div class="sub-heading">FAILURE RCA WISE (MTD)</div>
 
         @foreach (var plant in new[] { "SMP", "RM1", "RM2" })
         {
@@ -1894,30 +2157,35 @@
                                 <span>Combined Total Closure</span>
                                 <strong>@totalDateWisePercentage</strong>
                             </div>
-                            <div class="closure-period-grid">
-                                @for (int dateDepartmentIndex = 0; dateDepartmentIndex < departments.Count; dateDepartmentIndex++)
-                                {
-                                    string dateDepartment = departments[dateDepartmentIndex];
-                                    string dateSeriesColor = lineColors[dateDepartmentIndex % lineColors.Length];
-                                    string dateItemStyle = "--series-color:" + dateSeriesColor + ";";
-                                    var dateItem = dateWiseItems
-                                        .FirstOrDefault(x => string.Equals(
-                                            string.IsNullOrWhiteSpace(x.Department) ? "Overall" : x.Department.Trim(),
-                                            dateDepartment,
-                                            StringComparison.OrdinalIgnoreCase
-                                        ));
-                                    string datePercentage = dateItem != null
-                                        ? dateItem.ClosurePercentage.ToString("N1") + "%"
-                                        : "No data";
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 style=" text-align: center; font-size:12px;">DTD Accumulated</h6>
+                                    <div class="closure-period-grid">
+                                        @for (int dateDepartmentIndex = 0; dateDepartmentIndex < departments.Count; dateDepartmentIndex++)
+                                        {
+                                            string dateDepartment = departments[dateDepartmentIndex];
+                                            string dateSeriesColor = lineColors[dateDepartmentIndex % lineColors.Length];
+                                            string dateItemStyle = "--series-color:" + dateSeriesColor + ";";
+                                            var dateItem = dateWiseItems
+                                                .FirstOrDefault(x => string.Equals(
+                                                    string.IsNullOrWhiteSpace(x.Department) ? "Overall" : x.Department.Trim(),
+                                                    dateDepartment,
+                                                    StringComparison.OrdinalIgnoreCase
+                                                ));
+                                            string datePercentage = dateItem != null
+                                                ? dateItem.ClosurePercentage.ToString("N1") + "%"
+                                                : "No data";
 
-                                    <div class="closure-period-item" style="@dateItemStyle">
-                                        <span class="closure-period-dot"></span>
-                                        <div class="closure-period-copy">
-                                            <span>@dateDepartment</span>
-                                            <strong>@datePercentage</strong>
-                                        </div>
+                                            <div class="closure-period-item" style="@dateItemStyle">
+                                                <span class="closure-period-dot"></span>
+                                                <div class="closure-period-copy">
+                                                    <span>@dateDepartment</span>
+                                                    <strong>@datePercentage</strong>
+                                                </div>
+                                            </div>
+                                        }
                                     </div>
-                                }
+                                </div>
                             </div>
                         </div>
 
@@ -1943,14 +2211,14 @@
                                           y2="@tickY.ToString(CultureInfo.InvariantCulture)"></line>
 
                                     @Html.Raw(
-                                        string.Format(
-                                            CultureInfo.InvariantCulture,
-                                            "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"end\">{2}%</text>",
-                                            plotLeft - 9m,
-                                            tickY + 4m,
-                                            Math.Round(percentageTick, 0)
-                                        )
-                                    )
+                                                                 string.Format(
+                                                                     CultureInfo.InvariantCulture,
+                                                                     "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"end\">{2}%</text>",
+                                                                     plotLeft - 9m,
+                                                                     tickY + 4m,
+                                                                     Math.Round(percentageTick, 0)
+                                                                 )
+                                                             )
                                 }
 
                                 <line class="axis-line"
@@ -1983,14 +2251,14 @@
                                           y2="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"></line>
 
                                     @Html.Raw(
-                                        string.Format(
-                                            CultureInfo.InvariantCulture,
-                                            "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"middle\">{2}</text>",
-                                            monthX,
-                                            plotTop + plotHeight + 25m,
-                                            System.Web.HttpUtility.HtmlEncode(monthLabel)
-                                        )
-                                    )
+                                                                 string.Format(
+                                                                     CultureInfo.InvariantCulture,
+                                                                     "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"middle\">{2}</text>",
+                                                                     monthX,
+                                                                     plotTop + plotHeight + 25m,
+                                                                     System.Web.HttpUtility.HtmlEncode(monthLabel)
+                                                                 )
+                                                             )
                                 }
 
                                 @for (int monthIndex = 0; monthIndex < months.Count; monthIndex++)
@@ -2058,20 +2326,20 @@
                                             if (showBarLabel)
                                             {
                                                 @Html.Raw(
-                                                    string.Format(
-                                                        CultureInfo.InvariantCulture,
-                                                        "<text class=\"closure-bar-label\" x=\"{0:0.##}\" y=\"{1:0.##}\">{2:0}%</text>",
-                                                        barCenterX,
-                                                        barLabelY,
-                                                        barItem.ClosurePercentage
-                                                    )
-                                                )
+                                                                             string.Format(
+                                                                                 CultureInfo.InvariantCulture,
+                                                                                 "<text class=\"closure-bar-label\" x=\"{0:0.##}\" y=\"{1:0.##}\">{2:0}%</text>",
+                                                                                 barCenterX,
+                                                                                 barLabelY,
+                                                                                 barItem.ClosurePercentage
+                                                                             )
+                                                                         )
                                             }
                                         }
                                     }
                                 }
                             </svg>
-
+                            <h6 style=" text-align: center; font-size:12px;">YTD Accumulated</h6>
                             <div class="line-legend">
                                 @for (int departmentIndex = 0; departmentIndex < departments.Count; departmentIndex++)
                                 {

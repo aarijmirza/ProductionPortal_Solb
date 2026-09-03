@@ -567,6 +567,7 @@
     <Compile Include="Controllers\BoardingController.cs" />
     <Compile Include="Controllers\CCMController.cs" />
     <Compile Include="Controllers\CCMProductionController.cs" />
+    <Compile Include="Controllers\CMDDashboardController.cs" />
     <Compile Include="Controllers\ConsumptionController.cs" />
     <Compile Include="Controllers\DelayController.cs" />
     <Compile Include="Controllers\DelayCounterMeasureController.cs" />
@@ -2626,6 +2627,8 @@
     <Content Include="Views\SMPDayWiseProduction\Index.cshtml" />
     <Content Include="Views\SMPDayWiseProduction\Details.cshtml" />
     <Content Include="Views\SMPProductionDelay\Index.cshtml" />
+    <Content Include="Views\CMDDashboard\dashboard.cshtml" />
+    <Content Include="Views\Maintenance\countermeasurelist.cshtml" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace DAL.Models
 {
+
     public class SampleHBIDRIBLL
     {
         public int ID { get; set; }
 
-        public int? AnalysisID { get; set; }
+        public int AnalysisID { get; set; }
 
         public string SampleCode { get; set; }
 
@@ -49,6 +50,5 @@ namespace DAL.Models
         public DateTime? UpdatedDate { get; set; }
 
         public string UpdatedBy { get; set; }
-
     }
 }

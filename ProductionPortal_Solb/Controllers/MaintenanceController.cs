@@ -233,6 +233,28 @@ namespace ProductionPortal_Solb.Controllers
                         id
                     );
 
+                // Equipment dropdown is required ONLY for Role = User.
+                // Other roles can still view the saved equipment, but the
+                // dropdown/save controls are not loaded for them.
+                if (
+                    User != null &&
+                    User.Identity != null &&
+                    User.Identity.IsAuthenticated &&
+                    User.IsInRole("User")
+                )
+                {
+                    ViewBag.EquipmentItems =
+                        repo.GetMaintenanceEquipmentListByPlant(
+                            model.Plant,
+                            model.Equipments
+                        );
+                }
+                else
+                {
+                    ViewBag.EquipmentItems =
+                        new List<string>();
+                }
+
                 return View(
                     model
                 );
@@ -245,6 +267,139 @@ namespace ProductionPortal_Solb.Controllers
 
                 return RedirectToAction(
                     "list"
+                );
+            }
+        }
+
+        // =========================================================
+        // UPDATE EQUIPMENT AGAINST THIS DELAY
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateDelayEquipment(
+            int DelayID,
+            string Equipments)
+        {
+            try
+            {
+                // Security check: hiding the dropdown in Razor is not enough.
+                // Only Role = User is allowed to update equipment.
+                if (
+                    User == null ||
+                    User.Identity == null ||
+                    !User.Identity.IsAuthenticated ||
+                    !User.IsInRole("User")
+                )
+                {
+                    TempData["ErrorMessage"] =
+                        "You are not authorized to update equipment.";
+
+                    return RedirectToAction(
+                        "detail",
+                        new { id = DelayID }
+                    );
+                }
+
+                if (DelayID <= 0)
+                {
+                    TempData["ErrorMessage"] =
+                        "Invalid delay record.";
+
+                    return RedirectToAction(
+                        "list"
+                    );
+                }
+
+                if (string.IsNullOrWhiteSpace(Equipments))
+                {
+                    TempData["ErrorMessage"] =
+                        "Please select equipment.";
+
+                    return RedirectToAction(
+                        "detail",
+                        new { id = DelayID }
+                    );
+                }
+
+                PlantDelayBLL delay =
+                    repo.GetDelayByID(
+                        DelayID
+                    );
+
+                if (delay == null)
+                {
+                    TempData["ErrorMessage"] =
+                        "Delay record was not found.";
+
+                    return RedirectToAction(
+                        "list"
+                    );
+                }
+
+                // Server-side validation: selected equipment must belong
+                // to the same Plant as this delay record.
+                List<string> validEquipments =
+                    repo.GetMaintenanceEquipmentListByPlant(
+                        delay.Plant,
+                        delay.Equipments
+                    )
+                    ?? new List<string>();
+
+                bool isValidEquipment =
+                    validEquipments.Any(
+                        x =>
+                            string.Equals(
+                                x,
+                                Equipments.Trim(),
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                    );
+
+                if (!isValidEquipment)
+                {
+                    TempData["ErrorMessage"] =
+                        "Selected equipment is not valid for plant " +
+                        (delay.Plant ?? "-") + ".";
+
+                    return RedirectToAction(
+                        "detail",
+                        new { id = DelayID }
+                    );
+                }
+
+                int result =
+                    repo.UpdateDelayEquipment(
+                        DelayID,
+                        Equipments.Trim(),
+                        GetCurrentUser()
+                    );
+
+                if (result > 0)
+                {
+                    TempData["SuccessMessage"] =
+                        "Equipment updated successfully.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] =
+                        "Equipment was not updated.";
+                }
+
+                return RedirectToAction(
+                    "detail",
+                    new { id = DelayID }
+                );
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] =
+                    "Unable to update equipment. Error: " +
+                    ex.Message;
+
+                return RedirectToAction(
+                    "detail",
+                    new { id = DelayID }
                 );
             }
         }
@@ -356,12 +511,14 @@ namespace ProductionPortal_Solb.Controllers
         public ActionResult InsertMaintenanceAnalysis(
             FailureAnalysisBLL model,
             HttpPostedFileBase FailureAnalysisFile,
-            string FailureAnalysisFileRemarks)
+            string FailureAnalysisFileRemarks,
+            string[] increaseMTBFActions,
+            string[] decreaseMTTRActions)
         {
             int delayID =
-            model != null
-                ? model.DelayID ?? 0
-                : 0;
+                model != null
+                    ? model.DelayID ?? 0
+                    : 0;
 
             try
             {
@@ -384,8 +541,18 @@ namespace ProductionPortal_Solb.Controllers
                 model.StatusID =
                     1;
 
-                int result;
-
+                /*
+                 * Keep the existing FailureAnalysis table and its existing
+                 * insert/update procedures unchanged.
+                 *
+                 * The old controller relied on model.ID immediately after
+                 * InsertMaintenanceAnalysis(). For a NEW analysis that ID
+                 * may still be 0, so dynamic MTBF/MTTR rows could be saved
+                 * without the correct AnalysisID.
+                 *
+                 * We save/update the main analysis first, then read the
+                 * active FailureAnalysis row again by DelayID.
+                 */
                 if (model.ID > 0)
                 {
                     model.UpdatedBy =
@@ -394,15 +561,9 @@ namespace ProductionPortal_Solb.Controllers
                     model.UpdatedDate =
                         DateTime.Now;
 
-                    result =
-                        repo.UpdateMissingMaintenanceAnalysis(
-                            model
-                        );
-
-                    TempData["Success"] =
-                        result > 0
-                            ? "Missing analysis information updated successfully."
-                            : "No new information was available to update.";
+                    repo.UpdateMissingMaintenanceAnalysis(
+                        model
+                    );
                 }
                 else
                 {
@@ -412,23 +573,44 @@ namespace ProductionPortal_Solb.Controllers
                     model.CreatedDate =
                         DateTime.Now;
 
-                    result =
-                        repo.InsertMaintenanceAnalysis(
-                            model
-                        );
-
-                    TempData["Success"] =
-                        result > 0
-                            ? "Maintenance analysis saved successfully."
-                            : "Maintenance analysis could not be saved.";
+                    repo.InsertMaintenanceAnalysis(
+                        model
+                    );
                 }
 
+                FailureAnalysisBLL savedAnalysis =
+                    repo.GetMaintenanceAnalysisByDelayID(
+                        delayID
+                    );
 
                 if (
-                    (
-                        result > 0 ||
-                        model.ID > 0
-                    ) &&
+                    savedAnalysis == null ||
+                    savedAnalysis.ID <= 0
+                )
+                {
+                    throw new Exception(
+                        "Failure Analysis record was not found after save."
+                    );
+                }
+
+                /*
+                 * All dynamic rows are linked to this exact analysis.
+                 * Each row receives its own ActionCode inside
+                 * sp_InsertFailureAnalysisAction.
+                 */
+                int savedDynamicActions =
+                    SaveMtbfMttrActions(
+                        delayID,
+                        savedAnalysis.ID,
+                        increaseMTBFActions,
+                        decreaseMTTRActions
+                    );
+
+
+                // =====================================================
+                // FAILURE ANALYSIS ATTACHMENT
+                // =====================================================
+                if (
                     FailureAnalysisFile != null &&
                     FailureAnalysisFile.ContentLength > 0
                 )
@@ -463,16 +645,22 @@ namespace ProductionPortal_Solb.Controllers
                             "Failure analysis attachment could not be saved."
                         );
                     }
-
-                    TempData["Success"] =
-                        "Maintenance analysis attachment saved successfully.";
                 }
+
+
+                TempData["Success"] =
+                    savedDynamicActions > 0
+                        ? "Maintenance analysis and " +
+                          savedDynamicActions +
+                          " dynamic MTBF/MTTR action(s) saved successfully."
+                        : "Maintenance analysis saved successfully.";
+
 
                 return RedirectToAction(
                     "detail",
                     new
                     {
-                        id = model.DelayID
+                        id = delayID
                     }
                 );
             }
@@ -499,24 +687,35 @@ namespace ProductionPortal_Solb.Controllers
             }
         }
 
+
         // =========================================================
         // MTBF / MTTR ACTIONS
         // =========================================================
 
-        private void SaveMtbfMttrActions(
+        private int SaveMtbfMttrActions(
             int delayID,
             int analysisID,
             string[] increaseMTBFActions,
             string[] decreaseMTTRActions)
         {
-            if (delayID <= 0)
+            if (
+                delayID <= 0 ||
+                analysisID <= 0
+            )
             {
-                return;
+                return 0;
             }
+
+            int savedCount =
+                0;
 
             string currentUser =
                 GetCurrentUser();
 
+
+            // =====================================================
+            // MTBF - every box becomes a separate DB row/code
+            // =====================================================
             if (increaseMTBFActions != null)
             {
                 foreach (
@@ -531,19 +730,14 @@ namespace ProductionPortal_Solb.Controllers
                         continue;
                     }
 
-                    var action =
+                    FailureAnalysisActionBLL action =
                         new FailureAnalysisActionBLL
                         {
-                            ActionCode =
-                                repo.GenerateFailureActionCode(),
-
                             DelayID =
                                 delayID,
 
                             AnalysisID =
-                                analysisID > 0
-                                    ? (int?)analysisID
-                                    : null,
+                                analysisID,
 
                             ActionType =
                                 "IncreaseMTBF",
@@ -561,12 +755,32 @@ namespace ProductionPortal_Solb.Controllers
                                 DateTime.Now
                         };
 
-                    repo.InsertFailureAnalysisAction(
-                        action
-                    );
+                    /*
+                     * ActionCode is intentionally NOT generated here.
+                     * SQL generates it after the identity ActionID exists,
+                     * which makes every MTBF/MTTR code concurrency-safe
+                     * and unique.
+                     */
+                    int actionID =
+                        repo.InsertFailureAnalysisAction(
+                            action
+                        );
+
+                    if (actionID <= 0)
+                    {
+                        throw new Exception(
+                            "Dynamic MTBF action could not be saved."
+                        );
+                    }
+
+                    savedCount++;
                 }
             }
 
+
+            // =====================================================
+            // MTTR - every box becomes a separate DB row/code
+            // =====================================================
             if (decreaseMTTRActions != null)
             {
                 foreach (
@@ -581,19 +795,14 @@ namespace ProductionPortal_Solb.Controllers
                         continue;
                     }
 
-                    var action =
+                    FailureAnalysisActionBLL action =
                         new FailureAnalysisActionBLL
                         {
-                            ActionCode =
-                                repo.GenerateFailureActionCode(),
-
                             DelayID =
                                 delayID,
 
                             AnalysisID =
-                                analysisID > 0
-                                    ? (int?)analysisID
-                                    : null,
+                                analysisID,
 
                             ActionType =
                                 "DecreaseMTTR",
@@ -611,12 +820,26 @@ namespace ProductionPortal_Solb.Controllers
                                 DateTime.Now
                         };
 
-                    repo.InsertFailureAnalysisAction(
-                        action
-                    );
+                    int actionID =
+                        repo.InsertFailureAnalysisAction(
+                            action
+                        );
+
+                    if (actionID <= 0)
+                    {
+                        throw new Exception(
+                            "Dynamic MTTR action could not be saved."
+                        );
+                    }
+
+                    savedCount++;
                 }
             }
+
+
+            return savedCount;
         }
+
 
         // =========================================================
         // EXCEL EXPORT
@@ -1209,5 +1432,65 @@ namespace ProductionPortal_Solb.Controllers
                     ? "System"
                     : currentUser.Trim();
         }
+
+
+        [HttpGet]
+        public ActionResult countermeasurelist(
+        DateTime? fromDate,
+        DateTime? toDate,
+        string plant,
+        string status)
+        {
+            try
+            {
+                /*
+                 * No date supplied = show all countermeasures.
+                 * If user supplies only one side of the range,
+                 * the SP handles the open-ended filter.
+                 */
+                List<CounterMeasureFollowupVM> model =
+                    repo.GetFollowupTracker(
+                        fromDate,
+                        toDate,
+                        plant,
+                        status
+                    );
+
+                ViewBag.FromDate =
+                    fromDate.HasValue
+                        ? fromDate.Value.ToString(
+                            "yyyy-MM-dd"
+                        )
+                        : "";
+
+                ViewBag.ToDate =
+                    toDate.HasValue
+                        ? toDate.Value.ToString(
+                            "yyyy-MM-dd"
+                        )
+                        : "";
+
+                ViewBag.Plant =
+                    plant ?? "";
+
+                ViewBag.Status =
+                    status ?? "";
+
+                return View(
+                    model
+                );
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] =
+                    "Unable to load Counter Measure Follow-up Tracker. Error: " +
+                    ex.Message;
+
+                return View(
+                    new List<CounterMeasureFollowupVM>()
+                );
+            }
+        }
+
     }
 }

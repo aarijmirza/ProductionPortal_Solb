@@ -1,5 +1,6 @@
 ﻿@model DAL.Models.PlantDelayBLL
 @using System.Globalization
+@using System.Linq
 
 @{
     ViewBag.Title = "Maintenance Detail";
@@ -21,12 +22,51 @@
     bool hasFailureCategory1Component = analysis != null && !string.IsNullOrWhiteSpace(analysis.FailureCategory1Component);
     bool hasFailureCategory2RootCause = analysis != null && !string.IsNullOrWhiteSpace(analysis.FailureCategory2RootCause);
 
-    var actions = ViewBag.Actions as List<DAL.Models.FailureAnalysisBLL>
-    ?? new List<DAL.Models.FailureAnalysisBLL>();
+    var actions =
+        ViewBag.Actions as List<DAL.Models.FailureAnalysisActionBLL>
+        ?? new List<DAL.Models.FailureAnalysisActionBLL>();
+
+    var savedMtbfActions =
+        actions
+            .Where(x =>
+                x != null &&
+                string.Equals(
+                    x.ActionType ?? "",
+                    "IncreaseMTBF",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .ToList();
+
+    var savedMttrActions =
+        actions
+            .Where(x =>
+                x != null &&
+                string.Equals(
+                    x.ActionType ?? "",
+                    "DecreaseMTTR",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .ToList();
+
+    var equipmentItems =
+        ViewBag.EquipmentItems as IEnumerable<string>
+        ?? new List<string>();
+
+    // Equipment dropdown/save is available ONLY to Role = User.
+    bool canEditEquipment =
+        User != null &&
+        User.Identity != null &&
+        User.Identity.IsAuthenticated &&
+        (
+            User.IsInRole("User") ||
+            User.IsInRole("Administrator")
+        );
 
     bool showFailureReportStatus = Model != null
-        && Model.TotalDuration.HasValue
-        && Model.TotalDuration.Value >= 60;
+&& Model.TotalDuration.HasValue
+&& Model.TotalDuration.Value >= 60;
 }
 
 <style>
@@ -169,6 +209,59 @@
         margin-top: -5px;
         margin-bottom: 10px;
     }
+
+    .mtbf-mttr-box {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 14px;
+        height: 100%;
+    }
+
+    .mtbf-mttr-box-title {
+        color: #7f1010;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }
+
+    .mtbf-add-wrap {
+        margin-top: 8px;
+        text-align: right;
+    }
+
+    .mtbf-dynamic-row,
+    .mttr-dynamic-row {
+        border-top: 1px dashed #d7dde5;
+        margin-top: 12px;
+        padding-top: 12px;
+    }
+
+    .saved-action-item {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-left: 4px solid #7f1010;
+        border-radius: 8px;
+        margin-top: 8px;
+        padding: 9px 10px;
+    }
+
+        .saved-action-item small {
+            color: #6b7280;
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .saved-action-item div {
+            color: #222;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
 
     @@media (max-width: 767px) {
         .mtbf-mttr-remove {
@@ -333,45 +426,166 @@
         </div>
 
         <div class="main-card-body">
+
+            @if (canEditEquipment)
+            {
+                using (
+                    Html.BeginForm(
+                        "UpdateDelayEquipment",
+                        "Maintenance",
+                        FormMethod.Post,
+                        new
+                        {
+                            id = "equipmentUpdateForm"
+                        }
+                    )
+                )
+                {
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="DelayID"
+                           value="@Model.ID" />
+
+                    <div class="row align-items-end">
+
+                        <div class="col-md-8">
+                            <div class="form-group mb-md-0">
+                                <label class="font-weight-bold">
+                                    Equipment
+                                </label>
+
+                                <select id="EquipmentDropdown"
+                                        name="Equipments"
+                                        class="form-control"
+                                        required>
+
+                                    <option value="">
+                                        -- Select Equipment --
+                                    </option>
+
+                                    @foreach (
+                                        string equipmentItem
+                                        in equipmentItems
+                                    )
+                                    {
+                                        bool isSelected =
+                                            string.Equals(
+                                                Model.Equipments ?? "",
+                                                equipmentItem ?? "",
+                                                StringComparison.OrdinalIgnoreCase
+                                            );
+
+                                        <option value="@equipmentItem"
+                                                @(isSelected ? "selected" : "")>
+                                            @equipmentItem
+                                        </option>
+                                    }
+
+                                </select>
+
+                                <small class="form-text text-muted">
+                                    Equipment list is filtered for Plant:
+                                    <strong>@(Model.Plant ?? "-")</strong>
+                                </small>
+
+                                @if (
+                                    !string.IsNullOrWhiteSpace(
+                                        Model.Equipments
+                                    )
+                                )
+                                {
+                                    <small class="form-text text-muted">
+                                        Current Equipment:
+                                        <strong>
+                                            @Model.Equipments
+                                        </strong>
+                                    </small>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mb-0">
+                                <button type="submit"
+                                        class="btn btn-success btn-block">
+                                    <i class="fa fa-save"></i>
+                                    Save Equipment
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+            }
+            else
+            {
+                <!-- Non-User roles can view current equipment only. -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="info-list">
+                            <li>
+                                <span class="info-label">Equipment</span>
+                                <span class="info-value">
+                                    @(Model.Equipments ?? "-")
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <hr />
+
             <div class="row">
 
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <ul class="info-list">
                         <li>
-                            <span class="info-label">Equipment</span>
-                            <span class="info-value">@(Model.Equipments ?? "-")</span>
+                            <span class="info-label">
+                                Delay Description
+                            </span>
+
+                            <span class="info-value">
+                                @(Model.DelayDescription ?? "-")
+                            </span>
                         </li>
                     </ul>
                 </div>
+
+                <div class="col-md-4">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">
+                                Reason for Occurence
+                            </span>
+
+                            <span class="info-value">
+                                @(Model.ReasonForOccurence ?? "-")
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="col-md-4">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">
+                                Action Taken
+                            </span>
+
+                            <span class="info-value">
+                                @(Model.ActionTaken ?? "-")
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+
             </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <ul class="info-list">
-                        <li>
-                            <span class="info-label">Delay Description</span>
-                            <span class="info-value">@(Model.DelayDescription ?? "-")</span>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <ul class="info-list">
-                        <li>
-                            <span class="info-label">Reason for Occurence</span>
-                            <span class="info-value">@(Model.ReasonForOccurence ?? "-")</span>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <ul class="info-list">
-                        <li>
-                            <span class="info-label">Action Taken</span>
-                            <span class="info-value">@(Model.ActionTaken ?? "-")</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+
         </div>
     </div>
+
 
     <!-- DELAY CORRECTION / UPDATE FORM -->
     <div class="main-card">
@@ -527,11 +741,18 @@
 
                 <div class="mtbf-mttr-wrapper">
 
-                    <div id="mtbfMttrRows">
+                    <div class="row">
 
-                        <div class="row mtbf-mttr-row">
+                        <!-- ==================================================
+                             MTBF - UNLIMITED DYNAMIC ACTIONS
+                             ================================================== -->
+                        <div class="col-md-6">
+                            <div class="mtbf-mttr-box">
 
-                            <div class="col-md-6">
+                                <div class="mtbf-mttr-box-title">
+                                    MTBF Improvement Actions
+                                </div>
+
                                 <div class="form-group">
                                     <label>Long Term Action Taken to Increase MTBF</label>
 
@@ -540,9 +761,69 @@
                                               rows="3"
                                               placeholder="Enter MTBF improvement remarks">@(analysis != null ? analysis.IncreaseMTBF : "")</textarea>
                                 </div>
-                            </div>
 
-                            <div class="col-md-6">
+                                @if (hasIncreaseMTBF1)
+                                {
+                                    <div class="mtbf-dynamic-row">
+                                        <div class="form-group">
+                                            <label>Existing Additional MTBF Action</label>
+
+                                            <textarea name="IncreaseMTBF1"
+                                                      class="form-control"
+                                                      rows="3"
+                                                      placeholder="Enter additional MTBF action">@(analysis != null ? analysis.IncreaseMTBF1 : "")</textarea>
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (savedMtbfActions.Any())
+                                {
+                                    <div class="mt-3">
+                                        <label class="font-weight-bold">
+                                            Saved Dynamic MTBF Actions
+                                        </label>
+
+                                        @foreach (var savedAction in savedMtbfActions)
+                                        {
+                                            <div class="saved-action-item">
+                                                <small>
+                                                    @(string.IsNullOrWhiteSpace(savedAction.ActionCode)
+                                                        ? "Saved Action"
+                                                        : savedAction.ActionCode)
+                                                </small>
+
+                                                <div>
+                                                    @savedAction.ActionRemarks
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                <div id="mtbfAdditionalContainer"></div>
+
+                                <div class="mtbf-add-wrap">
+                                    <button type="button"
+                                            id="btnAddMtbf"
+                                            class="btn btn-sm btn-success">
+                                        + Add MTBF Action
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                        <!-- ==================================================
+                             MTTR - UNLIMITED DYNAMIC ACTIONS
+                             ================================================== -->
+                        <div class="col-md-6">
+                            <div class="mtbf-mttr-box">
+
+                                <div class="mtbf-mttr-box-title">
+                                    MTTR Reduction Actions
+                                </div>
+
                                 <div class="form-group">
                                     <label>Long Term Action Taken to Decrease MTTR</label>
 
@@ -551,53 +832,59 @@
                                               rows="3"
                                               placeholder="Enter MTTR reduction details">@(analysis != null ? analysis.DecreaseMTTR : "")</textarea>
                                 </div>
-                            </div>
 
+                                @if (hasDecreaseMTTR1)
+                                {
+                                    <div class="mttr-dynamic-row">
+                                        <div class="form-group">
+                                            <label>Existing Additional MTTR Action</label>
+
+                                            <textarea name="DecreaseMTTR1"
+                                                      class="form-control"
+                                                      rows="3"
+                                                      placeholder="Enter additional MTTR action">@(analysis != null ? analysis.DecreaseMTTR1 : "")</textarea>
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (savedMttrActions.Any())
+                                {
+                                    <div class="mt-3">
+                                        <label class="font-weight-bold">
+                                            Saved Dynamic MTTR Actions
+                                        </label>
+
+                                        @foreach (var savedAction in savedMttrActions)
+                                        {
+                                            <div class="saved-action-item">
+                                                <small>
+                                                    @(string.IsNullOrWhiteSpace(savedAction.ActionCode)
+                                                        ? "Saved Action"
+                                                        : savedAction.ActionCode)
+                                                </small>
+
+                                                <div>
+                                                    @savedAction.ActionRemarks
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                <div id="mttrAdditionalContainer"></div>
+
+                                <div class="mtbf-add-wrap">
+                                    <button type="button"
+                                            id="btnAddMttr"
+                                            class="btn btn-sm btn-success">
+                                        + Add MTTR Action
+                                    </button>
+                                </div>
+
+                            </div>
                         </div>
-
-                        @if (hasIncreaseMTBF1 || hasDecreaseMTTR1)
-                        {
-                            <div class="row mtbf-mttr-row">
-
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Additional Action to Increase MTBF</label>
-
-                                        <textarea name="IncreaseMTBF1"
-                                                  class="form-control"
-                                                  rows="3"
-                                                  placeholder="Enter additional MTBF action">@(analysis != null ? analysis.IncreaseMTBF1 : "")</textarea>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Additional Action to Decrease MTTR</label>
-
-                                        <textarea name="DecreaseMTTR1"
-                                                  class="form-control"
-                                                  rows="3"
-                                                  placeholder="Enter additional MTTR action">@(analysis != null ? analysis.DecreaseMTTR1 : "")</textarea>
-                                    </div>
-                                </div>
-
-                            </div>
-                        }
 
                     </div>
-
-                    @if (!hasIncreaseMTBF1 && !hasDecreaseMTTR1)
-                    {
-                        <div class="row">
-                            <div class="col-md-12 text-right mb-3">
-                                <button type="button"
-                                        id="btnAddMtbfMttr"
-                                        class="btn btn-sm btn-success">
-                                    + Add More
-                                </button>
-                            </div>
-                        </div>
-                    }
 
                 </div>
 
@@ -744,26 +1031,30 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>
-                                Attachment Remarks
-                            </label>
+                    @*<div class="col-md-6">
+                            <div class="form-group">
+                                <label>
+                                    Attachment Remarks
+                                </label>
 
-                            <input type="text"
-                                   class="form-control"
-                                   id="FailureAnalysisFileRemarks"
-                                   name="FailureAnalysisFileRemarks"
-                                   maxlength="250"
-                                   placeholder="Enter attachment remarks (optional)" />
-                        </div>
-                    </div>
+                                <input type="text"
+                                       class="form-control"
+                                       id="FailureAnalysisFileRemarks"
+                                       name="FailureAnalysisFileRemarks"
+                                       maxlength="250"
+                                       placeholder="Enter attachment remarks (optional)" />
+                            </div>
+                        </div>*@
                 </div>
 
                 <div class="text-right mt-3">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit"
+                            id="btnSaveAnalysis"
+                            class="btn btn-primary">
                         <i class="fa fa-save"></i>
-                        @(hasAnalysis ? "Update Missing Information" : "Save Analysis")
+                        <span class="save-analysis-text">
+                            @(hasAnalysis ? "Update Missing Information" : "Save Analysis")
+                        </span>
                     </button>
                 </div>
             }
@@ -806,6 +1097,49 @@
                 );
         });
 
+        $("#equipmentUpdateForm").on("submit", function (e) {
+
+            e.preventDefault();
+
+            var selectedEquipment =
+                ($("#EquipmentDropdown").val() || "").trim();
+
+            if (!selectedEquipment) {
+
+                Swal.fire({
+                    icon: "warning",
+                    title: "Equipment Required",
+                    text: "Please select equipment before saving.",
+                    confirmButtonColor: "#7f1010"
+                });
+
+                return;
+            }
+
+
+            var form =
+                this;
+
+
+            Swal.fire({
+                title: "Update Equipment?",
+                text: "Selected equipment will be saved against this delay record.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Yes, Save",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#198754",
+                cancelButtonColor: "#6c757d"
+            })
+                .then(function (result) {
+
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+        });
+
+
         $("#analysisForm").on("submit", function (e) {
             e.preventDefault();
 
@@ -830,56 +1164,139 @@
 <script>
     $(document).ready(function () {
 
-        $("#btnAddMtbfMttr").on("click", function () {
+        var mtbfActionIndex = 0;
+        var mttrActionIndex = 0;
 
-            if ($("#additionalMtbfMttrRow").length > 0) {
-                return;
-            }
+
+        // =========================================================
+        // MTBF - ADD UNLIMITED DYNAMIC ACTIONS
+        // =========================================================
+        $("#btnAddMtbf").on("click", function () {
+
+            mtbfActionIndex++;
 
             var html = `
-                <div class="mtbf-mttr-row" id="additionalMtbfMttrRow">
-                    <div class="row">
+                <div class="mtbf-dynamic-row dynamic-mtbf-item">
 
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Additional Action to Increase MTBF</label>
+                    <div class="form-group">
+                        <label>
+                            Additional MTBF Action ${mtbfActionIndex}
+                        </label>
 
-                                <textarea name="IncreaseMTBF1"
-                                          class="form-control"
-                                          rows="3"
-                                          placeholder="Enter additional MTBF action"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Additional Action to Decrease MTTR</label>
-
-                                <textarea name="DecreaseMTTR1"
-                                          class="form-control"
-                                          rows="3"
-                                          placeholder="Enter additional MTTR action"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="col-md-12 text-right mtbf-mttr-remove">
-                            <button type="button"
-                                    class="btn btn-sm btn-danger btnRemoveMtbfMttr">
-                                Remove
-                            </button>
-                        </div>
-
+                        <textarea name="increaseMTBFActions"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Enter additional MTBF action"></textarea>
                     </div>
+
+                    <div class="text-right mtbf-mttr-remove">
+                        <button type="button"
+                                class="btn btn-sm btn-danger btnRemoveMtbf">
+                            Remove
+                        </button>
+                    </div>
+
                 </div>
             `;
 
-            $("#mtbfMttrRows").append(html);
-            $("#btnAddMtbfMttr").hide();
+            $("#mtbfAdditionalContainer").append(html);
         });
 
-        $(document).on("click", ".btnRemoveMtbfMttr", function () {
-            $(this).closest(".mtbf-mttr-row").remove();
-            $("#btnAddMtbfMttr").show();
+
+        // =========================================================
+        // MTTR - ADD UNLIMITED DYNAMIC ACTIONS
+        // =========================================================
+        $("#btnAddMttr").on("click", function () {
+
+            mttrActionIndex++;
+
+            var html = `
+                <div class="mttr-dynamic-row dynamic-mttr-item">
+
+                    <div class="form-group">
+                        <label>
+                            Additional MTTR Action ${mttrActionIndex}
+                        </label>
+
+                        <textarea name="decreaseMTTRActions"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Enter additional MTTR action"></textarea>
+                    </div>
+
+                    <div class="text-right mtbf-mttr-remove">
+                        <button type="button"
+                                class="btn btn-sm btn-danger btnRemoveMttr">
+                            Remove
+                        </button>
+                    </div>
+
+                </div>
+            `;
+
+            $("#mttrAdditionalContainer").append(html);
+        });
+
+
+        // =========================================================
+        // REMOVE ONLY CLICKED MTBF FIELD
+        // =========================================================
+        $(document).on("click", ".btnRemoveMtbf", function () {
+            $(this)
+                .closest(".dynamic-mtbf-item")
+                .remove();
+        });
+
+
+        // =========================================================
+        // REMOVE ONLY CLICKED MTTR FIELD
+        // =========================================================
+        $(document).on("click", ".btnRemoveMttr", function () {
+            $(this)
+                .closest(".dynamic-mttr-item")
+                .remove();
+        });
+
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        $("#analysisForm").on("submit", function () {
+
+            var $form =
+                $(this);
+
+            var $button =
+                $("#btnSaveAnalysis");
+
+            if (
+                $form.data("submitting") === true
+            ) {
+                return false;
+            }
+
+            $form.data(
+                "submitting",
+                true
+            );
+
+            $button
+                .prop(
+                    "disabled",
+                    true
+                );
+
+            $button
+                .find(
+                    ".save-analysis-text"
+                )
+                .text(
+                    "Saving..."
+                );
+
+            return true;
         });
 
     });

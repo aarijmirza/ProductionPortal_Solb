@@ -1,0 +1,776 @@
+﻿@model List<DAL.Models.CounterMeasureFollowupVM>
+@using System
+@using System.Globalization
+@using System.Linq
+@using System.Collections.Generic
+
+@{
+    ViewBag.Title = "list";
+
+    var rows =
+        Model ??
+        new List<DAL.Models.CounterMeasureFollowupVM>();
+
+    var gregorian =
+        new CultureInfo("en-US");
+
+    string selectedFromDate =
+        Convert.ToString(
+            ViewBag.FromDate ?? ""
+        );
+
+    string selectedToDate =
+        Convert.ToString(
+            ViewBag.ToDate ?? ""
+        );
+
+    string selectedPlant =
+        Convert.ToString(
+            ViewBag.Plant ?? ""
+        );
+
+    string selectedStatus =
+        Convert.ToString(
+            ViewBag.Status ?? ""
+        );
+
+    var agencySummary =
+        rows
+            .Where(x =>
+                x != null &&
+                !string.IsNullOrWhiteSpace(x.Agency)
+            )
+            .GroupBy(x => x.Agency.Trim())
+            .Select(g => new
+            {
+                Agency = g.Key,
+
+                OpenCount = g.Count(x =>
+                    string.Equals(
+                        string.IsNullOrWhiteSpace(x.Status)
+                            ? "Open"
+                            : x.Status.Trim(),
+                        "Open",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                ),
+
+                InProgressCount = g.Count(x =>
+                    string.Equals(
+                        string.IsNullOrWhiteSpace(x.Status)
+                            ? ""
+                            : x.Status.Trim(),
+                        "In Progress",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                ),
+
+                ClosedCount = g.Count(x =>
+                    string.Equals(
+                        string.IsNullOrWhiteSpace(x.Status)
+                            ? ""
+                            : x.Status.Trim(),
+                        "Closed",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                ),
+
+                TotalCount = g.Count()
+            })
+            .OrderBy(x => x.Agency)
+            .ToList();
+
+    int totalOpen =
+        agencySummary.Sum(x => x.OpenCount);
+
+    int totalInProgress =
+        agencySummary.Sum(x => x.InProgressCount);
+
+    int totalClosed =
+        agencySummary.Sum(x => x.ClosedCount);
+}
+
+<style>
+    .cm-list-card {
+        border: 0;
+        border-radius: 14px;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, .08);
+    }
+
+        .cm-list-card .card-header {
+            background: #7f1230;
+            color: #fff;
+            font-weight: 700;
+            border-radius: 14px 14px 0 0;
+        }
+
+    .cm-filter-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fff;
+    }
+
+        .cm-filter-card label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+    .cm-table {
+        width: 100% !important;
+        font-size: 11px;
+    }
+
+        .cm-table thead th {
+            background: #174f75;
+            color: #fff;
+            border-color: #163c5a;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .cm-table tbody td {
+            vertical-align: middle;
+            word-break: break-word;
+        }
+
+        .cm-table .text-wrap-cell {
+            min-width: 180px;
+            max-width: 280px;
+            white-space: normal;
+        }
+
+        .cm-table .nowrap {
+            white-space: nowrap;
+        }
+
+    .cm-status {
+        display: inline-block;
+        min-width: 82px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .cm-status-open {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .cm-status-progress {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .cm-status-closed {
+        background: #ecfdf5;
+        color: #15803d;
+    }
+
+    .cm-status-overdue {
+        background: #fef2f2;
+        color: #b91c1c;
+    }
+
+    .evidence-btn {
+        white-space: nowrap;
+    }
+
+    .table-scroll-wrap {
+        overflow-x: auto;
+    }
+
+    .agency-summary-card {
+        border: 0;
+        border-radius: 14px;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, .08);
+        margin-bottom: 18px;
+    }
+
+        .agency-summary-card .card-header {
+            background: #7f1230;
+            color: #fff;
+            font-weight: 700;
+            border-radius: 14px 14px 0 0;
+        }
+
+    .agency-kpi {
+        min-height: 82px;
+        padding: 14px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fff;
+    }
+
+    .agency-kpi-title {
+        font-size: 11px;
+        font-weight: 800;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+    }
+
+    .agency-kpi-value {
+        margin-top: 4px;
+        font-size: 24px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .agency-summary-table thead th {
+        background: #174f75;
+        color: #fff;
+        border-color: #163c5a;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        font-size: 11px;
+    }
+
+    .agency-summary-table tbody td {
+        text-align: center;
+        vertical-align: middle;
+        font-size: 12px;
+    }
+
+        .agency-summary-table tbody td:first-child {
+            text-align: left;
+            font-weight: 700;
+        }
+
+    .count-open {
+        color: #c2410c;
+        font-weight: 800;
+    }
+
+    .count-progress {
+        color: #1d4ed8;
+        font-weight: 800;
+    }
+
+    .count-closed {
+        color: #15803d;
+        font-weight: 800;
+    }
+</style>
+
+<!-- Start XP Breadcrumbbar -->
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Counter Measures</h4>
+        </div>
+
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <a href="#">Counter Measure</a>
+                    </li>
+
+                    <li class="breadcrumb-item active"
+                        aria-current="page">
+                        Record
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End XP Breadcrumbbar -->
+
+
+<div class="xp-contentbar">
+
+    <div class="card cm-filter-card mb-3">
+        <div class="card-body">
+
+            <form method="get"
+                  action="@Url.Action("countermeasurelist", "Maintenance")">
+
+                <div class="row">
+
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>From Date</label>
+
+                            <input type="date"
+                                   name="fromDate"
+                                   class="form-control"
+                                   value="@selectedFromDate" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>To Date</label>
+
+                            <input type="date"
+                                   name="toDate"
+                                   class="form-control"
+                                   value="@selectedToDate" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>Plant</label>
+
+                            <select name="plant"
+                                    class="form-control">
+
+                                <option value="">
+                                    All Plants
+                                </option>
+
+                                <option value="Steel Making"
+                                        @(selectedPlant == "SMP" ? "selected" : "")>
+                                    SMP
+                                </option>
+
+                                <option value="Rolling Mill 1"
+                                        @(selectedPlant == "RM1" ? "selected" : "")>
+                                    RM1
+                                </option>
+
+                                <option value="Rolling Mill 2"
+                                        @(selectedPlant == "RM2" ? "selected" : "")>
+                                    RM2
+                                </option>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>Status</label>
+
+                            <select name="status"
+                                    class="form-control">
+
+                                <option value="">
+                                    All Status
+                                </option>
+
+                                <option value="Open"
+                                        @(selectedStatus == "Open" ? "selected" : "")>
+                                    Open
+                                </option>
+
+                                <option value="In Progress"
+                                        @(selectedStatus == "In Progress" ? "selected" : "")>
+                                    In Progress
+                                </option>
+
+                                <option value="Closed"
+                                        @(selectedStatus == "Closed" ? "selected" : "")>
+                                    Closed
+                                </option>
+
+                                <option value="Overdue"
+                                        @(selectedStatus == "Overdue" ? "selected" : "")>
+                                    Overdue
+                                </option>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-group mb-3">
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                <i class="fa fa-filter"></i>
+                                Filter
+                            </button>
+
+                            <a href="@Url.Action("countermeasurelist", "Maintenance")"
+                               class="btn btn-secondary">
+                                Reset
+                            </a>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+
+
+    <div class="card agency-summary-card">
+
+        <div class="card-header">
+            Agency-wise Counter Measure Status Summary
+        </div>
+
+        <div class="card-body">
+
+            <div class="row mb-3">
+
+                <div class="col-md-4">
+                    <div class="agency-kpi">
+                        <div class="agency-kpi-title">
+                            Total Open
+                        </div>
+
+                        <div class="agency-kpi-value count-open">
+                            @totalOpen
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="agency-kpi">
+                        <div class="agency-kpi-title">
+                            Total In Progress
+                        </div>
+
+                        <div class="agency-kpi-value count-progress">
+                            @totalInProgress
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="agency-kpi">
+                        <div class="agency-kpi-title">
+                            Total Closed
+                        </div>
+
+                        <div class="agency-kpi-value count-closed">
+                            @totalClosed
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover agency-summary-table mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>Agency</th>
+                            <th>Open</th>
+                            <th>In Progress</th>
+                            <th>Closed</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @if (agencySummary.Any())
+                        {
+                            foreach (var agency in agencySummary)
+                            {
+                                <tr>
+                                    <td>
+                                        @agency.Agency
+                                    </td>
+
+                                    <td class="count-open">
+                                        @agency.OpenCount
+                                    </td>
+
+                                    <td class="count-progress">
+                                        @agency.InProgressCount
+                                    </td>
+
+                                    <td class="count-closed">
+                                        @agency.ClosedCount
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            @agency.TotalCount
+                                        </strong>
+                                    </td>
+                                </tr>
+                            }
+
+                            <tr>
+                                <td>
+                                    <strong>Total</strong>
+                                </td>
+
+                                <td class="count-open">
+                                    @totalOpen
+                                </td>
+
+                                <td class="count-progress">
+                                    @totalInProgress
+                                </td>
+
+                                <td class="count-closed">
+                                    @totalClosed
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        @rows.Count
+                                    </strong>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5"
+                                    class="text-center text-muted">
+                                    No agency-wise countermeasure data found.
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card cm-list-card">
+
+        <div class="card-header">
+            Counter Measure Follow-up Tracker
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-scroll-wrap">
+
+                <table id="counterMeasureTable"
+                       class="table table-bordered table-hover cm-table">
+
+                    <thead>
+                        <tr>
+                            <th>Sr.No</th>
+                            <th>Delay ID</th>
+                            <th>Delay Date</th>
+                            <th>Plant</th>
+                            <th>Agency</th>
+                            <th>Equipment Name</th>
+                            <th>Delay Description</th>
+                            <th>CounterMeasureID</th>
+                            <th>Countermeasure</th>
+                            <th>Sub Order No-Counter Measure</th>
+                            <th>Responsible</th>
+                            <th>Target Date</th>
+                            <th>Evidence for Completion Attachment Link</th>
+                            <th>Status</th>
+                            <th>Reason for not Closing</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @if (rows.Any())
+                        {
+                            int srNo = 1;
+
+                            foreach (var item in rows)
+                            {
+                                string status =
+                                    string.IsNullOrWhiteSpace(
+                                        item.Status
+                                    )
+                                        ? "Open"
+                                        : item.Status.Trim();
+
+                                string statusClass =
+                                    status == "Closed"
+                                        ? "cm-status-closed"
+                                        : status == "Overdue"
+                                            ? "cm-status-overdue"
+                                            : status == "In Progress"
+                                                ? "cm-status-progress"
+                                                : "cm-status-open";
+
+                                <tr>
+
+                                    <td class="text-center nowrap">
+                                        @srNo
+                                    </td>
+
+                                    <td class="text-center nowrap">
+                                        @item.DelayID
+                                    </td>
+
+                                    <td class="text-center nowrap">
+                                        @(item.DelayDate.HasValue
+                                            ? item.DelayDate.Value.ToString(
+                                                "dd-MMM-yyyy",
+                                                gregorian
+                                            )
+                                            : "-")
+                                    </td>
+
+                                    <td class="text-center nowrap">
+                                        @(string.IsNullOrWhiteSpace(item.Plant)
+                                            ? "-"
+                                            : item.Plant)
+                                    </td>
+
+                                    <td class="text-center nowrap">
+                                        @(string.IsNullOrWhiteSpace(item.Agency)
+                                            ? "-"
+                                            : item.Agency)
+                                    </td>
+
+                                    <td class="text-wrap-cell">
+                                        @(string.IsNullOrWhiteSpace(item.EquipmentName)
+                                            ? "-"
+                                            : item.EquipmentName)
+                                    </td>
+
+                                    <td class="text-wrap-cell">
+                                        @(string.IsNullOrWhiteSpace(item.DelayDescription)
+                                            ? "-"
+                                            : item.DelayDescription)
+                                    </td>
+
+                                    <td class="text-center nowrap">
+                                        @item.CounterMeasureID
+                                    </td>
+
+                                    <td class="text-wrap-cell">
+                                        @(string.IsNullOrWhiteSpace(item.Countermeasure)
+                                            ? "-"
+                                            : item.Countermeasure)
+                                    </td>
+
+                                    <td class="text-center nowrap">
+                                        @(string.IsNullOrWhiteSpace(item.SubOrderNumber)
+                                            ? "-"
+                                            : item.SubOrderNumber)
+                                    </td>
+
+                                    <td class="text-center nowrap">
+                                        @(string.IsNullOrWhiteSpace(item.Responsible)
+                                            ? "-"
+                                            : item.Responsible)
+                                    </td>
+
+                                    <td class="text-center nowrap">
+                                        @(item.TargetDate.HasValue
+                                            ? item.TargetDate.Value.ToString(
+                                                "dd-MMM-yyyy",
+                                                gregorian
+                                            )
+                                            : "-")
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            item.EvidenceAttachmentLink
+                                        ))
+                                        {
+                                            <a href="@Url.Content(item.EvidenceAttachmentLink)"
+                                               target="_blank"
+                                               class="btn btn-sm btn-outline-primary evidence-btn">
+
+                                                <i class="fa fa-paperclip"></i>
+
+                                                @(string.IsNullOrWhiteSpace(
+                                                    item.EvidenceFileName
+                                                )
+                                                    ? "View Attachment"
+                                                    : item.EvidenceFileName)
+
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                -
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                    <td class="text-center nowrap">
+                                        <span class="cm-status @statusClass">
+                                            @status
+                                        </span>
+                                    </td>
+
+                                    <td class="text-wrap-cell">
+                                        @(string.IsNullOrWhiteSpace(
+                                            item.ReasonForNotClosing
+                                        )
+                                            ? "-"
+                                            : item.ReasonForNotClosing)
+                                    </td>
+
+                                </tr>
+
+                                srNo++;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="15"
+                                    class="text-center text-muted">
+                                    No countermeasure follow-up records found.
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+    $(document).ready(function () {
+
+        if (
+            $.fn.DataTable &&
+            !$.fn.DataTable.isDataTable(
+                "#counterMeasureTable"
+            )
+        ) {
+            $("#counterMeasureTable").DataTable({
+                pageLength: 5,
+                lengthMenu: [10, 25, 50, 100],
+                order: [[2, "desc"]],
+                scrollX: true,
+                autoWidth: false
+            });
+        }
+
+    });</script>

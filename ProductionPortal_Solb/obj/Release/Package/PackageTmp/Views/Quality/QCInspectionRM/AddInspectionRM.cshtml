@@ -1,201 +1,1311 @@
 ﻿@using System.Globalization
-@model DAL.Models.ViewModel.RMChargingVM
+@model DAL.Models.ViewModel.RMBundlesVM
 
 @{
-    ViewBag.Title = "add";
+    var vm = Model ?? new DAL.Models.ViewModel.RMBundlesVM();
+
+    if (vm.BundlingList == null)
+    {
+        vm.BundlingList = new List<DAL.Models.RMBundlingQCRowBLL>();
+    }
+
+    if (vm.Inspection == null)
+    {
+        vm.Inspection = new DAL.Models.RMQCInspectionBLL();
+    }
 }
 
-<!-- Start XP Breadcrumbbar -->
+
+<!-- ========================================================= -->
+<!-- BREADCRUMB                                                -->
+<!-- ========================================================= -->
+
 <div class="xp-breadcrumbbar">
+
     <div class="row">
+
         <div class="col-md-6 col-lg-6">
-            <h4 class="xp-page-title">QC Inspection Data - RM</h4>
+
+            <h4 class="xp-page-title">
+                QC Inspection Data - RM
+            </h4>
+
         </div>
+
+
         <div class="col-md-6 col-lg-6">
+
             <div class="xp-breadcrumb">
+
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
-                    <li class="breadcrumb-item"><a href="#">QC Inspection Data - RM</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Records</li>
+
+                    <li class="breadcrumb-item">
+
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+
+                    </li>
+
+                    <li class="breadcrumb-item">
+
+                        <a href="@Url.Action("InspectionRMlist", "Quality")">
+                            QC Inspection Data - RM
+                        </a>
+
+                    </li>
+
+                    <li class="breadcrumb-item active">
+                        Add
+                    </li>
+
                 </ol>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
-<!-- End XP Breadcrumbbar -->
+
+
+<!-- ========================================================= -->
+<!-- PAGE CONTENT                                              -->
+<!-- ========================================================= -->
+
 <div class="xp-contentbar">
 
-    <div class="row">
-        <div class="col-md-7">
+    @using (
+        Html.BeginForm(
+            "AddInspectionRM",
+            "Quality",
+            FormMethod.Post,
+            new
+            {
+                id = "qcInspectionForm",
+                autocomplete = "off"
+            }
+        )
+    )
+    {
+        @Html.AntiForgeryToken()
 
-            <div class="card">
-                <div class="card-body" style="height:500px; overflow-y:auto;">
 
-                    <table class="table table-bordered table-sm text-center">
-                        <thead class="bg-primary text-white">
-                            <tr>
-                                <th>Production Date</th>
-                                <th>Shift</th>
-                                <th>Heat No</th>
-                                <th>Product</th>
-                                <th>Steel Grade</th>
-                                <th>Total Bundles</th>
-                                <th>On-Hold</th>
-                                <th>Reject</th>
-                                <th>Accepted</th>
-                                <th>Defect Code</th>
-                                <th>MRB No</th>
-                            </tr>
-                        </thead>
+        <div class="row">
 
-                        <tbody>
 
-                            @*@foreach (var item in Model.ProductionList)
-                                {
-                                    <tr onclick="fillForm(this)"
-                                        data-heat="@item.HeatNo"
-                                        data-shift="@item.Shift"
-                                        data-grade="@item.SteelGrade"
-                                        data-size="@item.Product"
-                                        data-total="@item.TotalBundles"
-                                        data-onhold="@item.OnHold"
-                                        data-reject="@item.Reject"
-                                        data-accepted="@item.Accepted">
+            <!-- ================================================= -->
+            <!-- LEFT SIDE - BUNDLING SECTION                      -->
+            <!-- ================================================= -->
 
-                                        <td>@item.ProductionDate.ToString("dd-MM-yyyy")</td>
-                                        <td>@item.Shift</td>
-                                        <td>@item.HeatNo</td>
-                                        <td>@item.Product</td>
-                                        <td>@item.SteelGrade</td>
-                                        <td>@item.TotalBundles</td>
-                                        <td class="text-danger">@item.OnHold</td>
-                                        <td class="text-danger">@item.Reject</td>
-                                        <td>@item.Accepted</td>
-                                        <td>@item.DefectCode</td>
-                                        <td>@item.MRBNo</td>
+            <div class="col-md-7">
+
+                <div class="card">
+
+                    <div class="card-header bg-white">
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+
+                                <h5 class="card-title mb-0">
+                                    Pending Bundling Records
+                                </h5>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <input type="text"
+                                       id="tableSearch"
+                                       class="form-control form-control-sm"
+                                       placeholder="Search Heat / Grade / Shift..." />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="card-body"
+                         style="height:560px; overflow:auto;">
+
+
+                        <div class="table-responsive">
+
+                            <table class="table table-bordered table-sm text-center"
+                                   id="bundlingTable">
+
+                                <thead class="bg-primary text-white">
+
+                                    <tr>
+
+                                        <th>Production Date</th>
+
+                                        <th>Shift</th>
+
+                                        <th>Heat No</th>
+
+                                        <th>Product</th>
+
+                                        <th>Steel Grade</th>
+
+                                        <th>Total Bundles</th>
+
+                                        <th>On-Hold</th>
+
+                                        <th>Reject</th>
+
+                                        <th>Accepted</th>
+
+                                        <th>Defect Code</th>
+
+                                        <th>MRB No</th>
+
                                     </tr>
-                                }*@
 
-                        </tbody>
-                    </table>
+                                </thead>
+
+
+                                <tbody>
+
+
+                                    @if (
+                                        Model.BundlingList != null &&
+                                        Model.BundlingList.Count > 0
+                                    )
+                                    {
+                                        foreach (
+                                            var item
+                                            in Model.BundlingList
+                                        )
+                                        {
+                                            string productionDateValue =
+                                                item.ProductionDate.HasValue
+                                                    ? item.ProductionDate.Value.ToString(
+                                                        "yyyy-MM-dd",
+                                                        CultureInfo.InvariantCulture
+                                                    )
+                                                    : "";
+
+
+                                            string productionDateDisplay =
+                                                item.ProductionDate.HasValue
+                                                    ? item.ProductionDate.Value.ToString(
+                                                        "dd-MM-yyyy",
+                                                        CultureInfo.InvariantCulture
+                                                    )
+                                                    : "";
+
+
+                                            <tr class="bundling-row"
+                                                style="cursor:pointer;"
+                                                data-id="@item.ID"
+                                                data-date="@productionDateValue"
+                                                data-shift="@item.Shift"
+                                                data-heat="@item.HeatNo"
+                                                data-grade="@item.SteelGrade"
+                                                data-size="@item.Size"
+                                                data-product="@item.Product"
+                                                data-total="@(item.TotalBundleProduced ?? 0)"
+                                                data-onhold="@(item.OnHold ?? 0)"
+                                                data-reject="@(item.Rejected ?? 0)"
+                                                data-accepted="@(item.Accepted ?? 0)"
+                                                data-bundleseries="@item.BundleSeriesOnHold"
+                                                data-defect="@item.DefectCode"
+                                                data-mrb="@item.MRBNo"
+                                                data-remarks="@item.Remarks">
+
+
+                                                <td>
+                                                    @productionDateDisplay
+                                                </td>
+
+
+                                                <td>
+                                                    @item.Shift
+                                                </td>
+
+
+                                                <td>
+                                                    <strong>
+                                                        @item.HeatNo
+                                                    </strong>
+                                                </td>
+
+
+                                                <td>
+                                                    @item.Product
+                                                </td>
+
+
+                                                <td>
+                                                    @item.SteelGrade
+                                                </td>
+
+
+                                                <td>
+                                                    @(item.TotalBundleProduced ?? 0)
+                                                </td>
+
+
+                                                <td class="text-danger">
+                                                    @(item.OnHold ?? 0)
+                                                </td>
+
+
+                                                <td class="text-danger">
+                                                    @(item.Rejected ?? 0)
+                                                </td>
+
+
+                                                <td class="text-success">
+                                                    @(item.Accepted ?? 0)
+                                                </td>
+
+
+                                                <td>
+                                                    @item.DefectCode
+                                                </td>
+
+
+                                                <td>
+                                                    @item.MRBNo
+                                                </td>
+
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+
+                                            <td colspan="11"
+                                                class="text-center text-muted">
+
+                                                No pending Bundling records found.
+
+                                            </td>
+
+                                        </tr>
+                                    }
+
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
 
                 </div>
+
             </div>
 
-        </div>
-
-        <!-- ================= RIGHT SIDE FORM ================= -->
-        <div class="col-md-5">
-
-            <div class="card">
-                <div class="card-body">
 
 
-                    <!-- Row 1 -->
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label>Production Date</label>
-                            <input type="text" id="prodDate" class="form-control" />
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label>Shift</label>
-                            <input type="text" id="shift" class="form-control" />
-                        </div>
+            <!-- ================================================= -->
+            <!-- RIGHT SIDE - QC FORM                              -->
+            <!-- ================================================= -->
+
+            <div class="col-md-5">
+
+                <div class="card">
+
+
+                    <div class="card-header bg-white">
+
+                        <h5 class="card-title mb-0">
+                            QC Inspection
+                        </h5>
+
                     </div>
 
-                    <!-- Row 2 -->
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label>Heat No</label>
-                            <input type="text" id="heatNo" class="form-control" />
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label>Steel Grade</label>
-                            <input type="text" id="grade" class="form-control" />
-                        </div>
-                    </div>
 
-                    <!-- Row 3 -->
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label>Bar Size</label>
-                            <input type="text" id="size" class="form-control" />
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label>Total Bundles</label>
-                            <input type="text" id="totalBundles" class="form-control" />
-                        </div>
-                    </div>
+                    <div class="card-body">
 
-                    <!-- Row 4 -->
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label>On-Hold</label>
-                            <input type="text" id="onHold" class="form-control text-danger" />
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label>Rejected</label>
-                            <input type="text" id="reject" class="form-control text-danger" />
-                        </div>
-                    </div>
 
-                    <!-- Row 5 -->
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label>Accepted</label>
-                            <input type="text" id="accepted" class="form-control" />
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label>MRB No</label>
-                            <input type="text" class="form-control" />
-                        </div>
-                    </div>
+                        @Html.ValidationSummary(
+                            false,
+                            "",
+                            new
+                            {
+                                @class = "alert alert-danger"
+                            }
+                        )
 
-                    <!-- Row 6 -->
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label>Defect Code</label>
-                            <input type="text" class="form-control" />
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label>QC Status</label>
-                            <select class="form-control">
-                                <option>Accepted</option>
-                                <option>Rejected</option>
-                                <option>Hold</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <!-- Full Width -->
-                    <div class="form-group">
-                        <label>Remarks</label>
-                        <textarea class="form-control"></textarea>
-                    </div>
+                        <!-- ===================================== -->
+                        <!-- PRODUCTION DATE / SHIFT               -->
+                        <!-- ===================================== -->
 
-                    <button class="btn btn-success btn-block">Save</button>
+                        <div class="form-row">
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    Production Date
+                                    <span class="text-danger">*</span>
+                                </label>
+
+
+                                <input type="date"
+                                       id="prodDate"
+                                       name="Inspection.ProductionDate"
+                                       class="form-control"
+                                       value="@(Model.Inspection.ProductionDate == DateTime.MinValue
+                                                    ? ""
+                                                    : Model.Inspection.ProductionDate?.ToString("yyyy-MM-dd"))"
+                                       readonly
+                                       required />
+
+                            </div>
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    Shift
+                                    <span class="text-danger">*</span>
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.Shift,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        id = "shift",
+                                        @readonly = "readonly",
+                                        required = "required"
+                                    }
+                                )
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- ===================================== -->
+                        <!-- HEAT / GRADE                          -->
+                        <!-- ===================================== -->
+
+                        <div class="form-row">
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    Heat No
+                                    <span class="text-danger">*</span>
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.HeatNo,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        id = "heatNo",
+                                        @readonly = "readonly",
+                                        required = "required"
+                                    }
+                                )
+
+                            </div>
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    Steel Grade
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.SteelGrade,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        id = "grade",
+                                        @readonly = "readonly"
+                                    }
+                                )
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- ===================================== -->
+                        <!-- SIZE / TOTAL BUNDLES                  -->
+                        <!-- ===================================== -->
+
+                        <div class="form-row">
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    Bar Size
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.BarSize,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        id = "size",
+                                        @readonly = "readonly"
+                                    }
+                                )
+
+                            </div>
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    Total Bundles
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.TotalBundles,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        id = "totalBundles",
+                                        type = "number",
+                                        min = "0",
+                                        @readonly = "readonly"
+                                    }
+                                )
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- ===================================== -->
+                        <!-- ON HOLD / REJECTED                    -->
+                        <!-- ===================================== -->
+
+                        <div class="form-row">
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    On-Hold
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.OnHold,
+                                    new
+                                    {
+                                        @class = "form-control text-danger",
+                                        id = "onHold",
+                                        type = "number",
+                                        min = "0"
+                                    }
+                                )
+
+                            </div>
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    Rejected
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.Rejected,
+                                    new
+                                    {
+                                        @class = "form-control text-danger",
+                                        id = "reject",
+                                        type = "number",
+                                        min = "0"
+                                    }
+                                )
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- ===================================== -->
+                        <!-- ACCEPTED / MRB                        -->
+                        <!-- ===================================== -->
+
+                        <div class="form-row">
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    Accepted
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.Accepted,
+                                    new
+                                    {
+                                        @class = "form-control text-success",
+                                        id = "accepted",
+                                        type = "number",
+                                        @readonly = "readonly"
+                                    }
+                                )
+
+                            </div>
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    MRB No
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.MRBNo,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        id = "mrbNo",
+                                        maxlength = "100"
+                                    }
+                                )
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- ===================================== -->
+                        <!-- BUNDLE SERIES ON HOLD                 -->
+                        <!-- ===================================== -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Bundle Series On Hold
+                            </label>
+
+
+                            @Html.TextBoxFor(
+                                m => m.Inspection.BundleSeriesOnHold,
+                                new
+                                {
+                                    @class = "form-control",
+                                    id = "bundleSeries",
+                                    maxlength = "500"
+                                }
+                            )
+
+                        </div>
+
+
+
+                        <!-- ===================================== -->
+                        <!-- DEFECT / QC STATUS                    -->
+                        <!-- ===================================== -->
+
+                        <div class="form-row">
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    Defect Code
+                                </label>
+
+
+                                @Html.TextBoxFor(
+                                    m => m.Inspection.DefectCodes,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        id = "defectCode",
+                                        maxlength = "500"
+                                    }
+                                )
+
+                            </div>
+
+
+                            <div class="form-group col-md-6">
+
+                                <label>
+                                    QC Status
+                                    <span class="text-danger">*</span>
+                                </label>
+
+
+                                @Html.DropDownListFor(
+                                    m => m.Inspection.QCStatus,
+
+                                    new List<SelectListItem>
+                                    {
+                                        new SelectListItem
+                                        {
+                                            Text = "-- Select --",
+                                            Value = ""
+                                        },
+
+                                        new SelectListItem
+                                        {
+                                            Text = "Accepted",
+                                            Value = "Accepted"
+                                        },
+
+                                        new SelectListItem
+                                        {
+                                            Text = "Rejected",
+                                            Value = "Rejected"
+                                        },
+
+                                        new SelectListItem
+                                        {
+                                            Text = "Hold",
+                                            Value = "Hold"
+                                        }
+                                    },
+
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        id = "qcStatus",
+                                        required = "required"
+                                    }
+                                )
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- ===================================== -->
+                        <!-- REMARKS                               -->
+                        <!-- ===================================== -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Remarks
+                            </label>
+
+
+                            @Html.TextAreaFor(
+                                m => m.Inspection.Remarks,
+                                new
+                                {
+                                    @class = "form-control",
+                                    id = "remarks",
+                                    rows = "3",
+                                    maxlength = "2000"
+                                }
+                            )
+
+                        </div>
+
+
+
+                        <!-- ===================================== -->
+                        <!-- SAVE                                  -->
+                        <!-- ===================================== -->
+
+                        <button type="submit"
+                                id="saveBtn"
+                                class="btn btn-success btn-block"
+                                disabled>
+
+                            <i class="mdi mdi-content-save"></i>
+
+                            Save QC Inspection
+
+                        </button>
+
+
+                    </div>
 
                 </div>
+
             </div>
 
+
         </div>
-
-
-    </div>
+    }
 
 </div>
+
+
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT                                                -->
+<!-- ========================================================= -->
+
 <script>
-    function fillForm(row) {
 
-        document.getElementById("heatNo").value = row.dataset.heat;
-        document.getElementById("shift").value = row.dataset.shift;
-        document.getElementById("grade").value = row.dataset.grade;
-        document.getElementById("size").value = row.dataset.size;
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
 
-        document.getElementById("totalBundles").value = row.dataset.total;
-        document.getElementById("onHold").value = row.dataset.onhold;
-        document.getElementById("reject").value = row.dataset.reject;
-        document.getElementById("accepted").value = row.dataset.accepted;
+            var rows =
+                document.querySelectorAll(
+                    ".bundling-row"
+                );
 
+
+            /*
+             * -------------------------------------------------
+             * ROW CLICK
+             * -------------------------------------------------
+             */
+            rows.forEach(
+                function (row) {
+
+                    row.addEventListener(
+                        "click",
+                        function () {
+
+                            rows.forEach(
+                                function (r) {
+
+                                    r.classList.remove(
+                                        "table-success"
+                                    );
+
+                                }
+                            );
+
+
+                            row.classList.add(
+                                "table-success"
+                            );
+
+
+                            fillInspectionForm(
+                                row
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+             * -------------------------------------------------
+             * RECALCULATE ACCEPTED
+             * -------------------------------------------------
+             */
+            var onHold =
+                document.getElementById(
+                    "onHold"
+                );
+
+
+            var reject =
+                document.getElementById(
+                    "reject"
+                );
+
+
+            if (onHold) {
+
+                onHold.addEventListener(
+                    "input",
+                    function () {
+
+                        calculateAccepted();
+
+                        autoSetQCStatus();
+
+                    }
+                );
+
+            }
+
+
+            if (reject) {
+
+                reject.addEventListener(
+                    "input",
+                    function () {
+
+                        calculateAccepted();
+
+                        autoSetQCStatus();
+
+                    }
+                );
+
+            }
+
+
+            /*
+             * -------------------------------------------------
+             * TABLE SEARCH
+             * -------------------------------------------------
+             */
+            var search =
+                document.getElementById(
+                    "tableSearch"
+                );
+
+
+            if (search) {
+
+                search.addEventListener(
+                    "keyup",
+                    function () {
+
+                        var searchText =
+                            this.value
+                                .toLowerCase()
+                                .trim();
+
+
+                        rows.forEach(
+                            function (row) {
+
+                                var text =
+                                    row.innerText
+                                        .toLowerCase();
+
+
+                                row.style.display =
+                                    text.indexOf(
+                                        searchText
+                                    ) >= 0
+                                        ? ""
+                                        : "none";
+
+                            }
+                        );
+
+                    }
+                );
+
+            }
+
+
+            /*
+             * -------------------------------------------------
+             * FORM SUBMIT
+             * -------------------------------------------------
+             */
+            var form =
+                document.getElementById(
+                    "qcInspectionForm"
+                );
+
+
+            var isSubmitting =
+                false;
+
+
+            if (form) {
+
+                form.addEventListener(
+                    "submit",
+                    function (event) {
+
+                        if (isSubmitting) {
+                            return;
+                        }
+
+
+                        var heatNo =
+                            document.getElementById(
+                                "heatNo"
+                            ).value.trim();
+
+
+                        if (!heatNo) {
+
+                            event.preventDefault();
+
+                            alert(
+                                "Please select a Bundling record first."
+                            );
+
+                            return;
+                        }
+
+
+                        calculateAccepted();
+
+
+                        var accepted =
+                            parseInt(
+                                document.getElementById(
+                                    "accepted"
+                                ).value
+                                ||
+                                "0",
+                                10
+                            );
+
+
+                        if (accepted < 0) {
+
+                            event.preventDefault();
+
+                            alert(
+                                "On-Hold + Rejected cannot exceed Total Bundles."
+                            );
+
+                            return;
+                        }
+
+
+                        var confirmed =
+                            confirm(
+                                "Save QC Inspection for Heat "
+                                +
+                                heatNo
+                                +
+                                "?"
+                            );
+
+
+                        if (!confirmed) {
+
+                            event.preventDefault();
+
+                            return;
+                        }
+
+
+                        isSubmitting =
+                            true;
+
+
+                        var saveButton =
+                            document.getElementById(
+                                "saveBtn"
+                            );
+
+
+                        saveButton.disabled =
+                            true;
+
+
+                        saveButton.innerHTML =
+                            "Saving...";
+
+                    }
+                );
+
+            }
+
+        }
+    );
+
+
+
+    // =========================================================
+    // FILL FORM
+    // =========================================================
+
+    function fillInspectionForm(
+        row) {
+        setValue(
+            "prodDate",
+            row.getAttribute(
+                "data-date"
+            )
+        );
+
+
+        setValue(
+            "shift",
+            row.getAttribute(
+                "data-shift"
+            )
+        );
+
+
+        setValue(
+            "heatNo",
+            row.getAttribute(
+                "data-heat"
+            )
+        );
+
+
+        setValue(
+            "grade",
+            row.getAttribute(
+                "data-grade"
+            )
+        );
+
+
+        setValue(
+            "size",
+            row.getAttribute(
+                "data-size"
+            )
+        );
+
+
+        setValue(
+            "totalBundles",
+            row.getAttribute(
+                "data-total"
+            )
+        );
+
+
+        setValue(
+            "onHold",
+            row.getAttribute(
+                "data-onhold"
+            )
+        );
+
+
+        setValue(
+            "reject",
+            row.getAttribute(
+                "data-reject"
+            )
+        );
+
+
+        /*
+         * Accepted BundlingSection se initially fill hoga,
+         * phir calculation server logic ke same formula se.
+         */
+        setValue(
+            "accepted",
+            row.getAttribute(
+                "data-accepted"
+            )
+        );
+
+
+        setValue(
+            "bundleSeries",
+            row.getAttribute(
+                "data-bundleseries"
+            )
+        );
+
+
+        setValue(
+            "defectCode",
+            row.getAttribute(
+                "data-defect"
+            )
+        );
+
+
+        setValue(
+            "mrbNo",
+            row.getAttribute(
+                "data-mrb"
+            )
+        );
+
+
+        setValue(
+            "remarks",
+            row.getAttribute(
+                "data-remarks"
+            )
+        );
+
+
+        calculateAccepted();
+
+        autoSetQCStatus();
+
+
+        var saveButton =
+            document.getElementById(
+                "saveBtn"
+            );
+
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                false;
+
+        }
     }
+
+
+
+    // =========================================================
+    // ACCEPTED CALCULATION
+    // =========================================================
+
+    function calculateAccepted() {
+        var total =
+            getIntValue(
+                "totalBundles"
+            );
+
+
+        var onHold =
+            getIntValue(
+                "onHold"
+            );
+
+
+        var rejected =
+            getIntValue(
+                "reject"
+            );
+
+
+        var accepted =
+            total
+            -
+            onHold
+            -
+            rejected;
+
+
+        setValue(
+            "accepted",
+            accepted
+        );
+    }
+
+
+
+    // =========================================================
+    // AUTO QC STATUS
+    // =========================================================
+
+    function autoSetQCStatus() {
+        var onHold =
+            getIntValue(
+                "onHold"
+            );
+
+
+        var rejected =
+            getIntValue(
+                "reject"
+            );
+
+
+        var qcStatus =
+            document.getElementById(
+                "qcStatus"
+            );
+
+
+        if (!qcStatus) {
+            return;
+        }
+
+
+        if (rejected > 0) {
+
+            qcStatus.value =
+                "Rejected";
+
+        }
+        else if (onHold > 0) {
+
+            qcStatus.value =
+                "Hold";
+
+        }
+        else {
+
+            qcStatus.value =
+                "Accepted";
+
+        }
+    }
+
+
+
+    // =========================================================
+    // HELPERS
+    // =========================================================
+
+    function setValue(
+        id,
+        value) {
+        var element =
+            document.getElementById(
+                id
+            );
+
+
+        if (!element) {
+            return;
+        }
+
+
+        element.value =
+            value == null
+                ? ""
+                : value;
+    }
+
+
+
+    function getIntValue(
+        id) {
+        var element =
+            document.getElementById(
+                id
+            );
+
+
+        if (!element) {
+            return 0;
+        }
+
+
+        var value =
+            parseInt(
+                element.value
+                ||
+                "0",
+                10
+            );
+
+
+        return isNaN(value)
+            ? 0
+            : value;
+    }
+
 </script>
