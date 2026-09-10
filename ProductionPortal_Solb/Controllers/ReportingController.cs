@@ -828,11 +828,12 @@ namespace ProductionPortal_Solb.Controllers
             return View();
         }
 
+
         public ActionResult ShiftProductionDashboard(
-            DateTime? fromdate,
-            DateTime? todate,
-            string plant,
-            string shift)
+    DateTime? fromdate,
+    DateTime? todate,
+    string plant,
+    string shift)
         {
             DateTime fromDate =
                 (fromdate ?? DateTime.Today).Date;
@@ -856,6 +857,80 @@ namespace ProductionPortal_Solb.Controllers
                 string.IsNullOrWhiteSpace(shift)
                     ? string.Empty
                     : shift.Trim();
+
+            // Treat the UI's All options as no filter.
+            if (
+                selectedPlant.Equals(
+                    "All",
+                    StringComparison.OrdinalIgnoreCase
+                ) ||
+                selectedPlant.Equals(
+                    "All Plants",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                selectedPlant = string.Empty;
+            }
+
+            if (
+                selectedShift.Equals(
+                    "All",
+                    StringComparison.OrdinalIgnoreCase
+                ) ||
+                selectedShift.Equals(
+                    "All Shifts",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                selectedShift = string.Empty;
+            }
+
+            /*
+             * PlantDelay and dashboard dropdowns do not always use the
+             * same plant text. For example, RM1 delay rows can contain
+             * "Rolling Mill" or "Rolling Mill 1", while the dashboard
+             * sends "RM1". Normalize aliases before filtering so valid
+             * date-wise delay rows are not removed.
+             */
+            Func<string, string> normalizeRollingMillPlant =
+                value =>
+                {
+                    string compact =
+                        new string(
+                            (value ?? string.Empty)
+                                .Where(char.IsLetterOrDigit)
+                                .ToArray()
+                        )
+                        .ToUpperInvariant();
+
+                    if (
+                        compact == "RM1" ||
+                        compact == "RM01" ||
+                        compact == "ROLLINGMILL" ||
+                        compact == "ROLLINGMILL1" ||
+                        compact == "ROLLINGMILL01"
+                    )
+                    {
+                        return "RM1";
+                    }
+
+                    if (
+                        compact == "RM2" ||
+                        compact == "RM02" ||
+                        compact == "ROLLINGMILL2" ||
+                        compact == "ROLLINGMILL02"
+                    )
+                    {
+                        return "RM2";
+                    }
+
+                    return compact;
+                };
+
+            string selectedDelayPlant =
+                normalizeRollingMillPlant(selectedPlant);
 
             // Utility table mein plant RM1/RM2 format mein hai.
             string utilityPlantName;
@@ -931,6 +1006,8 @@ namespace ProductionPortal_Solb.Controllers
             // DELAY DATA
             // =====================================================
 
+            // PlantDelay.Date already stores the report/operational date.
+            // Fetch exactly the selected date range—no extra calendar day.
             var delayData =
                 repo.GetAllRMDelay(
                     fromDate,
@@ -938,7 +1015,7 @@ namespace ProductionPortal_Solb.Controllers
                     selectedShift
                 ) ?? new List<PlantDelayBLL>();
 
-            // Month-to-date delays: first day of ToDate month through ToDate.
+            // Month-to-date delays use the same stored-date rule.
             var monthlyDelayData =
                 repo.GetAllRMDelay(
                     monthStartDate,
@@ -973,8 +1050,8 @@ namespace ProductionPortal_Solb.Controllers
                 delayData = delayData
                     .Where(x =>
                         !string.IsNullOrWhiteSpace(x.Plant) &&
-                        x.Plant.Trim().Equals(
-                            selectedPlant,
+                        normalizeRollingMillPlant(x.Plant).Equals(
+                            selectedDelayPlant,
                             StringComparison.OrdinalIgnoreCase
                         ))
                     .ToList();
@@ -982,8 +1059,8 @@ namespace ProductionPortal_Solb.Controllers
                 monthlyDelayData = monthlyDelayData
                     .Where(x =>
                         !string.IsNullOrWhiteSpace(x.Plant) &&
-                        x.Plant.Trim().Equals(
-                            selectedPlant,
+                        normalizeRollingMillPlant(x.Plant).Equals(
+                            selectedDelayPlant,
                             StringComparison.OrdinalIgnoreCase
                         ))
                     .ToList();
@@ -1349,6 +1426,529 @@ namespace ProductionPortal_Solb.Controllers
 
             return View(vm);
         }
+
+
+        //public ActionResult ShiftProductionDashboard(
+        //    DateTime? fromdate,
+        //    DateTime? todate,
+        //    string plant,
+        //    string shift)
+        //{
+        //    DateTime fromDate =
+        //        (fromdate ?? DateTime.Today).Date;
+
+        //    DateTime toDate =
+        //        (todate ?? fromDate).Date;
+
+        //    if (fromDate > toDate)
+        //    {
+        //        DateTime tempDate = fromDate;
+        //        fromDate = toDate;
+        //        toDate = tempDate;
+        //    }
+
+        //    string selectedPlant =
+        //        string.IsNullOrWhiteSpace(plant)
+        //            ? string.Empty
+        //            : plant.Trim();
+
+        //    string selectedShift =
+        //        string.IsNullOrWhiteSpace(shift)
+        //            ? string.Empty
+        //            : shift.Trim();
+
+        //    // Utility table mein plant RM1/RM2 format mein hai.
+        //    string utilityPlantName;
+
+        //    if (
+        //        selectedPlant.Equals(
+        //            "Rolling Mill 2",
+        //            StringComparison.OrdinalIgnoreCase
+        //        ) ||
+        //        selectedPlant.Equals(
+        //            "RM2",
+        //            StringComparison.OrdinalIgnoreCase
+        //        )
+        //    )
+        //    {
+        //        utilityPlantName = "RM2";
+        //    }
+        //    else if (
+        //        selectedPlant.Equals(
+        //            "Rolling Mill 1",
+        //            StringComparison.OrdinalIgnoreCase
+        //        ) ||
+        //        selectedPlant.Equals(
+        //            "RM1",
+        //            StringComparison.OrdinalIgnoreCase
+        //        )
+        //    )
+        //    {
+        //        utilityPlantName = "RM1";
+        //    }
+        //    else
+        //    {
+        //        // Plant select na ho to default RM1
+        //        utilityPlantName = "RM1";
+        //    }
+
+        //    string targetMonth = toDate.ToString(
+        //        "MMMM",
+        //        System.Globalization.CultureInfo.InvariantCulture
+        //    );
+
+        //    string targetYear =
+        //        toDate.Year.ToString();
+
+        //    // =====================================================
+        //    // PRODUCTION DATA
+        //    // =====================================================
+
+        //    var dischargedData =
+        //        rm.GetDichargedHeats(
+        //            fromDate,
+        //            toDate,
+        //            selectedPlant,
+        //            selectedShift
+        //        ) ?? new List<BilletDischargingBLL>();
+
+        //    DateTime monthStartDate =
+        //        new DateTime(
+        //            toDate.Year,
+        //            toDate.Month,
+        //            1
+        //        );
+
+        //    var monthlyChartData =
+        //        rm.GetDichargedHeats(
+        //            monthStartDate,
+        //            toDate,
+        //            selectedPlant,
+        //            selectedShift
+        //        ) ?? new List<BilletDischargingBLL>();
+
+        //    // =====================================================
+        //    // DELAY DATA
+        //    // =====================================================
+
+        //    var delayData =
+        //        repo.GetAllRMDelay(
+        //            fromDate,
+        //            toDate,
+        //            selectedShift
+        //        ) ?? new List<PlantDelayBLL>();
+
+        //    // Month-to-date delays: first day of ToDate month through ToDate.
+        //    var monthlyDelayData =
+        //        repo.GetAllRMDelay(
+        //            monthStartDate,
+        //            toDate,
+        //            selectedShift
+        //        ) ?? new List<PlantDelayBLL>();
+
+        //    // =====================================================
+        //    // SAFE PLANT FILTER
+        //    // =====================================================
+
+        //    if (!string.IsNullOrWhiteSpace(selectedPlant))
+        //    {
+        //        dischargedData = dischargedData
+        //            .Where(x =>
+        //                !string.IsNullOrWhiteSpace(x.Plant) &&
+        //                x.Plant.Trim().Equals(
+        //                    selectedPlant,
+        //                    StringComparison.OrdinalIgnoreCase
+        //                ))
+        //            .ToList();
+
+        //        monthlyChartData = monthlyChartData
+        //            .Where(x =>
+        //                !string.IsNullOrWhiteSpace(x.Plant) &&
+        //                x.Plant.Trim().Equals(
+        //                    selectedPlant,
+        //                    StringComparison.OrdinalIgnoreCase
+        //                ))
+        //            .ToList();
+
+        //        delayData = delayData
+        //            .Where(x =>
+        //                !string.IsNullOrWhiteSpace(x.Plant) &&
+        //                x.Plant.Trim().Equals(
+        //                    selectedPlant,
+        //                    StringComparison.OrdinalIgnoreCase
+        //                ))
+        //            .ToList();
+
+        //        monthlyDelayData = monthlyDelayData
+        //            .Where(x =>
+        //                !string.IsNullOrWhiteSpace(x.Plant) &&
+        //                x.Plant.Trim().Equals(
+        //                    selectedPlant,
+        //                    StringComparison.OrdinalIgnoreCase
+        //                ))
+        //            .ToList();
+        //    }
+
+        //    // =====================================================
+        //    // SAFE SHIFT FILTER
+        //    // =====================================================
+
+        //    if (!string.IsNullOrWhiteSpace(selectedShift))
+        //    {
+        //        dischargedData = dischargedData
+        //            .Where(x =>
+        //                !string.IsNullOrWhiteSpace(x.Shift) &&
+        //                x.Shift.Trim().Equals(
+        //                    selectedShift,
+        //                    StringComparison.OrdinalIgnoreCase
+        //                ))
+        //            .ToList();
+
+        //        monthlyChartData = monthlyChartData
+        //            .Where(x =>
+        //                !string.IsNullOrWhiteSpace(x.Shift) &&
+        //                x.Shift.Trim().Equals(
+        //                    selectedShift,
+        //                    StringComparison.OrdinalIgnoreCase
+        //                ))
+        //            .ToList();
+
+        //        delayData = delayData
+        //            .Where(x =>
+        //                !string.IsNullOrWhiteSpace(x.Shift) &&
+        //                x.Shift.Trim().Equals(
+        //                    selectedShift,
+        //                    StringComparison.OrdinalIgnoreCase
+        //                ))
+        //            .ToList();
+
+        //        monthlyDelayData = monthlyDelayData
+        //            .Where(x =>
+        //                !string.IsNullOrWhiteSpace(x.Shift) &&
+        //                x.Shift.Trim().Equals(
+        //                    selectedShift,
+        //                    StringComparison.OrdinalIgnoreCase
+        //                ))
+        //            .ToList();
+        //    }
+
+        //    // =====================================================
+        //    // TOTAL FINISHED PRODUCT
+        //    // =====================================================
+
+        //    decimal totalFinishedProduct =
+        //        dischargedData.Sum(
+        //            x => x.TheoriticalWeight ?? 0
+        //        );
+
+        //    // =====================================================
+        //    // UTILITY DATA
+        //    // =====================================================
+
+        //    var utilityData =
+        //        crepo.GetUtilityDataByDate(
+        //            fromDate,
+        //            toDate,
+        //            utilityPlantName
+        //        ) ?? new PlantConsumptionBLL();
+
+        //    // RM1/RM2 ka fuel FuelConsumption field mein hai.
+        //    decimal totalFuelConsumption =
+        //        utilityData.FuelConsumption ?? 0;
+
+        //    decimal totalElectricityConsumption =
+        //        utilityData.PowerConsumption ?? 0;
+
+        //    decimal totalWaterConsumption =
+        //        utilityData.WaterConsumption ?? 0;
+
+        //    // Formula: Consumption / Total Finished Product
+        //    ViewBag.FuelConsumptionActual =
+        //        totalFinishedProduct > 0
+        //            ? Math.Round(
+        //                totalFuelConsumption /
+        //                totalFinishedProduct,
+        //                3
+        //            )
+        //            : 0;
+
+        //    ViewBag.ElectricityConsumptionActual =
+        //        totalFinishedProduct > 0
+        //            ? Math.Round(
+        //                totalElectricityConsumption /
+        //                totalFinishedProduct,
+        //                3
+        //            )
+        //            : 0;
+
+        //    ViewBag.WaterConsumptionActual =
+        //        totalFinishedProduct > 0
+        //            ? Math.Round(
+        //                totalWaterConsumption /
+        //                totalFinishedProduct,
+        //                3
+        //            )
+        //            : 0;
+
+        //    ViewBag.TotalFuelConsumption =
+        //        totalFuelConsumption;
+
+        //    ViewBag.TotalElectricityConsumption =
+        //        totalElectricityConsumption;
+
+        //    ViewBag.TotalWaterConsumption =
+        //        totalWaterConsumption;
+
+        //    ViewBag.TotalFinishedProduct =
+        //        totalFinishedProduct;
+
+        //    // =====================================================
+        //    // DAILY TARGET
+        //    // =====================================================
+
+        //    decimal productionTarget = 0M;
+
+        //    for (
+        //        DateTime targetDate = fromDate;
+        //        targetDate <= toDate;
+        //        targetDate = targetDate.AddDays(1)
+        //    )
+        //    {
+        //        var dailyTarget =
+        //            dailyTargetRepo.GetByDate(
+        //                targetDate,
+        //                utilityPlantName
+        //            );
+
+        //        if (dailyTarget != null)
+        //        {
+        //            productionTarget +=
+        //                Convert.ToDecimal(
+        //                    dailyTarget.DailyProductionTarget
+        //                );
+        //        }
+        //    }
+
+        //    ViewBag.DailyProductionTarget =
+        //        productionTarget;
+
+        //    var monthlyTarget =
+        //        targetRepo.GetByMonthYear(
+        //            targetMonth,
+        //            targetYear
+        //        ) ?? new RollingMillTargetsBLL();
+
+        //    // =====================================================
+        //    // REPORT HEADER + RANGE SHIFT MINUTES
+        //    // =====================================================
+
+        //    var shiftDetails =
+        //        rm.RollingMillDetails()
+        //            .Where(x =>
+        //                x.Date >= fromDate &&
+        //                x.Date < toDate.AddDays(1) &&
+        //                x.StatusID == 1 &&
+        //                (
+        //                    string.IsNullOrWhiteSpace(selectedPlant) ||
+        //                    (
+        //                        !string.IsNullOrWhiteSpace(x.Plant) &&
+        //                        x.Plant.Trim().Equals(
+        //                            selectedPlant,
+        //                            StringComparison.OrdinalIgnoreCase
+        //                        )
+        //                    )
+        //                ) &&
+        //                (
+        //                    string.IsNullOrWhiteSpace(selectedShift) ||
+        //                    (
+        //                        !string.IsNullOrWhiteSpace(x.Shift) &&
+        //                        x.Shift.Trim().Equals(
+        //                            selectedShift,
+        //                            StringComparison.OrdinalIgnoreCase
+        //                        )
+        //                    )
+        //                )
+        //            )
+        //            .ToList();
+
+        //    Func<string, decimal> getShiftMinutes =
+        //        shiftName =>
+        //        {
+        //            string normalizedShift =
+        //                (shiftName ?? string.Empty).Trim();
+
+        //            if (
+        //                normalizedShift.Equals(
+        //                    "Long Morning",
+        //                    StringComparison.OrdinalIgnoreCase
+        //                ) ||
+        //                normalizedShift.Equals(
+        //                    "Long Night",
+        //                    StringComparison.OrdinalIgnoreCase
+        //                )
+        //            )
+        //            {
+        //                return 720M;
+        //            }
+
+        //            return 480M;
+        //        };
+
+        //    decimal totalShiftMinutes =
+        //        shiftDetails
+        //            .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
+        //            .GroupBy(x => new
+        //            {
+        //                WorkDate = x.Date.Date,
+        //                Plant = (x.Plant ?? string.Empty).Trim().ToUpper(),
+        //                Shift = x.Shift.Trim().ToUpper()
+        //            })
+        //            .Sum(x => getShiftMinutes(x.First().Shift));
+
+        //    // If shift-detail rows are not available, calculate safe minutes
+        //    // from the selected date range so RRR/Productivity never become 0.
+        //    if (totalShiftMinutes <= 0)
+        //    {
+        //        int selectedDays =
+        //            (toDate - fromDate).Days + 1;
+
+        //        totalShiftMinutes =
+        //            string.IsNullOrWhiteSpace(selectedShift)
+        //                ? selectedDays * 1440M
+        //                : selectedDays * getShiftMinutes(selectedShift);
+        //    }
+
+        //    int monthlyDays =
+        //        (toDate - monthStartDate).Days + 1;
+
+        //    decimal monthlyShiftMinutes =
+        //        string.IsNullOrWhiteSpace(selectedShift)
+        //            ? monthlyDays * 1440M
+        //            : monthlyDays * getShiftMinutes(selectedShift);
+
+        //    var reportPlants =
+        //        dischargedData
+        //            .Where(x => !string.IsNullOrWhiteSpace(x.Plant))
+        //            .Select(x => x.Plant.Trim())
+        //            .Concat(
+        //                delayData
+        //                    .Where(x => !string.IsNullOrWhiteSpace(x.Plant))
+        //                    .Select(x => x.Plant.Trim())
+        //            )
+        //            .Distinct(StringComparer.OrdinalIgnoreCase)
+        //            .ToList();
+
+        //    var reportShifts =
+        //        dischargedData
+        //            .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
+        //            .Select(x => x.Shift.Trim())
+        //            .Concat(
+        //                delayData
+        //                    .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
+        //                    .Select(x => x.Shift.Trim())
+        //            )
+        //            .Concat(
+        //                shiftDetails
+        //                    .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
+        //                    .Select(x => x.Shift.Trim())
+        //            )
+        //            .Distinct(StringComparer.OrdinalIgnoreCase)
+        //            .ToList();
+
+        //    var reportTeams =
+        //        shiftDetails
+        //            .Where(x => !string.IsNullOrWhiteSpace(x.Team))
+        //            .Select(x => x.Team.Trim())
+        //            .Distinct(StringComparer.OrdinalIgnoreCase)
+        //            .ToList();
+
+        //    var reportShiftIncharges =
+        //        shiftDetails
+        //            .Where(x => !string.IsNullOrWhiteSpace(x.ShiftIncharge))
+        //            .Select(x => x.ShiftIncharge.Trim())
+        //            .Distinct(StringComparer.OrdinalIgnoreCase)
+        //            .ToList();
+
+        //    var vm =
+        //        new ShiftProductionReportVM
+        //        {
+        //            Delays = delayData,
+        //            DischargedHeats = dischargedData,
+        //            MonthlyProductionData = monthlyChartData,
+        //            MonthlyDelayData = monthlyDelayData,
+        //            RollingMillTarget = monthlyTarget
+        //        };
+
+        //    ViewBag.FromDate =
+        //        fromDate.ToString("yyyy-MM-dd");
+
+        //    ViewBag.ToDate =
+        //        toDate.ToString("yyyy-MM-dd");
+
+        //    ViewBag.SelectedPlant =
+        //        selectedPlant;
+
+        //    ViewBag.SelectedShift =
+        //        selectedShift;
+
+        //    ViewBag.From = fromDate;
+
+        //    ViewBag.To = toDate;
+
+        //    ViewBag.ReportDate =
+        //        fromDate == toDate
+        //            ? fromDate.ToString("dd/MM/yyyy")
+        //            : fromDate.ToString("dd/MM/yyyy") +
+        //              " - " +
+        //              toDate.ToString("dd/MM/yyyy");
+
+        //    ViewBag.ReportPlant =
+        //        !string.IsNullOrWhiteSpace(selectedPlant)
+        //            ? selectedPlant
+        //            : reportPlants.Any()
+        //                ? string.Join(", ", reportPlants)
+        //                : "All";
+
+        //    ViewBag.ReportShift =
+        //        !string.IsNullOrWhiteSpace(selectedShift)
+        //            ? selectedShift
+        //            : reportShifts.Any()
+        //                ? string.Join(", ", reportShifts)
+        //                : "All";
+
+        //    ViewBag.ReportTeam =
+        //        reportTeams.Any()
+        //            ? string.Join(", ", reportTeams)
+        //            : "-";
+
+        //    ViewBag.ReportShiftIncharge =
+        //        reportShiftIncharges.Any()
+        //            ? string.Join(", ", reportShiftIncharges)
+        //            : "-";
+
+        //    ViewBag.TotalShiftMinutes =
+        //        totalShiftMinutes;
+
+        //    ViewBag.MonthlyShiftMinutes =
+        //        monthlyShiftMinutes;
+
+        //    ViewBag.MonthlyDelayFromDate =
+        //        monthStartDate;
+
+        //    ViewBag.MonthlyDelayToDate =
+        //        toDate;
+
+        //    ViewBag.UtilityPlant =
+        //        utilityPlantName;
+
+        //    ViewBag.TargetMonth =
+        //        targetMonth;
+
+        //    ViewBag.TargetYear =
+        //        targetYear;
+
+        //    return View(vm);
+        //}
 
         public ActionResult SupplyChainPrint(DateTime? from, DateTime? to)
         {

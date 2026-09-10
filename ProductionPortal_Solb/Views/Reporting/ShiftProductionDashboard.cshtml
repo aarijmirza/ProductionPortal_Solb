@@ -18,10 +18,9 @@
 
     // =========================================================
     // DOWNTIME OPERATIONAL DAY RULE
-    // Operational day starts at 07:00 AM (Morning / Long Morning).
-    // Example:
-    // 31-Aug operational downtime = 31-Aug 07:00 to 01-Sep 06:59:59.
-    // Any delay before 07:00 belongs to the PREVIOUS operational day.
+    // PlantDelay.Date already represents the operational/report date.
+    // Do not change that date in the View. StartTime is used only to
+    // order rows from 07:00 through 06:59.
     // =========================================================
 
     var rawDelays = Model != null && Model.Delays != null
@@ -74,7 +73,7 @@
         return null;
     };
 
-    // Converts physical delay date/time to its 07:00-based operational date.
+    // Use the stored operational/report date exactly as returned.
     Func<DAL.Models.PlantDelayBLL, DateTime?> GetDowntimeOperationalDate = delay =>
     {
         if (delay == null || !delay.Date.HasValue)
@@ -82,23 +81,10 @@
             return null;
         }
 
-        DateTime physicalDate = delay.Date.Value.Date;
-        TimeSpan? startTime = ParseDelayTime(delay.StartTime);
-
-        // If StartTime is unavailable, keep the record on its stored date
-        // instead of dropping it from the dashboard.
-        if (!startTime.HasValue)
-        {
-            return physicalDate;
-        }
-
-        return startTime.Value < downtimeDayStart
-            ? physicalDate.AddDays(-1)
-            : physicalDate;
+        return delay.Date.Value.Date;
     };
 
-    // Sort time inside each operational day.
-    // 07:00 = first minute of the day, 06:59 = last minute of the day.
+    // Sort each operational day from 07:00 through next-day 06:59.
     Func<DAL.Models.PlantDelayBLL, int> GetDowntimeOperationalTimeOrder = delay =>
     {
         if (delay == null)
@@ -190,8 +176,7 @@
         downtimeToDate = tempDate;
     }
 
-    // Main report downtime:
-    // only operational dates inside selected From/To range are included.
+    // Main report downtime: filter strictly by PlantDelay.Date.
     var delays = rawDelays
         .Where(x =>
         {
@@ -206,16 +191,12 @@
             return operationalDate.Value.Date >= downtimeFromDate.Date
                 && operationalDate.Value.Date <= downtimeToDate.Date;
         })
-        // IMPORTANT:
-        // Every report date starts from 07:00 AM.
-        // Example for 31-Aug:
-        // 31-Aug 07:00 ... 23:59, then 01-Sep 00:00 ... 06:59.
         .OrderBy(x => GetDowntimeOperationalDate(x) ?? DateTime.MaxValue)
         .ThenBy(x => GetDowntimeOperationalTimeOrder(x))
         .ThenBy(x => Convert.ToString(x.EndTime))
         .ToList();
 
-    // Monthly accumulated downtime also follows 07:00-to-07:00 operational days.
+    // Monthly accumulated downtime also filters by PlantDelay.Date.
     DateTime monthlyDowntimeFromDate =
         new DateTime(downtimeToDate.Year, downtimeToDate.Month, 1);
 
@@ -2258,7 +2239,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>
                 Downtime Details
-                <small class="text-muted ml-2">Operational day: 07:00 AM to next day 07:00 AM</small>
+                <small class="text-muted ml-2">Operational day: 07:00 AM to next day 06:59 AM</small>
             </span>
 
             <button type="button"
@@ -2326,7 +2307,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="9"
+                                <td colspan="11"
                                     class="text-center text-muted">
                                     No downtime found.
                                 </td>
@@ -2336,12 +2317,12 @@
 
                     <tfoot>
                         <tr class="font-weight-bold">
-                            <td colspan="3" class="text-right">
+                            <td colspan="5" class="text-right">
                                 Total
                             </td>
 
                             <td>@totalDelayDuration</td>
-                            <td colspan="5"></td>
+                            <td colspan="7"></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -2368,6 +2349,7 @@
                             <th>Seq.</th>
                             <th>Heat No</th>
                             <th>Grade</th>
+                            <th>Profile</th>
                             <th>Size</th>
                             <th>Billet Discharge</th>
                             <th>Billet Rolled</th>
@@ -2400,6 +2382,7 @@
                                     <td>@item.DischargingSequence</td>
                                     <td>@item.HeatNo</td>
                                     <td>@item.SteelGrade</td>
+                                    <td>@item.Profile</td>
                                     <td>@item.Size</td>
                                     <td>@item.TotalBillet</td>
                                     <td>@item.TotalBillet</td>

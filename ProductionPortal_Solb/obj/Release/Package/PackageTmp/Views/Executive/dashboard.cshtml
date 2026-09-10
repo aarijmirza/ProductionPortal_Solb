@@ -28,6 +28,7 @@
     decimal dataQualityScore = Math.Max(0m, Math.Min(100m, summary.DataQualityScore));
 
     decimal selectedTotal = selectedProduction.Total;
+    decimal rollingMillSelectedTotal = selectedProduction.RM1 + selectedProduction.RM2;
     decimal mtdTotal = mtdProduction.Total;
     decimal ytdTotal = ytdProduction.Total;
 
@@ -48,6 +49,17 @@
     string reportPeriod = dashboard.FromDate == dashboard.ToDate
         ? dashboard.ToDate.ToString("dd MMM yyyy")
         : dashboard.FromDate.ToString("dd MMM") + " - " + dashboard.ToDate.ToString("dd MMM yyyy");
+
+    int reportFilterBaseYear =
+        dashboard.ToDate.Year >= 2000
+            ? dashboard.ToDate.Year
+            : DateTime.Today.Year;
+
+    int reportFilterStartYear =
+        Math.Min(reportFilterBaseYear, DateTime.Today.Year) - 7;
+
+    int reportFilterEndYear =
+        Math.Max(reportFilterBaseYear, DateTime.Today.Year) + 2;
 
     Func<decimal, string> number0 = value => value.ToString("N0");
     Func<decimal, string> number1 = value => value.ToString("N1");
@@ -289,7 +301,8 @@
             text-transform: uppercase;
         }
 
-        .header-filter input {
+        .header-filter input,
+        .header-filter select {
             width: 125px;
             height: 34px;
             margin-top: 3px;
@@ -300,6 +313,28 @@
             color: #263142;
             font-size: 11px;
             font-weight: 700;
+        }
+
+        .header-filter select {
+            min-width: 112px;
+            cursor: pointer;
+        }
+
+        .header-filter .period-type-select {
+            min-width: 118px;
+        }
+
+        .header-filter .month-select {
+            min-width: 105px;
+        }
+
+        .header-filter .year-select {
+            width: 88px;
+            min-width: 88px;
+        }
+
+        .header-filter .filter-field[hidden] {
+            display: none !important;
         }
 
     .filter-btn {
@@ -410,7 +445,7 @@
 
     .executive-kpis {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
         margin-top: 14px;
     }
@@ -1463,7 +1498,7 @@
 
     @@media (max-width: 1450px) {
         .executive-kpis {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
         .department-grid {
@@ -1532,7 +1567,8 @@
             flex: 1 1 130px;
         }
 
-        .header-filter input {
+        .header-filter input,
+        .header-filter select {
             width: 100%;
         }
 
@@ -1640,7 +1676,7 @@
         }
 
         .executive-kpis {
-            grid-template-columns: repeat(8, 1fr) !important;
+            grid-template-columns: repeat(9, 1fr) !important;
             gap: 5px !important;
             margin-top: 7px !important;
         }
@@ -1914,16 +1950,75 @@
             </div>
 
             <div class="toolbar-actions">
-                @using (Html.BeginForm("dashboard", null, FormMethod.Get, new { @class = "header-filter" }))
+                @using (Html.BeginForm("dashboard", null, FormMethod.Get, new
                 {
-                    <div>
+                    @class = "header-filter",
+                    id = "executivePeriodFilter"
+                }))
+                {
+                    <div class="filter-field">
+                        <label for="periodType">Report period</label>
+                        <select id="periodType"
+                                name="periodType"
+                                class="period-type-select">
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                            <option value="custom" selected>Custom dates</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-field"
+                         id="weekDateField"
+                         hidden>
+                        <label for="weekDate">Week containing</label>
+                        <input id="weekDate"
+                               name="weekDate"
+                               type="date"
+                               value="@dashboard.ToDate.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div class="filter-field"
+                         id="reportMonthField"
+                         hidden>
+                        <label for="reportMonth">Month</label>
+                        <select id="reportMonth"
+                                name="reportMonth"
+                                class="month-select">
+                            @for (int monthNumber = 1; monthNumber <= 12; monthNumber++)
+                            {
+                                <option value="@monthNumber">
+                                    @(new DateTime(2000, monthNumber, 1).ToString("MMM"))
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="filter-field"
+                         id="reportYearField"
+                         hidden>
+                        <label for="reportYear">Year</label>
+                        <select id="reportYear"
+                                name="reportYear"
+                                class="year-select">
+                            @for (int reportYear = reportFilterEndYear; reportYear >= reportFilterStartYear; reportYear--)
+                            {
+                                <option value="@reportYear">@reportYear</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="filter-field"
+                         id="customFromDateField">
                         <label for="fromDate">From date</label>
                         <input id="fromDate"
                                name="fromDate"
                                type="date"
                                value="@dashboard.FromDate.ToString("yyyy-MM-dd")" />
                     </div>
-                    <div>
+
+                    <div class="filter-field"
+                         id="customToDateField">
                         <label for="toDate">To date</label>
                         <input id="toDate"
                                name="toDate"
@@ -1949,16 +2044,31 @@
 
             <div class="executive-kpi info">
                 <div class="kpi-top">
-                    <div class="kpi-label">Selected Production</div>
+                    <div class="kpi-label">SMP Selected Production</div>
                     <div class="kpi-icon">
                         <i class="fa-solid fa-industry"></i>
                     </div>
                 </div>
 
-                <div class="kpi-value">@number0(selectedTotal) MT</div>
-                <div class="kpi-subtitle">Combined selected-period production</div>
+                <div class="kpi-value">@number0(selectedProduction.SMP) MT</div>
+                <div class="kpi-subtitle">Steel Making Plant production</div>
                 <div class="kpi-status info">
-                    SMP @number0(selectedProduction.SMP) • RM1 @number0(selectedProduction.RM1) • RM2 @number0(selectedProduction.RM2)
+                    Selected period: @reportPeriod
+                </div>
+            </div>
+
+            <div class="executive-kpi info">
+                <div class="kpi-top">
+                    <div class="kpi-label">Rolling Mills Selected Production</div>
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-gears"></i>
+                    </div>
+                </div>
+
+                <div class="kpi-value">@number0(rollingMillSelectedTotal) MT</div>
+                <div class="kpi-subtitle">RM1 + RM2 selected-period production</div>
+                <div class="kpi-status info">
+                    RM1 @number0(selectedProduction.RM1) MT • RM2 @number0(selectedProduction.RM2) MT
                 </div>
             </div>
 
@@ -2630,6 +2740,188 @@
 </div>
 
 <script>
+    (function initialiseExecutivePeriodFilter() {
+        const form = document.getElementById("executivePeriodFilter");
+
+        if (!form) {
+            return;
+        }
+
+        const periodType = document.getElementById("periodType");
+        const weekDate = document.getElementById("weekDate");
+        const reportMonth = document.getElementById("reportMonth");
+        const reportYear = document.getElementById("reportYear");
+        const fromDate = document.getElementById("fromDate");
+        const toDate = document.getElementById("toDate");
+
+        const weekDateField = document.getElementById("weekDateField");
+        const reportMonthField = document.getElementById("reportMonthField");
+        const reportYearField = document.getElementById("reportYearField");
+        const customFromDateField = document.getElementById("customFromDateField");
+        const customToDateField = document.getElementById("customToDateField");
+
+        const query = new URLSearchParams(window.location.search);
+        const allowedPeriodTypes = ["weekly", "monthly", "yearly", "custom"];
+        const requestedPeriodType = (query.get("periodType") || "custom").toLowerCase();
+
+        periodType.value = allowedPeriodTypes.indexOf(requestedPeriodType) >= 0
+            ? requestedPeriodType
+            : "custom";
+
+        const initialToDate = parseLocalDate(toDate.value) || new Date();
+        const requestedMonth = parseInt(query.get("reportMonth"), 10);
+        const requestedYear = parseInt(query.get("reportYear"), 10);
+
+        reportMonth.value = String(
+            requestedMonth >= 1 && requestedMonth <= 12
+                ? requestedMonth
+                : initialToDate.getMonth() + 1
+        );
+
+        const yearOptionExists = Array.prototype.some.call(
+            reportYear.options,
+            function (option) {
+                return Number(option.value) === requestedYear;
+            }
+        );
+
+        reportYear.value = String(
+            yearOptionExists
+                ? requestedYear
+                : initialToDate.getFullYear()
+        );
+
+        const requestedWeekDate = query.get("weekDate");
+
+        if (requestedWeekDate && parseLocalDate(requestedWeekDate)) {
+            weekDate.value = requestedWeekDate;
+        }
+
+        function parseLocalDate(value) {
+            const parts = String(value || "").split("-");
+
+            if (parts.length !== 3) {
+                return null;
+            }
+
+            const year = Number(parts[0]);
+            const month = Number(parts[1]);
+            const day = Number(parts[2]);
+            const result = new Date(year, month - 1, day);
+
+            return result.getFullYear() === year &&
+                   result.getMonth() === month - 1 &&
+                   result.getDate() === day
+                ? result
+                : null;
+        }
+
+        function formatLocalDate(value) {
+            const year = value.getFullYear();
+            const month = String(value.getMonth() + 1).padStart(2, "0");
+            const day = String(value.getDate()).padStart(2, "0");
+
+            return year + "-" + month + "-" + day;
+        }
+
+        function showField(field, show) {
+            if (field) {
+                field.hidden = !show;
+            }
+        }
+
+        function refreshPeriodFields() {
+            const type = periodType.value;
+
+            showField(weekDateField, type === "weekly");
+            showField(reportMonthField, type === "monthly");
+            showField(reportYearField, type === "monthly" || type === "yearly");
+            showField(customFromDateField, type === "custom");
+            showField(customToDateField, type === "custom");
+        }
+
+        function setWeeklyRange() {
+            const selectedDate = parseLocalDate(weekDate.value);
+
+            if (!selectedDate) {
+                throw new Error("Please select a valid week date.");
+            }
+
+            // SOLB reporting week: Sunday through Saturday.
+            const weekStart = new Date(
+                selectedDate.getFullYear(),
+                selectedDate.getMonth(),
+                selectedDate.getDate() - selectedDate.getDay()
+            );
+
+            const weekEnd = new Date(
+                weekStart.getFullYear(),
+                weekStart.getMonth(),
+                weekStart.getDate() + 6
+            );
+
+            fromDate.value = formatLocalDate(weekStart);
+            toDate.value = formatLocalDate(weekEnd);
+        }
+
+        function setMonthlyRange() {
+            const year = Number(reportYear.value);
+            const month = Number(reportMonth.value);
+
+            if (!year || month < 1 || month > 12) {
+                throw new Error("Please select a valid month and year.");
+            }
+
+            fromDate.value = formatLocalDate(new Date(year, month - 1, 1));
+            toDate.value = formatLocalDate(new Date(year, month, 0));
+        }
+
+        function setYearlyRange() {
+            const year = Number(reportYear.value);
+
+            if (!year) {
+                throw new Error("Please select a valid year.");
+            }
+
+            fromDate.value = formatLocalDate(new Date(year, 0, 1));
+            toDate.value = formatLocalDate(new Date(year, 11, 31));
+        }
+
+        periodType.addEventListener("change", refreshPeriodFields);
+
+        form.addEventListener("submit", function (event) {
+            try {
+                if (periodType.value === "weekly") {
+                    setWeeklyRange();
+                }
+                else if (periodType.value === "monthly") {
+                    setMonthlyRange();
+                }
+                else if (periodType.value === "yearly") {
+                    setYearlyRange();
+                }
+                else {
+                    const customFrom = parseLocalDate(fromDate.value);
+                    const customTo = parseLocalDate(toDate.value);
+
+                    if (!customFrom || !customTo) {
+                        throw new Error("Please select valid From and To dates.");
+                    }
+
+                    if (customFrom > customTo) {
+                        throw new Error("From date cannot be after To date.");
+                    }
+                }
+            }
+            catch (error) {
+                event.preventDefault();
+                alert(error.message || "Invalid reporting period.");
+            }
+        });
+
+        refreshPeriodFields();
+    })();
+
     Chart.defaults.font.family = "Segoe UI, Arial, sans-serif";
     Chart.defaults.color = "#344054";
 

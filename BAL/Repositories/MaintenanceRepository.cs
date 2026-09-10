@@ -396,6 +396,69 @@ namespace BAL.Repositories
         }
 
 
+        // =============================================================
+        // DAILY PRODUCTION ONLY
+        // Executes the existing dashboard SP with one date and reads only
+        // its first result set. No selected-period accumulation is returned.
+        // =============================================================
+        public ProductionSummaryVM GetDailyProduction(
+            DateTime productionDate)
+        {
+            productionDate =
+                productionDate.Date;
+
+            using (
+                SqlConnection connection =
+                    new SqlConnection(
+                        connectionString
+                    )
+            )
+            using (
+                SqlCommand command =
+                    new SqlCommand(
+                        "dbo.sp_GetCMDPerformanceDashboard",
+                        connection
+                    )
+            )
+            {
+                command.CommandType =
+                    CommandType.StoredProcedure;
+
+                command.CommandTimeout =
+                    120;
+
+                command.Parameters.Add(
+                    "@FromDate",
+                    SqlDbType.Date
+                ).Value = productionDate;
+
+                command.Parameters.Add(
+                    "@ToDate",
+                    SqlDbType.Date
+                ).Value = productionDate;
+
+                connection.Open();
+
+                using (
+                    SqlDataReader reader =
+                        command.ExecuteReader(
+                            CommandBehavior.SingleResult
+                        )
+                )
+                {
+                    if (reader.Read())
+                    {
+                        return ReadProductionSummary(
+                            reader
+                        );
+                    }
+                }
+            }
+
+            return new ProductionSummaryVM();
+        }
+
+
         private ProductionSummaryVM ReadProductionSummary(
             SqlDataReader reader)
         {

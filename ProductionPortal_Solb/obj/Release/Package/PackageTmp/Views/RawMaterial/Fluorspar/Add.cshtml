@@ -1,0 +1,321 @@
+﻿@model DAL.Models.QCFluorsparReportBLL
+@using System.Collections.Generic
+@using System.Globalization
+@{
+    bool isEdit = Model != null && Model.ID > 0;
+    ViewBag.Title = isEdit ? "Edit Fluorspar Analysis Report" : "Add Fluorspar Analysis Report";
+    var samples = Model != null && Model.Samples != null && Model.Samples.Count > 0 ? Model.Samples : new List
+    <DAL.Models.QCFluorsparSampleBLL> { new DAL.Models.QCFluorsparSampleBLL { SrNo = 1 } };
+}
+<style>
+    .fa-card {
+        background: #fff;
+        border: 1px solid #e3e7eb;
+        border-radius: 8px;
+        margin-bottom: 18px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+        overflow: hidden
+    }
+
+    .fa-card-head {
+        padding: 13px 16px;
+        font-weight: 700;
+        background: #f7f9fc;
+        border-bottom: 1px solid #e3e7eb
+    }
+
+    .fa-card-body {
+        padding: 16px
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #546e7a
+    }
+
+    .sample-box {
+        border: 1px solid #dfe5eb;
+        border-radius: 7px;
+        padding: 14px;
+        margin-bottom: 14px;
+        background: #fbfcfd
+    }
+
+    .sample-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px
+    }
+
+    .btn-brand {
+        background: #b51045;
+        border-color: #b51045;
+        color: #fff
+    }
+
+        .btn-brand:hover {
+            background: #94103a;
+            color: #fff
+        }
+
+    .avg-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(110px, 1fr));
+        gap: 8px
+    }
+
+    .avg-item {
+        text-align: center;
+        padding: 8px;
+        background: #f3f7fa;
+        border: 1px solid #dce5ec;
+        border-radius: 5px
+    }
+
+    .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px
+    }
+
+    @@media(max-width:767px) {
+        .avg-grid {
+            grid-template-columns: repeat(2, minmax(100px, 1fr))
+        }
+
+        .actions {
+            flex-direction: column-reverse
+        }
+
+            .actions .btn {
+                width: 100%
+            }
+    }
+</style>
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6">
+            <h4 class="xp-page-title">@(isEdit?"Edit Fluorspar Analysis Report":"Add Fluorspar Analysis Report")</h4>
+        </div>
+        <div class="col-md-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Fluorspar")">Fluorspar</a></li>
+                    <li class="breadcrumb-item active">@(isEdit?"Edit":"Add")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="xp-contentbar">
+    <div class="text-muted mb-3">QCF-AR-06</div> @using (Html.BeginForm("Add", "Fluorspar", FormMethod.Post, new { id = "fluorsparForm", autocomplete = "off" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ID)
+        //@Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
+        <div class="fa-card">
+            <div class="fa-card-head">Report Information</div>
+            <div class="fa-card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-md-4">
+                        <div class="form-group">
+                            <label>Supplier</label>@Html.TextBoxFor(m => m.Supplier, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" step="0.001" class="form-control" name="Quantity" value="@(Model!=null&&Model.Quantity.HasValue?Model.Quantity.Value.ToString("0.###", CultureInfo.InvariantCulture):"")" />
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4">
+                        <div class="form-group">
+                            <label>Shipment Code No.</label>@Html.TextBoxFor(m => m.ShipmentCodeNo, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <div class="form-group">
+                            <label>Receiving Date</label>
+                            <input type="date" class="form-control" name="ReceivingDate" value="@(Model!=null&&Model.ReceivingDate.HasValue?Model.ReceivingDate.Value.ToString("yyyy-MM-dd"):"")" />
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <div class="form-group">
+                            <label>Analysis Date *</label>
+                            <input type="date" class="form-control" name="AnalysisDate" required value="@(Model!=null&&Model.AnalysisDate.HasValue?Model.AnalysisDate.Value.ToString("yyyy-MM-dd"):"")" />
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4">
+                        <div class="form-group">
+                            <label>Material *</label>@Html.TextBoxFor(m => m.Material, new { @class = "form-control", required = "required" })
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4">
+                        <div class="form-group">
+                            <label>Reference No.</label>@Html.TextBoxFor(m => m.ReferenceNo, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <div class="form-group">
+                            <label>Delivery PO</label>@Html.TextBoxFor(m => m.DeliveryPO, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <div class="form-group">
+                            <label>Lot Size</label>@Html.TextBoxFor(m => m.LotSize, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <div class="form-group">
+                            <label>Certificate No.</label>@Html.TextBoxFor(m => m.CertificateNo, new { @class = "form-control" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fa-card">
+            <div class="fa-card-head">Sample Analysis</div>
+            <div class="fa-card-body">
+                <div id="sampleContainer">
+                    @for (int i = 0; i
+< samples.Count; i++)
+                    {
+                        var s = samples[i];<div class="sample-box sample-row">
+                            <div class="sample-head">
+                                <strong>Sample <span class="sample-number">@(i+1)</span></strong>
+                                <button type="button" class="btn btn-danger btn-sm remove-row">Remove</button>
+                            </div>
+                            <input type="hidden" name="Samples[@i].ID" value="@s.ID" />
+                            <div class="row">
+                                <div class="col-lg-2 col-md-4">
+                                    <div class="form-group">
+                                        <label>Sample No.</label>
+                                        <input type="text" class="form-control" name="Samples[@i].SampleNo" value="@s.SampleNo" />
+                                    </div>
+                                </div> @foreach (var f in new[] { "CaF2", "SiO2", "P", "S", "Fe2O3", "Al2O3", "Na2O", "K2O", "BaO", "Pb" })
+                                {
+                                    decimal? val = null; switch (f) { case "CaF2": val = s.CaF2; break; case "SiO2": val = s.SiO2; break; case "P": val = s.P; break; case "S": val = s.S; break; case "Fe2O3": val = s.Fe2O3; break; case "Al2O3": val = s.Al2O3; break; case "Na2O": val = s.Na2O; break; case "K2O": val = s.K2O; break; case "BaO": val = s.BaO; break; case "Pb": val = s.Pb; break; }
+                                    <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6">
+                                        <div class="form-group">
+                                            <label>@f %</label>
+                                            <input type="number" step="0.0001" class="form-control chemistry" data-field="@f" name="Samples[@i].@f" value="@(val.HasValue?val.Value.ToString("0.####", CultureInfo.InvariantCulture):"")" />
+                                        </div>
+                                    </div>}
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="form-group">
+                                        <label>Comment</label>
+                                        <input type="text" class="form-control" name="Samples[@i].Comment" value="@s.Comment" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>}
+                </div>
+                <button type="button" id="addRow" class="btn btn-brand">+ Add Row</button>
+                <div class="avg-grid mt-3">
+                    @foreach (var f in new[] { "CaF2", "SiO2", "P", "S", "Fe2O3", "Al2O3", "Na2O", "K2O", "BaO", "Pb" })
+                    {
+                        <div class="avg-item"><strong>@f %</strong><span id="avg@f">-</span></div>}
+                </div>
+            </div>
+        </div>
+        <div class="fa-card">
+            <div class="fa-card-head">Disposition / Remarks</div>
+            <div class="fa-card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Final Status</label>@Html.DropDownListFor(m => m.FinalStatus, new SelectList(new[] { "Accepted", "MRB" }, Model != null ? Model.FinalStatus : "Accepted"), "-- Select --", new { @class = "form-control", id = "FinalStatus" })
+                        </div>
+                    </div>
+                    <div class="col-md-3" id="mrbBox">
+                        <div class="form-group">
+                            <label>MRB No.</label>@Html.TextBoxFor(m => m.MRBNo, new { @class = "form-control" })
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Remarks</label>@Html.TextAreaFor(m => m.Remarks, 3, 120, new { @class = "form-control" })
+                </div>
+                <div class="form-group">
+                    <label>Comments</label>@Html.TextAreaFor(m => m.Comments, 4, 120, new { @class = "form-control" })
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <a href="@Url.Action("Index", "Fluorspar")" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-brand">@(isEdit?"Update":"Save")</button>
+        </div>  }
+</div>
+<script>
+    (function () {
+        var c = document.getElementById('sampleContainer'),
+            add = document.getElementById('addRow'),
+            fields = ['CaF2', 'SiO2', 'P', 'S', 'Fe2O3', 'Al2O3', 'Na2O', 'K2O', 'BaO', 'Pb'];
+
+        function cf(i, n) {
+            return '<div class="col-lg-1 col-md-2 col-sm-3 col-xs-6"><div class="form-group"><label>' + n + ' %</label><input type="number" step="0.0001" class="form-control chemistry" data-field="' + n + '" name="Samples[' + i + '].' + n + '" /></div></div>';
+        }
+
+        function row(i) {
+            return '<div class="sample-box sample-row"><div class="sample-head"><strong>Sample <span class="sample-number">' + (i + 1) + '</span></strong><button type="button" class="btn btn-danger btn-sm remove-row">Remove</button></div><input type="hidden" name="Samples[' + i + '].ID" value="0"/><div class="row"><div class="col-lg-2 col-md-4"><div class="form-group"><label>Sample No.</label><input type="text" class="form-control" name="Samples[' + i + '].SampleNo"/></div></div>' + fields.map(function (f) {
+                return cf(i, f)
+            }).join('') + '<div class="col-lg-3 col-md-6"><div class="form-group"><label>Comment</label><input type="text" class="form-control" name="Samples[' + i + '].Comment"/></div></div></div></div>';
+        }
+
+        function avg() {
+            fields.forEach(function (f) {
+                var ins = c.querySelectorAll('.chemistry[data-field="' + f + '"]'),
+                    t = 0,
+                    n = 0;
+                for (var i = 0; i < ins.length; i++) {
+                    var v = parseFloat(ins[i].value);
+                    if (!isNaN(v)) {
+                        t += v;
+                        n++;
+                    }
+                }
+                document.getElementById('avg' + f).innerText = n ? (t / n).toFixed(4) : '-';
+            });
+        }
+
+        function re() {
+            var rows = c.querySelectorAll('.sample-row');
+            for (var i = 0; i < rows.length; i++) {
+                rows[i].querySelector('.sample-number').innerText = i + 1;
+                var els = rows[i].querySelectorAll('input,select,textarea');
+                for (var j = 0; j < els.length; j++) {
+                    var n = els[j].getAttribute('name');
+                    if (n) els[j].setAttribute('name', n.replace(/Samples\[\d+\]/, 'Samples[' + i + ']'));
+                }
+            }
+            avg();
+        }
+        add.addEventListener('click', function () {
+            c.insertAdjacentHTML('beforeend', row(c.querySelectorAll('.sample-row').length));
+        });
+        c.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-row')) {
+                if (c.querySelectorAll('.sample-row').length <= 1) {
+                    alert('At least one sample row is required.');
+                    return;
+                }
+                e.target.closest('.sample-row').remove();
+                re();
+            }
+        });
+        c.addEventListener('input', function (e) {
+            if (e.target.classList.contains('chemistry')) avg();
+        });
+        var st = document.getElementById('FinalStatus'),
+            mb = document.getElementById('mrbBox');
+
+        function tm() {
+            mb.style.display = st.value === 'MRB' ? '' : 'none';
+        }
+        st.addEventListener('change', tm);
+        tm();
+        avg();
+    })();
+</script>

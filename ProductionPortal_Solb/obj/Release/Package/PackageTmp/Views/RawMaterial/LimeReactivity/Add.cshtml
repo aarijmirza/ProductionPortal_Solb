@@ -1,0 +1,936 @@
+﻿@model DAL.Models.QCLimeReactivityReportBLL
+@using System
+@using System.Collections.Generic
+@using System.Globalization
+
+@{
+    var isEdit = Model != null && Model.ID > 0;
+    ViewBag.Title = isEdit ? "Edit Lime Reactivity Report" : "Add Lime Reactivity Report";
+
+    var samples = (Model != null && Model.Samples != null && Model.Samples.Count > 0)
+        ? Model.Samples
+        : new List<DAL.Models.QCLimeReactivitySampleBLL>
+        {
+            new DAL.Models.QCLimeReactivitySampleBLL { SrNo = 1 }
+                        };
+}
+
+<style>
+    .lime-page {
+        padding: 18px 10px 30px;
+    }
+
+    .lime-header {
+        margin-bottom: 18px;
+    }
+
+        .lime-header h3 {
+            margin: 0 0 4px;
+            font-weight: 700;
+            color: #263238;
+        }
+
+    .lime-code {
+        color: #78909c;
+        font-size: 13px;
+    }
+
+    .lime-card {
+        background: #fff;
+        border: 1px solid #e5e9ef;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+        margin-bottom: 18px;
+        overflow: hidden;
+    }
+
+    .lime-card-header {
+        padding: 13px 16px;
+        background: #f7f9fc;
+        border-bottom: 1px solid #e5e9ef;
+        font-weight: 700;
+        color: #37474f;
+    }
+
+    .lime-card-body {
+        padding: 16px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #546e7a;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        height: 38px;
+        border-radius: 5px;
+        border-color: #dce2e8;
+        box-shadow: none;
+    }
+
+    textarea.form-control {
+        height: auto;
+        min-height: 95px;
+        resize: vertical;
+    }
+
+    .form-control:focus {
+        border-color: #b51045;
+        box-shadow: 0 0 0 2px rgba(181,16,69,.08);
+    }
+
+    .sample-card {
+        border: 1px solid #dfe5eb;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .sample-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 11px 14px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e5e9ef;
+    }
+
+    .sample-title {
+        font-weight: 700;
+        color: #37474f;
+        margin: 0;
+    }
+
+    .sample-card-body {
+        padding: 15px 14px 4px;
+    }
+
+    .section-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #607d8b;
+        text-transform: uppercase;
+        letter-spacing: .35px;
+        margin: 4px 0 11px;
+        padding-bottom: 7px;
+        border-bottom: 1px solid #edf0f3;
+    }
+
+    .temperature-box {
+        background: #f9fbfd;
+        border: 1px solid #e5e9ef;
+        border-radius: 7px;
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    .temperature-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(105px, 1fr));
+        gap: 10px;
+    }
+
+    .temp-field label {
+        display: block;
+        text-align: center;
+        font-size: 12px;
+        color: #607d8b;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .temp-field .form-control {
+        text-align: center;
+    }
+
+    .btn-brand {
+        background: #b51045;
+        border-color: #b51045;
+        color: #fff;
+    }
+
+        .btn-brand:hover,
+        .btn-brand:focus {
+            background: #94103a;
+            border-color: #94103a;
+            color: #fff;
+        }
+
+    .btn-outline-danger {
+        background: #fff;
+        border: 1px solid #d9534f;
+        color: #d9534f;
+    }
+
+        .btn-outline-danger:hover,
+        .btn-outline-danger:focus {
+            background: #d9534f;
+            color: #fff;
+        }
+
+    .add-row-wrap {
+        display: flex;
+        justify-content: flex-start;
+        margin-top: 2px;
+        margin-bottom: 18px;
+    }
+
+    .action-bar {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding-top: 4px;
+    }
+
+    .validation-summary-errors {
+        background: #fff4f4;
+        border: 1px solid #f2c5c5;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 15px;
+    }
+
+    @@media (max-width: 991px) {
+        .temperature-grid {
+            grid-template-columns: repeat(3, minmax(100px, 1fr));
+        }
+    }
+
+    @@media (max-width: 767px) {
+        .lime-page {
+            padding: 10px 0 24px;
+        }
+
+        .lime-card-body,
+        .sample-card-body {
+            padding: 12px;
+        }
+
+        .temperature-grid {
+            grid-template-columns: repeat(2, minmax(100px, 1fr));
+        }
+
+        .action-bar {
+            flex-direction: column-reverse;
+        }
+
+            .action-bar .btn {
+                width: 100%;
+            }
+
+        .sample-card-head {
+            align-items: center;
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .temperature-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@*Start XP Breadcrumbbar*@
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">@(isEdit ? "Edit" : "Add") Active CaO, MgO and Lime Reactivity Test Report</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">@(isEdit ? "Edit" : "Add") Active CaO, MgO and Lime Reactivity Test Report</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+@*End XP Breadcrumbbar*@
+
+<div class="container-fluid lime-page">
+
+    <div class="lime-header">
+        <h3></h3>
+        <div class="lime-code">QCF-TR-03</div>
+    </div>
+
+    @using (Html.BeginForm("Add", "LimeReactivity", FormMethod.Post, new { id = "limeForm", autocomplete = "off" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ID)
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+        <div class="lime-card">
+            <div class="lime-card-header">Report Information</div>
+            <div class="lime-card-body">
+                <div class="row">
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Analysis Date (QC) <span class="text-danger">*</span></label>
+                            <input type="date"
+                                   name="AnalysisDateQC"
+                                   class="form-control"
+                                   value="@(Model != null && Model.AnalysisDateQC.HasValue ? Model.AnalysisDateQC.Value.ToString("yyyy-MM-dd") : "")"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Reference No.</label>
+                            @Html.TextBoxFor(
+                                          m => m.ReferenceNo,
+                                          new
+                                          {
+                                              @class = "form-control",
+                                              maxlength = "100",
+                                              placeholder = "Enter reference no."
+                                          }
+                                      )
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Final Status</label>
+                            @Html.DropDownListFor(
+                                          m => m.FinalStatus,
+                                          new SelectList(
+                                              new[] { "Accepted", "MRB" },
+                                              Model != null ? Model.FinalStatus : "Accepted"
+                                          ),
+                                          "-- Select --",
+                                          new
+                                          {
+                                              @class = "form-control",
+                                              id = "FinalStatus"
+                                          }
+                                      )
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6" id="mrbBox">
+                        <div class="form-group">
+                            <label>MRB No.</label>
+                            @Html.TextBoxFor(
+                                          m => m.MRBNo,
+                                          new
+                                          {
+                                              @class = "form-control",
+                                              maxlength = "100",
+                                              placeholder = "Enter MRB no."
+                                          }
+                                      )
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="lime-card">
+            <div class="lime-card-header">Test Samples</div>
+            <div class="lime-card-body">
+
+                <div id="sampleBody">
+
+                    @for (int i = 0; i < samples.Count; i++)
+                    {
+                        var s = samples[i];
+
+                        <div class="sample-card sample-row" data-index="@i">
+
+                            <div class="sample-card-head">
+                                <h4 class="sample-title">
+                                    Sample Row <span class="srno">@(i + 1)</span>
+                                </h4>
+
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm remove-row">
+                                    Remove
+                                </button>
+                            </div>
+
+                            <div class="sample-card-body">
+
+                                <input type="hidden"
+                                       name="Samples[@i].ID"
+                                       value="@s.ID" />
+
+                                <div class="section-label">Shipment / Sample Information</div>
+
+                                <div class="row">
+
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Shipment Code</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   name="Samples[@i].ShipmentCode"
+                                                   maxlength="100"
+                                                   value="@s.ShipmentCode" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Received Date</label>
+                                            <input type="date"
+                                                   class="form-control"
+                                                   name="Samples[@i].ReceivedDate"
+                                                   value="@(s.ReceivedDate.HasValue ? s.ReceivedDate.Value.ToString("yyyy-MM-dd") : "")" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Supplier</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   name="Samples[@i].Supplier"
+                                                   maxlength="200"
+                                                   value="@s.Supplier" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Quantity (Tons)</label>
+                                            <input type="number"
+                                                   step="0.001"
+                                                   class="form-control"
+                                                   name="Samples[@i].QuantityTons"
+                                                   value="@(s.QuantityTons.HasValue ? s.QuantityTons.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Sample No.</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   name="Samples[@i].SampleNo"
+                                                   maxlength="100"
+                                                   value="@s.SampleNo" />
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="section-label">Chemical Analysis</div>
+
+                                <div class="row">
+
+                                    <div class="col-lg-3 col-md-3 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Active CaO %</label>
+                                            <input type="number"
+                                                   step="0.001"
+                                                   class="form-control"
+                                                   name="Samples[@i].ActiveCaO"
+                                                   value="@(s.ActiveCaO.HasValue ? s.ActiveCaO.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-3 col-md-3 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Total CaO %</label>
+                                            <input type="number"
+                                                   step="0.001"
+                                                   class="form-control"
+                                                   name="Samples[@i].TotalCaO"
+                                                   value="@(s.TotalCaO.HasValue ? s.TotalCaO.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-3 col-md-3 col-sm-6">
+                                        <div class="form-group">
+                                            <label>MgO %</label>
+                                            <input type="number"
+                                                   step="0.001"
+                                                   class="form-control"
+                                                   name="Samples[@i].MgO"
+                                                   value="@(s.MgO.HasValue ? s.MgO.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-3 col-md-3 col-sm-6">
+                                        <div class="form-group">
+                                            <label>LOI %</label>
+                                            <input type="number"
+                                                   step="0.001"
+                                                   class="form-control"
+                                                   name="Samples[@i].LOI"
+                                                   value="@(s.LOI.HasValue ? s.LOI.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="section-label">Fresh Lime Temperature (°C) / Time (Seconds)</div>
+
+                                <div class="temperature-box">
+                                    <div class="temperature-grid">
+
+                                        <div class="temp-field">
+                                            <label>0 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp0Sec"
+                                                   value="@(s.Temp0Sec.HasValue ? s.Temp0Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                        <div class="temp-field">
+                                            <label>30 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp30Sec"
+                                                   value="@(s.Temp30Sec.HasValue ? s.Temp30Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                        <div class="temp-field">
+                                            <label>60 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp60Sec"
+                                                   value="@(s.Temp60Sec.HasValue ? s.Temp60Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                        <div class="temp-field">
+                                            <label>90 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp90Sec"
+                                                   value="@(s.Temp90Sec.HasValue ? s.Temp90Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                        <div class="temp-field">
+                                            <label>120 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp120Sec"
+                                                   value="@(s.Temp120Sec.HasValue ? s.Temp120Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                        <div class="temp-field">
+                                            <label>150 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp150Sec"
+                                                   value="@(s.Temp150Sec.HasValue ? s.Temp150Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                        <div class="temp-field">
+                                            <label>180 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp180Sec"
+                                                   value="@(s.Temp180Sec.HasValue ? s.Temp180Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                        <div class="temp-field">
+                                            <label>240 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp240Sec"
+                                                   value="@(s.Temp240Sec.HasValue ? s.Temp240Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                        <div class="temp-field">
+                                            <label>360 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp360Sec"
+                                                   value="@(s.Temp360Sec.HasValue ? s.Temp360Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                        <div class="temp-field">
+                                            <label>600 sec</label>
+                                            <input type="number" step="0.001" class="form-control"
+                                                   name="Samples[@i].Temp600Sec"
+                                                   value="@(s.Temp600Sec.HasValue ? s.Temp600Sec.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Sample Status</label>
+                                            <select class="form-control"
+                                                    name="Samples[@i].TestStatus">
+                                                <option value="">-- Select --</option>
+                                                <option value="Accepted" @(s.TestStatus == "Accepted" ? "selected" : "")>Accepted</option>
+                                                <option value="Rejected" @(s.TestStatus == "Rejected" ? "selected" : "")>Rejected</option>
+                                                <option value="MRB" @(s.TestStatus == "MRB" ? "selected" : "")>MRB</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    }
+
+                </div>
+
+                <div class="add-row-wrap">
+                    <button type="button"
+                            class="btn btn-brand"
+                            id="addRow">
+                        + Add Row
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="lime-card">
+            <div class="lime-card-header">Remarks</div>
+            <div class="lime-card-body">
+                <div class="form-group" style="margin-bottom:0;">
+                    @Html.TextAreaFor(
+                                  m => m.Remarks,
+                                  4,
+                                  120,
+                                  new
+                                  {
+                                      @class = "form-control",
+                                      placeholder = "Enter remarks..."
+                                  }
+                              )
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <a href="@Url.Action("Index", "LimeReactivity")"
+               class="btn btn-default">
+                Cancel
+            </a>
+
+            <button type="submit"
+                    class="btn btn-brand">
+                @(isEdit ? "Update" : "Save")
+            </button>
+        </div>
+    }
+</div>
+
+<script>
+    (function () {
+
+        var sampleBody = document.getElementById('sampleBody');
+        var addRowButton = document.getElementById('addRow');
+
+        function renumber() {
+
+            var rows = sampleBody.querySelectorAll('.sample-row');
+
+            for (var i = 0; i < rows.length; i++) {
+
+                rows[i].setAttribute('data-index', i);
+
+                var srNo = rows[i].querySelector('.srno');
+
+                if (srNo) {
+                    srNo.innerText = i + 1;
+                }
+
+                var controls = rows[i].querySelectorAll('input, select, textarea');
+
+                for (var j = 0; j < controls.length; j++) {
+
+                    var name = controls[j].getAttribute('name');
+
+                    if (name) {
+                        controls[j].setAttribute(
+                            'name',
+                            name.replace(
+                                /Samples\[\d+\]/,
+                                'Samples[' + i + ']'
+                            )
+                        );
+                    }
+                }
+            }
+        }
+
+        function emptyRow(index) {
+
+            return `
+        <div class="sample-card sample-row" data-index="${index}">
+
+            <div class="sample-card-head">
+                <h4 class="sample-title">
+                    Sample Row <span class="srno">${index + 1}</span>
+                </h4>
+
+                <button type="button"
+                        class="btn btn-outline-danger btn-sm remove-row">
+                    Remove
+                </button>
+            </div>
+
+            <div class="sample-card-body">
+
+                <input type="hidden"
+                       name="Samples[${index}].ID"
+                       value="0" />
+
+                <div class="section-label">Shipment / Sample Information</div>
+
+                <div class="row">
+
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Shipment Code</label>
+                            <input type="text"
+                                   class="form-control"
+                                   maxlength="100"
+                                   name="Samples[${index}].ShipmentCode" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Received Date</label>
+                            <input type="date"
+                                   class="form-control"
+                                   name="Samples[${index}].ReceivedDate" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Supplier</label>
+                            <input type="text"
+                                   class="form-control"
+                                   maxlength="200"
+                                   name="Samples[${index}].Supplier" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Quantity (Tons)</label>
+                            <input type="number"
+                                   step="0.001"
+                                   class="form-control"
+                                   name="Samples[${index}].QuantityTons" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Sample No.</label>
+                            <input type="text"
+                                   class="form-control"
+                                   maxlength="100"
+                                   name="Samples[${index}].SampleNo" />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="section-label">Chemical Analysis</div>
+
+                <div class="row">
+
+                    <div class="col-lg-3 col-md-3 col-sm-6">
+                        <div class="form-group">
+                            <label>Active CaO %</label>
+                            <input type="number"
+                                   step="0.001"
+                                   class="form-control"
+                                   name="Samples[${index}].ActiveCaO" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6">
+                        <div class="form-group">
+                            <label>Total CaO %</label>
+                            <input type="number"
+                                   step="0.001"
+                                   class="form-control"
+                                   name="Samples[${index}].TotalCaO" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6">
+                        <div class="form-group">
+                            <label>MgO %</label>
+                            <input type="number"
+                                   step="0.001"
+                                   class="form-control"
+                                   name="Samples[${index}].MgO" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-6">
+                        <div class="form-group">
+                            <label>LOI %</label>
+                            <input type="number"
+                                   step="0.001"
+                                   class="form-control"
+                                   name="Samples[${index}].LOI" />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="section-label">Fresh Lime Temperature (°C) / Time (Seconds)</div>
+
+                <div class="temperature-box">
+                    <div class="temperature-grid">
+
+                        <div class="temp-field">
+                            <label>0 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp0Sec" />
+                        </div>
+
+                        <div class="temp-field">
+                            <label>30 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp30Sec" />
+                        </div>
+
+                        <div class="temp-field">
+                            <label>60 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp60Sec" />
+                        </div>
+
+                        <div class="temp-field">
+                            <label>90 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp90Sec" />
+                        </div>
+
+                        <div class="temp-field">
+                            <label>120 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp120Sec" />
+                        </div>
+
+                        <div class="temp-field">
+                            <label>150 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp150Sec" />
+                        </div>
+
+                        <div class="temp-field">
+                            <label>180 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp180Sec" />
+                        </div>
+
+                        <div class="temp-field">
+                            <label>240 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp240Sec" />
+                        </div>
+
+                        <div class="temp-field">
+                            <label>360 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp360Sec" />
+                        </div>
+
+                        <div class="temp-field">
+                            <label>600 sec</label>
+                            <input type="number" step="0.001" class="form-control"
+                                   name="Samples[${index}].Temp600Sec" />
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Sample Status</label>
+                            <select class="form-control"
+                                    name="Samples[${index}].TestStatus">
+                                <option value="">-- Select --</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="MRB">MRB</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>`;
+        }
+
+        addRowButton.addEventListener('click', function () {
+
+            var index =
+                sampleBody.querySelectorAll('.sample-row').length;
+
+            sampleBody.insertAdjacentHTML(
+                'beforeend',
+                emptyRow(index)
+            );
+        });
+
+        sampleBody.addEventListener('click', function (e) {
+
+            var target = e.target;
+
+            if (
+                target &&
+                target.classList.contains('remove-row')
+            ) {
+                var rows =
+                    sampleBody.querySelectorAll('.sample-row');
+
+                if (rows.length === 1) {
+                    alert('At least one row is required.');
+                    return;
+                }
+
+                var row =
+                    target.closest('.sample-row');
+
+                if (row) {
+                    row.parentNode.removeChild(row);
+                    renumber();
+                }
+            }
+        });
+
+        function toggleMRB() {
+
+            var finalStatus =
+                document.getElementById('FinalStatus');
+
+            var mrbBox =
+                document.getElementById('mrbBox');
+
+            if (!finalStatus || !mrbBox) {
+                return;
+            }
+
+            var isMRB =
+                finalStatus.value === 'MRB';
+
+            mrbBox.style.display =
+                isMRB ? '' : 'none';
+        }
+
+        var finalStatus =
+            document.getElementById('FinalStatus');
+
+        if (finalStatus) {
+            finalStatus.addEventListener(
+                'change',
+                toggleMRB
+            );
+        }
+
+        toggleMRB();
+
+    })();
+</script>

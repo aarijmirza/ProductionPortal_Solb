@@ -568,11 +568,15 @@
     <Compile Include="Controllers\CCMController.cs" />
     <Compile Include="Controllers\CCMProductionController.cs" />
     <Compile Include="Controllers\CMDDashboardController.cs" />
+    <Compile Include="Controllers\CokeCoalController.cs" />
     <Compile Include="Controllers\ConsumptionController.cs" />
     <Compile Include="Controllers\DelayController.cs" />
     <Compile Include="Controllers\DelayCounterMeasureController.cs" />
     <Compile Include="Controllers\ExecutiveController.cs" />
+    <Compile Include="Controllers\FerroAlloyController.cs" />
+    <Compile Include="Controllers\FluorsparController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\LimeReactivityController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\MaintenanceController.cs" />
     <Compile Include="Controllers\MeltshopController.cs" />
@@ -2629,6 +2633,18 @@
     <Content Include="Views\SMPProductionDelay\Index.cshtml" />
     <Content Include="Views\CMDDashboard\dashboard.cshtml" />
     <Content Include="Views\Maintenance\countermeasurelist.cshtml" />
+    <Content Include="Views\RawMaterial\LimeReactivity\List.cshtml" />
+    <Content Include="Views\RawMaterial\LimeReactivity\Add.cshtml" />
+    <Content Include="Views\RawMaterial\LimeReactivity\Details.cshtml" />
+    <Content Include="Views\RawMaterial\FerroAlloy\List.cshtml" />
+    <Content Include="Views\RawMaterial\FerroAlloy\Add.cshtml" />
+    <Content Include="Views\RawMaterial\FerroAlloy\Details.cshtml" />
+    <Content Include="Views\RawMaterial\Fluorspar\Add.cshtml" />
+    <Content Include="Views\RawMaterial\Fluorspar\List.cshtml" />
+    <Content Include="Views\RawMaterial\Fluorspar\Details.cshtml" />
+    <Content Include="Views\RawMaterial\CokeCoal\Add.cshtml" />
+    <Content Include="Views\RawMaterial\CokeCoal\Details.cshtml" />
+    <Content Include="Views\RawMaterial\CokeCoal\Index.cshtml" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

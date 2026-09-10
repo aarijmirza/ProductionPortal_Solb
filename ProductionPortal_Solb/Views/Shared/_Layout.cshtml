@@ -253,8 +253,8 @@
                                     </ul>
 
                                     @*<ul class="xp-vertical-submenu">
-                                            <li><a href="@Url.Action("castmillCertificate", "Quality")">CAST / MILL CERTIFICATE</a></li>
-                                        </ul>*@
+                        <li><a href="@Url.Action("castmillCertificate", "Quality")">CAST / MILL CERTIFICATE</a></li>
+                    </ul>*@
                                 }
 
                                 @if (isAdmin || isQC || isRollingMill)
@@ -275,7 +275,11 @@
                                         <li><a href="@Url.Action("QCInspectionRMadd", "RMMechanical")">RM MECHANICAL TEST RESULT</a></li>
                                     </ul>
                                 }
-
+                            </li>
+                            <li>
+                                <a href="javascript:void(0);">
+                                    <span>RAW MATERIAL</span><i class="icon-arrow-right pull-right"></i>
+                                </a>
                                 @if (isAdmin || isQC)
                                 {
                                     <ul class="xp-vertical-submenu">
@@ -284,6 +288,22 @@
 
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("HBIDRIlist", "Quality")">DRI / HBI ANALYSIS</a></li>
+                                    </ul>
+
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("List", "LimeReactivity")">LIME REACTIVITY ANALYSIS</a></li>
+                                    </ul>
+
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("List", "FerroAlloy")">FERRO ALLOY ANALYSIS</a></li>
+                                    </ul>
+
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("List", "Fluorspar")">FLUROSPAR ANALYSIS</a></li>
+                                    </ul>
+
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("Index", "CokeCoal")">COKE & COAL ANALYSIS</a></li>
                                     </ul>
                                 }
                             </li>

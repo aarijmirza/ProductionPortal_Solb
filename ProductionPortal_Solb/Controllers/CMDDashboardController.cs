@@ -63,9 +63,72 @@ namespace ProductionPortal_Solb.Controllers
                 model.FromDate = selectedFromDate;
                 model.ToDate = selectedToDate;
 
-                model.DailyProduction =
-                    model.DailyProduction ??
-                    new ProductionSummaryVM();
+                /*
+                 * Preserve the SMP plan returned by
+                 * sp_GetCMDPerformanceDashboard before DailyProduction is
+                 * replaced with the actual one-day production result.
+                 *
+                 * ComparisonPercentage contains:
+                 * SUM(SMPDayWiseProduction.ProductionPlan)
+                 *
+                 * When the selected filter covers more than one day, fetch
+                 * the selected To Date separately so the Daily card never
+                 * receives an accumulated period plan.
+                 */
+                decimal smpDailyProductionPlan = 0M;
+
+                try
+                {
+                    CMDPerformanceDashboardVM dailyPlanDashboard =
+                        selectedFromDate == selectedToDate
+                            ? model
+                            : mrepo.GetDashboard(
+                                selectedToDate,
+                                selectedToDate
+                              );
+
+                    if (
+                        dailyPlanDashboard != null &&
+                        dailyPlanDashboard.DailyProduction != null
+                    )
+                    {
+                        smpDailyProductionPlan =
+                            Math.Max(
+                                0M,
+                                dailyPlanDashboard
+                                    .DailyProduction
+                                    .ComparisonPercentage
+                            );
+                    }
+                }
+                catch
+                {
+                    smpDailyProductionPlan = 0M;
+                }
+
+                /*
+                 * The first production card must always represent one day.
+                 * Other dashboard sections continue using the selected range.
+                 * The selected To Date is treated as the dashboard report date.
+                 */
+                try
+                {
+                    model.DailyProduction =
+                        mrepo.GetDailyProduction(
+                            selectedToDate
+                        ) ??
+                        new ProductionSummaryVM();
+                }
+                catch
+                {
+                    // Never fall back to the accumulated selected-period value.
+                    model.DailyProduction =
+                        new ProductionSummaryVM();
+                }
+
+                // Keep the database ProductionPlan with the one-day actuals.
+                model.DailyProduction.ComparisonPercentage =
+                    smpDailyProductionPlan;
 
                 model.MTDProduction =
                     model.MTDProduction ??
@@ -130,22 +193,19 @@ namespace ProductionPortal_Solb.Controllers
 
                 // =====================================================
                 // SMP TARGET
-                // Fixed yearly target = 700,000 MT.
-                // Daily target = 700,000 / 365 (or 366 in leap year).
-                // MTD/YTD targets are accumulated using that daily rate.
+                // Daily target comes directly from the selected date's
+                // SMPDayWiseProduction.ProductionPlan value.
+                // Existing MTD/YTD target behaviour remains unchanged.
                 // =====================================================
                 ViewBag.SMPYearlyProductionTarget =
                     SMPYearlyProductionTarget;
 
                 ViewBag.SMPDailyTarget =
-                    GetSMPDailyTarget(selectedToDate.Year);
+                    smpDailyProductionPlan;
 
-                // Daily / Selected Period
+                // Daily plan for selected To Date only.
                 ViewBag.SMPProductionPlan =
-                    GetSMPProductionPlan(
-                        selectedFromDate,
-                        selectedToDate
-                    );
+                    smpDailyProductionPlan;
 
                 // Month To Date
                 ViewBag.SMPMTDProductionPlan =
@@ -164,22 +224,22 @@ namespace ProductionPortal_Solb.Controllers
                 // =====================================================
                 // RM1 / RM2 TARGETS
                 // Source: RollingMillDailyTargetRepository.
-                // Daily / selected period = sum of saved daily targets.
+                // Daily = saved target for selected To Date only.
                 // MTD = month start through selected date.
                 // YTD = Jan-01 through selected date.
                 // =====================================================
 
-                // Daily / Selected Period
+                // Daily plan for selected To Date only.
                 ViewBag.RM1ProductionPlan =
                     GetRollingMillProductionPlan(
-                        selectedFromDate,
+                        selectedToDate,
                         selectedToDate,
                         "RM1"
                     );
 
                 ViewBag.RM2ProductionPlan =
                     GetRollingMillProductionPlan(
-                        selectedFromDate,
+                        selectedToDate,
                         selectedToDate,
                         "RM2"
                     );

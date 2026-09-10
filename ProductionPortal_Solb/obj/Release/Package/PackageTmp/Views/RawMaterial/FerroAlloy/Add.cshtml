@@ -1,0 +1,884 @@
+﻿
+
+
+@model DAL.Models.QCFerroAlloyReportBLL
+@using System
+@using System.Collections.Generic
+@using System.Globalization
+
+@{
+    bool isEdit = Model != null && Model.ID > 0;
+
+    var samples =
+        Model != null &&
+        Model.Samples != null &&
+        Model.Samples.Count > 0
+            ? Model.Samples
+            : new List<DAL.Models.QCFerroAlloySampleBLL>
+            {
+                new DAL.Models.QCFerroAlloySampleBLL
+                {
+                    SrNo = 1
+                }
+                    };
+}
+
+<style>
+    .fa-page {
+        padding: 18px 10px 30px;
+    }
+
+    .fa-card {
+        background: #fff;
+        border: 1px solid #e3e7eb;
+        border-radius: 8px;
+        margin-bottom: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+        overflow: hidden;
+    }
+
+    .fa-card-head {
+        padding: 13px 16px;
+        font-weight: 700;
+        background: #f7f9fc;
+        border-bottom: 1px solid #e3e7eb;
+    }
+
+    .fa-card-body {
+        padding: 16px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #546e7a;
+    }
+
+    .form-control {
+        border-radius: 5px;
+        border-color: #dce2e8;
+        box-shadow: none;
+    }
+
+    .sample-box {
+        border: 1px solid #dfe5eb;
+        border-radius: 7px;
+        padding: 14px;
+        margin-bottom: 14px;
+        background: #fbfcfd;
+    }
+
+    .sample-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .sample-title {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .btn-brand {
+        background: #b51045;
+        border-color: #b51045;
+        color: #fff;
+    }
+
+        .btn-brand:hover, .btn-brand:focus {
+            background: #94103a;
+            border-color: #94103a;
+            color: #fff;
+        }
+
+    .avg-box {
+        background: #f3f7fa;
+        border: 1px solid #dce5ec;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 10px;
+    }
+
+    .avg-grid {
+        display: grid;
+        grid-template-columns: repeat(7,minmax(90px,1fr));
+        gap: 8px;
+    }
+
+    .avg-item {
+        text-align: center;
+        padding: 8px;
+        background: #fff;
+        border: 1px solid #e3e7eb;
+        border-radius: 5px;
+    }
+
+        .avg-item strong {
+            display: block;
+            font-size: 12px;
+            color: #607d8b;
+        }
+
+        .avg-item span {
+            display: block;
+            margin-top: 3px;
+            font-weight: 700;
+        }
+
+    .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    @@media(max-width:991px) {
+        .avg-grid {
+            grid-template-columns: repeat(4,minmax(90px,1fr));
+        }
+    }
+
+    @@media(max-width:767px) {
+        .fa-page {
+            padding: 10px 0 24px;
+        }
+
+        .fa-card-body {
+            padding: 12px;
+        }
+
+        .avg-grid {
+            grid-template-columns: repeat(2,minmax(90px,1fr));
+        }
+
+        .actions {
+            flex-direction: column-reverse;
+        }
+
+            .actions .btn {
+                width: 100%;
+            }
+    }
+</style>
+
+@*Start XP Breadcrumbbar*@
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">@(isEdit ? "Edit" : "Add")Analysis Report - Ferro Alloy</h4>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="icon-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#">@(isEdit ? "Edit" : "Add") Analysis Report - Ferro Alloy</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Record</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+@*End XP Breadcrumbbar*@
+
+
+<div class="xp-contentbar">
+
+    @using (Html.BeginForm(
+        "Add",
+        "FerroAlloy",
+        FormMethod.Post,
+        new
+        {
+            id = "ferroForm",
+            autocomplete = "off"
+        }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ID)
+        @*@Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })*@
+
+        <div class="fa-card">
+            <div class="fa-card-head">Report Information</div>
+
+            <div class="fa-card-body">
+                <div class="row">
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Supplier</label>
+                            @Html.TextBoxFor(
+                                m => m.Supplier,
+                                new
+                                {
+                                    @class = "form-control",
+                                    maxlength = "200"
+                                }
+                            )
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number"
+                                   step="0.001"
+                                   class="form-control"
+                                   name="Quantity"
+                                   value="@(Model != null && Model.Quantity.HasValue ? Model.Quantity.Value.ToString("0.###", CultureInfo.InvariantCulture) : "")" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Shipment Code No.</label>
+                            @Html.TextBoxFor(
+                                m => m.ShipmentCodeNo,
+                                new
+                                {
+                                    @class = "form-control",
+                                    maxlength = "100"
+                                }
+                            )
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Receiving Date</label>
+                            <input type="date"
+                                   class="form-control"
+                                   name="ReceivingDate"
+                                   value="@(Model != null && Model.ReceivingDate.HasValue ? Model.ReceivingDate.Value.ToString("yyyy-MM-dd") : "")" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Analysis Date *</label>
+                            <input type="date"
+                                   class="form-control"
+                                   name="AnalysisDate"
+                                   required
+                                   value="@(Model != null && Model.AnalysisDate.HasValue ? Model.AnalysisDate.Value.ToString("yyyy-MM-dd") : "")" />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Material *</label>
+                            @Html.DropDownListFor(
+                                m => m.Material,
+                                new SelectList(
+                                    new[]
+                                    {
+                                        "Fe-Si",
+                                        "Fe-Mn",
+                                        "Ca-Si",
+                                        "Si-Mn",
+                                        "Fe-V"
+                                    },
+                                    Model != null
+                                        ? Model.Material
+                                        : null
+                                ),
+                                "-- Select Material --",
+                                new
+                                {
+                                    @class = "form-control",
+                                    required = "required"
+                                }
+                            )
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Reference No.</label>
+                            @Html.TextBoxFor(
+                                m => m.ReferenceNo,
+                                new
+                                {
+                                    @class = "form-control",
+                                    maxlength = "100"
+                                }
+                            )
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Delivery PO</label>
+                            @Html.TextBoxFor(
+                                m => m.DeliveryPO,
+                                new
+                                {
+                                    @class = "form-control",
+                                    maxlength = "100"
+                                }
+                            )
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Lot Size</label>
+                            @Html.TextBoxFor(
+                                m => m.LotSize,
+                                new
+                                {
+                                    @class = "form-control",
+                                    maxlength = "100"
+                                }
+                            )
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Certificate No.</label>
+                            @Html.TextBoxFor(
+                                m => m.CertificateNo,
+                                new
+                                {
+                                    @class = "form-control",
+                                    maxlength = "100"
+                                }
+                            )
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="fa-card">
+            <div class="fa-card-head">Sample Analysis</div>
+
+            <div class="fa-card-body">
+
+                <div id="sampleContainer">
+
+                    @for (int i = 0; i < samples.Count; i++)
+                    {
+                        var s = samples[i];
+
+                        <div class="sample-box sample-row">
+
+                            <div class="sample-head">
+                                <h4 class="sample-title">
+                                    Sample <span class="sample-number">@(i + 1)</span>
+                                </h4>
+
+                                <button type="button"
+                                        class="btn btn-danger btn-sm remove-row">
+                                    Remove
+                                </button>
+                            </div>
+
+                            <input type="hidden"
+                                   name="Samples[@i].ID"
+                                   value="@s.ID" />
+
+                            <div class="row">
+
+                                <div class="col-lg-2 col-md-4 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Sample No.</label>
+                                        <input type="text"
+                                               class="form-control"
+                                               maxlength="100"
+                                               name="Samples[@i].SampleNo"
+                                               value="@s.SampleNo" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6">
+                                    <div class="form-group">
+                                        <label>Si %</label>
+                                        <input type="number" step="0.0001" class="form-control chemistry"
+                                               data-field="Si"
+                                               name="Samples[@i].Si"
+                                               value="@(s.Si.HasValue ? s.Si.Value.ToString("0.####", CultureInfo.InvariantCulture) : "")" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6">
+                                    <div class="form-group">
+                                        <label>Mn %</label>
+                                        <input type="number" step="0.0001" class="form-control chemistry"
+                                               data-field="Mn"
+                                               name="Samples[@i].Mn"
+                                               value="@(s.Mn.HasValue ? s.Mn.Value.ToString("0.####", CultureInfo.InvariantCulture) : "")" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6">
+                                    <div class="form-group">
+                                        <label>P %</label>
+                                        <input type="number" step="0.0001" class="form-control chemistry"
+                                               data-field="P"
+                                               name="Samples[@i].P"
+                                               value="@(s.P.HasValue ? s.P.Value.ToString("0.####", CultureInfo.InvariantCulture) : "")" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6">
+                                    <div class="form-group">
+                                        <label>S %</label>
+                                        <input type="number" step="0.0001" class="form-control chemistry"
+                                               data-field="S"
+                                               name="Samples[@i].S"
+                                               value="@(s.S.HasValue ? s.S.Value.ToString("0.####", CultureInfo.InvariantCulture) : "")" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6">
+                                    <div class="form-group">
+                                        <label>Al %</label>
+                                        <input type="number" step="0.0001" class="form-control chemistry"
+                                               data-field="Al"
+                                               name="Samples[@i].Al"
+                                               value="@(s.Al.HasValue ? s.Al.Value.ToString("0.####", CultureInfo.InvariantCulture) : "")" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6">
+                                    <div class="form-group">
+                                        <label>Ca %</label>
+                                        <input type="number" step="0.0001" class="form-control chemistry"
+                                               data-field="Ca"
+                                               name="Samples[@i].Ca"
+                                               value="@(s.Ca.HasValue ? s.Ca.Value.ToString("0.####", CultureInfo.InvariantCulture) : "")" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6">
+                                    <div class="form-group">
+                                        <label>V %</label>
+                                        <input type="number" step="0.0001" class="form-control chemistry"
+                                               data-field="V"
+                                               name="Samples[@i].V"
+                                               value="@(s.V.HasValue ? s.V.Value.ToString("0.####", CultureInfo.InvariantCulture) : "")" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-md-6 col-sm-12">
+                                    <div class="form-group">
+                                        <label>Comment</label>
+                                        <input type="text"
+                                               class="form-control"
+                                               maxlength="1000"
+                                               name="Samples[@i].Comment"
+                                               value="@s.Comment" />
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    }
+
+                </div>
+
+                <button type="button"
+                        id="addRow"
+                        class="btn btn-brand">
+                    + Add Row
+                </button>
+
+                <div class="avg-box">
+                    <strong>Average</strong>
+
+                    <div class="avg-grid">
+                        <div class="avg-item"><strong>Si %</strong><span id="avgSi">-</span></div>
+                        <div class="avg-item"><strong>Mn %</strong><span id="avgMn">-</span></div>
+                        <div class="avg-item"><strong>P %</strong><span id="avgP">-</span></div>
+                        <div class="avg-item"><strong>S %</strong><span id="avgS">-</span></div>
+                        <div class="avg-item"><strong>Al %</strong><span id="avgAl">-</span></div>
+                        <div class="avg-item"><strong>Ca %</strong><span id="avgCa">-</span></div>
+                        <div class="avg-item"><strong>V %</strong><span id="avgV">-</span></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="fa-card">
+            <div class="fa-card-head">Disposition / Remarks</div>
+
+            <div class="fa-card-body">
+
+                <div class="row">
+
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="form-group">
+                            <label>Final Status</label>
+
+                            @Html.DropDownListFor(
+                                m => m.FinalStatus,
+                                new SelectList(
+                                    new[]
+                                    {
+                                        "Accepted",
+                                        "MRB"
+                                    },
+                                    Model != null
+                                        ? Model.FinalStatus
+                                        : "Accepted"
+                                ),
+                                "-- Select --",
+                                new
+                                {
+                                    @class = "form-control",
+                                    id = "FinalStatus"
+                                }
+                            )
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6"
+                         id="mrbBox">
+                        <div class="form-group">
+                            <label>MRB No.</label>
+                            @Html.TextBoxFor(
+                                m => m.MRBNo,
+                                new
+                                {
+                                    @class = "form-control",
+                                    maxlength = "100"
+                                }
+                            )
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+                    <label>Remarks</label>
+                    @Html.TextAreaFor(
+                        m => m.Remarks,
+                        3,
+                        120,
+                        new
+                        {
+                            @class = "form-control"
+                        }
+                    )
+                </div>
+
+                <div class="form-group">
+                    <label>Comments</label>
+                    @Html.TextAreaFor(
+                        m => m.Comments,
+                        4,
+                        120,
+                        new
+                        {
+                            @class = "form-control"
+                        }
+                    )
+                </div>
+
+            </div>
+        </div>
+
+        <div class="actions">
+
+            <a href="@Url.Action("Index", "FerroAlloy")"
+               class="btn btn-default">
+                Cancel
+            </a>
+
+            <button type="submit"
+                    class="btn btn-brand">
+                @(isEdit ? "Update" : "Save")
+            </button>
+
+        </div>
+    }
+</div>
+
+<script>(function () {
+
+    var container =
+        document.getElementById('sampleContainer');
+
+    var addButton =
+        document.getElementById('addRow');
+
+    var fields =
+        ['Si', 'Mn', 'P', 'S', 'Al', 'Ca', 'V'];
+
+    function reindex() {
+
+        var rows =
+            container.querySelectorAll('.sample-row');
+
+        for (
+            var i = 0;
+            i < rows.length;
+            i++
+        ) {
+            var number =
+                rows[i].querySelector('.sample-number');
+
+            if (number) {
+                number.innerText = i + 1;
+            }
+
+            var controls =
+                rows[i].querySelectorAll(
+                    'input,select,textarea'
+                );
+
+            for (
+                var j = 0;
+                j < controls.length;
+                j++
+            ) {
+                var name =
+                    controls[j].getAttribute('name');
+
+                if (name) {
+                    controls[j].setAttribute(
+                        'name',
+                        name.replace(
+                            /Samples\[\d+\]/,
+                            'Samples[' + i + ']'
+                        )
+                    );
+                }
+            }
+        }
+
+        calculateAverage();
+    }
+
+    function newRow(index) {
+
+        return `
+        <div class="sample-box sample-row">
+
+            <div class="sample-head">
+                <h4 class="sample-title">
+                    Sample <span class="sample-number">${index + 1}</span>
+                </h4>
+
+                <button type="button"
+                        class="btn btn-danger btn-sm remove-row">
+                    Remove
+                </button>
+            </div>
+
+            <input type="hidden"
+                   name="Samples[${index}].ID"
+                   value="0" />
+
+            <div class="row">
+
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="form-group">
+                        <label>Sample No.</label>
+                        <input type="text"
+                               class="form-control"
+                               maxlength="100"
+                               name="Samples[${index}].SampleNo" />
+                    </div>
+                </div>
+
+                ${chemField(index, 'Si', 'Si %')}
+                ${chemField(index, 'Mn', 'Mn %')}
+                ${chemField(index, 'P', 'P %')}
+                ${chemField(index, 'S', 'S %')}
+                ${chemField(index, 'Al', 'Al %')}
+                ${chemField(index, 'Ca', 'Ca %')}
+                ${chemField(index, 'V', 'V %')}
+
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="form-group">
+                        <label>Comment</label>
+                        <input type="text"
+                               class="form-control"
+                               maxlength="1000"
+                               name="Samples[${index}].Comment" />
+                    </div>
+                </div>
+
+            </div>
+        </div>`;
+    }
+
+    function chemField(index, name, label) {
+
+        return `
+        <div class="col-lg-1 col-md-2 col-sm-3 col-xs-6">
+            <div class="form-group">
+                <label>${label}</label>
+                <input type="number"
+                       step="0.0001"
+                       class="form-control chemistry"
+                       data-field="${name}"
+                       name="Samples[${index}].${name}" />
+            </div>
+        </div>`;
+    }
+
+    function calculateAverage() {
+
+        for (
+            var f = 0;
+            f < fields.length;
+            f++
+        ) {
+            var field =
+                fields[f];
+
+            var inputs =
+                container.querySelectorAll(
+                    '.chemistry[data-field="' + field + '"]'
+                );
+
+            var total = 0;
+            var count = 0;
+
+            for (
+                var i = 0;
+                i < inputs.length;
+                i++
+            ) {
+                if (
+                    inputs[i].value !== ''
+                    &&
+                    !isNaN(
+                        parseFloat(
+                            inputs[i].value
+                        )
+                    )
+                ) {
+                    total +=
+                        parseFloat(
+                            inputs[i].value
+                        );
+
+                    count++;
+                }
+            }
+
+            var target =
+                document.getElementById(
+                    'avg' + field
+                );
+
+            if (target) {
+                target.innerText =
+                    count > 0
+                        ? (total / count).toFixed(4)
+                        : '-';
+            }
+        }
+    }
+
+    addButton.addEventListener(
+        'click',
+        function () {
+
+            var index =
+                container.querySelectorAll(
+                    '.sample-row'
+                ).length;
+
+            container.insertAdjacentHTML(
+                'beforeend',
+                newRow(index)
+            );
+        }
+    );
+
+    container.addEventListener(
+        'click',
+        function (e) {
+
+            if (
+                e.target &&
+                e.target.classList.contains(
+                    'remove-row'
+                )
+            ) {
+                var rows =
+                    container.querySelectorAll(
+                        '.sample-row'
+                    );
+
+                if (rows.length <= 1) {
+                    alert(
+                        'At least one sample row is required.'
+                    );
+                    return;
+                }
+
+                var row =
+                    e.target.closest(
+                        '.sample-row'
+                    );
+
+                if (row) {
+                    row.parentNode.removeChild(
+                        row
+                    );
+
+                    reindex();
+                }
+            }
+        }
+    );
+
+    container.addEventListener(
+        'input',
+        function (e) {
+
+            if (
+                e.target &&
+                e.target.classList.contains(
+                    'chemistry'
+                )
+            ) {
+                calculateAverage();
+            }
+        }
+    );
+
+    function toggleMRB() {
+
+        var status =
+            document.getElementById(
+                'FinalStatus'
+            );
+
+        var box =
+            document.getElementById(
+                'mrbBox'
+            );
+
+        if (!status || !box)
+            return;
+
+        box.style.display =
+            status.value === 'MRB'
+                ? ''
+                : 'none';
+    }
+
+    var finalStatus =
+        document.getElementById(
+            'FinalStatus'
+        );
+
+    if (finalStatus) {
+        finalStatus.addEventListener(
+            'change',
+            toggleMRB
+        );
+    }
+
+    toggleMRB();
+    calculateAverage();
+
+})();</script>

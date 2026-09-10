@@ -50,12 +50,16 @@
     <Compile Include="Repositories\BoardingRepository.cs" />
     <Compile Include="Repositories\CCMDailyProductionRepository.cs" />
     <Compile Include="Repositories\CCMRespository.cs" />
+    <Compile Include="Repositories\CokeCoalRepository.cs" />
     <Compile Include="Repositories\ConsumptionRepository.cs" />
     <Compile Include="Repositories\DelayCounterMeasureRepository.cs" />
     <Compile Include="Repositories\DelayRepository.cs" />
     <Compile Include="Repositories\ExecutiveDashboardRepository.cs" />
+    <Compile Include="Repositories\FerroAlloyRepository.cs" />
+    <Compile Include="Repositories\FluorsparRepository.cs" />
     <Compile Include="Repositories\LFMeltShopRepository.cs" />
     <Compile Include="Repositories\EAFMeltShopRepository.cs" />
+    <Compile Include="Repositories\LimeReactivityRepository.cs" />
     <Compile Include="Repositories\MaintenanceRepository.cs" />
     <Compile Include="Repositories\MeltshopRepository.cs" />
     <Compile Include="Repositories\RMMechanicalRepository.cs" />

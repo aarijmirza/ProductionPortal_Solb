@@ -6,6 +6,12 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Approved SMP summary plans. The Daily SMP plan is supplied by the
+    // controller from SMPDayWiseProduction.ProductionPlan for the report date.
+    const decimal SMPMonthlyProductionPlan = 30000m;
+    const decimal SMPYearlyProductionPlan = 700000m;
+
 }
 
 
@@ -844,7 +850,7 @@
 
     .rca-horizontal-value {
         color: #111827;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 950;
         padding-left: 8px;
         white-space: nowrap;
@@ -858,7 +864,7 @@
     .rca-horizontal-percentage {
         color: #7f1010;
         font-weight: 950;
-        margin-left: 15px;
+        margin-left: 5px;
     }
 
     .rca-axis-title {
@@ -1559,20 +1565,12 @@
 
     <div class="top-grid">
         @{
-            bool isSingleDay =
-                Model.FromDate.Date == Model.ToDate.Date;
-
             var cards = new[]
             {
                 new
                 {
-                    Title = isSingleDay
-                        ? "Daily Production in Tons"
-                        : "Selected Period Production in Tons",
-
-                    Compare = isSingleDay
-                        ? "SMP Daily Plan vs Actual"
-                        : "SMP Period Plan vs Actual",
+                    Title = "Daily Production in Tons",
+                    Compare = "Daily Plan vs Actual",
 
                     Data = Model.DailyProduction
                 },
@@ -1607,7 +1605,7 @@
             {
                 smpPlan = ViewBag.SMPProductionPlan != null
                     ? Math.Max(0m, Convert.ToDecimal(ViewBag.SMPProductionPlan))
-                    : 0m;
+                    : Math.Max(0m, p.ComparisonPercentage);
 
                 rm1Plan = ViewBag.RM1ProductionPlan != null
                     ? Math.Max(0m, Convert.ToDecimal(ViewBag.RM1ProductionPlan))
@@ -1619,9 +1617,7 @@
             }
             else if (isMTDCard)
             {
-                smpPlan = ViewBag.SMPMTDProductionPlan != null
-                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.SMPMTDProductionPlan))
-                    : 0m;
+                smpPlan = SMPMonthlyProductionPlan;
 
                 rm1Plan = ViewBag.RM1MTDProductionPlan != null
                     ? Math.Max(0m, Convert.ToDecimal(ViewBag.RM1MTDProductionPlan))
@@ -1633,9 +1629,7 @@
             }
             else if (isYTDCard)
             {
-                smpPlan = ViewBag.SMPYTDProductionPlan != null
-                    ? Math.Max(0m, Convert.ToDecimal(ViewBag.SMPYTDProductionPlan))
-                    : 0m;
+                smpPlan = SMPYearlyProductionPlan;
 
                 rm1Plan = ViewBag.RM1YTDProductionPlan != null
                     ? Math.Max(0m, Convert.ToDecimal(ViewBag.RM1YTDProductionPlan))
@@ -2082,8 +2076,6 @@
                         <div class="rca-axis-title">
                             Total RCA Delay:
                             @totalRcaHours.ToString("N1") Hours
-                            &nbsp;|&nbsp;
-                            100%
                         </div>
 
                     </div>
@@ -2250,10 +2242,10 @@
                         <div class="panel-title">@plantTitle</div>
 
                         <!--<div class="closure-period-summary">-->
-                            @*<div class="closure-period-title">
-                                    @selectedPeriodTitle · date-wise closure %
-                                </div>*@
-                            <!--<div class="closure-total-kpi">
+                        @*<div class="closure-period-title">
+                                @selectedPeriodTitle · date-wise closure %
+                            </div>*@
+                        <!--<div class="closure-total-kpi">
                                 <span>Combined Total Closure</span>
                                 <strong>totalDateWisePercentage</strong>
                             </div>
@@ -2311,14 +2303,14 @@
                                           y2="@tickY.ToString(CultureInfo.InvariantCulture)"></line>
 
                                     @Html.Raw(
-                                                                                          string.Format(
-                                                                                              CultureInfo.InvariantCulture,
-                                                                                              "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"end\">{2}%</text>",
-                                                                                              plotLeft - 9m,
-                                                                                              tickY + 4m,
-                                                                                              Math.Round(percentageTick, 0)
-                                                                                          )
-                                                                                      )
+                                                                                                         string.Format(
+                                                                                                             CultureInfo.InvariantCulture,
+                                                                                                             "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"end\">{2}%</text>",
+                                                                                                             plotLeft - 9m,
+                                                                                                             tickY + 4m,
+                                                                                                             Math.Round(percentageTick, 0)
+                                                                                                         )
+                                                                                                     )
                                 }
 
                                 <line class="axis-line"
@@ -2326,40 +2318,6 @@
                                       y1="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"
                                       x2="@((plotLeft + plotWidth).ToString(CultureInfo.InvariantCulture))"
                                       y2="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"></line>
-
-                                @for (int monthIndex = 0; monthIndex < months.Count; monthIndex++)
-                                {
-                                    int monthNumber = months[monthIndex];
-                                    string monthLabel = new DateTime(
-                                        Model.ToDate.Year,
-                                        monthNumber,
-                                        1
-                                    ).ToString(
-                                        "MMM yy",
-                                        CultureInfo.InvariantCulture
-                                    );
-
-                                    decimal monthX =
-                                        plotLeft +
-                                        monthIndex * monthGroupWidth +
-                                        monthGroupWidth / 2m;
-
-                                    <line class="grid-line"
-                                          x1="@monthX.ToString(CultureInfo.InvariantCulture)"
-                                          y1="@((plotTop + plotHeight - 8m).ToString(CultureInfo.InvariantCulture))"
-                                          x2="@monthX.ToString(CultureInfo.InvariantCulture)"
-                                          y2="@((plotTop + plotHeight).ToString(CultureInfo.InvariantCulture))"></line>
-
-                                    @Html.Raw(
-                                                                                          string.Format(
-                                                                                              CultureInfo.InvariantCulture,
-                                                                                              "<text class=\"axis-label\" x=\"{0:0.##}\" y=\"{1:0.##}\" text-anchor=\"middle\">{2}</text>",
-                                                                                              monthX,
-                                                                                              plotTop + plotHeight + 25m,
-                                                                                              System.Web.HttpUtility.HtmlEncode(monthLabel)
-                                                                                          )
-                                                                                      )
-                                }
 
                                 @for (int monthIndex = 0; monthIndex < months.Count; monthIndex++)
                                 {
@@ -2419,21 +2377,21 @@
                                                   rx="3"
                                                   fill="@barColor">
                                                 <title>
-                                                    @department · @barItem.MonthName @Model.ToDate.Year · @barItem.ClosurePercentage.ToString("N1")%
+                                                    @department · @barItem.ClosurePercentage.ToString("N1")%
                                                 </title>
                                             </rect>
 
                                             if (showBarLabel)
                                             {
                                                 @Html.Raw(
-                                                                                                      string.Format(
-                                                                                                          CultureInfo.InvariantCulture,
-                                                                                                          "<text class=\"closure-bar-label\" x=\"{0:0.##}\" y=\"{1:0.##}\">{2:0}%</text>",
-                                                                                                          barCenterX,
-                                                                                                          barLabelY,
-                                                                                                          barItem.ClosurePercentage
-                                                                                                      )
-                                                                                                  )
+                                                                                                                     string.Format(
+                                                                                                                         CultureInfo.InvariantCulture,
+                                                                                                                         "<text class=\"closure-bar-label\" x=\"{0:0.##}\" y=\"{1:0.##}\">{2:0}%</text>",
+                                                                                                                         barCenterX,
+                                                                                                                         barLabelY,
+                                                                                                                         barItem.ClosurePercentage
+                                                                                                                     )
+                                                                                                                 )
                                             }
                                         }
                                     }
@@ -2457,19 +2415,11 @@
                                     string latestValue = latest != null
                                         ? latest.ClosurePercentage.ToString("N1") + "%"
                                         : "No data";
-                                    string latestMonth = latest != null
-                                        ? new DateTime(Model.ToDate.Year, latest.MonthNumber, 1)
-                                            .ToString("MMM", CultureInfo.InvariantCulture)
-                                        : "";
 
                                     <span class="line-legend-item" style="@legendStyle">
                                         <span class="line-legend-color"></span>
                                         <span>@department</span>
                                         <strong>@latestValue</strong>
-                                        @if (!string.IsNullOrWhiteSpace(latestMonth))
-                                        {
-                                            <em>(Accum. @latestMonth)</em>
-                                        }
                                     </span>
                                 }
                             </div>

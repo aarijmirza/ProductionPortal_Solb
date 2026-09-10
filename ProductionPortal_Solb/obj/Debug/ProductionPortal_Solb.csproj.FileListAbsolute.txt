@@ -64,6 +64,8 @@ D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EntityFramework.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EntityFramework.SqlServer.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EPPlus.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EPPlus.Interfaces.dll
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.DataSet.dll
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelNumberFormat.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\HarfBuzzSharp.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\itextsharp.dll
@@ -184,6 +186,10 @@ D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\DocumentFormat.OpenXm
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EntityFramework.xml
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EntityFramework.SqlServer.xml
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\EPPlus.xml
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.pdb
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.xml
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.DataSet.pdb
+D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.DataSet.xml
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelNumberFormat.xml
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\HarfBuzzSharp.pdb
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\itextsharp.xml
@@ -287,9 +293,3 @@ D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\ProductionPorta
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\Producti.ECDD0488.Up2Date
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\ProductionPortal_Solb.dll
 D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\obj\Debug\ProductionPortal_Solb.pdb
-D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.DataSet.dll
-D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.dll
-D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.pdb
-D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.xml
-D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.DataSet.pdb
-D:\Projects\ProductionPortal_GIT\ProductionPortal_Solb\bin\ExcelDataReader.DataSet.xml

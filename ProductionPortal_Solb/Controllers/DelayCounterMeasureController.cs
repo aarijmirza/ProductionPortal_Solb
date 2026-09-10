@@ -313,6 +313,18 @@ namespace ProductionPortal_Solb.Controllers
         {
             try
             {
+                if (id <= 0)
+                {
+                    return Json(
+                        new
+                        {
+                            success = false,
+                            message =
+                                "Invalid countermeasure ID."
+                        }
+                    );
+                }
+
                 DelayCounterMeasureBLL item =
                     repo.GetByID(id);
 

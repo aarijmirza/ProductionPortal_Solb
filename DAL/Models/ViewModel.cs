@@ -148,145 +148,145 @@ namespace DAL.Models
                 Form = new BilletDischargingBLL();
                 SubmittedHeat = new List<BundlingSectionBLL>();
             }
+        }
 
+        public class RMChargingVM
+        {
+            public DateTime? Date { get; set; }
+            public string HeatNo { get; set; }
+            public string Shift { get; set; }
+            public string Plant { get; set; }
+            public string Team { get; set; }
+            public string ShiftIncharge { get; set; }
+            public BilletBoardBLL Form { get; set; }
+            public List<BilletChargingBLL> SubmittedHeat { get; set; }
 
-            public class RMChargingVM
+            public RMChargingVM()
             {
-                public DateTime? Date { get; set; }
-                public string HeatNo { get; set; }
-                public string Shift { get; set; }
-                public string Plant { get; set; }
-                public string Team { get; set; }
-                public string ShiftIncharge { get; set; }
-                public BilletBoardBLL Form { get; set; }
-                public List<BilletChargingBLL> SubmittedHeat { get; set; }
-
-                public RMChargingVM()
-                {
-                    Form = new BilletBoardBLL();
-                    SubmittedHeat = new List<BilletChargingBLL>();
-                }
-
-            }
-            public class RMDischargingVM
-            {
-                public DateTime? Date { get; set; }
-                public string HeatNo { get; set; }
-                public string Shift { get; set; }
-                public string Plant { get; set; }
-                public string Team { get; set; }
-                public string ShiftIncharge { get; set; }
-                public BilletChargingBLL Form { get; set; }
-                public List<BilletDischargingBLL> SubmittedHeat { get; set; }
-
-                public RMDischargingVM()
-                {
-                    Form = new BilletChargingBLL();
-                    SubmittedHeat = new List<BilletDischargingBLL>();
-                }
-
+                Form = new BilletBoardBLL();
+                SubmittedHeat = new List<BilletChargingBLL>();
             }
 
-            public class SlagByProductPDFVM
+        }
+        public class RMDischargingVM
+        {
+            public DateTime? Date { get; set; }
+            public string HeatNo { get; set; }
+            public string Shift { get; set; }
+            public string Plant { get; set; }
+            public string Team { get; set; }
+            public string ShiftIncharge { get; set; }
+            public BilletChargingBLL Form { get; set; }
+            public List<BilletDischargingBLL> SubmittedHeat { get; set; }
+
+            public RMDischargingVM()
             {
-                public List<SlagByProductAnalysisBLL> SlagData { get; set; }
-                    = new List<SlagByProductAnalysisBLL>();
-
-                public List<SlagSampleAnalysisBLL> Samples { get; set; }
-                    = new List<SlagSampleAnalysisBLL>();
-
-                public DateTime FromDate { get; set; }
-                public DateTime ToDate { get; set; }
+                Form = new BilletChargingBLL();
+                SubmittedHeat = new List<BilletDischargingBLL>();
             }
 
-            public class HBIDRIAnalysisPDFVM
+        }
+
+        public class SlagByProductPDFVM
+        {
+            public List<SlagByProductAnalysisBLL> SlagData { get; set; }
+                = new List<SlagByProductAnalysisBLL>();
+
+            public List<SlagSampleAnalysisBLL> Samples { get; set; }
+                = new List<SlagSampleAnalysisBLL>();
+
+            public DateTime FromDate { get; set; }
+            public DateTime ToDate { get; set; }
+        }
+
+        public class HBIDRIAnalysisPDFVM
+        {
+            public List<QCHBIDRIAnalysisBLL> HBIDRIData { get; set; }
+                = new List<QCHBIDRIAnalysisBLL>();
+
+            public List<SampleHBIDRIBLL> Samples { get; set; }
+                = new List<SampleHBIDRIBLL>();
+
+            public DateTime FromDate { get; set; }
+            public DateTime ToDate { get; set; }
+        }
+
+        public class BilletBoardingPDFVM
+        {
+            public List<BilletBoardBLL> BilletBoards { get; set; }
+                = new List<BilletBoardBLL>();
+
+            public List<HeatChemistryBLL> Samples { get; set; }
+                = new List<HeatChemistryBLL>();
+
+            public DateTime FromDate { get; set; }
+            public DateTime ToDate { get; set; }
+        }
+
+        public class RMHourlyDischargeVM
+        {
+            public DateTime? Date { get; set; }
+            public string HeatNo { get; set; }
+            public string Shift { get; set; }
+            public string Plant { get; set; }
+            public string Team { get; set; }
+            public string ShiftIncharge { get; set; }
+
+            public string TimeFrom { get; set; }
+
+            public string TimeTo { get; set; }
+
+            public string NoofBillets { get; set; }
+
+            public decimal? NoofCobble { get; set; }
+
+            public int? Reject { get; set; }
+
+            public string BilletHeatNo { get; set; }
+
+            public string SafetyIssueShift { get; set; }
+
+            public string MessageShift { get; set; }
+
+            public string FuelConsumptionStart { get; set; }
+
+            public string FuelConsumptionEnd { get; set; }
+
+            public string TotalConsumption { get; set; }
+
+            public string ElectricityConsumption { get; set; }
+
+            public int? StatusID { get; set; }
+
+            public string CreatedBy { get; set; }
+
+            public DateTime? CreatedDate { get; set; }
+
+            public string UpdatedBy { get; set; }
+
+            public DateTime? UpdatedDate { get; set; }
+
+            public BilletDischargingBLL Form { get; set; }
+            public List<RMHourlyDischargeBLL> RMHourlyDischarge { get; set; }
+
+            public RMHourlyDischargeVM()
             {
-                public List<QCHBIDRIAnalysisBLL> HBIDRIData { get; set; }
-                    = new List<QCHBIDRIAnalysisBLL>();
-
-                public List<SampleHBIDRIBLL> Samples { get; set; }
-                    = new List<SampleHBIDRIBLL>();
-
-                public DateTime FromDate { get; set; }
-                public DateTime ToDate { get; set; }
-            }
-
-            public class BilletBoardingPDFVM
-            {
-                public List<BilletBoardBLL> BilletBoards { get; set; }
-                    = new List<BilletBoardBLL>();
-
-                public List<HeatChemistryBLL> Samples { get; set; }
-                    = new List<HeatChemistryBLL>();
-
-                public DateTime FromDate { get; set; }
-                public DateTime ToDate { get; set; }
-            }
-
-            public class RMHourlyDischargeVM
-            {
-                public DateTime? Date { get; set; }
-                public string HeatNo { get; set; }
-                public string Shift { get; set; }
-                public string Plant { get; set; }
-                public string Team { get; set; }
-                public string ShiftIncharge { get; set; }
-
-                public string TimeFrom { get; set; }
-
-                public string TimeTo { get; set; }
-
-                public string NoofBillets { get; set; }
-
-                public decimal? NoofCobble { get; set; }
-
-                public int? Reject { get; set; }
-
-                public string BilletHeatNo { get; set; }
-
-                public string SafetyIssueShift { get; set; }
-
-                public string MessageShift { get; set; }
-
-                public string FuelConsumptionStart { get; set; }
-
-                public string FuelConsumptionEnd { get; set; }
-
-                public string TotalConsumption { get; set; }
-
-                public string ElectricityConsumption { get; set; }
-
-                public int? StatusID { get; set; }
-
-                public string CreatedBy { get; set; }
-
-                public DateTime? CreatedDate { get; set; }
-
-                public string UpdatedBy { get; set; }
-
-                public DateTime? UpdatedDate { get; set; }
-
-                public BilletDischargingBLL Form { get; set; }
-                public List<RMHourlyDischargeBLL> RMHourlyDischarge { get; set; }
-
-                public RMHourlyDischargeVM()
-                {
-                    Form = new BilletDischargingBLL();
-                    RMHourlyDischarge = new List<RMHourlyDischargeBLL>();
-                }
-            }
-            public class RMShiftDetailsVM
-            {
-                public RMShiftDetailsBLL Form { get; set; }
-                public List<RMShiftDetailsBLL> List { get; set; }
-
-                public RMShiftDetailsVM()
-                {
-                    Form = new RMShiftDetailsBLL();
-                    List = new List<RMShiftDetailsBLL>();
-                }
+                Form = new BilletDischargingBLL();
+                RMHourlyDischarge = new List<RMHourlyDischargeBLL>();
             }
         }
+        public class RMShiftDetailsVM
+        {
+            public RMShiftDetailsBLL Form { get; set; }
+            public List<RMShiftDetailsBLL> List { get; set; }
+
+            public RMShiftDetailsVM()
+            {
+                Form = new RMShiftDetailsBLL();
+                List = new List<RMShiftDetailsBLL>();
+            }
+        }
+
         public class SupplyChainStockVM
         {
             public int ID { get; set; }

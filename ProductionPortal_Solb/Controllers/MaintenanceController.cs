@@ -237,10 +237,13 @@ namespace ProductionPortal_Solb.Controllers
                 // Other roles can still view the saved equipment, but the
                 // dropdown/save controls are not loaded for them.
                 if (
-                    User != null &&
-                    User.Identity != null &&
-                    User.Identity.IsAuthenticated &&
-                    User.IsInRole("User")
+                   User != null &&
+                   User.Identity != null &&
+                   User.Identity.IsAuthenticated &&
+                   (
+                       User.IsInRole("User") ||
+                       User.IsInRole("Administrator")
+                   )
                 )
                 {
                     ViewBag.EquipmentItems =

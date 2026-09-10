@@ -1,0 +1,340 @@
+@model DAL.Models.QCCokeCoalReportBLL
+@using System.Linq
+
+@{
+    ViewBag.Title = "Coke & Coal Report Details";
+}
+
+<style>
+    .detail-card {
+        border:1px solid #e8edf3;
+        border-radius:8px;
+        box-shadow:0 2px 8px rgba(0,0,0,.05);
+        overflow:hidden;
+    }
+    .detail-header {
+        background:#f8f9fb;
+        border-bottom:1px solid #e8edf3;
+        padding:15px 20px;
+        font-weight:600;
+        font-size:18px;
+    }
+    .detail-label {
+        font-size:12px;
+        font-weight:600;
+        color:#6c757d;
+        text-transform:uppercase;
+        margin-bottom:5px;
+    }
+    .detail-value {
+        background:#f3f5f8;
+        border:1px solid #e8edf3;
+        border-radius:5px;
+        min-height:38px;
+        padding:9px 12px;
+        font-size:14px;
+        color:#333;
+        word-break:break-word;
+    }
+    .section-title {
+        font-size:15px;
+        font-weight:700;
+        color:#444;
+        border-left:4px solid #b30d0d;
+        padding-left:10px;
+        margin:20px 0 15px;
+    }
+    .status-badge {
+        padding:6px 12px;
+        border-radius:20px;
+        font-size:13px;
+        font-weight:600;
+    }
+    .status-accepted { background:#d4edda; color:#155724; }
+    .status-mrb { background:#fff3cd; color:#856404; }
+    .sample-table-wrap {
+        width:100%;
+        overflow-x:auto;
+        border:1px solid #e8edf3;
+        border-radius:6px;
+    }
+    .sample-table {
+        min-width:1000px;
+        margin-bottom:0;
+    }
+    .sample-table th {
+        background:#f8f9fb;
+        text-align:center;
+        white-space:nowrap;
+    }
+    .sample-table td {
+        text-align:center;
+        vertical-align:middle !important;
+        white-space:nowrap;
+    }
+    .average-row th,.average-row td {
+        background:#f3f7fa;
+        font-weight:700;
+    }
+    .text-box {
+        min-height:75px;
+        white-space:pre-wrap;
+    }
+</style>
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6 col-lg-6">
+            <h4 class="xp-page-title">Coke & Coal Report Details</h4>
+        </div>
+
+        <div class="col-md-6 col-lg-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "CokeCoal")">Coke & Coal</a>
+                    </li>
+                    <li class="breadcrumb-item active">Details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model == null)
+{
+    <div class="xp-contentbar">
+        <div class="alert alert-danger">
+            Record not found or model is empty.
+        </div>
+
+        <a href="@Url.Action("Index", "CokeCoal")"
+           class="btn btn-secondary">
+            Back
+        </a>
+    </div>
+
+    return;
+}
+
+<div class="xp-contentbar">
+
+    <div class="card detail-card">
+
+        <div class="detail-header d-flex justify-content-between align-items-center">
+
+            <span>
+                Analysis Report - Coke & Coal
+                <small class="text-muted ml-2">QCF-AR-07</small>
+            </span>
+
+            @if (string.Equals(Model.FinalStatus, "Accepted", System.StringComparison.OrdinalIgnoreCase))
+            {
+                <span class="status-badge status-accepted">Accepted</span>
+            }
+            else if (string.Equals(Model.FinalStatus, "MRB", System.StringComparison.OrdinalIgnoreCase))
+            {
+                <span class="status-badge status-mrb">MRB</span>
+            }
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="section-title">General Information</div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Supplier</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.Supplier) ? "-" : Model.Supplier)</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Quantity</div>
+                    <div class="detail-value">@(Model.Quantity.HasValue ? Model.Quantity.Value.ToString("0.###") : "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Shipment Code No.</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.ShipmentCodeNo) ? "-" : Model.ShipmentCodeNo)</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Material</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.Material) ? "-" : Model.Material)</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Receiving Date</div>
+                    <div class="detail-value">@(Model.ReceivingDate.HasValue ? Model.ReceivingDate.Value.ToString("dd-MMM-yyyy") : "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Analysis Date</div>
+                    <div class="detail-value">@(Model.AnalysisDate.HasValue ? Model.AnalysisDate.Value.ToString("dd-MMM-yyyy") : "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Delivery PO</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.DeliveryPO) ? "-" : Model.DeliveryPO)</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Lot Size</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.LotSize) ? "-" : Model.LotSize)</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <div class="detail-label">Description</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Certificate No.</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.CertificateNo) ? "-" : Model.CertificateNo)</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">MRB No.</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.MRBNo) ? "-" : Model.MRBNo)</div>
+                </div>
+            </div>
+
+            <div class="section-title">Chemical and Physical Analysis</div>
+
+            <div class="sample-table-wrap">
+
+                <table class="table table-bordered table-condensed sample-table">
+
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Sample Code</th>
+                            <th>Ash %</th>
+                            <th>Moisture %</th>
+                            <th>Volatile %</th>
+                            <th>S %</th>
+                            <th>Fixed Carbon %</th>
+                            <th>Grain Size mm</th>
+                            <th>Remark</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    @if (Model.Samples != null && Model.Samples.Any())
+                    {
+                        foreach (var s in Model.Samples)
+                        {
+                            <tr>
+                                <td>@s.SrNo</td>
+                                <td>@(string.IsNullOrWhiteSpace(s.SampleCode) ? "-" : s.SampleCode)</td>
+                                <td>@(s.Ash.HasValue ? s.Ash.Value.ToString("0.####") : "-")</td>
+                                <td>@(s.Moisture.HasValue ? s.Moisture.Value.ToString("0.####") : "-")</td>
+                                <td>@(s.Volatile.HasValue ? s.Volatile.Value.ToString("0.####") : "-")</td>
+                                <td>@(s.S.HasValue ? s.S.Value.ToString("0.####") : "-")</td>
+                                <td>@(s.FixedCarbon.HasValue ? s.FixedCarbon.Value.ToString("0.####") : "-")</td>
+                                <td>@(string.IsNullOrWhiteSpace(s.GrainSizeMM) ? "-" : s.GrainSizeMM)</td>
+                                <td>@(string.IsNullOrWhiteSpace(s.Remark) ? "-" : s.Remark)</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">
+                                No sample records found.
+                            </td>
+                        </tr>
+                    }
+
+                    </tbody>
+
+                    @if (Model.Samples != null && Model.Samples.Any())
+                    {
+                        <tfoot>
+                            <tr class="average-row">
+                                <th colspan="2">Average</th>
+                                <td>@(Model.Samples.Where(x => x.Ash.HasValue).Any() ? Model.Samples.Where(x => x.Ash.HasValue).Average(x => x.Ash.Value).ToString("0.0000") : "-")</td>
+                                <td>@(Model.Samples.Where(x => x.Moisture.HasValue).Any() ? Model.Samples.Where(x => x.Moisture.HasValue).Average(x => x.Moisture.Value).ToString("0.0000") : "-")</td>
+                                <td>@(Model.Samples.Where(x => x.Volatile.HasValue).Any() ? Model.Samples.Where(x => x.Volatile.HasValue).Average(x => x.Volatile.Value).ToString("0.0000") : "-")</td>
+                                <td>@(Model.Samples.Where(x => x.S.HasValue).Any() ? Model.Samples.Where(x => x.S.HasValue).Average(x => x.S.Value).ToString("0.0000") : "-")</td>
+                                <td>@(Model.Samples.Where(x => x.FixedCarbon.HasValue).Any() ? Model.Samples.Where(x => x.FixedCarbon.HasValue).Average(x => x.FixedCarbon.Value).ToString("0.0000") : "-")</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    }
+
+                </table>
+
+            </div>
+
+            <div class="section-title">Decision / Comments</div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <div class="detail-label">Decision Details</div>
+                    <div class="detail-value text-box">
+                        @(string.IsNullOrWhiteSpace(Model.DecisionDetails) ? "-" : Model.DecisionDetails)
+                    </div>
+                </div>
+
+                <div class="form-group col-md-6">
+                    <div class="detail-label">Comments</div>
+                    <div class="detail-value text-box">
+                        @(string.IsNullOrWhiteSpace(Model.Comments) ? "-" : Model.Comments)
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">System Information</div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Created By</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.CreatedBy) ? "-" : Model.CreatedBy)</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Created Date</div>
+                    <div class="detail-value">@(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("dd-MMM-yyyy hh:mm tt") : "-")</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Updated By</div>
+                    <div class="detail-value">@(string.IsNullOrWhiteSpace(Model.UpdatedBy) ? "-" : Model.UpdatedBy)</div>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <div class="detail-label">Updated Date</div>
+                    <div class="detail-value">@(Model.UpdatedDate.HasValue ? Model.UpdatedDate.Value.ToString("dd-MMM-yyyy hh:mm tt") : "-")</div>
+                </div>
+            </div>
+
+            <div class="text-right mt-3">
+                <a href="@Url.Action("Index", "CokeCoal")"
+                   class="btn btn-secondary">
+                    Back
+                </a>
+
+                <a href="@Url.Action("Add", "CokeCoal", new { id = Model.ID })"
+                   class="btn btn-warning">
+                    Edit
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

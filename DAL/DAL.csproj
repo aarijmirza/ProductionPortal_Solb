@@ -110,10 +110,14 @@
     <Compile Include="Models\LaddleFurnaceBLL.cs" />
     <Compile Include="Models\PlantConsumptionBLL.cs" />
     <Compile Include="Models\PlantDelayBLL.cs" />
+    <Compile Include="Models\QCCokeCoalBLL.cs" />
+    <Compile Include="Models\QCFerroAlloyReportBLL.cs" />
+    <Compile Include="Models\QCFluorsparReportBLL.cs" />
     <Compile Include="Models\QCHBIDRIAnalysisBLL.cs" />
     <Compile Include="Models\QCInspectionDataBLL.cs" />
     <Compile Include="Models\QCInspectionDataRMBLL.cs" />
     <Compile Include="Models\QCInspectionRMPageVM.cs" />
+    <Compile Include="Models\QCLimeReactivityReportBLL.cs" />
     <Compile Include="Models\RawStockBLL.cs" />
     <Compile Include="Models\RMBundlingQCRowBLL.cs" />
     <Compile Include="Models\RMChemicalAnalysisBLL.cs" />

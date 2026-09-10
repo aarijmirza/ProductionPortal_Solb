@@ -7,9 +7,10 @@
     ViewBag.Title = "SMP Production Delay";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    var records = Model != null
-        ? Model.ToList()
-        : new List<DAL.Models.SMPProductionDelayBLL>();
+    var records =
+        Model != null
+            ? Model.ToList()
+            : new List<DAL.Models.SMPProductionDelayBLL>();
 }
 
 <style>
@@ -36,18 +37,6 @@
             margin-bottom: 12px;
         }
 
-        .upload-card label {
-            color: #374151;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .upload-card .form-control {
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            min-height: 38px;
-        }
-
     .btn-upload-smp {
         background: #16815b;
         border-color: #16815b;
@@ -69,7 +58,7 @@
         border-radius: 5px;
         color: #92400e;
         font-size: 12px;
-        line-height: 1.5;
+        line-height: 1.55;
         margin-top: 12px;
         padding: 9px 11px;
     }
@@ -80,7 +69,7 @@
         border-radius: 5px;
         color: #065f46;
         font-size: 12px;
-        line-height: 1.5;
+        line-height: 1.55;
         margin-top: 8px;
         padding: 9px 11px;
     }
@@ -89,10 +78,6 @@
         display: flex;
         gap: 8px;
     }
-
-        .smp-filter-actions .btn {
-            min-height: 38px;
-        }
 
     .production-table-wrap {
         background: #fff;
@@ -136,6 +121,17 @@
         font-weight: 700;
     }
 
+    .plant-badge {
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 999px;
+        color: #3730a3;
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 4px 8px;
+    }
+
     .analysis-light {
         border-radius: 50%;
         box-shadow: 0 0 0 3px rgba(0, 0, 0, .05);
@@ -155,10 +151,6 @@
         }
 
     @@media (max-width: 767px) {
-        .upload-card {
-            padding: 14px;
-        }
-
         .smp-filter-actions {
             display: block;
         }
@@ -182,12 +174,14 @@
 </div>
 
 <div class="xp-contentbar">
+
     <div class="upload-card">
         <div class="row">
+
             <div class="col-md-7">
                 <div class="section-title">
                     <i class="fa fa-file-excel-o text-success"></i>
-                    Upload Failure Analysis Excel
+                    Upload SMP Delay Excel
                 </div>
 
                 @using (Html.BeginForm(
@@ -228,19 +222,20 @@
                     </div>
                 }
 
-                @*<div class="upload-warning">
+                <div class="upload-warning">
                     <i class="fa fa-exclamation-triangle"></i>
-                    Sheet name must be <b>Delays analysis</b> and it must
-                    contain the approved 19 columns. Maximum file size: 10 MB.
+                    Sheet name must be <b>SMP Delay Upload</b>.
+                    Header row is Excel row 3 and must contain the approved
+                    27 columns from <b>ID</b> through <b>UpdatedDate</b>.
                 </div>
 
                 <div class="upload-note">
                     <i class="fa fa-info-circle"></i>
-                    Codes are generated as <b>SS-SMP-001</b>. If the uploaded
-                    dates already exist for SteelMaking/SMP, their records are
-                    updated from the file. Active rows omitted from those dates
-                    are closed with StatusID 3.
-                </div>*@
+                    Plant comes from <b>SMPPlantArea.AreaCode</b>.
+                    Equipment must belong to the selected Plant ID through
+                    <b>SMPDelayEquipments.PlantArea</b>.
+                    ID, DelayCode and audit fields are database controlled.
+                </div>
             </div>
 
             <div class="col-md-5 mt-4 mt-md-0">
@@ -277,7 +272,8 @@
                     </div>
 
                     <div class="smp-filter-actions">
-                        <button type="submit" class="btn btn-danger flex-fill">
+                        <button type="submit"
+                                class="btn btn-danger flex-fill">
                             <i class="fa fa-search"></i>
                             Search
                         </button>
@@ -290,6 +286,7 @@
                     </div>
                 }
             </div>
+
         </div>
     </div>
 
@@ -310,12 +307,15 @@
                 <thead>
                     <tr>
                         <th>Delay Code</th>
+                        <th>Row No.</th>
+                        <th>Plant</th>
                         <th>Date</th>
                         <th>Shift</th>
                         <th>Start</th>
                         <th>Finish</th>
                         <th>Total Min.</th>
                         <th>Agency</th>
+                        <th>Agency Code</th>
                         <th>Area</th>
                         <th>Equipment</th>
                         <th>Delay Description</th>
@@ -332,26 +332,49 @@
                                 <td class="font-weight-bold">
                                     @item.DelayCode
                                 </td>
+
+                                <td>
+                                    @(item.RowNo.HasValue
+                                        ? item.RowNo.Value.ToString()
+                                        : "-")
+                                </td>
+
+                                <td>
+                                    <span class="plant-badge">
+                                        @item.Plant
+                                        @if (!string.IsNullOrWhiteSpace(item.PlantDescription))
+                                        {
+                                            @: - @item.PlantDescription
+                                        }
+                                    </span>
+                                </td>
+
                                 <td>@item.ProductionDate.ToString("dd-MMM-yyyy")</td>
                                 <td>@item.ShiftGroup</td>
+
                                 <td>
                                     @(item.DelayStart.HasValue
                                         ? item.DelayStart.Value.ToString(@"hh\:mm")
                                         : "-")
                                 </td>
+
                                 <td>
                                     @(item.DelayFinish.HasValue
                                         ? item.DelayFinish.Value.ToString(@"hh\:mm")
                                         : "-")
                                 </td>
+
                                 <td>@item.TotalMinutes</td>
                                 <td>@item.Agency</td>
+                                <td>@item.AgencyCode</td>
                                 <td>@item.Area</td>
                                 <td>@item.Equipment</td>
+
                                 <td class="delay-description-cell"
                                     title="@item.DelayDescription">
                                     @item.DelayDescription
                                 </td>
+
                                 <td>
                                     @if (item.IsFailureAnalysisFilled)
                                     {
@@ -374,7 +397,8 @@
                     else
                     {
                         <tr>
-                            <td colspan="11" class="text-center text-muted p-4">
+                            <td colspan="14"
+                                class="text-center text-muted p-4">
                                 No SMP production-delay data found.
                             </td>
                         </tr>
@@ -383,12 +407,14 @@
             </table>
         </div>
     </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     (function () {
+
         var form = document.getElementById('smpDelayUploadForm');
         var file = document.getElementById('excelFile');
         var button = document.getElementById('btnUploadSMPDelay');
@@ -401,7 +427,7 @@
                     Swal.fire({
                         icon: 'warning',
                         title: 'File required',
-                        text: 'Please select the Failure Analysis Excel file.',
+                        text: 'Please select the SMP Delay Excel file.',
                         confirmButtonColor: '#991b1b'
                     });
                     return;
@@ -410,7 +436,7 @@
                 Swal.fire({
                     icon: 'question',
                     title: 'Upload Excel file?',
-                    text: 'Existing SteelMaking data for the uploaded dates will be synchronized with this file.',
+                    text: 'Existing records for the uploaded Plant ID/date combinations will be synchronized with this file.',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, upload',
                     cancelButtonText: 'Cancel',
@@ -456,5 +482,6 @@
                 });
             </text>
         }
+
     })();
 </script>

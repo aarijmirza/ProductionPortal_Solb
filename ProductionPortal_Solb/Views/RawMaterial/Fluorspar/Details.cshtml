@@ -1,0 +1,163 @@
+﻿@model DAL.Models.QCFluorsparReportBLL
+@using System.Linq
+
+@{ ViewBag.Title = "Fluorspar Report Details"; }
+<style>
+    .detail-card {
+        border: 1px solid #e8edf3;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.05);
+        overflow: hidden
+    }
+
+    .detail-header {
+        background: #f8f9fb;
+        border-bottom: 1px solid #e8edf3;
+        padding: 15px 20px;
+        font-weight: 600;
+        font-size: 18px
+    }
+
+    .detail-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        margin-bottom: 5px
+    }
+
+    .detail-value {
+        background: #f3f5f8;
+        border: 1px solid #e8edf3;
+        border-radius: 5px;
+        min-height: 38px;
+        padding: 9px 12px;
+        font-size: 14px;
+        color: #333;
+        word-break: break-word
+    }
+
+    .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #444;
+        border-left: 4px solid #b30d0d;
+        padding-left: 10px;
+        margin: 20px 0 15px
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        display: inline-block
+    }
+
+    .status-accepted {
+        background: #d4edda;
+        color: #155724
+    }
+
+    .status-mrb {
+        background: #fff3cd;
+        color: #856404
+    }
+
+    .status-other {
+        background: #e2e3e5;
+        color: #383d41
+    }
+
+    .sample-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid #e8edf3;
+        border-radius: 6px
+    }
+
+    .sample-table {
+        min-width: 1400px;
+        margin-bottom: 0
+    }
+
+        .sample-table thead th {
+            background: #f8f9fb;
+            text-align: center;
+            white-space: nowrap
+        }
+
+        .sample-table td {
+            text-align: center;
+            white-space: nowrap
+        }
+
+    .average-row td, .average-row th {
+        background: #f3f7fa;
+        font-weight: 700;
+        text-align: center
+    }
+
+    .remarks-box {
+        min-height: 75px;
+        white-space: pre-wrap
+    }
+</style>
+
+<div class="xp-breadcrumbbar"><div class="row"><div class="col-md-6"><h4 class="xp-page-title">Fluorspar Report Details</h4></div><div class="col-md-6"><div class="xp-breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="@Url.Action("Index","Home")"><i class="icon-home"></i></a></li><li class="breadcrumb-item"><a href="@Url.Action("Index","Fluorspar")">Fluorspar</a></li><li class="breadcrumb-item active">Details</li></ol></div></div></div></div>
+@if (Model == null)
+{<div class="xp-contentbar"><div class="alert alert-danger">Record not found or model is empty.</div><a href="@Url.Action("Index","Fluorspar")" class="btn btn-secondary">Back</a></div>return;
+}
+<div class="xp-contentbar">
+    <div class="card detail-card">
+        <div class="detail-header d-flex justify-content-between align-items-center"><span>Analysis Report - Fluorspar <small class="text-muted ml-2">QCF-AR-06</small></span>@if (string.Equals(Model.FinalStatus, "Accepted", StringComparison.OrdinalIgnoreCase))
+        {<span class="status-badge status-accepted">Accepted</span>}
+        else if (string.Equals(Model.FinalStatus, "MRB", StringComparison.OrdinalIgnoreCase))
+        {<span class="status-badge status-mrb">MRB</span>}
+        else
+        {<span class="status-badge status-other">@(string.IsNullOrWhiteSpace(Model.FinalStatus)?"Not Set":Model.FinalStatus)</span>}</div><div class="card-body">
+            <div class="section-title">General Information</div>
+            <div class="form-row">
+                @foreach (var x in new[] { new { L = "Supplier", V = Model.Supplier }, new { L = "Quantity", V = Model.Quantity.HasValue ? Model.Quantity.Value.ToString("0.###") : "-" }, new { L = "Shipment Code No.", V = Model.ShipmentCodeNo }, new { L = "Material", V = Model.Material } })
+                {<div class="form-group col-md-3"><div class="detail-label">@x.L</div><div class="detail-value">@(string.IsNullOrWhiteSpace(x.V)?"-":x.V)</div></div>}
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-3"><div class="detail-label">Receiving Date</div><div class="detail-value">@(Model.ReceivingDate.HasValue?Model.ReceivingDate.Value.ToString("dd-MMM-yyyy"):"-")</div></div>
+                <div class="form-group col-md-3"><div class="detail-label">Analysis Date</div><div class="detail-value">@(Model.AnalysisDate.HasValue?Model.AnalysisDate.Value.ToString("dd-MMM-yyyy"):"-")</div></div>
+                <div class="form-group col-md-3"><div class="detail-label">Reference No.</div><div class="detail-value">@(string.IsNullOrWhiteSpace(Model.ReferenceNo)?"-":Model.ReferenceNo)</div></div>
+                <div class="form-group col-md-3"><div class="detail-label">Delivery PO</div><div class="detail-value">@(string.IsNullOrWhiteSpace(Model.DeliveryPO)?"-":Model.DeliveryPO)</div></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-3"><div class="detail-label">Lot Size</div><div class="detail-value">@(string.IsNullOrWhiteSpace(Model.LotSize)?"-":Model.LotSize)</div></div>
+                <div class="form-group col-md-3"><div class="detail-label">Certificate No.</div><div class="detail-value">@(string.IsNullOrWhiteSpace(Model.CertificateNo)?"-":Model.CertificateNo)</div></div>
+                <div class="form-group col-md-3"><div class="detail-label">Final Status</div><div class="detail-value">@(string.IsNullOrWhiteSpace(Model.FinalStatus)?"-":Model.FinalStatus)</div></div>
+                <div class="form-group col-md-3"><div class="detail-label">MRB No.</div><div class="detail-value">@(string.IsNullOrWhiteSpace(Model.MRBNo)?"-":Model.MRBNo)</div></div>
+            </div>
+            <div class="section-title">Sample Analysis</div><div class="sample-table-wrap">
+                <table class="table table-bordered table-condensed sample-table">
+                    <thead><tr><th>No.</th><th>Sample No.</th><th>CaF2 %</th><th>SiO2 %</th><th>P %</th><th>S %</th><th>Fe2O3 %</th><th>Al2O3 %</th><th>Na2O %</th><th>K2O %</th><th>BaO %</th><th>Pb %</th><th>Comment</th></tr></thead>
+                    <tbody>
+                        @if (Model.Samples != null && Model.Samples.Any())
+                        {
+                            foreach (var s in Model.Samples)
+                            {
+                                <tr><td>@s.SrNo</td><td>@(string.IsNullOrWhiteSpace(s.SampleNo)?"-":s.SampleNo)</td><td>@(s.CaF2.HasValue?s.CaF2.Value.ToString("0.####"):"-")</td><td>@(s.SiO2.HasValue?s.SiO2.Value.ToString("0.####"):"-")</td><td>@(s.P.HasValue?s.P.Value.ToString("0.####"):"-")</td><td>@(s.S.HasValue?s.S.Value.ToString("0.####"):"-")</td><td>@(s.Fe2O3.HasValue?s.Fe2O3.Value.ToString("0.####"):"-")</td><td>@(s.Al2O3.HasValue?s.Al2O3.Value.ToString("0.####"):"-")</td><td>@(s.Na2O.HasValue?s.Na2O.Value.ToString("0.####"):"-")</td><td>@(s.K2O.HasValue?s.K2O.Value.ToString("0.####"):"-")</td><td>@(s.BaO.HasValue?s.BaO.Value.ToString("0.####"):"-")</td><td>@(s.Pb.HasValue?s.Pb.Value.ToString("0.####"):"-")</td><td style="text-align:left">@(string.IsNullOrWhiteSpace(s.Comment)?"-":s.Comment)</td></tr>
+}
+                        }
+                        else
+                        {
+                            <tr><td colspan="13" class="text-center text-muted">No sample records found.</td></tr>
+}
+                    </tbody>
+                    @if (Model.Samples != null && Model.Samples.Any())
+                    {
+                        <tfoot><tr class="average-row"><th colspan="2">Average</th><td>@(Model.Samples.Where(x=>x.CaF2.HasValue).Any()?Model.Samples.Where(x=>x.CaF2.HasValue).Average(x=>x.CaF2.Value).ToString("0.0000"):"-")</td><td>@(Model.Samples.Where(x=>x.SiO2.HasValue).Any()?Model.Samples.Where(x=>x.SiO2.HasValue).Average(x=>x.SiO2.Value).ToString("0.0000"):"-")</td><td>@(Model.Samples.Where(x=>x.P.HasValue).Any()?Model.Samples.Where(x=>x.P.HasValue).Average(x=>x.P.Value).ToString("0.0000"):"-")</td><td>@(Model.Samples.Where(x=>x.S.HasValue).Any()?Model.Samples.Where(x=>x.S.HasValue).Average(x=>x.S.Value).ToString("0.0000"):"-")</td><td>@(Model.Samples.Where(x=>x.Fe2O3.HasValue).Any()?Model.Samples.Where(x=>x.Fe2O3.HasValue).Average(x=>x.Fe2O3.Value).ToString("0.0000"):"-")</td><td>@(Model.Samples.Where(x=>x.Al2O3.HasValue).Any()?Model.Samples.Where(x=>x.Al2O3.HasValue).Average(x=>x.Al2O3.Value).ToString("0.0000"):"-")</td><td>@(Model.Samples.Where(x=>x.Na2O.HasValue).Any()?Model.Samples.Where(x=>x.Na2O.HasValue).Average(x=>x.Na2O.Value).ToString("0.0000"):"-")</td><td>@(Model.Samples.Where(x=>x.K2O.HasValue).Any()?Model.Samples.Where(x=>x.K2O.HasValue).Average(x=>x.K2O.Value).ToString("0.0000"):"-")</td><td>@(Model.Samples.Where(x=>x.BaO.HasValue).Any()?Model.Samples.Where(x=>x.BaO.HasValue).Average(x=>x.BaO.Value).ToString("0.0000"):"-")</td><td>@(Model.Samples.Where(x=>x.Pb.HasValue).Any()?Model.Samples.Where(x=>x.Pb.HasValue).Average(x=>x.Pb.Value).ToString("0.0000"):"-")</td><td></td></tr></tfoot>
+}
+                </table>
+            </div>
+            <div class="section-title">Remarks / Comments</div><div class="form-row"><div class="form-group col-md-6"><div class="detail-label">Remarks</div><div class="detail-value remarks-box">@(string.IsNullOrWhiteSpace(Model.Remarks)?"-":Model.Remarks)</div></div><div class="form-group col-md-6"><div class="detail-label">Comments</div><div class="detail-value remarks-box">@(string.IsNullOrWhiteSpace(Model.Comments)?"-":Model.Comments)</div></div></div>
+            <div class="section-title">System Information</div><div class="form-row"><div class="form-group col-md-3"><div class="detail-label">Created By</div><div class="detail-value">@(string.IsNullOrWhiteSpace(Model.CreatedBy)?"-":Model.CreatedBy)</div></div><div class="form-group col-md-3"><div class="detail-label">Created Date</div><div class="detail-value">@(Model.CreatedDate.HasValue?Model.CreatedDate.Value.ToString("dd-MMM-yyyy hh:mm tt"):"-")</div></div><div class="form-group col-md-3"><div class="detail-label">Updated By</div><div class="detail-value">@(string.IsNullOrWhiteSpace(Model.UpdatedBy)?"-":Model.UpdatedBy)</div></div><div class="form-group col-md-3"><div class="detail-label">Updated Date</div><div class="detail-value">@(Model.UpdatedDate.HasValue?Model.UpdatedDate.Value.ToString("dd-MMM-yyyy hh:mm tt"):"-")</div></div></div>
+            <div class="text-right mt-3"><a href="@Url.Action("List","Fluorspar")" class="btn btn-secondary">Back</a> <a href="@Url.Action("Add","Fluorspar",new{id=Model.ID})" class="btn btn-warning">Edit</a></div>
+        </div>
+    </div>
+</div>
