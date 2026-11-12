@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using WebAPICode.Helpers;
@@ -131,6 +132,525 @@ namespace BAL.Repositories
             {
                 return list;
             }
+        }
+
+
+        public List<string> GetSMPMaintenanceEquipmentList(
+            string area,
+            string selectedEquipment)
+        {
+            List<string> list =
+                new List<string>();
+
+            try
+            {
+                SqlParameter[] parameters =
+                {
+                    new SqlParameter(
+                        "@Area",
+                        SqlDbType.NVarChar,
+                        100
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(area)
+                                ? (object)DBNull.Value
+                                : area.Trim()
+                    }
+                };
+
+
+                DataTable dt =
+                    new DBHelper()
+                        .GetTableFromSP(
+                            "sp_GetMaintenanceSMPEquipmentsByArea",
+                            parameters
+                        );
+
+
+                if (dt != null)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        string displayText =
+                            row.Table.Columns.Contains(
+                                "DisplayText"
+                            )
+                                ? Convert.ToString(
+                                    row["DisplayText"]
+                                )
+                                : "";
+
+
+                        if (
+                            !string.IsNullOrWhiteSpace(
+                                displayText
+                            )
+                        )
+                        {
+                            list.Add(
+                                displayText.Trim()
+                            );
+                        }
+                    }
+                }
+
+
+                if (
+                    !string.IsNullOrWhiteSpace(
+                        selectedEquipment
+                    )
+                    &&
+                    !list.Any(
+                        x =>
+                            string.Equals(
+                                x,
+                                selectedEquipment.Trim(),
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                    )
+                )
+                {
+                    list.Insert(
+                        0,
+                        selectedEquipment.Trim()
+                    );
+                }
+
+
+                return list
+                    .Distinct(
+                        StringComparer.OrdinalIgnoreCase
+                    )
+                    .OrderBy(
+                        x => x
+                    )
+                    .ToList();
+            }
+            catch
+            {
+                return list;
+            }
+        }
+
+
+        public int UpdateSMPMaintenanceEquipment(
+            int delayID,
+            string equipment,
+            string updatedBy)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@ID",
+                    SqlDbType.Int
+                )
+                {
+                    Value = delayID
+                },
+
+                new SqlParameter(
+                    "@Equipment",
+                    SqlDbType.NVarChar,
+                    250
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            equipment
+                        )
+                            ? (object)DBNull.Value
+                            : equipment.Trim()
+                },
+
+                new SqlParameter(
+                    "@UpdatedBy",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            updatedBy
+                        )
+                            ? (object)DBNull.Value
+                            : updatedBy.Trim()
+                }
+            };
+
+
+            DataTable dt =
+                new DBHelper()
+                    .GetTableFromSP(
+                        "sp_UpdateMaintenanceSMPEquipment",
+                        parameters
+                    );
+
+
+            if (
+                dt != null &&
+                dt.Rows.Count > 0 &&
+                dt.Columns.Contains(
+                    "AffectedRows"
+                ) &&
+                dt.Rows[0][
+                    "AffectedRows"
+                ] != DBNull.Value
+            )
+            {
+                return Convert.ToInt32(
+                    dt.Rows[0][
+                        "AffectedRows"
+                    ]
+                );
+            }
+
+
+            return 0;
+        }
+
+
+        public int UpdateSMPMaintenanceDelayCorrection(
+            int delayID,
+            string delayDescription1,
+            string reasonForOccurence1,
+            string actionTaken1,
+            string updatedBy)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@ID",
+                    SqlDbType.Int
+                )
+                {
+                    Value = delayID
+                },
+
+                new SqlParameter(
+                    "@DelayDescription1",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            delayDescription1
+                        )
+                            ? (object)DBNull.Value
+                            : delayDescription1.Trim()
+                },
+
+                new SqlParameter(
+                    "@ReasonForOccurence1",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            reasonForOccurence1
+                        )
+                            ? (object)DBNull.Value
+                            : reasonForOccurence1.Trim()
+                },
+
+                new SqlParameter(
+                    "@ActionTaken1",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            actionTaken1
+                        )
+                            ? (object)DBNull.Value
+                            : actionTaken1.Trim()
+                },
+
+                new SqlParameter(
+                    "@UpdatedBy",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            updatedBy
+                        )
+                            ? (object)DBNull.Value
+                            : updatedBy.Trim()
+                }
+            };
+
+
+            DataTable dt =
+                new DBHelper()
+                    .GetTableFromSP(
+                        "sp_UpdateMaintenanceSMPDelayCorrection",
+                        parameters
+                    );
+
+
+            if (
+                dt != null &&
+                dt.Rows.Count > 0 &&
+                dt.Columns.Contains(
+                    "AffectedRows"
+                ) &&
+                dt.Rows[0][
+                    "AffectedRows"
+                ] != DBNull.Value
+            )
+            {
+                return Convert.ToInt32(
+                    dt.Rows[0][
+                        "AffectedRows"
+                    ]
+                );
+            }
+
+
+            return 0;
+        }
+
+
+        public int UpdateSMPMaintenanceFailureAnalysis(
+            int delayID,
+            DateTime? lastPMDate,
+            string failureReportStatus,
+            string increaseMTBF,
+            string increaseMTBF1,
+            string decreaseMTTR,
+            string decreaseMTTR1,
+            string sapBreakdownOrder,
+            string failureCategory1Component,
+            string failureCategory2RootCause,
+            string filePath,
+            string originalFileName,
+            string fileRemarks,
+            string updatedBy)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@ID",
+                    SqlDbType.Int
+                )
+                {
+                    Value = delayID
+                },
+
+                new SqlParameter(
+                    "@LastPMDate",
+                    SqlDbType.Date
+                )
+                {
+                    Value =
+                        lastPMDate.HasValue
+                            ? (object)lastPMDate.Value.Date
+                            : DBNull.Value
+                },
+
+                new SqlParameter(
+                    "@FailureReportStatus",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            failureReportStatus
+                        )
+                            ? (object)DBNull.Value
+                            : failureReportStatus.Trim()
+                },
+
+                new SqlParameter(
+                    "@IncreaseMTBF",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            increaseMTBF
+                        )
+                            ? (object)DBNull.Value
+                            : increaseMTBF.Trim()
+                },
+
+                new SqlParameter(
+                    "@IncreaseMTBF1",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            increaseMTBF1
+                        )
+                            ? (object)DBNull.Value
+                            : increaseMTBF1.Trim()
+                },
+
+                new SqlParameter(
+                    "@DecreaseMTTR",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            decreaseMTTR
+                        )
+                            ? (object)DBNull.Value
+                            : decreaseMTTR.Trim()
+                },
+
+                new SqlParameter(
+                    "@DecreaseMTTR1",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            decreaseMTTR1
+                        )
+                            ? (object)DBNull.Value
+                            : decreaseMTTR1.Trim()
+                },
+
+                new SqlParameter(
+                    "@SAPBreakdownOrder",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            sapBreakdownOrder
+                        )
+                            ? (object)DBNull.Value
+                            : sapBreakdownOrder.Trim()
+                },
+
+                new SqlParameter(
+                    "@FailureCategory1Component",
+                    SqlDbType.NVarChar,
+                    500
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            failureCategory1Component
+                        )
+                            ? (object)DBNull.Value
+                            : failureCategory1Component.Trim()
+                },
+
+                new SqlParameter(
+                    "@FailureCategory2RootCause",
+                    SqlDbType.NVarChar,
+                    500
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            failureCategory2RootCause
+                        )
+                            ? (object)DBNull.Value
+                            : failureCategory2RootCause.Trim()
+                },
+
+                new SqlParameter(
+                    "@FailureAnalysisFilePath",
+                    SqlDbType.NVarChar,
+                    500
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            filePath
+                        )
+                            ? (object)DBNull.Value
+                            : filePath.Trim()
+                },
+
+                new SqlParameter(
+                    "@FailureAnalysisFileName",
+                    SqlDbType.NVarChar,
+                    255
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            originalFileName
+                        )
+                            ? (object)DBNull.Value
+                            : originalFileName.Trim()
+                },
+
+                new SqlParameter(
+                    "@FailureAnalysisFileRemarks",
+                    SqlDbType.NVarChar,
+                    500
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            fileRemarks
+                        )
+                            ? (object)DBNull.Value
+                            : fileRemarks.Trim()
+                },
+
+                new SqlParameter(
+                    "@UpdatedBy",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(
+                            updatedBy
+                        )
+                            ? (object)DBNull.Value
+                            : updatedBy.Trim()
+                }
+            };
+
+
+            DataTable dt =
+                new DBHelper()
+                    .GetTableFromSP(
+                        "sp_UpdateMaintenanceSMPFailureAnalysis",
+                        parameters
+                    );
+
+
+            if (
+                dt != null &&
+                dt.Rows.Count > 0 &&
+                dt.Columns.Contains(
+                    "AffectedRows"
+                ) &&
+                dt.Rows[0][
+                    "AffectedRows"
+                ] != DBNull.Value
+            )
+            {
+                return Convert.ToInt32(
+                    dt.Rows[0][
+                        "AffectedRows"
+                    ]
+                );
+            }
+
+
+            return 0;
         }
 
 
@@ -683,6 +1203,289 @@ new SqlParameter(
 
             return list;
         }
+
+
+        // =========================================================
+        // TAB SOURCE ROUTING
+        // SteelMaking -> SMPDelayDaywise
+        // RollingMill -> PlantDelay
+        // =========================================================
+
+        public List<PlantDelayBLL> GetMaintenanceRecordsBySource(
+            DateTime? fromDate,
+            DateTime? toDate,
+            string source,
+            string plantOrArea,
+            string delayType,
+            string agency,
+            bool isExport)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@FromDate",
+                    SqlDbType.Date
+                )
+                {
+                    Value =
+                        fromDate.HasValue
+                            ? (object)fromDate.Value.Date
+                            : DBNull.Value
+                },
+
+                new SqlParameter(
+                    "@ToDate",
+                    SqlDbType.Date
+                )
+                {
+                    Value =
+                        toDate.HasValue
+                            ? (object)toDate.Value.Date
+                            : DBNull.Value
+                },
+
+                new SqlParameter(
+                    "@Source",
+                    SqlDbType.NVarChar,
+                    50
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(source)
+                            ? (object)DBNull.Value
+                            : source.Trim()
+                },
+
+                new SqlParameter(
+                    "@PlantOrArea",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(plantOrArea)
+                            ? (object)DBNull.Value
+                            : plantOrArea.Trim()
+                },
+
+                new SqlParameter(
+                    "@Agency",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(agency)
+                            ? (object)DBNull.Value
+                            : agency.Trim()
+                },
+
+                new SqlParameter(
+                    "@DelayType",
+                    SqlDbType.NVarChar,
+                    -1
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(delayType)
+                            ? (object)DBNull.Value
+                            : delayType.Trim()
+                },
+
+                new SqlParameter(
+                    "@IsExport",
+                    SqlDbType.Bit
+                )
+                {
+                    Value =
+                        isExport
+                }
+            };
+
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_GetMaintenanceRecordsBySource",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+
+            var list =
+                new List<PlantDelayBLL>();
+
+
+            if (
+                dt == null ||
+                dt.Rows.Count == 0
+            )
+            {
+                return list;
+            }
+
+
+            foreach (DataRow row in dt.Rows)
+            {
+                list.Add(
+                    new PlantDelayBLL
+                    {
+                        ID =
+                            GetInt(
+                                row,
+                                "ID"
+                            ),
+
+                        Date =
+                            GetNullableDate(
+                                row,
+                                "Date"
+                            ),
+
+                        Plant =
+                            GetString(
+                                row,
+                                "Plant"
+                            ),
+
+                        ProductSize =
+                            GetString(
+                                row,
+                                "ProductSize"
+                            ),
+
+                        Area =
+                            GetString(
+                                row,
+                                "Area"
+                            ),
+
+                        Shift =
+                            GetString(
+                                row,
+                                "Shift"
+                            ),
+
+                        StartTime =
+                            GetNullableTimeSpan(
+                                row,
+                                "StartTime"
+                            ),
+
+                        EndTime =
+                            GetNullableTimeSpan(
+                                row,
+                                "EndTime"
+                            ),
+
+                        TotalDuration =
+                            GetNullableInt(
+                                row,
+                                "TotalDuration"
+                            ),
+
+                        DelayType =
+                            GetString(
+                                row,
+                                "DelayType"
+                            ),
+
+                        AgencyName =
+                            GetString(
+                                row,
+                                "AgencyName"
+                            ),
+
+                        Delaycode =
+                            GetString(
+                                row,
+                                "DelayCode"
+                            ),
+
+                        Equipments =
+                            GetString(
+                                row,
+                                "Equipments"
+                            ),
+
+                        DelayDescription =
+                            GetString(
+                                row,
+                                "DelayDescription"
+                            ),
+
+                        ReasonForOccurence =
+                            GetString(
+                                row,
+                                "ReasonForOccurence"
+                            ),
+
+                        ActionTaken =
+                            GetString(
+                                row,
+                                "ActionTaken"
+                            ),
+
+                        LastPMDate =
+                            GetNullableDate(
+                                row,
+                                "LastPMDate"
+                            ),
+
+                        FailureReportStatus =
+                            GetString(
+                                row,
+                                "FailureReportStatus"
+                            ),
+
+                        IncreaseMTBF =
+                            GetString(
+                                row,
+                                "IncreaseMTBF"
+                            ),
+
+                        IncreaseMTBF1 =
+                            GetString(
+                                row,
+                                "IncreaseMTBF1"
+                            ),
+
+                        DecreaseMTTR =
+                            GetString(
+                                row,
+                                "DecreaseMTTR"
+                            ),
+
+                        DecreaseMTTR1 =
+                            GetString(
+                                row,
+                                "DecreaseMTTR1"
+                            ),
+
+                        SAPBreakdownOrder =
+                            GetString(
+                                row,
+                                "SAPBreakdownOrder"
+                            ),
+
+                        FailureCategory1Component =
+                            GetString(
+                                row,
+                                "FailureCategory1Component"
+                            ),
+
+                        FailureCategory2RootCause =
+                            GetString(
+                                row,
+                                "FailureCategory2RootCause"
+                            )
+                    }
+                );
+            }
+
+
+            return list;
+        }
+
 
         public List<PlantDelayBLL> GetAllDelay(
     DateTime fromDate,
@@ -1478,6 +2281,256 @@ new SqlParameter(
             }
         }
 
+        public PlantDelayBLL GetMaintenanceDetailBySource(
+            int id,
+            string source)
+        {
+            try
+            {
+                SqlParameter[] parameters =
+                {
+                    new SqlParameter(
+                        "@ID",
+                        SqlDbType.Int
+                    )
+                    {
+                        Value = id
+                    },
+
+                    new SqlParameter(
+                        "@Source",
+                        SqlDbType.NVarChar,
+                        50
+                    )
+                    {
+                        Value =
+                            string.IsNullOrWhiteSpace(source)
+                                ? (object)DBNull.Value
+                                : source.Trim()
+                    }
+                };
+
+
+                DataTable dt =
+                    new DBHelper()
+                        .GetTableFromSP(
+                            "sp_GetMaintenanceDetailBySource",
+                            parameters
+                        );
+
+
+                if (
+                    dt == null ||
+                    dt.Rows.Count == 0
+                )
+                {
+                    return null;
+                }
+
+
+                DataRow row =
+                    dt.Rows[0];
+
+
+                PlantDelayBLL model =
+                    new PlantDelayBLL
+                    {
+                        ID =
+                            row["ID"] == DBNull.Value
+                                ? 0
+                                : Convert.ToInt32(row["ID"]),
+
+                        Date =
+                            row["Date"] == DBNull.Value
+                                ? (DateTime?)null
+                                : Convert.ToDateTime(row["Date"]),
+
+                        Area =
+                            row["Area"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["Area"]),
+
+                        Plant =
+                            row["Plant"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["Plant"]),
+
+                        Delaycode =
+                            row["Delaycode"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["Delaycode"]),
+
+                        Shift =
+                            row["Shift"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["Shift"]),
+
+                        Team =
+                            row["Team"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["Team"]),
+
+                        ShiftIncharge =
+                            row["ShiftIncharge"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["ShiftIncharge"]),
+
+                        StartTime =
+                            row["StartTime"] == DBNull.Value
+                                ? (TimeSpan?)null
+                                : (TimeSpan)row["StartTime"],
+
+                        EndTime =
+                            row["EndTime"] == DBNull.Value
+                                ? (TimeSpan?)null
+                                : (TimeSpan)row["EndTime"],
+
+                        TotalDuration =
+                            row["TotalDuration"] == DBNull.Value
+                                ? 0
+                                : Convert.ToInt32(row["TotalDuration"]),
+
+                        Cobble =
+                            row["Cobble"] == DBNull.Value
+                                ? 0
+                                : Convert.ToInt32(row["Cobble"]),
+
+                        HotOut =
+                            row["HotOut"] == DBNull.Value
+                                ? 0
+                                : Convert.ToInt32(row["HotOut"]),
+
+                        DelayType =
+                            row["DelayType"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["DelayType"]),
+
+                        AgencyName =
+                            row["AgencyName"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["AgencyName"]),
+
+                        AgencyCode =
+                            row["AgencyCode"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["AgencyCode"]),
+
+                        Component =
+                            row["Component"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["Component"]),
+
+                        Equipments =
+                            row["Equipments"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["Equipments"]),
+
+                        Reason =
+                            row["Reason"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["Reason"]),
+
+                        DelayDescription =
+                            row["DelayDescription"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["DelayDescription"]),
+
+                        ReasonForOccurence =
+                            row["ReasonForOccurence"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["ReasonForOccurence"]),
+
+                        ActionTaken =
+                            row["ActionTaken"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["ActionTaken"]),
+
+                        DelayDescription1 =
+                            row["DelayDescription1"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["DelayDescription1"]),
+
+                        ReasonForOccurence1 =
+                            row["ReasonForOccurence1"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["ReasonForOccurence1"]),
+
+                        ActionTaken1 =
+                            row["ActionTaken1"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["ActionTaken1"]),
+
+                        StatusID =
+                            row["StatusID"] == DBNull.Value
+                                ? 0
+                                : Convert.ToInt32(row["StatusID"]),
+
+                        CreatedBy =
+                            row["CreatedBy"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["CreatedBy"]),
+
+                        CreatedDate =
+                            row["CreatedDate"] == DBNull.Value
+                                ? (DateTime?)null
+                                : Convert.ToDateTime(row["CreatedDate"]),
+
+                        LastPMDate =
+                            row["LastPMDate"] == DBNull.Value
+                                ? (DateTime?)null
+                                : Convert.ToDateTime(row["LastPMDate"]),
+
+                        FailureReportStatus =
+                            row["FailureReportStatus"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["FailureReportStatus"]),
+
+                        IncreaseMTBF =
+                            row["IncreaseMTBF"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["IncreaseMTBF"]),
+
+                        IncreaseMTBF1 =
+                            row["IncreaseMTBF1"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["IncreaseMTBF1"]),
+
+                        DecreaseMTTR =
+                            row["DecreaseMTTR"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["DecreaseMTTR"]),
+
+                        DecreaseMTTR1 =
+                            row["DecreaseMTTR1"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["DecreaseMTTR1"]),
+
+                        SAPBreakdownOrder =
+                            row["SAPBreakdownOrder"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["SAPBreakdownOrder"]),
+
+                        FailureCategory1Component =
+                            row["FailureCategory1Component"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["FailureCategory1Component"]),
+
+                        FailureCategory2RootCause =
+                            row["FailureCategory2RootCause"] == DBNull.Value
+                                ? ""
+                                : Convert.ToString(row["FailureCategory2RootCause"])
+                    };
+
+
+                return model;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+
         public PlantDelayBLL GetDelayByID(int id)
         {
             try
@@ -2208,6 +3261,155 @@ new SqlParameter(
                 );
             }
         }
+
+        public FailureAnalysisBLL GetSMPMaintenanceAnalysisByDelayID(
+    int delayID)
+        {
+            try
+            {
+                SqlParameter[] parameters =
+                {
+            new SqlParameter(
+                "@ID",
+                SqlDbType.Int
+            )
+            {
+                Value = delayID
+            }
+        };
+
+                DataTable dt =
+                    new DBHelper()
+                        .GetTableFromSP(
+                            "sp_GetSMPMaintenanceAnalysisByDelayID",
+                            parameters
+                        );
+
+                if (
+                    dt == null ||
+                    dt.Rows.Count == 0
+                )
+                {
+                    return null;
+                }
+
+                DataRow row =
+                    dt.Rows[0];
+
+                return new FailureAnalysisBLL
+                {
+                    ID =
+                        row["ID"] == DBNull.Value
+                            ? 0
+                            : Convert.ToInt32(
+                                row["ID"]
+                            ),
+
+                    DelayID =
+                        row["DelayID"] == DBNull.Value
+                            ? 0
+                            : Convert.ToInt32(
+                                row["DelayID"]
+                            ),
+
+                    AnalysisCode =
+                        row["AnalysisCode"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["AnalysisCode"]
+                            ),
+
+                    LastPMDate =
+                        row["LastPMDate"] == DBNull.Value
+                            ? (DateTime?)null
+                            : Convert.ToDateTime(
+                                row["LastPMDate"]
+                            ),
+
+                    FailureReportStatus =
+                        row["FailureReportStatus"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["FailureReportStatus"]
+                            ),
+
+                    IncreaseMTBF =
+                        row["IncreaseMTBF"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["IncreaseMTBF"]
+                            ),
+
+                    IncreaseMTBF1 =
+                        row["IncreaseMTBF1"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["IncreaseMTBF1"]
+                            ),
+
+                    DecreaseMTTR =
+                        row["DecreaseMTTR"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["DecreaseMTTR"]
+                            ),
+
+                    DecreaseMTTR1 =
+                        row["DecreaseMTTR1"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["DecreaseMTTR1"]
+                            ),
+
+                    SAPBreakdownOrder =
+                        row["SAPBreakdownOrder"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["SAPBreakdownOrder"]
+                            ),
+
+                    FailureCategory1Component =
+                        row["FailureCategory1Component"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["FailureCategory1Component"]
+                            ),
+
+                    FailureCategory2RootCause =
+                        row["FailureCategory2RootCause"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["FailureCategory2RootCause"]
+                            ),
+
+                    StatusID =
+                        row["StatusID"] == DBNull.Value
+                            ? 1
+                            : Convert.ToInt32(
+                                row["StatusID"]
+                            ),
+
+                    CreatedBy =
+                        row["CreatedBy"] == DBNull.Value
+                            ? ""
+                            : Convert.ToString(
+                                row["CreatedBy"]
+                            ),
+
+                    CreatedDate =
+                        row["CreatedDate"] == DBNull.Value
+                            ? (DateTime?)null
+                            : Convert.ToDateTime(
+                                row["CreatedDate"]
+                            )
+                };
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private string GetString(
     DataRow row,
     string columnName)
@@ -2327,7 +3529,4 @@ new SqlParameter(
 
         public string Remarks { get; set; }
     }
-
-
-
 }

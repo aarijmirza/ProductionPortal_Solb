@@ -1,0 +1,651 @@
+﻿@model DAL.Models.RMMTCPageVM
+@using System
+@using System.Linq
+
+@{
+    ViewBag.Title = "RM MTC Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var header =
+        Model != null && Model.Header != null
+            ? Model.Header
+            : new DAL.Models.RMMTCHeaderBLL();
+
+    var eligible =
+        Model != null && Model.EligibleHeats != null
+            ? Model.EligibleHeats
+            : new List<DAL.Models.RMMTCEligibleHeatBLL>();
+
+    var selected =
+        Model != null && Model.SelectedHeats != null
+            ? Model.SelectedHeats
+            : new List<DAL.Models.RMMTCDetailBLL>();
+
+    var mtcList =
+        Model != null && Model.MTCList != null
+            ? Model.MTCList
+            : new List<DAL.Models.RMMTCListRowBLL>();
+
+    bool hasMTC = header.ID > 0;
+}
+
+<style>
+    .mtc-page {
+        padding: 14px;
+        background: #f4f6f8;
+    }
+
+    .mtc-grid {
+        display: grid;
+        grid-template-columns: minmax(560px, 1fr) minmax(620px, 1.15fr);
+        gap: 16px;
+        align-items: start;
+    }
+
+    .mtc-card {
+        background: #fff;
+        border: 1px solid #d8dee6;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(0,0,0,.06);
+        margin-bottom: 14px;
+    }
+
+    .mtc-card-head {
+        padding: 12px 16px;
+        background: #8b0018;
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .mtc-toolbar {
+        display: flex;
+        gap: 8px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        align-items: center;
+    }
+
+    .mtc-input {
+        width: 100%;
+        height: 36px;
+        padding: 7px 10px;
+        border: 1px solid #cfd7e3;
+        border-radius: 6px;
+    }
+
+    .mtc-btn {
+        border: 1px solid #cfd7e3;
+        background: #fff;
+        color: #8b0018;
+        height: 36px;
+        padding: 0 12px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .mtc-btn.primary {
+        background: #8b0018;
+        color: #fff;
+        border-color: #8b0018;
+    }
+
+    .mtc-btn.success {
+        background: #18864b;
+        color: #fff;
+        border-color: #18864b;
+    }
+
+    .mtc-table-wrap {
+        max-height: 390px;
+        overflow: auto;
+    }
+
+    .mtc-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .mtc-table th,
+    .mtc-table td {
+        border-bottom: 1px solid #e6e9ed;
+        padding: 8px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .mtc-table th {
+        position: sticky;
+        top: 0;
+        background: #f3e7ea;
+        z-index: 1;
+    }
+
+    .mtc-form {
+        padding: 16px;
+    }
+
+    .mtc-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px 14px;
+    }
+
+    .mtc-field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .mtc-number {
+        font-size: 27px;
+        font-weight: 800;
+        color: #8b0018;
+    }
+
+    .mtc-status {
+        font-size: 21px;
+        font-weight: 800;
+        color: @(header.IsFinal ? "#7a7a7a" : "#2774ea");
+    }
+
+    .mtc-note {
+        color: #b42318;
+        font-style: italic;
+        margin-top: 12px;
+    }
+
+    @@media(max-width:1200px) {
+        .mtc-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar">
+    <div class="row">
+        <div class="col-md-6">
+            <h4 class="xp-page-title">RM MTC Management</h4>
+        </div>
+        <div class="col-md-6">
+            <div class="xp-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index","Home")">
+                            <i class="icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">Quality</li>
+                    <li class="breadcrumb-item active">MTC</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+    <div class="mtc-page">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="mtc-grid">
+
+            <div>
+                <div class="mtc-card">
+                    <div class="mtc-card-head">
+                        RM Mechanical Test Heats
+                    </div>
+
+                    <form method="get"
+                          action="@Url.Action("Index","RMMTC")"
+                          class="mtc-toolbar">
+
+                        @if (hasMTC)
+                        {
+                            <input type="hidden"
+                                   name="id"
+                                   value="@header.ID" />
+                        }
+
+                        <input class="mtc-input"
+                               name="heatSearch"
+                               placeholder="Search Heat ID / Grade" />
+
+                        <button class="mtc-btn"
+                                type="submit">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </form>
+
+                    @if (hasMTC && !header.IsFinal)
+                    {
+                        <form method="post"
+                              action="@Url.Action("AddHeats","RMMTC")"
+                              id="addHeatsForm">
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="mtcID"
+                                   value="@header.ID" />
+
+                            <div class="mtc-toolbar" style="justify-content:space-between;border-top:1px solid #e5e7eb;">
+                                <label style="margin:0;display:flex;align-items:center;gap:8px;">
+                                    <input type="checkbox" id="selectAllHeats" />
+                                    Select All
+                                </label>
+
+                                <button class="mtc-btn success"
+                                        type="submit"
+                                        id="addSelectedHeatsBtn">
+                                    <i class="fa fa-arrow-right"></i>
+                                    Add Selected Heats
+                                </button>
+                            </div>
+
+                            <div class="mtc-table-wrap">
+                                <table class="mtc-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Heat No.</th>
+                                            <th>Steel Grade</th>
+                                            <th>Bar Size</th>
+                                            <th>No. of Bundles</th>
+                                            <th>Wire Rod?</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var row in eligible)
+                                        {
+                                            var alreadySelected = selected.Exists(x => x.QCInspectionRMID == row.QCInspectionRMID);
+                                            <tr>
+                                                <td>
+                                                    <input type="checkbox"
+                                                           class="heat-select"
+                                                           name="selectedHeatIDs"
+                                                           value="@row.QCInspectionRMID"
+                                                           @(alreadySelected ? "disabled" : "") />
+                                                </td>
+                                                <td>@row.HeatNo</td>
+                                                <td>@row.SteelGrade</td>
+                                                <td>@(row.BarSize.HasValue ? row.BarSize.Value.ToString("0.###") : "")</td>
+                                                <td>@row.NoOfBundles</td>
+                                                <td>
+                                                    <input type="checkbox"
+                                                           disabled
+                                                           @(row.IsWireRodOrCoil ? "checked" : "") />
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="mtc-table-wrap">
+                            <table class="mtc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Heat No.</th>
+                                        <th>Steel Grade</th>
+                                        <th>Bar Size</th>
+                                        <th>No. of Bundles</th>
+                                        <th>Wire Rod?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in eligible)
+                                    {
+                                        <tr>
+                                            <td>@row.HeatNo</td>
+                                            <td>@row.SteelGrade</td>
+                                            <td>@(row.BarSize.HasValue ? row.BarSize.Value.ToString("0.###") : "")</td>
+                                            <td>@row.NoOfBundles</td>
+                                            <td>
+                                                <input type="checkbox"
+                                                       disabled
+                                                       @(row.IsWireRodOrCoil ? "checked" : "") />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+
+                <div class="mtc-card">
+                    <div class="mtc-card-head">
+                        Saved MTCs
+                    </div>
+
+                    <form method="get"
+                          action="@Url.Action("Index","RMMTC")"
+                          class="mtc-toolbar">
+
+                        <input class="mtc-input"
+                               name="mtcSearch"
+                               placeholder="Search MTC No. / Customer" />
+
+                        <button class="mtc-btn"
+                                type="submit">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </form>
+
+                    <div class="mtc-table-wrap">
+                        <table class="mtc-table">
+                            <thead>
+                                <tr>
+                                    <th>MTC Sr No.</th>
+                                    <th>Issued Date</th>
+                                    <th>Customer</th>
+                                    <th>Created By</th>
+                                    <th>Heats</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in mtcList)
+                                {
+                                    <tr style="cursor:pointer"
+                                        onclick="window.location='@Url.Action("Index","RMMTC",new { id=row.ID })'">
+                                        <td>@row.MTCNo</td>
+                                        <td>@row.IssueDate.ToString("dd-MM-yyyy")</td>
+                                        <td>@row.CustomerName</td>
+                                        <td>@row.CreatedBy</td>
+                                        <td>@row.HeatCount</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <div>
+                <div class="mtc-card">
+
+                    <div class="mtc-toolbar"
+                         style="justify-content:flex-end;">
+
+                        <form method="post"
+                              action="@Url.Action("CreateNew","RMMTC")">
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit"
+                                    class="mtc-btn primary">
+                                <i class="fa fa-file-o"></i>
+                                Create New MTC
+                            </button>
+                        </form>
+
+                        @if (hasMTC)
+                        {
+                            <form method="post"
+                                  action="@Url.Action("CancelReset","RMMTC")"
+                                  style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@header.ID" />
+                                <button type="submit"
+                                        class="mtc-btn"
+                                        onclick="return confirm('Reset the form to its initial state? Unsaved draft MTC and its selected heats will be cancelled. Saved MTC data will remain safe.');">
+                                    <i class="fa fa-times"></i>&nbsp;
+                                    Cancel / Reset
+                                </button>
+                            </form>
+                        }
+
+                        @if (hasMTC)
+                        {
+                            <a class="mtc-btn"
+                               style="display:inline-flex;align-items:center;text-decoration:none;"
+                               href="@Url.Action("PrintMTC","RMMTC",new { id=header.ID })">
+                                <i class="fa fa-print"></i>&nbsp;
+                                Print MTC
+                            </a>
+                        }
+                    </div>
+
+                    <div class="mtc-form">
+
+                        <form method="post"
+                              action="@Url.Action("SaveHeader","RMMTC")">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="ID"
+                                   value="@header.ID" />
+
+                            <div style="display:grid;grid-template-columns:180px 1fr;gap:15px;align-items:center;">
+
+                                <div>MTC SR No.:</div>
+                                <div class="mtc-number">
+                                    @header.MTCNo
+                                </div>
+
+                                <div>Customer Name:</div>
+                                <div>
+                                    <input class="mtc-input"
+                                           name="CustomerName"
+                                           value="@header.CustomerName"
+                                           @(header.IsFinal ? "readonly" : "") />
+                                </div>
+
+                                <div>Shipping Address:</div>
+                                <div>
+                                    <input class="mtc-input"
+                                           name="ShippingAddress"
+                                           value="@header.ShippingAddress"
+                                           @(header.IsFinal ? "readonly" : "") />
+                                </div>
+
+                                <div>D.N. No.:</div>
+                                <div style="display:flex;gap:18px;align-items:center;">
+                                    <input class="mtc-input"
+                                           style="max-width:220px;"
+                                           name="DNNo"
+                                           value="@header.DNNo"
+                                           @(header.IsFinal ? "readonly" : "") />
+
+                                    <label style="margin:0;">
+                                        <input type="checkbox"
+                                               name="IsWireRodMTC"
+                                               value="true"
+                                               @(header.IsWireRodMTC ? "checked" : "")
+                                               @(header.IsFinal ? "disabled" : "") />
+                                        Wire Rod MTC
+                                    </label>
+
+                                    <input type="hidden"
+                                           name="IsWireRodMTC"
+                                           value="false" />
+                                </div>
+
+                                <div>MTC Status:</div>
+                                <div class="mtc-status">
+                                    @(header.IsFinal ? "OLD MTC" : "NEW MTC")
+                                </div>
+                            </div>
+
+                            <input type="hidden"
+                                   name="IssueDate"
+                                   value="@header.IssueDate.ToString("yyyy-MM-dd")" />
+
+                            @if (hasMTC && !header.IsFinal)
+                            {
+                                <div style="margin-top:16px;">
+                                    <button type="submit"
+                                            class="mtc-btn success">
+                                        <i class="fa fa-save"></i>
+                                        Save MTC
+                                    </button>
+                                </div>
+                            }
+
+                            <div class="mtc-note">
+                                NOTE: Maximum 10 Heat ID is allowed for every MTC.
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="mtc-table-wrap"
+                         style="min-height:350px;border-top:1px solid #e5e7eb;">
+                        <table class="mtc-table">
+                            <thead>
+                                <tr>
+                                    <th>Heat No.</th>
+                                    <th>Steel Grade</th>
+                                    <th>Bar Size (mm)</th>
+                                    <th>Actual No. of Bundles</th>
+                                    <th>Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in selected)
+                                {
+                                    <tr>
+                                        <td>@row.HeatNo</td>
+                                        <td>@row.SteelGrade</td>
+                                        <td>@(row.BarSize.HasValue ? row.BarSize.Value.ToString("0.###") : "")</td>
+                                        <td>
+                                            @if (!header.IsFinal)
+                                            {
+                                                <form method="post"
+                                                      action="@Url.Action("UpdateDetail","RMMTC")"
+                                                      style="display:flex;gap:6px;justify-content:center;">
+                                                    @Html.AntiForgeryToken()
+
+                                                    <input type="hidden"
+                                                           name="mtcID"
+                                                           value="@header.ID" />
+
+                                                    <input type="hidden"
+                                                           name="detailID"
+                                                           value="@row.ID" />
+
+                                                    <input type="number"
+                                                           name="actualNoOfBundles"
+                                                           class="mtc-input"
+                                                           style="width:90px;"
+                                                           value="@row.ActualNoOfBundles" />
+
+                                                    <button type="submit"
+                                                            class="mtc-btn">
+                                                        <i class="fa fa-save"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                @row.ActualNoOfBundles
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!header.IsFinal)
+                                            {
+                                                <form method="post"
+                                                      action="@Url.Action("RemoveHeat","RMMTC")">
+                                                    @Html.AntiForgeryToken()
+
+                                                    <input type="hidden"
+                                                           name="mtcID"
+                                                           value="@header.ID" />
+
+                                                    <input type="hidden"
+                                                           name="detailID"
+                                                           value="@row.ID" />
+
+                                                    <button type="submit"
+                                                            class="mtc-btn">
+                                                        <i class="fa fa-arrow-left"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (hasMTC && !header.IsFinal)
+                    {
+                        <div style="padding:14px;text-align:right;">
+                            <form method="post"
+                                  action="@Url.Action("FinalizeMTC","RMMTC")">
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="id"
+                                       value="@header.ID" />
+
+                                <button type="submit"
+                                        class="mtc-btn primary">
+                                    Finalize MTC
+                                </button>
+                            </form>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    (function () {
+        var form = document.getElementById('addHeatsForm');
+        var selectAll = document.getElementById('selectAllHeats');
+
+        if (!form) return;
+
+        function enabledHeatCheckboxes() {
+            return Array.prototype.slice.call(
+                form.querySelectorAll('.heat-select:not([disabled])')
+            );
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                enabledHeatCheckboxes().forEach(function (cb) {
+                    cb.checked = selectAll.checked;
+                });
+            });
+        }
+
+        form.addEventListener('submit', function (e) {
+            var checked = form.querySelectorAll('.heat-select:checked');
+            var currentCount = @selected.Count;
+            var remaining = Math.max(0, 10 - currentCount);
+
+            if (checked.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one heat.');
+                return;
+            }
+
+            if (checked.length > remaining) {
+                e.preventDefault();
+                alert('You can select only ' + remaining + ' more heat(s). Maximum 10 Heat IDs are allowed for every MTC.');
+            }
+        });
+    })();
+</script>

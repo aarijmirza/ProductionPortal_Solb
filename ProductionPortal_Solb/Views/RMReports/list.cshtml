@@ -98,8 +98,44 @@
             </div>
         </div>
 
-        <!-- Monthly Performance -->
         <div class="col-md-4">
+            <div class="card border-danger mb-3">
+                <div class="card-body text-center">
+                    <h5>Finished Product Shift Summary Report</h5>
+
+                    <button class="btn btn-primary openReport mb-2"
+                            data-url="@Url.Action("FinishedProductShiftSummaryReport", "RMReports")">
+                        View Report
+                    </button>
+
+                    <button class="btn btn-success downloadReport mb-2"
+                            data-url="@Url.Action("FinishedProductShiftSummaryReport", "RMReports")">
+                        Download Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-danger mb-3">
+                <div class="card-body text-center">
+                    <h5>Furnace Charging Discharging Summary</h5>
+
+                    <button class="btn btn-primary openReport mb-2"
+                            data-url="@Url.Action("FurnaceChargingDischargingSummary", "RMReports")">
+                        View Report
+                    </button>
+
+                    <button class="btn btn-success downloadReport mb-2"
+                            data-url="@Url.Action("FurnaceChargingDischargingSummary", "RMReports")">
+                        Download Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Performance -->
+        @*<div class="col-md-4">
             <div class="card border-danger mb-3">
                 <div class="card-body text-center">
                     <h5>Monthly Performance</h5>
@@ -115,30 +151,30 @@
                     </button>
                 </div>
             </div>
-        </div>
+        </div>*@
 
         <!-- Daily Production -->
         <!--<div class="col-md-4">
-            <div class="card border-danger mb-3">
-                <div class="card-body text-center">
-                    <h5>Daily Production</h5>-->
+    <div class="card border-danger mb-3">
+        <div class="card-body text-center">
+            <h5>Daily Production</h5>-->
         @*<button class="btn btn-primary openReport mb-2"
-                    data-url="@Url.Action("DailyProductionRM", "Reporting")">
-                View Report
-            </button>*@
+                data-url="@Url.Action("DailyProductionRM", "Reporting")">
+            View Report
+        </button>*@
 
         <!--<button class="btn btn-primary openReport mb-2"
-                            data-url="@Url.Action("ShiftProductionDashboard", "Reporting")">
-                        View Report
-                    </button>
+                        data-url="@Url.Action("ShiftProductionDashboard", "Reporting")">
+                    View Report
+                </button>
 
-                    <button class="btn btn-success downloadReport mb-2"
-                            data-url="@Url.Action("DailyProductionRM", "Reporting")">
-                        Download Report
-                    </button>
-                </div>
+                <button class="btn btn-success downloadReport mb-2"
+                        data-url="@Url.Action("DailyProductionRM", "Reporting")">
+                    Download Report
+                </button>
             </div>
-        </div>-->
+        </div>
+    </div>-->
 
     </div>
 </div>

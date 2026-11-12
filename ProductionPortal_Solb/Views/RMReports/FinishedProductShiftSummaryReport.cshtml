@@ -1,0 +1,496 @@
+@using System
+@using System.Collections.Generic
+@using DAL.Models
+@model dynamic
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    IEnumerable<FinishedProductShiftSummaryRowBLL> reportRows =
+        ViewBag.Rows as IEnumerable<FinishedProductShiftSummaryRowBLL>
+        ?? new List<FinishedProductShiftSummaryRowBLL>();
+
+    var rows =
+        new List<FinishedProductShiftSummaryRowBLL>(
+            reportRows
+        );
+
+    int minimumRows = 10;
+
+    string documentNo =
+        Convert.ToString(
+            ViewBag.DocumentNo ?? "RM2F-FPS-1016"
+        );
+
+    string revisionNo =
+        Convert.ToString(
+            ViewBag.RevisionNo ?? "02"
+        );
+
+    string reportDate =
+        Convert.ToString(
+            ViewBag.ReportDate ?? ""
+        );
+
+    string shift =
+        Convert.ToString(
+            ViewBag.Shift ?? ""
+        );
+
+    string plant =
+        Convert.ToString(
+            ViewBag.Plant ?? ""
+        );
+
+    bool autoPrint =
+        ViewBag.AutoPrint != null
+        &&
+        Convert.ToBoolean(
+            ViewBag.AutoPrint
+        );
+}
+
+<style>
+    .solb-report-page {
+        background: #fff;
+        border: 1px solid #222;
+        max-width: 1500px;
+        margin: 18px auto;
+        padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #111;
+    }
+
+    .solb-report-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        margin: 0;
+    }
+
+        .solb-report-table th,
+        .solb-report-table td {
+            border: 1px solid #222;
+            padding: 6px 4px;
+            vertical-align: middle;
+            word-break: break-word;
+            font-size: 11px;
+        }
+
+        .solb-report-table th {
+            text-align: center;
+            font-weight: 700;
+        }
+
+    .logo-cell {
+        width: 16%;
+        text-align: center;
+    }
+
+    .logo-box {
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .company-title {
+        text-align: center;
+        font-size: 20px !important;
+        font-weight: 800;
+    }
+
+    .form-title {
+        text-align: center;
+        font-size: 17px !important;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .doc-cell {
+        text-align: center;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .meta-label {
+        background: #f1f1f1;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .meta-value {
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .section-row th {
+        background: #e8e8e8;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+
+    .main-header th {
+        background: #efefef;
+        line-height: 1.15;
+        font-size: 10px;
+        height: 64px;
+    }
+
+    .data-row td {
+        height: 34px;
+        text-align: center;
+    }
+
+    .serial-cell {
+        width: 3.6%;
+        font-weight: 700;
+    }
+
+    .signature-label {
+        background: #f8f8f8;
+        font-weight: 700;
+    }
+
+    .signature-line {
+        display: block;
+        min-height: 25px;
+        border-bottom: 1px solid #222;
+        padding: 3px 5px;
+    }
+
+    .report-actions {
+        max-width: 1500px;
+        margin: 12px auto 0;
+        text-align: right;
+    }
+
+    .btn-print-report {
+        border: 0;
+        padding: 8px 16px;
+        border-radius: 5px;
+        background: #9d1238;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    @@media print {
+        .xp-breadcrumbbar,
+        .report-actions,
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .xp-contentbar {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .solb-report-page {
+            max-width: none;
+            margin: 0;
+            border: 0;
+        }
+
+        .solb-report-table th,
+        .solb-report-table td {
+            font-size: 8px;
+            padding: 3px 2px;
+        }
+
+        .main-header th {
+            font-size: 7.5px;
+            height: 54px;
+        }
+
+        @@page {
+            size: A4 landscape;
+            margin: 6mm;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row">
+        <div class="col-md-10">
+            <h4 class="xp-page-title font-weight-bold">
+                Finished Product - Shift Summary Report
+            </h4>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <div class="report-actions no-print">
+        <button type="button"
+                class="btn-print-report"
+                onclick="window.print();">
+            <i class="fa fa-print"></i>
+            Print Report
+        </button>
+    </div>
+
+    <div class="solb-report-page">
+
+        <table class="solb-report-table">
+            <colgroup>
+                <col style="width:16%;" />
+                <col style="width:59%;" />
+                <col style="width:12.5%;" />
+                <col style="width:12.5%;" />
+            </colgroup>
+
+            <tr>
+                <td rowspan="2" class="logo-cell">
+                    <div class="logo-box">
+                        <img src="@Url.Content("~/assets/images/logo.png")"
+                             style="width:60%;" />
+                    </div>
+                </td>
+
+                <td class="company-title">
+                    SOLB STEEL COMPANY
+                </td>
+
+                <td colspan="2" class="doc-cell">
+                    @documentNo
+                </td>
+            </tr>
+
+            <tr>
+                <td class="form-title">
+                    FINISHED PRODUCT SHIFT SUMMARY REPORT
+                </td>
+
+                <td class="doc-cell">
+                    @reportDate
+                </td>
+
+                <td class="doc-cell">
+                    Revision no. @revisionNo
+                </td>
+            </tr>
+        </table>
+
+        <table class="solb-report-table">
+
+            <tr>
+                <td colspan="3" class="meta-label">
+                    DATE
+                </td>
+
+                <td colspan="3" class="meta-value">
+                    @reportDate
+                </td>
+
+                <td colspan="2" class="meta-label">
+                    SHIFT
+                </td>
+
+                <td colspan="2" class="meta-value">
+                    @shift
+                </td>
+
+                <td class="meta-label">
+                    PLANT
+                </td>
+
+                <td colspan="4"
+                    class="meta-value">
+                    @plant
+                </td>
+            </tr>
+
+            <tr class="section-row">
+                <th colspan="2">Section</th>
+                <th colspan="5">Rolling Line</th>
+                <th colspan="2">Bar Line</th>
+                <th colspan="6">Coil Line</th>
+            </tr>
+
+            <tr class="main-header">
+                <th class="serial-cell">Sr No.</th>
+                <th>Heat No.</th>
+                <th>Size</th>
+                <th>No. of Billets Rolled</th>
+                <th>Rolled Billet Weight, MT</th>
+                <th>Finished Product Weight, MT</th>
+                <th>Yield %</th>
+                <th>No. of Prime Bundles</th>
+                <th>Bundle / Coil Serial Nos.</th>
+                <th>No. of Hold / Rejected Bundles</th>
+                <th>Reason for Hold / Rejected Bundle</th>
+                <th>Location for Prime Bundles / Coils</th>
+                <th>Verified by QC</th>
+                <th>Verified by Shipping</th>
+                <th>Remarks</th>
+            </tr>
+
+            @{
+                int displayRowCount =
+                    Math.Max(
+                        minimumRows,
+                        rows.Count
+                    );
+            }
+
+            @for (int i = 0; i < displayRowCount; i++)
+            {
+                FinishedProductShiftSummaryRowBLL item =
+                    i < rows.Count
+                        ? rows[i]
+                        : null;
+
+                <tr class="data-row">
+                    <td class="serial-cell">
+                        @(i + 1)
+                    </td>
+
+                    <td>
+                        @(item != null ? item.HeatNo : "")
+                    </td>
+
+                    <td>
+                        @(item != null ? item.Size : "")
+                    </td>
+
+                    <td>
+                        @(item != null
+                            ? item.BilletsRolled.ToString("0.###")
+                            : "")
+                    </td>
+
+                    <td>
+                        @(item != null
+                            ? item.RolledBilletWeight.ToString("0.###")
+                            : "")
+                    </td>
+
+                    <td>
+                        @(item != null
+                            ? item.FinishedProductWeight.ToString("0.###")
+                            : "")
+                    </td>
+
+                    <td>
+                        @(item != null
+                            ? item.YieldPercentage.ToString("0.00")
+                            : "")
+                    </td>
+
+                    <td>
+                        @(item != null
+                            ? item.PrimeBundles.ToString()
+                            : "")
+                    </td>
+
+                    <td>
+                        @(item != null ? item.BundleCoilSerialNos : "")
+                    </td>
+
+                    <td>
+                        @(item != null && item.HoldRejectedBundles > 0
+                            ? item.HoldRejectedBundles.ToString()
+                            : "")
+                    </td>
+
+                    <td>
+                        @(item != null ? item.HoldRejectedReason : "")
+                    </td>
+
+                    <td>
+                        @(item != null ? item.PrimeLocation : "")
+                    </td>
+
+                    <td>
+                        @(item != null ? item.VerifiedByQC : "")
+                    </td>
+
+                    <td>
+                        @(item != null ? item.VerifiedByShipping : "")
+                    </td>
+
+                    <td>
+                        @(item != null ? item.Remarks : "")
+                    </td>
+                </tr>
+            }
+
+        </table>
+
+        <table class="solb-report-table">
+            <tr>
+                <td style="width:23%;" class="signature-label">
+                    Tagging &amp; Storage Pulpit Operator
+                </td>
+
+                <td style="width:8%;" class="signature-label">
+                    Name
+                </td>
+
+                <td style="width:24%;">
+                    <span class="signature-line">
+                        @Convert.ToString(ViewBag.TaggingOperatorName ?? "")
+                    </span>
+                </td>
+
+                <td style="width:10%;" class="signature-label">
+                    Signature
+                </td>
+
+                <td style="width:15%;">
+                    <span class="signature-line">
+                        @Convert.ToString(ViewBag.TaggingOperatorSignature ?? "")
+                    </span>
+                </td>
+
+                <td style="width:20%;" rowspan="2"></td>
+            </tr>
+
+            <tr>
+                <td class="signature-label">
+                    Finishing Foreman
+                </td>
+
+                <td class="signature-label">
+                    Name
+                </td>
+
+                <td>
+                    <span class="signature-line">
+                        @Convert.ToString(ViewBag.FinishingForemanName ?? "")
+                    </span>
+                </td>
+
+                <td class="signature-label">
+                    Signature
+                </td>
+
+                <td>
+                    <span class="signature-line">
+                        @Convert.ToString(ViewBag.FinishingForemanSignature ?? "")
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+@if (autoPrint)
+{
+    <script>
+        window.addEventListener("load", function () {
+            window.print();
+        });
+    </script>
+}

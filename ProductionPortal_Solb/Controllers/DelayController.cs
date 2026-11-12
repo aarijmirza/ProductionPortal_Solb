@@ -303,12 +303,7 @@ namespace ProductionPortal_Solb.Controllers
             if (selectedShiftDetailID > 0)
             {
                 selectedRMDetail =
-                    rm.RollingMillDetails()
-                        .FirstOrDefault(x =>
-                            x.ID ==
-                                selectedShiftDetailID &&
-                            x.StatusID == 1
-                        );
+                    rm.GetRollingMillDetailByID(selectedShiftDetailID);
             }
 
             /*
@@ -328,20 +323,11 @@ namespace ProductionPortal_Solb.Controllers
                     selectedDate.Date.AddDays(1);
 
                 selectedRMDetail =
-                    rm.RollingMillDetails()
-                        .Where(x =>
-                            x.Date >=
-                                selectedDate.Date &&
-                            x.Date <
-                                nextDate &&
-                            x.Plant ==
-                                selectedPlant &&
-                            x.Shift ==
-                                selectedShift &&
-                            x.StatusID == 1
-                        )
-                        .OrderByDescending(
-                            x => x.ID
+                    rm.GetRollingMillDetailsByRange(
+                            selectedDate,
+                            selectedDate,
+                            selectedPlant,
+                            selectedShift
                         )
                         .FirstOrDefault();
             }
@@ -1228,9 +1214,8 @@ namespace ProductionPortal_Solb.Controllers
         {
             if (data != null)
             {
-                var agencies = repo.GetAllAgency().ToList();
-
-                var agencyname = repo.GetAllAgency().ToList(); // ensure it's a List
+                var agencies = repo.GetAllAgency()?.ToList()
+                    ?? new List<PlantDelayBLL>();
 
                 var selectedAgency = agencies
                     .Where(a => a.AgencyCode == data.AgencyCode)

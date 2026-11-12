@@ -12,6 +12,7 @@ namespace DAL.Models
         public int ID { get; set; }
         public DateTime? Date { get; set; }
         public string Delaycode { get; set; }
+        public string AnalysisCode { get; set; }
         public string Area { get; set; }
         public string Plant { get; set; }
         public string ProductSize { get; set; }
@@ -39,8 +40,6 @@ namespace DAL.Models
         public string ActionTaken1 { get; set; }
 
         public DateTime? LastPMDate { get; set; }
-
-        public string AnalysisCode { get; set; }
 
         public string FailureReportStatus { get; set; }
 
@@ -87,8 +86,8 @@ namespace DAL.Models
         public string Team { get; set; }
         public string ShiftIncharge { get; set; }
 
-        public int? Cobble { get; set; }
-        public int? HotOut { get; set; }
+        public decimal? Cobble { get; set; }
+        public decimal? HotOut { get; set; }
 
         public TimeSpan? StartTime { get; set; }
         public TimeSpan? EndTime { get; set; }

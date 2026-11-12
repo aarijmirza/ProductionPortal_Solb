@@ -149,9 +149,7 @@ namespace ProductionPortal_Solb.Controllers
 
             int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
 
-            var shiftDetails = rm.RollingMillDetails()
-                .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
-                .FirstOrDefault();
+            var shiftDetails = rm.GetRollingMillDetailByID(shiftDetailId);
 
             //var shiftDetails = rm.RollingMillDetails()
             //    .Where(x =>
@@ -273,9 +271,7 @@ namespace ProductionPortal_Solb.Controllers
 
                 int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
 
-                var shiftDetails = rm.RollingMillDetails()
-                    .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
-                    .FirstOrDefault();
+                var shiftDetails = rm.GetRollingMillDetailByID(shiftDetailId);
 
                 if (shiftDetails == null)
                 {
@@ -322,7 +318,10 @@ namespace ProductionPortal_Solb.Controllers
 
                 bool isUpdate = model.ID > 0;
 
-                decimal alreadyChargedBillet = repo.GetAllCharging()
+                var allCharging = repo.GetAllCharging()
+                    ?? new List<BilletChargingBLL>();
+
+                decimal alreadyChargedBillet = allCharging
                     .Where(x =>
                         x.StatusID == 1 &&
                         x.ID != model.ID &&
@@ -372,7 +371,7 @@ namespace ProductionPortal_Solb.Controllers
 
                     if (model.HeatSequence <= 0)
                     {
-                        var existingRecord = repo.GetAllCharging()
+                        var existingRecord = allCharging
                             .Where(x => x.ID == model.ID && x.StatusID == 1)
                             .FirstOrDefault();
 
@@ -411,7 +410,7 @@ namespace ProductionPortal_Solb.Controllers
 
                 if (model.HeatSequence <= 0)
                 {
-                    var existingHeats = repo.GetAllCharging()
+                    var existingHeats = allCharging
                         .Where(x =>
                             x.Date >= shiftDetails.Date.Date &&
                             x.Date < shiftDetails.Date.Date.AddDays(1) &&
@@ -594,9 +593,7 @@ namespace ProductionPortal_Solb.Controllers
 
             int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
 
-            var selectedShiftDetails = rm.RollingMillDetails()
-             .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
-             .FirstOrDefault();
+            var selectedShiftDetails = rm.GetRollingMillDetailByID(shiftDetailId);
 
             if (selectedShiftDetails == null)
             {
@@ -801,14 +798,7 @@ namespace ProductionPortal_Solb.Controllers
 
 
                 var shiftDetails =
-                    rm.RollingMillDetails()
-                        .Where(
-                            x =>
-                                x.ID == shiftDetailId
-                                &&
-                                x.StatusID == 1
-                        )
-                        .FirstOrDefault();
+                    rm.GetRollingMillDetailByID(shiftDetailId);
 
 
                 if (shiftDetails == null)
@@ -1227,9 +1217,7 @@ namespace ProductionPortal_Solb.Controllers
 
             int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
 
-            var shiftDetails = rm.RollingMillDetails()
-             .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
-             .FirstOrDefault();
+            var shiftDetails = rm.GetRollingMillDetailByID(shiftDetailId);
 
             if (shiftDetails == null)
             {
@@ -1318,9 +1306,7 @@ namespace ProductionPortal_Solb.Controllers
 
                 int shiftDetailId = Convert.ToInt32(Session["RM_ShiftDetailID"]);
 
-                var shiftDetails = rm.RollingMillDetails()
-                 .Where(x => x.ID == shiftDetailId && x.StatusID == 1)
-                 .FirstOrDefault();
+                var shiftDetails = rm.GetRollingMillDetailByID(shiftDetailId);
 
                 if (shiftDetails == null)
                 {
@@ -1479,11 +1465,7 @@ namespace ProductionPortal_Solb.Controllers
                 }
 
                 RMShiftDetailsBLL selectedShift =
-                    rm.RollingMillDetails()
-                        .FirstOrDefault(x =>
-                            x.ID == shiftDetailID &&
-                            x.StatusID == 1
-                        );
+                    rm.GetRollingMillDetailByID(shiftDetailID);
 
                 if (selectedShift == null)
                 {
@@ -1526,14 +1508,7 @@ namespace ProductionPortal_Solb.Controllers
                 start.AddDays(1);
 
             var allDetails =
-                rm.RollingMillDetails()
-                    .Where(x =>
-                        x.Date >= start &&
-                        x.Date < end &&
-                        x.StatusID == 1
-                    )
-                    .OrderByDescending(x => x.ID)
-                    .ToList();
+                rm.GetRollingMillDetailsByDate(selectedDate);
 
             /*
                 Agar session empty hai aur selected date par
@@ -1660,28 +1635,19 @@ namespace ProductionPortal_Solb.Controllers
                         ).Date;
 
                     RMShiftDetailsBLL savedShift =
-                        rm.RollingMillDetails()
+                        rm.GetRollingMillDetailsByRange(
+                                savedDate,
+                                savedDate,
+                                data.Plant,
+                                data.Shift
+                            )
                             .Where(x =>
-                                x.StatusID == 1 &&
-                                x.Date >= savedDate &&
-                                x.Date < savedDate.AddDays(1) &&
-                                !string.IsNullOrWhiteSpace(x.Plant) &&
-                                x.Plant.Trim().Equals(
-                                    data.Plant,
-                                    StringComparison.OrdinalIgnoreCase
-                                ) &&
-                                !string.IsNullOrWhiteSpace(x.Shift) &&
-                                x.Shift.Trim().Equals(
-                                    data.Shift,
-                                    StringComparison.OrdinalIgnoreCase
-                                ) &&
                                 !string.IsNullOrWhiteSpace(x.Team) &&
                                 x.Team.Trim().Equals(
                                     data.Team,
                                     StringComparison.OrdinalIgnoreCase
                                 )
                             )
-                            .OrderByDescending(x => x.ID)
                             .FirstOrDefault();
 
                     SetRollingMillSession(
@@ -1735,19 +1701,12 @@ namespace ProductionPortal_Solb.Controllers
             DateTime start = selectedDate.Date;
             DateTime end = start.AddDays(1);
 
-            var shiftDetails = rm.RollingMillDetails()
-                .Where(x =>
-                    x.Date >= start &&
-                    x.Date < end &&
-                    !string.IsNullOrEmpty(x.Shift) &&
-                    x.Shift.Trim().Equals(selectedShift.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                    (
-                        string.IsNullOrEmpty(selectedPlant) ||
-                        string.IsNullOrEmpty(x.Plant) ||
-                        x.Plant.Trim().Equals(selectedPlant.Trim(), StringComparison.OrdinalIgnoreCase)
-                    )
+            var shiftDetails = rm.GetRollingMillDetailsByRange(
+                    selectedDate,
+                    selectedDate,
+                    selectedPlant,
+                    selectedShift
                 )
-                .OrderByDescending(x => x.ID)
                 .FirstOrDefault();
 
             if (shiftDetails == null)
@@ -1842,6 +1801,71 @@ namespace ProductionPortal_Solb.Controllers
             {
                 TempData["ErrorMessage"] = "Error: " + ex.Message;
                 return RedirectToAction("RMHourlyDischarge");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateMessage(ShiftDetails model)
+        {
+            int result =
+                rm.UpdateUpcomingShiftMessage(
+                    model.Date,
+                    model.Shift,
+                    model.MessageUpcomingShift
+                );
+
+            TempData[result > 0
+                ? "SuccessMessage"
+                : "ErrorMessage"] =
+                    result > 0
+                        ? "Upcoming shift message updated successfully."
+                        : "No active record found for selected Date and Shift.";
+
+            return RedirectToAction(
+                "list",
+                "Delay",
+                new
+                {
+                    date = model.Date.ToString("yyyy-MM-dd"),
+                    shift = model.Shift
+                }
+            );
+        }
+
+        [HttpGet]
+        public JsonResult GetShiftMessage(
+    DateTime date,
+    string shift)
+        {
+            try
+            {
+                string message =
+                    rm.GetUpcomingShiftMessage(
+                        date,
+                        shift
+                    );
+
+                return Json(
+                    new
+                    {
+                        success = true,
+                        message = message ?? ""
+                    },
+                    JsonRequestBehavior.AllowGet
+                );
+            }
+            catch (Exception ex)
+            {
+                return Json(
+                    new
+                    {
+                        success = false,
+                        message = "",
+                        error = ex.Message
+                    },
+                    JsonRequestBehavior.AllowGet
+                );
             }
         }
     }

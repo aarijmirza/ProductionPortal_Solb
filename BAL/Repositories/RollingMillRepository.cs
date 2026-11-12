@@ -431,6 +431,135 @@ namespace BAL.Repositories
             );
         }
 
+        public RMShiftDetailsBLL GetRollingMillDetailByID(int id)
+        {
+            if (id <= 0)
+                return null;
+
+            try
+            {
+                DataTable dt = new DBHelper().GetTableFromQuery(
+                    @"SELECT TOP 1 *
+                      FROM RMShiftDetails
+                      WHERE ID = @ID
+                        AND StatusID = 1",
+                    new SqlParameter("@ID", SqlDbType.Int) { Value = id }
+                );
+
+                if (dt == null || dt.Rows.Count == 0)
+                    return null;
+
+                return JArray.Parse(
+                        JsonConvert.SerializeObject(dt)
+                    )
+                    .ToObject<List<RMShiftDetailsBLL>>()
+                    .FirstOrDefault();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public List<RMShiftDetailsBLL> GetRollingMillDetailsByDate(DateTime date)
+        {
+            try
+            {
+                DateTime start = date.Date;
+                DateTime end = start.AddDays(1);
+
+                DataTable dt = new DBHelper().GetTableFromQuery(
+                    @"SELECT *
+                      FROM RMShiftDetails
+                      WHERE StatusID = 1
+                        AND [Date] >= @StartDate
+                        AND [Date] < @EndDate
+                      ORDER BY ID DESC",
+                    new SqlParameter("@StartDate", SqlDbType.DateTime) { Value = start },
+                    new SqlParameter("@EndDate", SqlDbType.DateTime) { Value = end }
+                );
+
+                if (dt == null || dt.Rows.Count == 0)
+                    return new List<RMShiftDetailsBLL>();
+
+                return JArray.Parse(
+                        JsonConvert.SerializeObject(dt)
+                    )
+                    .ToObject<List<RMShiftDetailsBLL>>();
+            }
+            catch
+            {
+                return new List<RMShiftDetailsBLL>();
+            }
+        }
+
+        public List<RMShiftDetailsBLL> GetRollingMillDetailsByRange(
+            DateTime fromDate,
+            DateTime toDate,
+            string plant = null,
+            string shift = null)
+        {
+            try
+            {
+                DateTime start = fromDate.Date;
+                DateTime endExclusive = toDate.Date.AddDays(1);
+
+                var sql = new StringBuilder();
+                sql.Append(@"SELECT *
+                             FROM RMShiftDetails
+                             WHERE StatusID = 1
+                               AND [Date] >= @StartDate
+                               AND [Date] < @EndDate");
+
+                var parameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@StartDate", SqlDbType.DateTime) { Value = start },
+                    new SqlParameter("@EndDate", SqlDbType.DateTime) { Value = endExclusive }
+                };
+
+                if (!string.IsNullOrWhiteSpace(plant))
+                {
+                    sql.Append(" AND LTRIM(RTRIM(Plant)) = @Plant");
+                    parameters.Add(
+                        new SqlParameter("@Plant", SqlDbType.NVarChar, 100)
+                        {
+                            Value = plant.Trim()
+                        }
+                    );
+                }
+
+                if (!string.IsNullOrWhiteSpace(shift))
+                {
+                    sql.Append(" AND LTRIM(RTRIM(Shift)) = @Shift");
+                    parameters.Add(
+                        new SqlParameter("@Shift", SqlDbType.NVarChar, 100)
+                        {
+                            Value = shift.Trim()
+                        }
+                    );
+                }
+
+                sql.Append(" ORDER BY ID DESC");
+
+                DataTable dt = new DBHelper().GetTableFromQuery(
+                    sql.ToString(),
+                    parameters.ToArray()
+                );
+
+                if (dt == null || dt.Rows.Count == 0)
+                    return new List<RMShiftDetailsBLL>();
+
+                return JArray.Parse(
+                        JsonConvert.SerializeObject(dt)
+                    )
+                    .ToObject<List<RMShiftDetailsBLL>>();
+            }
+            catch
+            {
+                return new List<RMShiftDetailsBLL>();
+            }
+        }
+
         public List<RMShiftDetailsBLL> RMShiftDetailAll()
         {
             try
@@ -720,5 +849,241 @@ namespace BAL.Repositories
             }
         }
 
+        public int UpdateUpcomingShiftMessage(
+    DateTime date,
+    string shift,
+    string messageUpcomingShift)
+        {
+            SqlParameter[] parameters =
+            {
+        new SqlParameter(
+            "@Date",
+            SqlDbType.Date
+        )
+        {
+            Value = date.Date
+        },
+
+        new SqlParameter(
+            "@Shift",
+            SqlDbType.NVarChar,
+            50
+        )
+        {
+            Value =
+                string.IsNullOrWhiteSpace(shift)
+                    ? (object)DBNull.Value
+                    : shift.Trim()
+        },
+
+        new SqlParameter(
+            "@MessageUpcomingShift",
+            SqlDbType.NVarChar,
+            -1
+        )
+        {
+            Value =
+                string.IsNullOrWhiteSpace(
+                    messageUpcomingShift
+                )
+                    ? (object)DBNull.Value
+                    : messageUpcomingShift.Trim()
+        }
+    };
+
+            return new DBHelper()
+                .ExecuteNonQueryReturn(
+                    "sp_Shift_UpdateUpcomingMessage",
+                    parameters
+                );
+        }
+
+        public string GetUpcomingShiftMessage(
+    DateTime date,
+    string shift)
+        {
+            SqlParameter[] parameters =
+            {
+        new SqlParameter(
+            "@Date",
+            SqlDbType.Date
+        )
+        {
+            Value = date.Date
+        },
+
+        new SqlParameter(
+            "@Shift",
+            SqlDbType.NVarChar,
+            50
+        )
+        {
+            Value =
+                string.IsNullOrWhiteSpace(shift)
+                    ? (object)DBNull.Value
+                    : shift.Trim()
+        }
+    };
+
+
+            DataTable dt =
+                new DBHelper()
+                    .GetTableFromSP(
+                        "sp_Shift_GetUpcomingMessage",
+                        parameters
+                    );
+
+
+            if (
+                dt == null ||
+                dt.Rows.Count == 0
+            )
+            {
+                return string.Empty;
+            }
+
+
+            return
+                dt.Rows[0]["MessageUpcomingShift"]
+                == DBNull.Value
+                    ? string.Empty
+                    : Convert.ToString(
+                        dt.Rows[0]["MessageUpcomingShift"]
+                    );
+        }
+
+        public List<FinishedProductShiftSummaryRowBLL> GetFinishedProductShiftSummary(
+    DateTime fromDate,
+    DateTime toDate,
+    string plant,
+    string shift)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+            new SqlParameter("@FromDate", SqlDbType.Date)
+            {
+                Value = fromDate.Date
+            },
+            new SqlParameter("@ToDate", SqlDbType.Date)
+            {
+                Value = toDate.Date
+            },
+            new SqlParameter("@Plant", SqlDbType.NVarChar, 50)
+            {
+                Value = string.IsNullOrWhiteSpace(plant)
+                    ? (object)DBNull.Value
+                    : plant.Trim()
+            },
+            new SqlParameter("@Shift", SqlDbType.NVarChar, 50)
+            {
+                Value = string.IsNullOrWhiteSpace(shift)
+                    ? (object)DBNull.Value
+                    : shift.Trim()
+            }
+        };
+
+                DataTable dt =
+                    new DBHelper().GetTableFromSP(
+                        "sp_RM_FinishedProductShiftSummary",
+                        p
+                    );
+
+                if (dt == null || dt.Rows.Count == 0)
+                    return new List<FinishedProductShiftSummaryRowBLL>();
+
+                return JArray
+                    .Parse(JsonConvert.SerializeObject(dt))
+                    .ToObject<List<FinishedProductShiftSummaryRowBLL>>()
+                    ?? new List<FinishedProductShiftSummaryRowBLL>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    "GetFinishedProductShiftSummary Error: " + ex.Message,
+                    ex
+                );
+            }
+        }
+
+        public List<FurnaceChargingDischargingSummaryRowBLL>
+    GetFurnaceChargingDischargingSummary(
+        DateTime fromDate,
+        DateTime toDate,
+        string plant,
+        string shift)
+        {
+            try
+            {
+                SqlParameter[] p =
+                {
+            new SqlParameter("@FromDate", SqlDbType.Date)
+            {
+                Value = fromDate.Date
+            },
+
+            new SqlParameter("@ToDate", SqlDbType.Date)
+            {
+                Value = toDate.Date
+            },
+
+            new SqlParameter("@Plant", SqlDbType.NVarChar, 50)
+            {
+                Value =
+                    string.IsNullOrWhiteSpace(plant)
+                        ? (object)DBNull.Value
+                        : plant.Trim()
+            },
+
+            new SqlParameter("@Shift", SqlDbType.NVarChar, 50)
+            {
+                Value =
+                    string.IsNullOrWhiteSpace(shift)
+                        ? (object)DBNull.Value
+                        : shift.Trim()
+            }
+        };
+
+                DataTable dt =
+                    new DBHelper()
+                        .GetTableFromSP(
+                            "sp_RM_FurnaceChargingDischargingSummary",
+                            p
+                        );
+
+                if (dt == null || dt.Rows.Count == 0)
+                {
+                    return
+                        new List<
+                            FurnaceChargingDischargingSummaryRowBLL
+                        >();
+                }
+
+                return
+                    JArray
+                        .Parse(
+                            Newtonsoft.Json.JsonConvert
+                                .SerializeObject(dt)
+                        )
+                        .ToObject<
+                            List<
+                                FurnaceChargingDischargingSummaryRowBLL
+                            >
+                        >()
+                    ??
+                    new List<
+                        FurnaceChargingDischargingSummaryRowBLL
+                    >();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    "GetFurnaceChargingDischargingSummary Error: "
+                    + ex.Message,
+                    ex
+                );
+            }
+        }
     }
 }

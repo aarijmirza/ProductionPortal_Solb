@@ -539,7 +539,7 @@
 </div>
 
 <div class="xp-contentbar">
-    <form action="@Url.Action("QCInspectionRMadd", "RMMechanical")"
+    <form action="@Url.Action("QCInspectionRMadd", "Quality")"
           id="addprofileform"
           method="post"
           enctype="multipart/form-data">
@@ -791,11 +791,11 @@
                         </button>
 
                         <button type="submit"
-                                id="btnGenerateMTC"
                                 class="qc-action-btn"
+                                id="btnGenerateMTC"
                                 formaction="@Url.Action("GenerateMTC", "Quality")"
                                 formmethod="post">
-                            <i class="fa fa-file-excel-o"></i>
+                            <i class="fa fa-file-text-o"></i>
                             Generate MTC
                         </button>
                     </div>
@@ -875,7 +875,7 @@
                             </div>
 
                             <div class="qc-field">
-                                <label for="CrossSectionArea">Cross Section Area(mm)</label>
+                                <label for="CrossSectionArea">Cross Section Area</label>
                                 <input type="number"
                                        step="any"
                                        id="CrossSectionArea"
@@ -905,26 +905,65 @@
                             <div class="qc-field">
                                 <label>Bend Test</label>
                                 <div class="qc-check">
-                                    <input type="hidden" name="BendTestObserved" value="false" />
                                     <input type="checkbox"
                                            id="BendTestObserved"
                                            name="BendTestObserved"
                                            value="true"
                                            @(detail.BendTestObserved ? "checked" : "") />
+                                    <input type="hidden"
+                                           name="BendTestObserved"
+                                           value="false" />
                                     <span>No crack observed</span>
                                 </div>
                             </div>
 
                             <div class="qc-field">
                                 <label>Product Type</label>
+
                                 <div class="qc-check">
-                                    <input type="hidden" name="IsWireRodOrCoil" value="false" />
                                     <input type="checkbox"
                                            id="IsWireRodOrCoil"
                                            name="IsWireRodOrCoil"
                                            value="true"
                                            @(detail.IsWireRodOrCoil ? "checked" : "") />
+
+                                    <input type="hidden"
+                                           name="IsWireRodOrCoil"
+                                           value="false" />
+
                                     <span>Wire rod or coil</span>
+                                </div>
+
+                                <div id="ProductTypeDropdownWrap"
+                                     style="margin-top:8px;display:@(detail.IsWireRodOrCoil ? "block" : "none");">
+
+                                    <select id="ProductType"
+                                            name="ProductType"
+                                            class="qc-select"
+                                            @(detail.IsWireRodOrCoil ? "" : "disabled")>
+
+                                        <option value="">-- Select Product Type --</option>
+
+                                        <option value="Rebar"
+                                                @(string.Equals(detail.ProductType, "Rebar", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>
+                                            Rebar
+                                        </option>
+
+                                        <option value="Rebar In Coil"
+                                                @(string.Equals(detail.ProductType, "Rebar In Coil", StringComparison.OrdinalIgnoreCase) || string.Equals(detail.ProductType, "Rebar Coil", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>
+                                            Rebar In Coil
+                                        </option>
+
+                                        <option value="Plain Bar"
+                                                @(string.Equals(detail.ProductType, "Plain Bar", StringComparison.OrdinalIgnoreCase) || string.Equals(detail.ProductType, "Plain Rod", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>
+                                            Plain Bar
+                                        </option>
+
+                                        <option value="Wire Rod (Coil)"
+                                                @(string.Equals(detail.ProductType, "Wire Rod (Coil)", StringComparison.OrdinalIgnoreCase) || string.Equals(detail.ProductType, "Wire Rod", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>
+                                            Wire Rod (Coil)
+                                        </option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -963,7 +1002,8 @@
                                        id="TensileYieldRatio"
                                        name="TensileYieldRatio"
                                        class="qc-input"
-                                       value="@detail.TensileYieldRatio" />
+                                       value="@detail.TensileYieldRatio"
+                                       readonly />
                             </div>
 
                             <div class="qc-field">
@@ -1020,12 +1060,42 @@
                             </div>
 
                             <div class="qc-chemical-item">
+                                <label for="Cu">Cu</label>
+                                <input type="number" step="any" id="Cu" name="Cu" class="qc-chemical-input" value="@detail.Cu" readonly />
+                            </div>
+
+                            <div class="qc-chemical-item">
+                                <label for="Ni">Ni</label>
+                                <input type="number" step="any" id="Ni" name="Ni" class="qc-chemical-input" value="@detail.Ni" readonly />
+                            </div>
+
+                            <div class="qc-chemical-item">
+                                <label for="Cr">Cr</label>
+                                <input type="number" step="any" id="Cr" name="Cr" class="qc-chemical-input" value="@detail.Cr" readonly />
+                            </div>
+
+                            <div class="qc-chemical-item">
+                                <label for="Mo">Mo</label>
+                                <input type="number" step="any" id="Mo" name="Mo" class="qc-chemical-input" value="@detail.Mo" readonly />
+                            </div>
+
+                            <div class="qc-chemical-item">
+                                <label for="V">V</label>
+                                <input type="number" step="any" id="V" name="V" class="qc-chemical-input" value="@detail.V" readonly />
+                            </div>
+
+                            <div class="qc-chemical-item">
+                                <label for="B">B</label>
+                                <input type="number" step="any" id="B" name="B" class="qc-chemical-input" value="@detail.B" readonly />
+                            </div>
+
+                            <div class="qc-chemical-item">
                                 <label for="N">N</label>
                                 <input type="number" step="any" id="N" name="N" class="qc-chemical-input" value="@detail.N" readonly />
                             </div>
 
                             <div class="qc-chemical-item">
-                                <label for="Ceq">Ceq</label>
+                                <label for="Ceq">CE%</label>
                                 <input type="number" step="any" id="Ceq" name="Ceq" class="qc-chemical-input" value="@detail.Ceq" readonly />
                             </div>
                         </div>
@@ -1039,7 +1109,7 @@
         </div>
     </form>
 
-    <form action="@Url.Action("DeleteQCInspectionRM", "RMMechanical")"
+    <form action="@Url.Action("DeleteQCInspectionRM", "Quality")"
           method="post"
           id="deleteForm"
           style="display:none;">
@@ -1055,32 +1125,24 @@
 <script>
     $(document).ready(function () {
 
-        /* =====================================================
-           SUCCESS / ERROR MESSAGES
-           ===================================================== */
-
         var successMessage =
             @Html.Raw(
                 Newtonsoft.Json.JsonConvert.SerializeObject(
-                    Convert.ToString(
-                        TempData["SuccessMessage"]
-                    )
+                    Convert.ToString(TempData["SuccessMessage"])
                 )
             );
 
         var errorMessage =
             @Html.Raw(
                 Newtonsoft.Json.JsonConvert.SerializeObject(
-                    Convert.ToString(
-                        TempData["ErrorMessage"]
-                    )
+                    Convert.ToString(TempData["ErrorMessage"])
                 )
             );
 
         if (successMessage) {
             Swal.fire({
                 icon: "success",
-                title: "Operation Successful",
+                title: "Data Saved",
                 text: successMessage,
                 confirmButtonText: "OK",
                 confirmButtonColor: "#8b0018"
@@ -1097,11 +1159,6 @@
             });
         }
 
-
-        /* =====================================================
-           COMMON SETTINGS
-           ===================================================== */
-
         $("input[type='number']").attr(
             "step",
             "any"
@@ -1114,17 +1171,11 @@
             );
 
         if (currentInspectionID <= 0) {
-            $("#boardingTable tbody tr")
-                .removeClass("selected");
-
-            $("#mtcTable tbody tr")
-                .removeClass("selected");
+            $("#boardingTable tbody tr").removeClass("selected");
+            $("#mtcTable tbody tr").removeClass("selected");
         }
 
-
-        /* =====================================================
-           COMMON HELPER FUNCTIONS
-           ===================================================== */
+        loadMTCGrid("");
 
         function selectRow(
             tableSelector,
@@ -1138,7 +1189,6 @@
                 .addClass("selected");
         }
 
-
         function setValue(
             selector,
             value) {
@@ -1151,19 +1201,101 @@
             );
         }
 
+        function calculateTensileYieldRatio() {
+
+            var yieldStrength =
+                parseFloat(
+                    $("#YieldStrength").val()
+                );
+
+            var tensileStrength =
+                parseFloat(
+                    $("#TensileStrength").val()
+                );
+
+            if (
+                isNaN(yieldStrength) ||
+                isNaN(tensileStrength) ||
+                yieldStrength <= 0
+            ) {
+                $("#TensileYieldRatio").val("");
+                return;
+            }
+
+            var ratio =
+                tensileStrength /
+                yieldStrength;
+
+            $("#TensileYieldRatio").val(
+                ratio.toFixed(3)
+            );
+        }
+
+
+        $("#YieldStrength, #TensileStrength").on(
+            "input change",
+            function () {
+                calculateTensileYieldRatio();
+            }
+        );
+
 
         function setCheckbox(
             selector,
             value) {
 
-            $(selector).prop(
-                "checked",
+            var normalized =
                 value === true ||
-                value === "true" ||
                 value === 1 ||
-                value === "1"
-            );
+                value === "1" ||
+                String(value).toLowerCase() === "true" ||
+                String(value).toLowerCase() === "yes";
+
+            $(selector)
+                .prop(
+                    "checked",
+                    normalized
+                )
+                .trigger("change");
         }
+
+        function toggleProductTypeDropdown() {
+
+            var isChecked =
+                $("#IsWireRodOrCoil")
+                    .is(":checked");
+
+            $("#ProductTypeDropdownWrap")
+                .toggle(
+                    isChecked
+                );
+
+            $("#ProductType")
+                .prop(
+                    "disabled",
+                    !isChecked
+                );
+
+            if (!isChecked) {
+                $("#ProductType").val("");
+            }
+        }
+
+
+        $("#IsWireRodOrCoil").on(
+            "change",
+            function () {
+                toggleProductTypeDropdown();
+            }
+        );
+
+
+        toggleProductTypeDropdown();
+
+        /*
+         * Calculate ratio for an already-loaded saved record.
+         */
+        calculateTensileYieldRatio();
 
 
         function getResponseValue(
@@ -1186,15 +1318,13 @@
             if (
                 valueProperty &&
                 data[valueProperty] !== undefined &&
-                data[valueProperty] !== null &&
-                data[valueProperty] !== ""
+                data[valueProperty] !== null
             ) {
                 return data[valueProperty];
             }
 
             return "";
         }
-
 
         function toHtmlDate(value) {
 
@@ -1208,10 +1338,7 @@
             ) {
                 var ticks =
                     parseInt(
-                        value.replace(
-                            /[^0-9-]/g,
-                            ""
-                        ),
+                        value.replace(/[^0-9-]/g, ""),
                         10
                     );
 
@@ -1239,96 +1366,20 @@
                 .substring(0, 10);
         }
 
-
-        function escapeHtml(value) {
-
-            return $("<div>")
-                .text(
-                    value === null ||
-                    value === undefined
-                        ? ""
-                        : value
-                )
-                .html();
-        }
-
-
-        function formatNumber(value) {
-
-            if (
-                value === null ||
-                value === undefined ||
-                value === ""
-            ) {
-                return "0";
-            }
-
-            var number =
-                parseFloat(value);
-
-            return isNaN(number)
-                ? value
-                : number
-                    .toFixed(3)
-                    .replace(
-                        /\.?0+$/,
-                        ""
-                    );
-        }
-
-
-        function clearMTCFields() {
-
-            setValue("#MTCID", "0");
-            setValue("#MTCHeatNo", "");
-
-            setValue("#YieldStrength", "");
-            setValue("#TensileStrength", "");
-            setValue("#TensileYieldRatio", "");
-            setValue("#Elongation", "");
-            setValue("#GaugeLength", "");
-
-            setValue("#C", "");
-            setValue("#Si", "");
-            setValue("#Mn", "");
-            setValue("#P", "");
-            setValue("#S", "");
-            setValue("#N", "");
-            setValue("#Ceq", "");
-
-            $("#mtcTable tbody tr")
-                .removeClass("selected");
-        }
-
-
-        /* =====================================================
-           BOARDING DETAIL BINDING
-           ===================================================== */
-
         function bindBoardingDetail(data) {
 
             if (!data) {
                 return;
             }
 
-            /*
-             * data.ID is QCInspectionRM.ID. For a new boarding heat it is 0;
-             * for an already saved heat it is the existing record ID.
-             */
-            setValue(
-                "#ID",
-                data.ID || 0
-            );
-
             setValue(
                 "#BilletBoardingID",
-                data.BilletBoardingID ||
-                data.ID
+                data.BilletBoardingID
             );
 
             setValue(
                 "#MTCID",
-                data.MTCID || data.ID || 0
+                data.MTCID
             );
 
             setValue(
@@ -1349,32 +1400,10 @@
                 )
             );
 
-
-            /* Product information */
-
-            setValue(
-                "#HeatNo",
-                data.HeatNo
-            );
-
-            setValue(
-                "#Specification",
-                data.Specification
-            );
-
-            setValue(
-                "#SteelGrade",
-                data.SteelGrade
-            );
-
-            setValue(
-                "#BarSize",
-                getResponseValue(
-                    data,
-                    "BarSize",
-                    "BarSizeValue"
-                )
-            );
+            /* Product and bundle details */
+            setValue("#HeatNo", data.HeatNo);
+            setValue("#Specification", data.Specification);
+            setValue("#SteelGrade", data.SteelGrade);
 
             setValue(
                 "#Length",
@@ -1382,15 +1411,6 @@
                     data,
                     "Length",
                     "LengthValue"
-                )
-            );
-
-            setValue(
-                "#WeightPerBundle",
-                getResponseValue(
-                    data,
-                    "WeightPerBundle",
-                    "WeightPerBundleValue"
                 )
             );
 
@@ -1409,6 +1429,24 @@
                     data,
                     "CrossSectionArea",
                     "CrossSectionAreaValue"
+                )
+            );
+
+            setValue(
+                "#BarSize",
+                getResponseValue(
+                    data,
+                    "BarSize",
+                    "BarSizeValue"
+                )
+            );
+
+            setValue(
+                "#WeightPerBundle",
+                getResponseValue(
+                    data,
+                    "WeightPerBundle",
+                    "WeightPerBundleValue"
                 )
             );
 
@@ -1440,9 +1478,14 @@
                 data.IsWireRodOrCoil
             );
 
+            setValue(
+                "#ProductType",
+                data.ProductType
+            );
+
+            toggleProductTypeDropdown();
 
             /* Mechanical test */
-
             setValue(
                 "#YieldStrength",
                 getResponseValue(
@@ -1488,9 +1531,13 @@
                 )
             );
 
+            /*
+             * Ratio is always derived from:
+             * Tensile Strength / Yield Strength
+             */
+            calculateTensileYieldRatio();
 
             /* Chemical analysis */
-
             setValue(
                 "#C",
                 getResponseValue(
@@ -1536,6 +1583,13 @@
                 )
             );
 
+            setValue("#Cu", getResponseValue(data, "Cu", "CuValue"));
+            setValue("#Ni", getResponseValue(data, "Ni", "NiValue"));
+            setValue("#Cr", getResponseValue(data, "Cr", "CrValue"));
+            setValue("#Mo", getResponseValue(data, "Mo", "MoValue"));
+            setValue("#V", getResponseValue(data, "V", "VValue"));
+            setValue("#B", getResponseValue(data, "B", "BValue"));
+
             setValue(
                 "#N",
                 getResponseValue(
@@ -1554,11 +1608,6 @@
                 )
             );
         }
-
-
-        /* =====================================================
-           MTC DETAIL BINDING
-           ===================================================== */
 
         function bindMTCDetail(data) {
 
@@ -1566,290 +1615,91 @@
                 return;
             }
 
+            setValue("#ID", data.ID);
+            setValue("#MTCID", data.MTCID || data.ID);
 
-            /* MTC identity */
+            if (data.BilletBoardingID !== undefined) {
+                setValue("#BilletBoardingID", data.BilletBoardingID);
+            }
 
-            setValue(
-                "#ID",
-                data.ID || 0
-            );
+            if (data.Site !== undefined) {
+                setValue("#Site", data.Site);
+            }
 
-            setValue(
-                "#MTCID",
-                data.MTCID ||
-                data.ID
-            );
+            if (data.ProductionShift !== undefined) {
+                setValue("#ProductionShift", data.ProductionShift);
+            }
 
-            setValue(
-                "#BilletBoardingID",
-                data.BilletBoardingID || 0
-            );
-
-            setValue(
-                "#Site",
-                data.Site
-            );
-
-            setValue(
-                "#ProductionShift",
-                data.ProductionShift
-            );
-
-            setValue(
-                "#ProductionDateValue",
-                toHtmlDate(
-                    data.ProductionDateValue ||
-                    data.ProductionDate
-                )
-            );
-
-
-            /* Product information */
-
-            if (data.HeatNo) {
+            if (data.ProductionDateValue || data.ProductionDate) {
                 setValue(
-                    "#HeatNo",
-                    data.HeatNo
-                );
-
-                setValue(
-                    "#MTCHeatNo",
-                    data.HeatNo
+                    "#ProductionDateValue",
+                    toHtmlDate(
+                        data.ProductionDateValue ||
+                        data.ProductionDate
+                    )
                 );
             }
 
-            if (data.SteelGrade) {
-                setValue(
-                    "#SteelGrade",
-                    data.SteelGrade
-                );
-            }
+            setValue("#HeatNo", data.HeatNo);
+            setValue("#MTCHeatNo", data.HeatNo);
+            setValue("#Specification", data.Specification);
+            setValue("#SteelGrade", data.SteelGrade);
 
-            setValue(
-                "#BarSize",
-                getResponseValue(
-                    data,
-                    "BarSize",
-                    "BarSizeValue"
-                )
-            );
+            setValue("#BarSize", getResponseValue(data, "BarSize", "BarSizeValue"));
+            setValue("#Length", getResponseValue(data, "Length", "LengthValue"));
+            setValue("#WeightPerBundle", getResponseValue(data, "WeightPerBundle", "WeightPerBundleValue"));
+            setValue("#NominalWeight", getResponseValue(data, "NominalWeight", "NominalWeightValue"));
+            setValue("#CrossSectionArea", getResponseValue(data, "CrossSectionArea", "CrossSectionAreaValue"));
+            setValue("#NoOfBarsPerBundle", getResponseValue(data, "NoOfBarsPerBundle", "NoOfBarsPerBundleValue"));
+            setValue("#NoOfBundles", getResponseValue(data, "NoOfBundles", "NoOfBundlesValue"));
 
-            setValue(
-                "#NoOfBundles",
-                getResponseValue(
-                    data,
-                    "NoOfBundles",
-                    "NoOfBundlesValue"
-                )
-            );
-
-            if (data.Specification) {
-                setValue(
-                    "#Specification",
-                    data.Specification
-                );
-            }
-
-            setValue(
-                "#Length",
-                getResponseValue(
-                    data,
-                    "Length",
-                    "LengthValue"
-                )
-            );
-
-            setValue(
-                "#WeightPerBundle",
-                getResponseValue(
-                    data,
-                    "WeightPerBundle",
-                    "WeightPerBundleValue"
-                )
-            );
-
-            setValue(
-                "#NominalWeight",
-                getResponseValue(
-                    data,
-                    "NominalWeight",
-                    "NominalWeightValue"
-                )
-            );
-
-            setValue(
-                "#CrossSectionArea",
-                getResponseValue(
-                    data,
-                    "CrossSectionArea",
-                    "CrossSectionAreaValue"
-                )
-            );
-
-            setValue(
-                "#NoOfBarsPerBundle",
-                getResponseValue(
-                    data,
-                    "NoOfBarsPerBundle",
-                    "NoOfBarsPerBundleValue"
-                )
-            );
-
-
-            /* Mechanical test */
+            setCheckbox("#BendTestObserved", data.BendTestObserved);
+            setCheckbox("#IsWireRodOrCoil", data.IsWireRodOrCoil);
+            setValue("#ProductType", data.ProductType);
+            toggleProductTypeDropdown();
 
             setValue(
                 "#YieldStrength",
-                getResponseValue(
-                    data,
-                    "YieldStrength",
-                    "YieldStrengthValue"
-                ) ||
-                getResponseValue(
-                    data,
-                    "YieldStress",
-                    "YieldStressValue"
-                )
+                getResponseValue(data, "YieldStrength", "YieldStrengthValue") ||
+                getResponseValue(data, "YieldStress", "YieldStressValue")
             );
 
             setValue(
                 "#TensileStrength",
-                getResponseValue(
-                    data,
-                    "TensileStrength",
-                    "TensileStrengthValue"
-                ) ||
-                getResponseValue(
-                    data,
-                    "TensileStress",
-                    "TensileStressValue"
-                )
+                getResponseValue(data, "TensileStrength", "TensileStrengthValue") ||
+                getResponseValue(data, "TensileStress", "TensileStressValue")
             );
 
             setValue(
                 "#TensileYieldRatio",
-                getResponseValue(
-                    data,
-                    "TensileYieldRatio",
-                    "TensileYieldRatioValue"
-                ) ||
-                getResponseValue(
-                    data,
-                    "YSTSRatio",
-                    "YSTSRatioValue"
-                )
+                getResponseValue(data, "TensileYieldRatio", "TensileYieldRatioValue") ||
+                getResponseValue(data, "YSTSRatio", "YSTSRatioValue")
             );
 
-            setValue(
-                "#Elongation",
-                getResponseValue(
-                    data,
-                    "Elongation",
-                    "ElongationValue"
-                )
-            );
+            setValue("#Elongation", getResponseValue(data, "Elongation", "ElongationValue"));
+            setValue("#GaugeLength", getResponseValue(data, "GaugeLength", "GaugeLengthValue"));
 
-            setValue(
-                "#GaugeLength",
-                getResponseValue(
-                    data,
-                    "GaugeLength",
-                    "GaugeLengthValue"
-                )
-            );
+            /*
+             * Ignore any editable/stale stored ratio and calculate it
+             * from the loaded mechanical test values.
+             */
+            calculateTensileYieldRatio();
 
-
-            /* Chemical analysis */
-
-            setValue(
-                "#C",
-                getResponseValue(
-                    data,
-                    "C",
-                    "CValue"
-                )
-            );
-
-            setValue(
-                "#Si",
-                getResponseValue(
-                    data,
-                    "Si",
-                    "SiValue"
-                )
-            );
-
-            setValue(
-                "#Mn",
-                getResponseValue(
-                    data,
-                    "Mn",
-                    "MnValue"
-                )
-            );
-
-            setValue(
-                "#P",
-                getResponseValue(
-                    data,
-                    "P",
-                    "PValue"
-                )
-            );
-
-            setValue(
-                "#S",
-                getResponseValue(
-                    data,
-                    "S",
-                    "SValue"
-                )
-            );
-
-            setValue(
-                "#N",
-                getResponseValue(
-                    data,
-                    "N",
-                    "NValue"
-                )
-            );
-
-            setValue(
-                "#Ceq",
-                getResponseValue(
-                    data,
-                    "Ceq",
-                    "CeqValue"
-                )
-            );
-
-
-            /* Other values */
-
-            if (
-                data.BendTestObserved !== undefined
-            ) {
-                setCheckbox(
-                    "#BendTestObserved",
-                    data.BendTestObserved
-                );
-            }
-
-            if (
-                data.IsWireRodOrCoil !== undefined
-            ) {
-                setCheckbox(
-                    "#IsWireRodOrCoil",
-                    data.IsWireRodOrCoil
-                );
-            }
+            setValue("#C", getResponseValue(data, "C", "CValue"));
+            setValue("#Si", getResponseValue(data, "Si", "SiValue"));
+            setValue("#Mn", getResponseValue(data, "Mn", "MnValue"));
+            setValue("#P", getResponseValue(data, "P", "PValue"));
+            setValue("#S", getResponseValue(data, "S", "SValue"));
+            setValue("#Cu", getResponseValue(data, "Cu", "CuValue"));
+            setValue("#Ni", getResponseValue(data, "Ni", "NiValue"));
+            setValue("#Cr", getResponseValue(data, "Cr", "CrValue"));
+            setValue("#Mo", getResponseValue(data, "Mo", "MoValue"));
+            setValue("#V", getResponseValue(data, "V", "VValue"));
+            setValue("#B", getResponseValue(data, "B", "BValue"));
+            setValue("#N", getResponseValue(data, "N", "NValue"));
+            setValue("#Ceq", getResponseValue(data, "Ceq", "CeqValue"));
         }
 
-
-        /* =====================================================
-           BOARDING TABLE ROW CLICK
-           ===================================================== */
 
         $("#boardingTable tbody").on(
             "click",
@@ -1874,14 +1724,6 @@
                 var boardingID =
                     row.data("id");
 
-                var heatNo =
-                    row.data("heatno");
-
-
-                /* Never carry the previously selected saved record. */
-                setValue("#ID", "0");
-                clearMTCFields();
-
                 setValue(
                     "#BilletBoardingID",
                     boardingID
@@ -1894,7 +1736,7 @@
 
                 setValue(
                     "#HeatNo",
-                    heatNo
+                    row.data("heatno")
                 );
 
                 setValue(
@@ -1917,21 +1759,13 @@
                     row.data("bundlecount")
                 );
 
-
                 $.ajax({
-                    url:
-                        '@Url.Action("GetBoardingDetails", "RMMechanical")',
-
-                    type:
-                        "GET",
-
-                    cache:
-                        false,
-
+                    url: '@Url.Action("GetBoardingDetails", "Quality")',
+                    type: "GET",
                     data: {
-                        boardingID: boardingID
+                        boardingID:
+                            boardingID
                     },
-
                     success: function (response) {
 
                         if (
@@ -1941,52 +1775,48 @@
                             bindBoardingDetail(
                                 response.data
                             );
-
-                            /*
-                             * Selected boarding heat ke
-                             * according MTC grid filter karo.
-                             */
-                            loadMTCGrid(
-                                heatNo || ""
-                            );
-                        }
-                        else {
-                            Swal.fire({
-                                icon: "info",
-                                title: "No Details",
-                                text:
-                                    response &&
-                                    response.message
-                                        ? response.message
-                                        : "Boarding details are not available.",
-                                confirmButtonColor:
-                                    "#8b0018"
-                            });
                         }
                     },
-
-                    error: function (xhr) {
-
+                    error: function () {
                         Swal.fire({
                             icon: "error",
                             title: "Load Failed",
-                            text:
-                                xhr.responseJSON &&
-                                xhr.responseJSON.message
-                                    ? xhr.responseJSON.message
-                                    : "Billet boarding details could not be loaded.",
-                            confirmButtonColor:
-                                "#8b0018"
+                            text: "Billet boarding details load nahi ho saken.",
+                            confirmButtonColor: "#8b0018"
                         });
                     }
                 });
             }
         );
 
+        function escapeHtml(value) {
+            return $("<div>")
+                .text(
+                    value === null ||
+                    value === undefined
+                        ? ""
+                        : value
+                )
+                .html();
+        }
 
-        /* =====================================================
-           RENDER MTC GRID
-           ===================================================== */
+        function formatNumber(value) {
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
+                return "0";
+            }
+
+            var number =
+                parseFloat(value);
+
+            return isNaN(number)
+                ? value
+                : number.toFixed(3)
+                    .replace(/\.?0+$/, "");
+        }
 
         function renderMTCGrid(rows) {
 
@@ -1995,48 +1825,13 @@
 
             body.empty();
 
-            /* One visible MTC row per normalized HeatNo. */
-            var uniqueRows = [];
-            var seenKeys = {};
-
-            $.each(
-                rows || [],
-                function (index, item) {
-
-                    var id =
-                        parseInt(
-                            item.ID || "0",
-                            10
-                        );
-
-                    var normalizedHeat =
-                        (item.HeatNo || "")
-                            .toString()
-                            .trim()
-                            .toUpperCase();
-
-                    var key = normalizedHeat
-                        ? "HEAT:" + normalizedHeat
-                        : "ID:" + id;
-
-                    if (!seenKeys[key]) {
-                        seenKeys[key] = true;
-                        uniqueRows.push(item);
-                    }
-                }
-            );
-
-            rows = uniqueRows;
-
             if (
                 !rows ||
                 rows.length === 0
             ) {
                 body.append(
                     '<tr class="qc-empty">' +
-                    '<td colspan="7">' +
-                    'No MTC records found.' +
-                    '</td>' +
+                    '<td colspan="7">No MTC records found.</td>' +
                     '</tr>'
                 );
 
@@ -2049,67 +1844,37 @@
 
                     var row =
                         '<tr' +
-
                         ' data-id="' +
-                        escapeHtml(
-                            item.ID
-                        ) +
+                        escapeHtml(item.ID) +
                         '"' +
-
                         ' data-heatno="' +
-                        escapeHtml(
-                            item.HeatNo
-                        ) +
+                        escapeHtml(item.HeatNo) +
                         '"' +
-
                         ' data-steelgrade="' +
-                        escapeHtml(
-                            item.SteelGrade
-                        ) +
+                        escapeHtml(item.SteelGrade) +
                         '"' +
-
                         ' data-barsize="' +
-                        escapeHtml(
-                            item.BarSize
-                        ) +
+                        escapeHtml(item.BarSize) +
                         '"' +
-
                         ' data-noofbundles="' +
-                        escapeHtml(
-                            item.NoOfBundles
-                        ) +
+                        escapeHtml(item.NoOfBundles) +
                         '"' +
-
                         ' data-yieldstress="' +
-                        escapeHtml(
-                            item.YieldStress
-                        ) +
+                        escapeHtml(item.YieldStress) +
                         '"' +
-
                         ' data-tensilestress="' +
-                        escapeHtml(
-                            item.TensileStress
-                        ) +
+                        escapeHtml(item.TensileStress) +
                         '"' +
-
                         ' data-ratio="' +
-                        escapeHtml(
-                            item.YSTSRatio
-                        ) +
-                        '"' +
-
-                        '>' +
+                        escapeHtml(item.YSTSRatio) +
+                        '">' +
 
                         '<td>' +
-                        escapeHtml(
-                            item.HeatNo
-                        ) +
+                        escapeHtml(item.HeatNo) +
                         '</td>' +
 
                         '<td>' +
-                        escapeHtml(
-                            item.SteelGrade
-                        ) +
+                        escapeHtml(item.SteelGrade) +
                         '</td>' +
 
                         '<td>' +
@@ -2137,9 +1902,7 @@
                         '</td>' +
 
                         '<td>' +
-                        escapeHtml(
-                            item.NoOfBundles
-                        ) +
+                        escapeHtml(item.NoOfBundles) +
                         '</td>' +
 
                         '<td>' +
@@ -2159,29 +1922,17 @@
             );
         }
 
-
-        /* =====================================================
-           LOAD MTC GRID
-           ===================================================== */
-
         function loadMTCGrid(
             heatNo) {
 
             $.ajax({
-                url:
-                    '@Url.Action("GetMTCRowsJson", "RMMechanical")',
-
-                type:
-                    "GET",
-
-                cache:
-                    false,
-
+                url: '@Url.Action("GetMTCRowsJson", "Quality")',
+                type: "GET",
+                cache: false,
                 data: {
                     heatNo:
                         heatNo || ""
                 },
-
                 success: function (response) {
 
                     if (
@@ -2195,17 +1946,18 @@
                     else {
                         renderMTCGrid([]);
 
-                        if (
-                            response &&
-                            response.message
-                        ) {
-                            console.log(
+                        Swal.fire({
+                            icon: "info",
+                            title: "No MTC Data",
+                            text:
+                                response &&
                                 response.message
-                            );
-                        }
+                                    ? response.message
+                                    : "No saved MTC records found.",
+                            confirmButtonColor: "#8b0018"
+                        });
                     }
                 },
-
                 error: function (xhr) {
 
                     renderMTCGrid([]);
@@ -2217,195 +1969,114 @@
                             xhr.responseJSON &&
                             xhr.responseJSON.message
                                 ? xhr.responseJSON.message
-                                : "MTC data could not be loaded.",
-                        confirmButtonColor:
-                            "#8b0018"
+                                : "MTC data load nahi ho saka.",
+                        confirmButtonColor: "#8b0018"
                     });
                 }
             });
         }
 
-
-        /* =====================================================
-           MTC TABLE ROW CLICK
-           ===================================================== */
-
         $("#mtcTable tbody").on(
-    "click",
-    "tr",
-    function () {
-
-        if (
-            $(this).hasClass("qc-empty") ||
-            !$(this).data("id")
-        ) {
-            return;
-        }
-
-        selectRow(
-            "#mtcTable",
-            this
-        );
-
-        var row =
-            $(this);
-
-        var mtcID =
-            parseInt(
-                row.data("id") || "0",
-                10
-            );
-
-        var heatNo =
-            row.data("heatno") || "";
-
-        /*
-         * Selected record identity
-         */
-        setValue(
-            "#MTCID",
-            mtcID
-        );
-
-        setValue(
-            "#MTCHeatNo",
-            heatNo
-        );
-
-        /*
-         * Grid se available values immediately show karo.
-         */
-        setValue(
-            "#HeatNo",
-            heatNo
-        );
-
-        setValue(
-            "#SteelGrade",
-            row.data("steelgrade")
-        );
-
-        setValue(
-            "#BarSize",
-            row.data("barsize")
-        );
-
-        setValue(
-            "#NoOfBundles",
-            row.data("noofbundles")
-        );
-
-        setValue(
-            "#YieldStrength",
-            row.data("yieldstress")
-        );
-
-        setValue(
-            "#TensileStrength",
-            row.data("tensilestress")
-        );
-
-        setValue(
-            "#TensileYieldRatio",
-            row.data("ratio")
-        );
-
-        /*
-         * Complete selected MTC data fetch:
-         * Product + saved mechanical + chemical analysis
-         */
-        $.ajax({
-            url:
-                '@Url.Action("GetMTCDetails", "RMMechanical")',
-
-            type:
-                "GET",
-
-            cache:
-                false,
-
-            data: {
-                mtcID: mtcID
-            },
-
-            success: function (response) {
+            "click",
+            "tr",
+            function () {
 
                 if (
-                    response &&
-                    response.success &&
-                    response.data
+                    $(this).hasClass("qc-empty") ||
+                    !$(this).data("id")
                 ) {
-                    bindMTCDetail(
-                        response.data
+                    return;
+                }
+
+                selectRow("#mtcTable", this);
+
+                var row = $(this);
+
+                var mtcID =
+                    parseInt(
+                        row.data("id") || "0",
+                        10
                     );
-                }
-                else {
-                    Swal.fire({
-                        icon: "info",
-                        title: "MTC Data Not Found",
-                        text:
-                            response &&
-                            response.message
-                                ? response.message
-                                : "Complete details for the selected MTC are not available.",
-                        confirmButtonColor:
-                            "#8b0018"
-                    });
-                }
-            },
 
-            error: function (xhr) {
-
-                var message =
-                    "The selected MTC data could not be loaded.";
+                var heatNo =
+                    row.data("heatno") || "";
 
                 if (
-                    xhr &&
-                    xhr.responseJSON &&
-                    xhr.responseJSON.message
+                    isNaN(mtcID) ||
+                    mtcID <= 0
                 ) {
-                    message =
-                        xhr.responseJSON.message;
+                    return;
                 }
 
-                Swal.fire({
-                    icon: "error",
-                    title: "MTC Load Failed",
-                    text: message,
-                    confirmButtonColor:
-                        "#8b0018"
+                setValue("#MTCID", mtcID);
+                setValue("#MTCHeatNo", heatNo);
+                setValue("#HeatNo", heatNo);
+                setValue("#SteelGrade", row.data("steelgrade"));
+                setValue("#BarSize", row.data("barsize"));
+                setValue("#NoOfBundles", row.data("noofbundles"));
+                setValue("#YieldStrength", row.data("yieldstress"));
+                setValue("#TensileStrength", row.data("tensilestress"));
+                calculateTensileYieldRatio();
+
+                $.ajax({
+                    url: '@Url.Action("GetMTCDetails", "Quality")',
+                    type: "GET",
+                    cache: false,
+                    data: {
+                        mtcID: mtcID
+                    },
+                    success: function (response) {
+                        if (
+                            response &&
+                            response.success &&
+                            response.data
+                        ) {
+                            bindMTCDetail(
+                                response.data
+                            );
+                        }
+                        else {
+                            Swal.fire({
+                                icon: "info",
+                                title: "MTC Data Not Found",
+                                text:
+                                    response &&
+                                    response.message
+                                        ? response.message
+                                        : "Selected MTC details not found.",
+                                confirmButtonColor: "#8b0018"
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr.responseText);
+
+                        Swal.fire({
+                            icon: "error",
+                            title: "Load Failed",
+                            text:
+                                xhr.responseJSON &&
+                                xhr.responseJSON.message
+                                    ? xhr.responseJSON.message
+                                    : "Mechanical and chemical analysis could not be loaded.",
+                            confirmButtonColor: "#8b0018"
+                        });
+                    }
                 });
             }
-        });
-    }
-);
+        );
 
-
-        /* =====================================================
-           BOARDING SEARCH
-           ===================================================== */
 
         $("#btnBoardingSearch").on(
             "click",
             function () {
 
                 var search =
-                    (
-                        $("#BilletBoardingHeatID")
-                            .val() || ""
-                    )
-                    .trim()
-                    .toLowerCase();
+                    ($("#BilletBoardingHeatID").val() || "")
+                        .toLowerCase();
 
-                $("#boardingTable tbody tr")
-                    .each(function () {
-
-                        if (
-                            $(this)
-                                .hasClass("qc-empty")
-                        ) {
-                            return;
-                        }
+                $("#boardingTable tbody tr").each(
+                    function () {
 
                         var rowText =
                             $(this)
@@ -2414,57 +2085,33 @@
 
                         $(this).toggle(
                             !search ||
-                            rowText.indexOf(
-                                search
-                            ) >= 0
+                            rowText.indexOf(search) >= 0
                         );
-                    });
+                    }
+                );
             }
         );
-
-
-        $("#BilletBoardingHeatID").on(
-            "keypress",
-            function (event) {
-
-                if (event.which === 13) {
-                    event.preventDefault();
-
-                    $("#btnBoardingSearch")
-                        .trigger("click");
-                }
-            }
-        );
-
-
-        /* =====================================================
-           MTC SEARCH
-           ===================================================== */
 
         $("#btnMTCSearch").on(
             "click",
             function () {
 
-                var heatNo =
-                    (
-                        $("#MTCHeatNo")
-                            .val() || ""
-                    )
-                    .trim();
-
-                clearMTCFields();
-
-                setValue(
-                    "#MTCHeatNo",
-                    heatNo
-                );
-
                 loadMTCGrid(
-                    heatNo
+                    ($("#MTCHeatNo").val() || "")
+                        .trim()
                 );
             }
         );
 
+        $("#btnMTCRefresh").on(
+            "click",
+            function () {
+
+                $("#MTCHeatNo").val("");
+
+                loadMTCGrid("");
+            }
+        );
 
         $("#MTCHeatNo").on(
             "keypress",
@@ -2473,108 +2120,26 @@
                 if (event.which === 13) {
                     event.preventDefault();
 
-                    $("#btnMTCSearch")
-                        .trigger("click");
+                    loadMTCGrid(
+                        ($(this).val() || "")
+                            .trim()
+                    );
                 }
             }
         );
 
-
-        /* =====================================================
-           COPY BUTTONS
-           ===================================================== */
-
-        $("#btnBoardingCopy").on(
-            "click",
+        $("input[name='RollingMill']").on(
+            "change",
             function () {
 
-                var selectedRow =
-                    $("#boardingTable tbody tr.selected");
-
-                if (
-                    selectedRow.length === 0
-                ) {
-                    Swal.fire({
-                        icon: "info",
-                        title: "Select Boarding Record",
-                        text:
-                            "Please select a boarding row before copying.",
-                        confirmButtonColor:
-                            "#8b0018"
-                    });
-
-                    return;
-                }
-
-                var heatNo =
-                    selectedRow.data("heatno");
-
-                navigator.clipboard
-                    .writeText(
-                        heatNo || ""
-                    )
-                    .then(function () {
-
-                        Swal.fire({
-                            icon: "success",
-                            title: "Copied",
-                            text:
-                                "Heat number copied to the clipboard.",
-                            timer: 1200,
-                            showConfirmButton: false
-                        });
-                    });
+                window.location.href =
+                    '@Url.Action("QCInspectionRMadd", "Quality")'
+                    + "?rm="
+                    + encodeURIComponent(
+                        $(this).val()
+                    );
             }
         );
-
-
-        $("#btnMTCCopy").on(
-            "click",
-            function () {
-
-                var selectedRow =
-                    $("#mtcTable tbody tr.selected");
-
-                if (
-                    selectedRow.length === 0
-                ) {
-                    Swal.fire({
-                        icon: "info",
-                        title: "Select MTC Record",
-                        text:
-                            "Please select an MTC row before copying.",
-                        confirmButtonColor:
-                            "#8b0018"
-                    });
-
-                    return;
-                }
-
-                var heatNo =
-                    selectedRow.data("heatno");
-
-                navigator.clipboard
-                    .writeText(
-                        heatNo || ""
-                    )
-                    .then(function () {
-
-                        Swal.fire({
-                            icon: "success",
-                            title: "Copied",
-                            text:
-                                "MTC heat number copied to the clipboard.",
-                            timer: 1200,
-                            showConfirmButton: false
-                        });
-                    });
-            }
-        );
-
-
-        /* =====================================================
-           REFRESH BUTTONS
-           ===================================================== */
 
         $("#btnBoardingRefresh").on(
             "click",
@@ -2583,248 +2148,22 @@
             }
         );
 
-
-        $("#btnMTCRefresh").on(
-            "click",
-            function () {
-
-                clearMTCFields();
-
-                loadMTCGrid("");
-            }
-        );
-
-
-        /* =====================================================
-           RM1 / RM2 SWITCHING
-           ===================================================== */
-
-        $("input[name='RollingMill']").on(
-            "change",
-            function () {
-
-                var selectedRM =
-                    $(this).val();
-
-                window.location.href =
-                    '@Url.Action("QCInspectionRMadd", "RMMechanical")'
-                    + "?rm="
-                    + encodeURIComponent(
-                        selectedRM
-                    );
-            }
-        );
-
-
-        /* =====================================================
-           SAVE RECORD VALIDATION
-           ===================================================== */
-
-        $("#addprofileform").on(
-            "submit",
-            function (event) {
-
-                /*
-                 * Generate MTC button ke submit ko
-                 * normal save validation se exclude karo.
-                 */
-                var submitter =
-                    document.activeElement;
-
-                if (
-                    submitter &&
-                    submitter.id ===
-                    "btnGenerateMTC"
-                ) {
-                    return true;
-                }
-
-                var boardingID =
-                    parseInt(
-                        $("#BilletBoardingID")
-                            .val() || "0",
-                        10
-                    );
-
-                var heatNo =
-                    (
-                        $("#HeatNo")
-                            .val() || ""
-                    )
-                    .trim();
-
-                if (
-                    boardingID <= 0 &&
-                    !heatNo
-                ) {
-                    event.preventDefault();
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Select Boarding Record",
-                        text:
-                            "Please select a billet boarding record before saving.",
-                        confirmButtonColor:
-                            "#8b0018"
-                    });
-
-                    return false;
-                }
-
-                return true;
-            }
-        );
-
-
-        /* =====================================================
-           GENERATE MTC VALIDATION
-           ===================================================== */
-
         $("#btnGenerateMTC").on(
             "click",
-            function (event) {
+            function () {
 
-                var mtcID =
-                    parseInt(
-                        $("#MTCID")
-                            .val() || "0",
-                        10
+                $("#addprofileform")
+                    .attr(
+                        "action",
+                        '@Url.Action("GenerateMTC", "Quality")'
+                    )
+                    .attr(
+                        "method",
+                        "post"
                     );
-
-                var heatNo =
-                    (
-                        $("#HeatNo")
-                            .val() || ""
-                    )
-                    .trim();
-
-                var steelGrade =
-                    (
-                        $("#SteelGrade")
-                            .val() || ""
-                    )
-                    .trim();
-
-                var barSize =
-                    (
-                        $("#BarSize")
-                            .val() || ""
-                    )
-                    .trim();
-
-                var yieldStrength =
-                    (
-                        $("#YieldStrength")
-                            .val() || ""
-                    )
-                    .trim();
-
-                var tensileStrength =
-                    (
-                        $("#TensileStrength")
-                            .val() || ""
-                    )
-                    .trim();
-
-
-                if (
-                    mtcID <= 0
-                ) {
-                    event.preventDefault();
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Select MTC Record",
-                        text:
-                            "Please select an MTC record before generating the MTC.",
-                        confirmButtonColor:
-                            "#8b0018"
-                    });
-
-                    return false;
-                }
-
-
-                if (!heatNo) {
-                    event.preventDefault();
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Heat Number Missing",
-                        text:
-                            "The selected MTC record does not contain a Heat Number.",
-                        confirmButtonColor:
-                            "#8b0018"
-                    });
-
-                    return false;
-                }
-
-
-                if (!steelGrade) {
-                    event.preventDefault();
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Steel Grade Missing",
-                        text:
-                            "Steel Grade is required to generate the MTC.",
-                        confirmButtonColor:
-                            "#8b0018"
-                    });
-
-                    return false;
-                }
-
-
-                if (!barSize) {
-                    event.preventDefault();
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Bar Size Missing",
-                        text:
-                            "Bar Size is required to generate the MTC.",
-                        confirmButtonColor:
-                            "#8b0018"
-                    });
-
-                    return false;
-                }
-
-
-                if (
-                    !yieldStrength ||
-                    !tensileStrength
-                ) {
-                    event.preventDefault();
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Mechanical Data Missing",
-                        text:
-                            "Yield Strength and Tensile Strength are required.",
-                        confirmButtonColor:
-                            "#8b0018"
-                    });
-
-                    return false;
-                }
-
-
-                /*
-                 * Button already formaction GenerateMTC
-                 * use karta hai, isliye validation pass
-                 * hone par form normal submit hoga.
-                 */
-                return true;
             }
         );
 
-
-        /* =====================================================
-           DELETE RECORD
-           ===================================================== */
 
         $("#btnDelete").on(
             "click",
@@ -2832,19 +2171,15 @@
 
                 var id =
                     parseInt(
-                        $("#ID")
-                            .val() || "0",
-                        10
+                        $("#ID").val() || "0"
                     );
 
                 if (id <= 0) {
                     Swal.fire({
                         icon: "info",
                         title: "No Saved Record",
-                        text:
-                            "Please select a saved QC inspection record before deleting.",
-                        confirmButtonColor:
-                            "#8b0018"
+                        text: "please select record to delete",
+                        confirmButtonColor: "#8b0018"
                     });
 
                     return;
@@ -2853,306 +2188,19 @@
                 Swal.fire({
                     icon: "warning",
                     title: "Delete Record?",
-                    text:
-                        "Are you sure you want to delete the selected QC inspection record?",
+                    text: "do you want to delete the selected record?",
                     showCancelButton: true,
-                    confirmButtonText:
-                        "Yes, delete",
-                    cancelButtonText:
-                        "Cancel",
-                    confirmButtonColor:
-                        "#8b0018",
-                    cancelButtonColor:
-                        "#6b7280"
+                    confirmButtonText: "Yes, delete",
+                    cancelButtonText: "Cancel",
+                    confirmButtonColor: "#8b0018"
                 }).then(function (result) {
-
                     if (result.isConfirmed) {
-
-                        $("#DeleteID").val(
-                            id
-                        );
-
-                        $("#deleteForm")
-                            .submit();
+                        $("#DeleteID").val(id);
+                        $("#deleteForm").submit();
                     }
                 });
             }
         );
-
-
-        /* =====================================================
-           INITIAL MTC GRID LOAD
-           ===================================================== */
-
-        var initialHeatNo =
-            (
-                $("#HeatNo")
-                    .val() || ""
-            )
-            .trim();
-
-        loadMTCGrid(
-            initialHeatNo
-        );
-
-    function bindCompleteMTCDetail(data) {
-
-        if (!data) {
-            return;
-        }
-
-        /*
-         * Selected IDs and production context
-         */
-        setValue(
-            "#MTCID",
-            data.MTCID ||
-            data.ID
-        );
-
-        if (
-            data.BilletBoardingID !== undefined
-        ) {
-            setValue(
-                "#BilletBoardingID",
-                data.BilletBoardingID
-            );
-        }
-
-        setValue(
-            "#Site",
-            data.Site
-        );
-
-        setValue(
-            "#ProductionShift",
-            data.ProductionShift
-        );
-
-        setValue(
-            "#ProductionDateValue",
-            toHtmlDate(
-                data.ProductionDateValue ||
-                data.ProductionDate
-            )
-        );
-
-
-        /* ==============================================
-           Product description and specification
-           ============================================== */
-
-        setValue(
-            "#HeatNo",
-            data.HeatNo
-        );
-
-        setValue(
-            "#MTCHeatNo",
-            data.HeatNo
-        );
-
-        setValue(
-            "#Specification",
-            data.Specification
-        );
-
-        setValue(
-            "#SteelGrade",
-            data.SteelGrade
-        );
-
-        setValue(
-            "#BarSize",
-            getResponseValue(
-                data,
-                "BarSize",
-                "BarSizeValue"
-            )
-        );
-
-        setValue(
-            "#Length",
-            getResponseValue(
-                data,
-                "Length",
-                "LengthValue"
-            )
-        );
-
-        setValue(
-            "#WeightPerBundle",
-            getResponseValue(
-                data,
-                "WeightPerBundle",
-                "WeightPerBundleValue"
-            )
-        );
-
-        setValue(
-            "#NominalWeight",
-            getResponseValue(
-                data,
-                "NominalWeight",
-                "NominalWeightValue"
-            )
-        );
-
-        setValue(
-            "#CrossSectionArea",
-            getResponseValue(
-                data,
-                "CrossSectionArea",
-                "CrossSectionAreaValue"
-            )
-        );
-
-        setValue(
-            "#NoOfBarsPerBundle",
-            getResponseValue(
-                data,
-                "NoOfBarsPerBundle",
-                "NoOfBarsPerBundleValue"
-            )
-        );
-
-        setValue(
-            "#NoOfBundles",
-            getResponseValue(
-                data,
-                "NoOfBundles",
-                "NoOfBundlesValue"
-            )
-        );
-
-        setCheckbox(
-            "#BendTestObserved",
-            data.BendTestObserved
-        );
-
-        setCheckbox(
-            "#IsWireRodOrCoil",
-            data.IsWireRodOrCoil
-        );
-
-
-        /* ==============================================
-           Saved mechanical analysis
-           ============================================== */
-
-        setValue(
-            "#YieldStrength",
-            getResponseValue(
-                data,
-                "YieldStrength",
-                "YieldStress"
-            )
-        );
-
-        setValue(
-            "#TensileStrength",
-            getResponseValue(
-                data,
-                "TensileStrength",
-                "TensileStress"
-            )
-        );
-
-        setValue(
-            "#TensileYieldRatio",
-            getResponseValue(
-                data,
-                "TensileYieldRatio",
-                "YSTSRatio"
-            )
-        );
-
-        setValue(
-            "#Elongation",
-            getResponseValue(
-                data,
-                "Elongation",
-                "ElongationValue"
-            )
-        );
-
-        setValue(
-            "#GaugeLength",
-            getResponseValue(
-                data,
-                "GaugeLength",
-                "GaugeLengthValue"
-            )
-        );
-
-
-        /* ==============================================
-           Chemical analysis
-           ============================================== */
-
-        setValue(
-            "#C",
-            getResponseValue(
-                data,
-                "C",
-                "CValue"
-            )
-        );
-
-        setValue(
-            "#Si",
-            getResponseValue(
-                data,
-                "Si",
-                "SiValue"
-            )
-        );
-
-        setValue(
-            "#Mn",
-            getResponseValue(
-                data,
-                "Mn",
-                "MnValue"
-            )
-        );
-
-        setValue(
-            "#P",
-            getResponseValue(
-                data,
-                "P",
-                "PValue"
-            )
-        );
-
-        setValue(
-            "#S",
-            getResponseValue(
-                data,
-                "S",
-                "SValue"
-            )
-        );
-
-        setValue(
-            "#N",
-            getResponseValue(
-                data,
-                "N",
-                "NValue"
-            )
-        );
-
-        setValue(
-            "#Ceq",
-            getResponseValue(
-                data,
-                "Ceq",
-                "CeqValue"
-            )
-        );
-    }
 
     });
 </script>

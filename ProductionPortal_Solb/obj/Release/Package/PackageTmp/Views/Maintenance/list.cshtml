@@ -1,53 +1,143 @@
-﻿@using System.Globalization
+﻿@using System
+@using System.Collections.Generic
+@using System.Linq
+@using System.Globalization
+
 @{
     ViewBag.Title = "list";
 
-    var delay =
-        Model as List<DAL.Models.PlantDelayBLL>;
+    var steelMakingRecordsObject = (object)ViewBag.SteelMakingRecords;
+    var steelMakingDelays =
+        steelMakingRecordsObject as IEnumerable<DAL.Models.PlantDelayBLL>
+        ?? Enumerable.Empty<DAL.Models.PlantDelayBLL>();
 
+    var rollingMillRecordsObject = (object)ViewBag.RollingMillRecords;
+    var rollingMillDelays =
+        rollingMillRecordsObject as IEnumerable<DAL.Models.PlantDelayBLL>
+        ?? Enumerable.Empty<DAL.Models.PlantDelayBLL>();
+
+    var failureAnalysisStatusObject = (object)ViewBag.FailureAnalysisStatus;
     var failureAnalysisStatus =
-        ViewBag.FailureAnalysisStatus
-            as Dictionary<int, bool>
+        failureAnalysisStatusObject as Dictionary<int, bool>
         ?? new Dictionary<int, bool>();
 
-    string selectedDelayTypesCsv =
-        Convert.ToString(ViewBag.DelayType);
+    var steelAgenciesObject = (object)ViewBag.SteelAgencies;
+    var steelAgencies =
+        steelAgenciesObject as IEnumerable<DAL.Models.PlantDelayBLL>
+        ?? Enumerable.Empty<DAL.Models.PlantDelayBLL>();
 
-    string selectedAgenciesCsv =
-        Convert.ToString(ViewBag.Agency);
+    var rollingAgenciesObject = (object)ViewBag.RollingAgencies;
+    var rollingAgencies =
+        rollingAgenciesObject as IEnumerable<DAL.Models.PlantDelayBLL>
+        ?? Enumerable.Empty<DAL.Models.PlantDelayBLL>();
 
-    var selectedDelayTypes =
-        string.IsNullOrWhiteSpace(selectedDelayTypesCsv)
-            ? new List<string>()
-            : selectedDelayTypesCsv
-                .Split(
-                    new[] { ',' },
-                    StringSplitOptions.RemoveEmptyEntries
-                )
-                .Select(
-                    x => x.Trim()
-                )
-                .ToList();
+    Func<object, List<string>> toSelectedList =
+        value =>
+        {
+            string csv =
+                Convert.ToString(
+                    value
+                ) ?? string.Empty;
 
-    var selectedAgencies =
-string.IsNullOrWhiteSpace(selectedAgenciesCsv)
-    ? new List<string>()
-    : selectedAgenciesCsv
-        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-        .Select(x => x.Trim())
-        .ToList();
+            return
+                string.IsNullOrWhiteSpace(csv)
+                    ? new List<string>()
+                    : csv
+                        .Split(
+                            new[] { ',' },
+                            StringSplitOptions.RemoveEmptyEntries
+                        )
+                        .Select(
+                            x => (x ?? string.Empty).Trim()
+                        )
+                        .Where(
+                            x => !string.IsNullOrWhiteSpace(x)
+                        )
+                        .ToList();
+        };
 
-    string selectedPlantsCsv =
-        Convert.ToString(ViewBag.Plant);
 
-    var selectedPlants =
-        string.IsNullOrWhiteSpace(selectedPlantsCsv)
-            ? new List<string>()
-            : selectedPlantsCsv
-                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Trim())
-                .ToList();
+    var selectedSteelPlants =
+        toSelectedList(
+            (object)ViewBag.SteelPlant
+        );
+
+    var selectedSteelAgencies =
+        toSelectedList(
+            (object)ViewBag.SteelAgency
+        );
+
+    var selectedSteelDelayTypes =
+        toSelectedList(
+            (object)ViewBag.SteelDelayType
+        );
+
+
+    var selectedRollingPlants =
+        toSelectedList(
+            (object)ViewBag.RollingPlant
+        );
+
+    var selectedRollingAgencies =
+        toSelectedList(
+            (object)ViewBag.RollingAgency
+        );
+
+    var selectedRollingDelayTypes =
+        toSelectedList(
+            (object)ViewBag.RollingDelayType
+        );
+
+
+    string steelFromDateValue =
+        Convert.ToString(
+            (object)ViewBag.SteelFromDate
+        ) ?? string.Empty;
+
+    string steelToDateValue =
+        Convert.ToString(
+            (object)ViewBag.SteelToDate
+        ) ?? string.Empty;
+
+    string rollingFromDateValue =
+        Convert.ToString(
+            (object)ViewBag.RollingFromDate
+        ) ?? string.Empty;
+
+    string rollingToDateValue =
+        Convert.ToString(
+            (object)ViewBag.RollingToDate
+        ) ?? string.Empty;
+
+
+    string activeTab =
+        Convert.ToString(
+            (object)ViewBag.ActiveTab
+        ) ?? string.Empty;
+
+    if (
+        !string.Equals(
+            activeTab,
+            "steel",
+            StringComparison.OrdinalIgnoreCase
+        )
+        &&
+        !string.Equals(
+            activeTab,
+            "rolling",
+            StringComparison.OrdinalIgnoreCase
+        )
+    )
+    {
+        activeTab = "steel";
+    }
+    else
+    {
+        activeTab =
+            activeTab.ToLowerInvariant();
+    }
 }
+
 <!-- Start XP Breadcrumbbar -->
 <div class="xp-breadcrumbbar">
     <div class="row">
@@ -67,8 +157,7 @@ string.IsNullOrWhiteSpace(selectedAgenciesCsv)
 </div>
 <!-- End XP Breadcrumbbar -->
 <!-- Filters Section -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
-      rel="stylesheet" />
+<link href="@Url.Content("~/assets/plugins/select2/select2.min.css")" rel="stylesheet" />
 <style>
     .maintenance-filter-card {
         border: 1px solid #e5e7eb;
@@ -342,139 +431,241 @@ string.IsNullOrWhiteSpace(selectedAgenciesCsv)
             background: #ef4444;
             box-shadow: 0 0 0 3px rgba(239, 68, 68, .18);
         }
+
+    .maintenance-tabs-wrap {
+        margin: 0 0 16px 0;
+    }
+
+    .maintenance-tabs {
+        border-bottom: 2px solid #e5e7eb;
+        gap: 6px;
+    }
+
+        .maintenance-tabs .nav-item {
+            margin-bottom: -2px;
+        }
+
+        .maintenance-tabs .nav-link {
+            border: 0;
+            border-bottom: 3px solid transparent;
+            border-radius: 8px 8px 0 0;
+            color: #6b7280;
+            font-size: 13px;
+            font-weight: 800;
+            padding: 10px 18px;
+            transition: all .18s ease;
+        }
+
+            .maintenance-tabs .nav-link:hover,
+            .maintenance-tabs .nav-link:focus {
+                background: #faf5f7;
+                color: #7f1230;
+            }
+
+            .maintenance-tabs .nav-link.active {
+                background: #fff;
+                border-bottom-color: #a6173f;
+                color: #a6173f;
+            }
+
+    .maintenance-tab-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 22px;
+        margin-left: 6px;
+        padding: 0 7px;
+        border-radius: 999px;
+        background: #f3f4f6;
+        color: #4b5563;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .maintenance-tabs .nav-link.active .maintenance-tab-count {
+        background: #faeef2;
+        color: #7f1230;
+    }
+
+    .maintenance-tab-pane {
+        padding-top: 4px;
+    }
 </style>
 
-<div class="xp-breadcrumbbar"
-     style="padding: 35px 30px 0 30px;">
+<!-- Filter Section -->
+<!-- Start XP Contentbar -->
+<div class="xp-contentbar">
 
-    <div class="row">
-        <div class="col-lg-12">
+    <div class="maintenance-tabs-wrap">
+        <ul class="nav maintenance-tabs"
+            id="maintenanceTabs"
+            role="tablist">
 
+            <li class="nav-item">
+                <a class="nav-link @(activeTab == "steel" ? "active" : "")"
+                   id="steel-making-tab"
+                   data-toggle="tab"
+                   href="#steel-making-pane"
+                   role="tab"
+                   aria-controls="steel-making-pane"
+                   aria-selected="@(activeTab == "steel" ? "true" : "false")"
+                   data-tab-value="steel">
+
+                    <i class="fa fa-industry"></i>
+                    Steel Making
+
+                    <span class="maintenance-tab-count">
+                        @steelMakingDelays.Count()
+                    </span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link @(activeTab == "rolling" ? "active" : "")"
+                   id="rolling-mill-tab"
+                   data-toggle="tab"
+                   href="#rolling-mill-pane"
+                   role="tab"
+                   aria-controls="rolling-mill-pane"
+                   aria-selected="@(activeTab == "rolling" ? "true" : "false")"
+                   data-tab-value="rolling">
+
+                    <i class="fa fa-cogs"></i>
+                    Rolling Mill
+
+                    <span class="maintenance-tab-count">
+                        @rollingMillDelays.Count()
+                    </span>
+                </a>
+            </li>
+
+        </ul>
+    </div>
+
+
+    <div class="tab-content"
+         id="maintenanceTabsContent">
+
+        <!-- =====================================================
+             STEEL MAKING TAB
+             ===================================================== -->
+        <div class="tab-pane fade @(activeTab == "steel" ? "show active" : "") maintenance-tab-pane"
+             id="steel-making-pane"
+             role="tabpanel"
+             aria-labelledby="steel-making-tab">
+
+            <!-- STEEL MAKING FILTERS -->
             <div class="card maintenance-filter-card mb-3">
                 <div class="card-body">
 
-                    <form id="filterForm"
+                    <form id="steelFilterForm"
                           method="get"
                           action="@Url.Action("list", "Maintenance")">
+
+                        <input type="hidden"
+                               name="tab"
+                               value="steel" />
 
                         <div class="row align-items-end">
 
                             <div class="col-xl-2 col-md-4">
                                 <div class="form-group">
-                                    <label for="fromDate">
+                                    <label for="steelFromDate">
                                         From Date
                                     </label>
 
                                     <input type="date"
-                                           id="fromDate"
-                                           name="fromDate"
+                                           id="steelFromDate"
+                                           name="steelFromDate"
                                            class="form-control"
-                                           value="@ViewBag.FromDate" />
+                                           value="@steelFromDateValue" />
                                 </div>
                             </div>
 
                             <div class="col-xl-2 col-md-4">
                                 <div class="form-group">
-                                    <label for="toDate">
+                                    <label for="steelToDate">
                                         To Date
                                     </label>
 
                                     <input type="date"
-                                           id="toDate"
-                                           name="toDate"
+                                           id="steelToDate"
+                                           name="steelToDate"
                                            class="form-control"
-                                           value="@ViewBag.ToDate" />
+                                           value="@steelToDateValue" />
                                 </div>
                             </div>
 
-                            <div class="col-xl-3 col-md-6">
+                            <div class="col-xl-2 col-md-4">
                                 <div class="form-group filter-select-group">
-                                    <label for="plant">
-                                        Plant
+
+                                    <label for="steelPlant">
+                                        Area
                                     </label>
 
-                                    <select id="plant"
-                                            name="plant"
+                                    <select id="steelPlant"
+                                            name="steelPlant"
                                             class="form-control multi-select"
                                             multiple="multiple"
-                                            data-placeholder="Select plants">
-
-                                        <option value="Rolling Mill 1"
-                                                @(selectedPlants.Any(x => x.Equals("Rolling Mill 1", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
-                                            Rolling Mill 1
-                                        </option>
-
-                                        <option value="Rolling Mill 2"
-                                                @(selectedPlants.Any(x => x.Equals("Rolling Mill 2", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
-                                            Rolling Mill 2
-                                        </option>
+                                            data-placeholder="Select EAF / LF / CCM">
 
                                         <option value="EAF"
-                                                @(selectedPlants.Any(x => x.Equals("EAF", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                                @(selectedSteelPlants.Any(x => string.Equals(x, "EAF", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             EAF
                                         </option>
 
                                         <option value="LF"
-                                                @(selectedPlants.Any(x => x.Equals("LF", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                                @(selectedSteelPlants.Any(x => string.Equals(x, "LF", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             LF
                                         </option>
 
                                         <option value="CCM"
-                                                @(selectedPlants.Any(x => x.Equals("CCM", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                                @(selectedSteelPlants.Any(x => string.Equals(x, "CCM", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             CCM
                                         </option>
+
                                     </select>
+
                                 </div>
                             </div>
 
                             <div class="col-xl-3 col-md-6">
                                 <div class="form-group filter-select-group">
 
-                                    <label for="agency">
+                                    <label for="steelAgency">
                                         Agency
                                     </label>
 
-                                    <select id="agency"
-                                            name="agency"
+                                    <select id="steelAgency"
+                                            name="steelAgency"
                                             class="form-control multi-select"
                                             multiple="multiple"
                                             data-placeholder="Select agencies">
 
-                                        @if (ViewBag.Agencies != null)
+                                        @foreach (var a in steelAgencies)
                                         {
-                                            foreach (
-                                                var a
-                                                in (IEnumerable<DAL.Models.PlantDelayBLL>)ViewBag.Agencies
-                                            )
-                                            {
-                                                string agencyValue =
-                                                    !string.IsNullOrWhiteSpace(
-                                                        a.AgencyName
+                                            string agencyValue =
+                                                string.IsNullOrWhiteSpace(a.AgencyName)
+                                                    ? string.Empty
+                                                    : a.AgencyName.Trim();
+
+                                            bool isSelected =
+                                                selectedSteelAgencies.Any(
+                                                    x => string.Equals(
+                                                        x,
+                                                        agencyValue,
+                                                        StringComparison.OrdinalIgnoreCase
                                                     )
-                                                        ? a.AgencyName.Trim()
-                                                        : "";
+                                                );
 
-                                                bool isSelected =
-                                                    selectedAgencies != null
-                                                    &&
-                                                    selectedAgencies.Any(
-                                                        x =>
-                                                            x.Equals(
-                                                                agencyValue,
-                                                                StringComparison.OrdinalIgnoreCase
-                                                            )
-                                                    );
-
-                                                <option value="@agencyValue"
-                                                        data-code="@a.AgencyCode"
-                                                        data-department="@a.Area"
-                                                        data-delaytype="@a.DelayType"
-                                                        @(isSelected ? "selected" : "")>
-
-                                                    @a.AgencyName
-
-                                                </option>
-                                            }
+                                            <option value="@agencyValue"
+                                                    data-code="@a.AgencyCode"
+                                                    data-department="@a.Area"
+                                                    data-delaytype="@a.DelayType"
+                                                    @(isSelected ? "selected" : "")>
+                                                @a.AgencyName
+                                            </option>
                                         }
 
                                     </select>
@@ -482,50 +673,56 @@ string.IsNullOrWhiteSpace(selectedAgenciesCsv)
                                 </div>
                             </div>
 
-                            <div class="col-xl-3 col-md-8">
-                                <div class="form-group">
-                                    <label>
+                            <div class="col-xl-3 col-md-6">
+                                <div class="form-group filter-select-group">
+
+                                    <label for="steelDelayType">
                                         Delay Type
                                     </label>
 
-                                    <select id="delayType"
-                                            name="delayType"
+                                    <select id="steelDelayType"
+                                            name="steelDelayType"
                                             class="form-control multi-select"
                                             multiple="multiple"
                                             data-placeholder="Select delay types">
 
                                         <option value="Scheduled"
-                                                @(selectedDelayTypes.Any(x => x.Equals("Scheduled", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                                @(selectedSteelDelayTypes.Any(x => string.Equals(x, "Scheduled", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             Scheduled
                                         </option>
 
                                         <option value="Unscheduled"
-                                                @(selectedDelayTypes.Any(x => x.Equals("Unscheduled", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                                @(selectedSteelDelayTypes.Any(x => string.Equals(x, "Unscheduled", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
                                             Unscheduled
                                         </option>
 
                                     </select>
+
                                 </div>
                             </div>
+
                         </div>
 
-                        <div class="col-xl-4 col-md-4">
-                            <div class="form-group">
+                        <div class="row">
+                            <div class="col-lg-12">
                                 <div class="filter-actions">
 
                                     <button type="submit"
                                             class="btn btn-filter"
-                                            title="Apply Filters">
+                                            title="Apply Steel Making Filters">
                                         <i class="fa fa-filter"></i>
+                                        Apply
                                     </button>
 
                                     <a href="@Url.Action(
                                             "list",
-                                            "Maintenance"
+                                            "Maintenance",
+                                            new { tab = "steel" }
                                         )"
                                        class="btn btn-secondary"
-                                       title="Clear Filters">
+                                       title="Clear Steel Making Filters">
                                         <i class="fa fa-times"></i>
+                                        Clear
                                     </a>
 
                                     <button type="submit"
@@ -544,124 +741,460 @@ string.IsNullOrWhiteSpace(selectedAgenciesCsv)
                             </div>
                         </div>
 
+                    </form>
+
                 </div>
-
-                </form>
-
             </div>
-        </div>
 
-    </div>
-</div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card m-b-30">
+                        <div class="card-body">
 
-<!-- Filter Section -->
-<!-- Start XP Contentbar -->
-<div class="xp-contentbar">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card m-b-30">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover" id="maintenanceTable">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Area</th>
-                                    <th>Plant</th>
-                                    <th>Shift</th>
-                                    <th>Start Time</th>
-                                    <th>End Time</th>
-                                    <th>Total Duration</th>
-                                    <th>Delay Type</th>
-                                    <th>Agency</th>
-                                    <th>Delay Code</th>
-                                    <th>Equipment</th>
-                                    <th>Description</th>
-                                    <th>Failure Analysis</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (delay != null && delay.Any())
-                                {
-                                    foreach (var item in delay)
-                                    {
-                                        var gregorian = new CultureInfo("en-US");
-                                        gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover maintenance-data-table"
+                                       id="steelMakingTable">
 
-                                        bool failureAnalysisFilled =
-                                            failureAnalysisStatus.ContainsKey(item.ID) &&
-                                            failureAnalysisStatus[item.ID];
-
+                                    <thead>
                                         <tr>
-                                            <td>@(item.Date?.ToString("dd-MM-yyyy", gregorian))</td>
-                                            <td>@item.Plant</td>
-                                            <td>@item.Area</td>
-                                            <td>@item.Shift</td>
-                                            <td>@item.StartTime</td>
-                                            <td>@item.EndTime</td>
-                                            <td>@item.TotalDuration</td>
-                                            <td>@item.DelayType</td>
-                                            <td>@item.AgencyName</td>
-                                            <td>@item.Delaycode</td>
-                                            <td>@item.Equipments</td>
-                                            <td>@item.DelayDescription</td>
-                                            <td class="text-center"
-                                                data-order="@(failureAnalysisFilled ? 1 : 0)"
-                                                data-search="@(failureAnalysisFilled ? "Filled" : "Pending")">
-                                                <span class="failure-analysis-indicator @(failureAnalysisFilled ? "failure-analysis-filled" : "failure-analysis-pending")"
-                                                      title="@(failureAnalysisFilled ? "Failure analysis is filled" : "Failure analysis is not filled")">
-                                                    <span class="failure-analysis-light"></span>
-                                                    <span>
-                                                        @(failureAnalysisFilled ? "Filled" : "Pending")
-                                                    </span>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <a href="@Url.Action(
-                                                        "add",
-                                                        "DelayCounterMeasure",
-                                                        new
-                                                        {
-                                                            plantDelayID = item.ID
-                                                        }
-                                                    )"
-                                                   class="btn btn-sm btn-warning"
-                                                   title="Countermeasures">
-
-                                                    <i class="fa fa-tasks"></i>
-                                                </a>
-                                                @*<a href="javascript:void(0);"
-                                                       class="btn btn-sm btn-danger btn-delete"
-                                                       data-id="@item.ID">
-                                                        <i class="mdi mdi-trash-can"></i>
-                                                    </a>*@
-                                                <a href="@Url.Action("detail", "Maintenance", new { ID = item.ID })" class="btn btn-sm btn-info" onclick="event.stopPropagation();">
-                                                    <i class="mdi mdi-book-open-page-variant"></i>
-                                                </a>
-                                            </td>
+                                            <th>Date</th>
+                                            <th>Area</th>
+                                            <th>Plant</th>
+                                            <th>Shift</th>
+                                            <th>Start Time</th>
+                                            <th>End Time</th>
+                                            <th>Total Duration</th>
+                                            <th>Delay Type</th>
+                                            <th>Agency</th>
+                                            <th>Delay Code</th>
+                                            <th>Equipment</th>
+                                            <th>Description</th>
+                                            <th>Failure Analysis</th>
+                                            <th>Action</th>
                                         </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="14" class="text-center text-muted font-italic">
-                                            No data available
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                                    </thead>
+
+                                    <tbody>
+                                        @if (steelMakingDelays.Any())
+                                        {
+                                            foreach (var item in steelMakingDelays)
+                                            {
+                                                var gregorian =
+                                                    new CultureInfo("en-US");
+
+                                                gregorian.DateTimeFormat.Calendar =
+                                                    new GregorianCalendar();
+
+                                                bool failureAnalysisFilled =
+                                                    failureAnalysisStatus.ContainsKey(item.ID) &&
+                                                    failureAnalysisStatus[item.ID];
+
+                                                <tr>
+                                                    <td>
+                                                        @(item.Date?.ToString(
+                                                            "dd-MM-yyyy",
+                                                            gregorian
+                                                        ))
+                                                    </td>
+
+                                                    <td>@item.Area</td>
+                                                    <td>@item.Plant</td>
+                                                    <td>@item.Shift</td>
+                                                    <td>@item.StartTime</td>
+                                                    <td>@item.EndTime</td>
+                                                    <td>@item.TotalDuration</td>
+                                                    <td>@item.DelayType</td>
+                                                    <td>@item.AgencyName</td>
+                                                    <td>@item.Delaycode</td>
+                                                    <td>@item.Equipments</td>
+                                                    <td>@item.DelayDescription</td>
+
+                                                    <td class="text-center"
+                                                        data-order="@(failureAnalysisFilled ? 1 : 0)"
+                                                        data-search="@(failureAnalysisFilled ? "Filled" : "Pending")">
+
+                                                        <span class="failure-analysis-indicator @(failureAnalysisFilled ? "failure-analysis-filled" : "failure-analysis-pending")"
+                                                              title="@(failureAnalysisFilled ? "Failure analysis is filled" : "Failure analysis is not filled")">
+
+                                                            <span class="failure-analysis-light"></span>
+
+                                                            <span>
+                                                                @(failureAnalysisFilled ? "Filled" : "Pending")
+                                                            </span>
+
+                                                        </span>
+                                                    </td>
+
+                                                    <td>
+                                                        <a href="@Url.Action(
+                                                                "add",
+                                                                "DelayCounterMeasure",
+                                                                new
+                                                                {
+                                                                    plantDelayID = item.ID
+                                                                }
+                                                            )"
+                                                           class="btn btn-sm btn-warning"
+                                                           title="Countermeasures">
+
+                                                            <i class="fa fa-tasks"></i>
+                                                        </a>
+
+                                                        <a href="@Url.Action(
+                                                                "detail",
+                                                                "Maintenance",
+                                                                new
+                                                                {
+                                                                    ID = item.ID,
+                                                                    source = "SteelMaking"
+                                                                }
+                                                            )"
+                                                           class="btn btn-sm btn-info"
+                                                           onclick="event.stopPropagation();"
+                                                           title="Detail">
+
+                                                            <i class="mdi mdi-book-open-page-variant"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+
+                                </table>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
+
+
+        <!-- =====================================================
+             ROLLING MILL TAB
+             ===================================================== -->
+        <div class="tab-pane fade @(activeTab == "rolling" ? "show active" : "") maintenance-tab-pane"
+             id="rolling-mill-pane"
+             role="tabpanel"
+             aria-labelledby="rolling-mill-tab">
+
+            <!-- ROLLING MILL FILTERS -->
+            <div class="card maintenance-filter-card mb-3">
+                <div class="card-body">
+
+                    <form id="rollingFilterForm"
+                          method="get"
+                          action="@Url.Action("list", "Maintenance")">
+
+                        <input type="hidden"
+                               name="tab"
+                               value="rolling" />
+
+                        <div class="row align-items-end">
+
+                            <div class="col-xl-2 col-md-4">
+                                <div class="form-group">
+                                    <label for="rollingFromDate">
+                                        From Date
+                                    </label>
+
+                                    <input type="date"
+                                           id="rollingFromDate"
+                                           name="rollingFromDate"
+                                           class="form-control"
+                                           value="@rollingFromDateValue" />
+                                </div>
+                            </div>
+
+                            <div class="col-xl-2 col-md-4">
+                                <div class="form-group">
+                                    <label for="rollingToDate">
+                                        To Date
+                                    </label>
+
+                                    <input type="date"
+                                           id="rollingToDate"
+                                           name="rollingToDate"
+                                           class="form-control"
+                                           value="@rollingToDateValue" />
+                                </div>
+                            </div>
+
+                            <div class="col-xl-2 col-md-4">
+                                <div class="form-group filter-select-group">
+
+                                    <label for="rollingPlant">
+                                        Plant
+                                    </label>
+
+                                    <select id="rollingPlant"
+                                            name="rollingPlant"
+                                            class="form-control multi-select"
+                                            multiple="multiple"
+                                            data-placeholder="Select Rolling Mill">
+
+                                        <option value="Rolling Mill 1"
+                                                @(selectedRollingPlants.Any(x => string.Equals(x, "Rolling Mill 1", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                            Rolling Mill 1
+                                        </option>
+
+                                        <option value="Rolling Mill 2"
+                                                @(selectedRollingPlants.Any(x => string.Equals(x, "Rolling Mill 2", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                            Rolling Mill 2
+                                        </option>
+
+                                    </select>
+
+                                </div>
+                            </div>
+
+                            <div class="col-xl-3 col-md-6">
+                                <div class="form-group filter-select-group">
+
+                                    <label for="rollingAgency">
+                                        Agency
+                                    </label>
+
+                                    <select id="rollingAgency"
+                                            name="rollingAgency"
+                                            class="form-control multi-select"
+                                            multiple="multiple"
+                                            data-placeholder="Select agencies">
+
+                                        @foreach (var a in rollingAgencies)
+                                        {
+                                            string agencyValue =
+                                                string.IsNullOrWhiteSpace(a.AgencyName)
+                                                    ? string.Empty
+                                                    : a.AgencyName.Trim();
+
+                                            bool isSelected =
+                                                selectedRollingAgencies.Any(
+                                                    x => string.Equals(
+                                                        x,
+                                                        agencyValue,
+                                                        StringComparison.OrdinalIgnoreCase
+                                                    )
+                                                );
+
+                                            <option value="@agencyValue"
+                                                    data-code="@a.AgencyCode"
+                                                    data-department="@a.Area"
+                                                    data-delaytype="@a.DelayType"
+                                                    @(isSelected ? "selected" : "")>
+                                                @a.AgencyName
+                                            </option>
+                                        }
+
+                                    </select>
+
+                                </div>
+                            </div>
+
+                            <div class="col-xl-3 col-md-6">
+                                <div class="form-group filter-select-group">
+
+                                    <label for="rollingDelayType">
+                                        Delay Type
+                                    </label>
+
+                                    <select id="rollingDelayType"
+                                            name="rollingDelayType"
+                                            class="form-control multi-select"
+                                            multiple="multiple"
+                                            data-placeholder="Select delay types">
+
+                                        <option value="Scheduled"
+                                                @(selectedRollingDelayTypes.Any(x => string.Equals(x, "Scheduled", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                            Scheduled
+                                        </option>
+
+                                        <option value="Unscheduled"
+                                                @(selectedRollingDelayTypes.Any(x => string.Equals(x, "Unscheduled", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>
+                                            Unscheduled
+                                        </option>
+
+                                    </select>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="filter-actions">
+
+                                    <button type="submit"
+                                            class="btn btn-filter"
+                                            title="Apply Rolling Mill Filters">
+                                        <i class="fa fa-filter"></i>
+                                        Apply
+                                    </button>
+
+                                    <a href="@Url.Action(
+                                            "list",
+                                            "Maintenance",
+                                            new { tab = "rolling" }
+                                        )"
+                                       class="btn btn-secondary"
+                                       title="Clear Rolling Mill Filters">
+                                        <i class="fa fa-times"></i>
+                                        Clear
+                                    </a>
+
+                                    <button type="submit"
+                                            class="btn btn-success"
+                                            title="Download Failure Analysis"
+                                            formaction="@Url.Action(
+                                                    "ExportFailureAnalysisExcel",
+                                                    "Maintenance"
+                                                )"
+                                            formmethod="get">
+                                        <i class="fa fa-file-excel-o"></i>
+                                        Failure Analysis Report
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card m-b-30">
+                        <div class="card-body">
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover maintenance-data-table"
+                                       id="rollingMillTable">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Area</th>
+                                            <th>Plant</th>
+                                            <th>Shift</th>
+                                            <th>Start Time</th>
+                                            <th>End Time</th>
+                                            <th>Total Duration</th>
+                                            <th>Delay Type</th>
+                                            <th>Agency</th>
+                                            <th>Delay Code</th>
+                                            <th>Equipment</th>
+                                            <th>Description</th>
+                                            <th>Failure Analysis</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @if (rollingMillDelays.Any())
+                                        {
+                                            foreach (var item in rollingMillDelays)
+                                            {
+                                                var gregorian =
+                                                    new CultureInfo("en-US");
+
+                                                gregorian.DateTimeFormat.Calendar =
+                                                    new GregorianCalendar();
+
+                                                bool failureAnalysisFilled =
+                                                    failureAnalysisStatus.ContainsKey(item.ID) &&
+                                                    failureAnalysisStatus[item.ID];
+
+                                                <tr>
+                                                    <td>
+                                                        @(item.Date?.ToString(
+                                                            "dd-MM-yyyy",
+                                                            gregorian
+                                                        ))
+                                                    </td>
+
+                                                    <td>@item.Area</td>
+                                                    <td>@item.Plant</td>
+                                                    <td>@item.Shift</td>
+                                                    <td>@item.StartTime</td>
+                                                    <td>@item.EndTime</td>
+                                                    <td>@item.TotalDuration</td>
+                                                    <td>@item.DelayType</td>
+                                                    <td>@item.AgencyName</td>
+                                                    <td>@item.Delaycode</td>
+                                                    <td>@item.Equipments</td>
+                                                    <td>@item.DelayDescription</td>
+
+                                                    <td class="text-center"
+                                                        data-order="@(failureAnalysisFilled ? 1 : 0)"
+                                                        data-search="@(failureAnalysisFilled ? "Filled" : "Pending")">
+
+                                                        <span class="failure-analysis-indicator @(failureAnalysisFilled ? "failure-analysis-filled" : "failure-analysis-pending")"
+                                                              title="@(failureAnalysisFilled ? "Failure analysis is filled" : "Failure analysis is not filled")">
+
+                                                            <span class="failure-analysis-light"></span>
+
+                                                            <span>
+                                                                @(failureAnalysisFilled ? "Filled" : "Pending")
+                                                            </span>
+
+                                                        </span>
+                                                    </td>
+
+                                                    <td>
+                                                        <a href="@Url.Action(
+                                                                "add",
+                                                                "DelayCounterMeasure",
+                                                                new
+                                                                {
+                                                                    plantDelayID = item.ID
+                                                                }
+                                                            )"
+                                                           class="btn btn-sm btn-warning"
+                                                           title="Countermeasures">
+
+                                                            <i class="fa fa-tasks"></i>
+                                                        </a>
+
+                                                        <a href="@Url.Action(
+                                                                "detail",
+                                                                "Maintenance",
+                                                                new
+                                                                {
+                                                                    ID = item.ID,
+                                                                    source = "RollingMill"
+                                                                }
+                                                            )"
+                                                           class="btn btn-sm btn-info"
+                                                           onclick="event.stopPropagation();"
+                                                           title="Detail">
+
+                                                            <i class="mdi mdi-book-open-page-variant"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
     </div>
 </div>
 <!-- End XP Contentbar -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="@Url.Content("~/assets/plugins/select2/select2.min.js")"></script>
 <script>
     $(document).ready(function () {
 
@@ -679,80 +1212,92 @@ string.IsNullOrWhiteSpace(selectedAgenciesCsv)
         });
 
         // ==============================
-        // DATATABLE INIT
+        // DATATABLE INIT - BOTH TABS
         // ==============================
-        if ($.fn.DataTable.isDataTable("#maintenanceTable")) {
-            $("#maintenanceTable").DataTable().destroy();
+        function initMaintenanceTable(
+            selector,
+            exportTitle
+        ) {
+            if ($.fn.DataTable.isDataTable(selector)) {
+                $(selector).DataTable().destroy();
+            }
+
+            $(selector).DataTable({
+                pageLength: 10,
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "All"]
+                ],
+                ordering: true,
+                searching: true,
+                responsive: true,
+                autoWidth: false,
+                order: [[0, "desc"]],
+                dom: "Bfrtip",
+                buttons: [
+                    {
+                        extend: "excelHtml5",
+                        text: "Export Excel",
+                        className: "btn btn-success btn-sm",
+                        title: exportTitle
+                    },
+                    {
+                        extend: "pdfHtml5",
+                        text: "Export PDF",
+                        className: "btn btn-danger btn-sm",
+                        title: exportTitle,
+                        orientation: "landscape",
+                        pageSize: "A4",
+                        exportOptions: {
+                            columns: ":not(:last-child)"
+                        }
+                    },
+                    {
+                        extend: "print",
+                        text: "Print",
+                        className: "btn btn-secondary btn-sm",
+                        title: exportTitle,
+                        exportOptions: {
+                            columns: ":not(:last-child)"
+                        }
+                    }
+                ],
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ records",
+                    info: "Showing _START_ to _END_ of _TOTAL_ records",
+                    emptyTable: "No data available"
+                }
+            });
         }
 
-        $("#maintenanceTable").DataTable({
-            pageLength: 10,
-            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-            ordering: true,
-            searching: true,
-            responsive: true,
-            autoWidth: false,
-            order: [[0, "desc"]],
-            dom: "Bfrtip",
-            buttons: [
-                {
-                    extend: "excelHtml5",
-                    text: "Export Excel",
-                    className: "btn btn-success btn-sm",
-                    title: "Maintenance Record"
-                },
-                {
-                    extend: "pdfHtml5",
-                    text: "Export PDF",
-                    className: "btn btn-danger btn-sm",
-                    title: "Maintenance Record",
-                    orientation: "landscape",
-                    pageSize: "A4",
-                    exportOptions: {
-                        columns: ":not(:last-child)"
-                    }
-                },
-                {
-                    extend: "print",
-                    text: "Print",
-                    className: "btn btn-secondary btn-sm",
-                    title: "Maintenance Record",
-                    exportOptions: {
-                        columns: ":not(:last-child)"
-                    }
-                }
-            ],
-            language: {
-                search: "Search:",
-                lengthMenu: "Show _MENU_ records",
-                info: "Showing _START_ to _END_ of _TOTAL_ records",
-                emptyTable: "No data available"
+        initMaintenanceTable(
+            "#steelMakingTable",
+            "Steel Making Maintenance Record"
+        );
+
+        initMaintenanceTable(
+            "#rollingMillTable",
+            "Rolling Mill Maintenance Record"
+        );
+
+
+        // Adjust DataTables when a tab becomes visible.
+        $('#maintenanceTabs a[data-toggle="tab"]').on(
+            'shown.bs.tab',
+            function () {
+
+                $.fn.dataTable
+                    .tables({
+                        visible: true,
+                        api: true
+                    })
+                    .columns
+                    .adjust();
             }
-        });
+        );
 
-        // ==============================
-        // CUSTOM EXPORT PDF BUTTON
-        // ==============================
-        $("#exportPdf").on("click", function () {
-            var fromDate = $("#fromDate").val();
-            var toDate = $("#toDate").val();
 
-            if (!fromDate) {
-                alert("Please select From Date");
-                return;
-            }
-
-            if (!toDate) {
-                alert("Please select To Date");
-                return;
-            }
-
-            var url = '@Url.Action("ExportMaintenancePdf", "Maintenance")'
-                + '?fromDate=' + encodeURIComponent(fromDate)
-                + '&toDate=' + encodeURIComponent(toDate);
-
-            window.open(url, "_blank");
-        });
 
     });
 </script>

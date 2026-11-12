@@ -15,8 +15,7 @@ namespace ProductionPortal_Solb.Controllers
     public class SMPProductionDelayController : Controller
     {
         private const string UploadSheetName = "SMP Delay Upload";
-        private const int HeaderRowIndex = 2;     // Excel row 3
-        private const int DataStartRowIndex = 3;  // Excel row 4
+        private const int MaximumHeaderScanRows = 10;
 
         private readonly SMPProductionDelayRepository repo =
             new SMPProductionDelayRepository();
@@ -26,7 +25,7 @@ namespace ProductionPortal_Solb.Controllers
             "ID",
             "RowNo",
             "DelayCode",
-            "Plant ID",
+            "Plant",
             "ShiftGroup",
             "ProductionDate",
             "DelayStart",
@@ -275,7 +274,16 @@ namespace ProductionPortal_Solb.Controllers
                     );
                 }
 
-                ValidateExcelHeaders(sheet);
+                int headerRowIndex =
+                    FindHeaderRowIndex(sheet);
+
+                ValidateExcelHeaders(
+                    sheet,
+                    headerRowIndex
+                );
+
+                int dataStartRowIndex =
+                    headerRowIndex + 1;
 
                 var rows =
                     new List<SMPProductionDelayUploadBLL>();
@@ -286,7 +294,7 @@ namespace ProductionPortal_Solb.Controllers
                  * cells so unused template rows are skipped.
                  */
                 for (
-                    int rowIndex = DataStartRowIndex;
+                    int rowIndex = dataStartRowIndex;
                     rowIndex < sheet.Rows.Count;
                     rowIndex++
                 )
@@ -303,23 +311,27 @@ namespace ProductionPortal_Solb.Controllers
                     }
 
                     string plant =
-                        RequiredPlantID(
+                        RequiredPlant(
                             row[3],
                             excelRowNo
                         );
 
-                    int rowNo =
-                        OptionalPositiveInteger(
+                    int? excelRowNumber =
+                        OptionalInteger(
                             row[1],
                             excelRowNo,
                             "RowNo"
-                        )
-                        ??
-                        (
-                            rowIndex -
-                            DataStartRowIndex +
-                            1
                         );
+
+                    int rowNo =
+                        excelRowNumber.HasValue &&
+                        excelRowNumber.Value > 0
+                            ? excelRowNumber.Value
+                            : (
+                                rowIndex -
+                                dataStartRowIndex +
+                                1
+                              );
 
                     TimeSpan? delayStart =
                         OptionalTime(
@@ -361,13 +373,6 @@ namespace ProductionPortal_Solb.Controllers
                         new SMPProductionDelayUploadBLL
                         {
                             ExcelRowNo = excelRowNo,
-
-                            ID =
-                                OptionalInteger(
-                                    row[0],
-                                    excelRowNo,
-                                    "ID"
-                                ),
 
                             RowNo = rowNo,
 
@@ -508,11 +513,93 @@ namespace ProductionPortal_Solb.Controllers
         }
 
 
-        private static void ValidateExcelHeaders(
+        private static int FindHeaderRowIndex(
             DataTable sheet)
         {
             if (
-                sheet.Rows.Count <= HeaderRowIndex ||
+                sheet == null ||
+                sheet.Rows.Count == 0
+            )
+            {
+                throw new InvalidOperationException(
+                    "The '" +
+                    UploadSheetName +
+                    "' sheet is empty."
+                );
+            }
+
+            int rowsToCheck =
+                Math.Min(
+                    sheet.Rows.Count,
+                    MaximumHeaderScanRows
+                );
+
+            for (
+                int rowIndex = 0;
+                rowIndex < rowsToCheck;
+                rowIndex++
+            )
+            {
+                DataRow row =
+                    sheet.Rows[rowIndex];
+
+                if (sheet.Columns.Count < 4)
+                {
+                    continue;
+                }
+
+                string column0 =
+                    NormalizeHeader(
+                        Convert.ToString(
+                            row[0]
+                        )
+                    );
+
+                string column1 =
+                    NormalizeHeader(
+                        Convert.ToString(
+                            row[1]
+                        )
+                    );
+
+                string column2 =
+                    NormalizeHeader(
+                        Convert.ToString(
+                            row[2]
+                        )
+                    );
+
+                string column3 =
+                    NormalizeHeader(
+                        Convert.ToString(
+                            row[3]
+                        )
+                    );
+
+                if (
+                    column0 == "id" &&
+                    column1 == "rowno" &&
+                    column2 == "delaycode" &&
+                    column3 == "plant"
+                )
+                {
+                    return rowIndex;
+                }
+            }
+
+            throw new InvalidOperationException(
+                "Excel header row could not be found. " +
+                "The first columns must be: ID, RowNo, DelayCode, Plant."
+            );
+        }
+
+
+        private static void ValidateExcelHeaders(
+            DataTable sheet,
+            int headerRowIndex)
+        {
+            if (
+                sheet.Rows.Count <= headerRowIndex ||
                 sheet.Columns.Count < ExpectedHeaders.Length
             )
             {
@@ -526,7 +613,7 @@ namespace ProductionPortal_Solb.Controllers
             }
 
             DataRow headerRow =
-                sheet.Rows[HeaderRowIndex];
+                sheet.Rows[headerRowIndex];
 
             for (
                 int columnIndex = 0;
@@ -575,7 +662,9 @@ namespace ProductionPortal_Solb.Controllers
         {
             int[] indexes =
             {
-                3, 4, 5, 6, 7,
+                // Plant (index 3) is intentionally excluded because
+                // every template row contains fixed value "Steel Making".
+                4, 5, 6, 7,
                 9, 11, 12, 13, 14, 15,
                 16, 17, 18, 19, 20, 21, 22
             };
@@ -696,6 +785,10 @@ namespace ProductionPortal_Solb.Controllers
                 case "ANNUALSHUTDOWN":
                     code = "AS";
                     break;
+
+                case "PRODUCTION":
+                    code = "P";
+                    break;
             }
 
             if (!string.IsNullOrWhiteSpace(code))
@@ -703,7 +796,10 @@ namespace ProductionPortal_Solb.Controllers
                 return code;
             }
 
-            if (!string.IsNullOrWhiteSpace(excelAgencyCode))
+            if (
+                !string.IsNullOrWhiteSpace(excelAgencyCode) &&
+                !excelAgencyCode.Trim().StartsWith("#")
+            )
             {
                 return excelAgencyCode.Trim();
             }
@@ -718,40 +814,33 @@ namespace ProductionPortal_Solb.Controllers
         }
 
 
-        private static string RequiredPlantID(
+        private static string RequiredPlant(
             object value,
             int excelRowNo)
         {
-            string text =
+            string plant =
                 RequiredText(
                     value,
                     excelRowNo,
-                    "Plant ID"
+                    "Plant"
                 );
 
-            int plantID;
-
             if (
-                !int.TryParse(
-                    text,
-                    NumberStyles.Integer,
-                    CultureInfo.InvariantCulture,
-                    out plantID
+                !string.Equals(
+                    plant.Trim(),
+                    "Steel Making",
+                    StringComparison.OrdinalIgnoreCase
                 )
-                ||
-                plantID <= 0
             )
             {
                 throw new InvalidOperationException(
                     "Excel row " +
                     excelRowNo +
-                    ": Plant ID must be a valid positive number from SMPPlantArea."
+                    ": Plant must be 'Steel Making'."
                 );
             }
 
-            return plantID.ToString(
-                CultureInfo.InvariantCulture
-            );
+            return "Steel Making";
         }
 
 

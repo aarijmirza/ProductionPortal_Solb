@@ -12,6 +12,7 @@ namespace DAL.Models
         public string Shift { get; set; }
         public string Team { get; set; }
         public string ShiftIncharge { get; set; }
+        public string MessageUpcomingShift { get; set; }
         public int StatusID { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; }

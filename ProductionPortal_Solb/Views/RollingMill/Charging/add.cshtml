@@ -8,10 +8,17 @@
 
     int nextSequence = 1;
 
+    string selectedShiftFilter = Convert.ToString(pageModel.Shift ?? "").Trim();
+
     if (Model.SubmittedHeat != null && Model.SubmittedHeat.Any())
     {
+        string currentShiftForSequence = Convert.ToString(Model.Shift ?? "").Trim();
+
         nextSequence = Model.SubmittedHeat
-            .Where(x => x.Shift == Model.Shift)
+            .Where(x => string.Equals(
+                Convert.ToString(x.Shift ?? "").Trim(),
+                currentShiftForSequence,
+                StringComparison.OrdinalIgnoreCase))
             .Select(x => x.HeatSequence)
             .Where(x => x > 0)
             .DefaultIfEmpty(0)
@@ -149,9 +156,9 @@
                     <div class="col-md-2">
                         <label>Heat #</label>
                         @Html.DropDownListFor(m => m.HeatNo,
-                            (IEnumerable<SelectListItem>)ViewBag.HeatNo,
-                            "-- Select Heat --",
-                            new { @class = "form-control select2-heat", id = "ddlHeat" })
+                                 (IEnumerable<SelectListItem>)ViewBag.HeatNo,
+                                 "-- Select Heat --",
+                                 new { @class = "form-control select2-heat", id = "ddlHeat" })
                     </div>
 
                     <div class="col-md-2">
@@ -242,13 +249,16 @@
     <div class="card mt-3">
         <div class="card-body">
 
-            <select id="shiftFilter" class="form-control mb-2" style="width:200px;">
+            <select id="shiftFilter"
+                    class="form-control mb-2"
+                    style="width:200px;"
+                    onchange="applyChargingShiftFilter();">
                 <option value="">All</option>
-                <option value="Morning" @(Model.Shift == "Morning" ? "selected" : "")>Morning</option>
-                <option value="Evening" @(Model.Shift == "Evening" ? "selected" : "")>Evening</option>
-                <option value="Night" @(Model.Shift == "Night" ? "selected" : "")>Night</option>
-                <option value="Long Morning" @(Model.Shift == "Long Morning" ? "selected" : "")>Long Morning</option>
-                <option value="Long Night" @(Model.Shift == "Long Night" ? "selected" : "")>Long Night</option>
+                <option value="Morning" @(string.Equals(selectedShiftFilter, "Morning", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Morning</option>
+                <option value="Evening" @(string.Equals(selectedShiftFilter, "Evening", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Evening</option>
+                <option value="Night" @(string.Equals(selectedShiftFilter, "Night", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Night</option>
+                <option value="Long Morning" @(string.Equals(selectedShiftFilter, "Long Morning", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Long Morning</option>
+                <option value="Long Night" @(string.Equals(selectedShiftFilter, "Long Night", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Long Night</option>
             </select>
 
             <div class="mb-2">
@@ -273,9 +283,9 @@
                     {
                         foreach (var item in Model.SubmittedHeat)
                         {
-                            <tr data-shift="@item.Shift">
+                            <tr class="charging-data-row" data-shift="@Convert.ToString(item.Shift ?? "").Trim()">
                                 <td>@item.HeatSequence</td>
-                                <td>@item.Shift</td>
+                                <td class="charging-shift-cell">@item.Shift</td>
                                 <td>@item.HeatNo</td>
                                 <td>@item.TotalBillet</td>
                                 <td>@item.TotalWeight</td>
@@ -459,54 +469,7 @@
     });
 </script>
 
-<script>
-    $(document).ready(function () {
 
-        function toNum(val) {
-            return parseFloat($.trim(val)) || 0;
-        }
-
-        function normalizeShift(val) {
-            return (val || "").toString().trim().toLowerCase();
-        }
-
-        function calculateChargingTotals() {
-            var totalBillet = 0;
-            var totalWeight = 0;
-
-            $("#chargingTableBody tr:visible").each(function () {
-                totalBillet += toNum($(this).find("td:eq(3)").text());
-                totalWeight += toNum($(this).find("td:eq(4)").text());
-            });
-
-            $("#totalBilletBadge").text(totalBillet);
-            $("#totalProducedBadge").text(totalWeight.toFixed(2));
-        }
-
-        function applyChargingFilter() {
-            var selectedShift = normalizeShift($("#shiftFilter").val());
-
-            $("#chargingTableBody tr").each(function () {
-                var rowShift = normalizeShift($(this).attr("data-shift"));
-
-                if (selectedShift === "" || rowShift === selectedShift) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-
-            calculateChargingTotals();
-        }
-
-        $("#shiftFilter").off("change").on("change", function () {
-            applyChargingFilter();
-        });
-
-        applyChargingFilter();
-    });
-
-</script>
 
 <script>
     $(document).ready(function () {
@@ -632,6 +595,62 @@
     });
 </script>
 
+
+<script>
+    function normalizeChargingShift(value) {
+        return (value || "")
+            .toString()
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase();
+    }
+
+    function calculateVisibleChargingTotals() {
+        var totalBillet = 0;
+        var totalWeight = 0;
+        var rows = document.querySelectorAll("#chargingTableBody tr.charging-data-row");
+
+        rows.forEach(function (row) {
+            if (row.style.display !== "none") {
+                var cells = row.querySelectorAll("td");
+                totalBillet += parseFloat((cells[3] ? cells[3].textContent : "0").trim()) || 0;
+                totalWeight += parseFloat((cells[4] ? cells[4].textContent : "0").trim()) || 0;
+            }
+        });
+
+        var billetBadge = document.getElementById("totalBilletBadge");
+        var producedBadge = document.getElementById("totalProducedBadge");
+
+        if (billetBadge) billetBadge.textContent = totalBillet;
+        if (producedBadge) producedBadge.textContent = totalWeight.toFixed(2);
+    }
+
+    function applyChargingShiftFilter() {
+        var filter = document.getElementById("shiftFilter");
+        if (!filter) return;
+
+        var selectedShift = normalizeChargingShift(filter.value);
+        var rows = document.querySelectorAll("#chargingTableBody tr.charging-data-row");
+
+        rows.forEach(function (row) {
+            var rowShift = normalizeChargingShift(row.getAttribute("data-shift"));
+
+            if (!rowShift) {
+                var shiftCell = row.querySelector(".charging-shift-cell");
+                rowShift = normalizeChargingShift(shiftCell ? shiftCell.textContent : "");
+            }
+
+            var visible = !selectedShift || rowShift === selectedShift;
+            row.style.setProperty("display", visible ? "table-row" : "none", "important");
+        });
+
+        calculateVisibleChargingTotals();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        applyChargingShiftFilter();
+    });
+</script>
 <script>
     $(document).ready(function () {
 

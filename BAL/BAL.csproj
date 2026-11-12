@@ -37,6 +37,11 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Compression.4.3.0\lib\net46\System.IO.Compression.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -63,6 +68,7 @@
     <Compile Include="Repositories\MaintenanceRepository.cs" />
     <Compile Include="Repositories\MeltshopRepository.cs" />
     <Compile Include="Repositories\RMMechanicalRepository.cs" />
+    <Compile Include="Repositories\RMMTCRepository.cs" />
     <Compile Include="Repositories\RollingMillDailyTargetRepository.cs" />
     <Compile Include="Repositories\RollingMillRepository.cs" />
     <Compile Include="Repositories\QualityRepository.cs" />
@@ -78,6 +84,7 @@
     <Compile Include="Repositories\UserRoleRepository.cs" />
     <Compile Include="Repositories\LoginRepository.cs" />
     <Compile Include="Repositories\UtilityRepository.cs" />
+    <Compile Include="Services\RMMTCExcelBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -89,5 +96,6 @@
       <Name>DAL</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

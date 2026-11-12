@@ -1,0 +1,680 @@
+@using System
+@using System.Collections.Generic
+@using DAL.Models
+@model dynamic
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    IEnumerable<FurnaceChargingDischargingSummaryRowBLL> reportRows =
+        ViewBag.Rows
+            as IEnumerable<FurnaceChargingDischargingSummaryRowBLL>
+        ??
+        new List<FurnaceChargingDischargingSummaryRowBLL>();
+
+    var rows =
+        new List<FurnaceChargingDischargingSummaryRowBLL>(
+            reportRows
+        );
+
+    int minimumRows =
+        8;
+
+    string documentNo =
+        Convert.ToString(
+            ViewBag.DocumentNo
+            ??
+            "RM2F-FCD-1001"
+        );
+
+    string revisionNo =
+        Convert.ToString(
+            ViewBag.RevisionNo
+            ??
+            "02"
+        );
+
+    string reportDate =
+        Convert.ToString(
+            ViewBag.ReportDate
+            ??
+            ""
+        );
+
+    string shift =
+        Convert.ToString(
+            ViewBag.Shift
+            ??
+            ""
+        );
+
+    string plant =
+        Convert.ToString(
+            ViewBag.Plant
+            ??
+            ""
+        );
+
+    bool autoPrint =
+        ViewBag.AutoPrint != null
+        &&
+        Convert.ToBoolean(
+            ViewBag.AutoPrint
+        );
+}
+
+<style>
+    .solb-report-page {
+        background: #fff;
+        border: 1px solid #222;
+        max-width: 1500px;
+        margin: 18px auto;
+        padding: 0;
+        font-family: Arial,Helvetica,sans-serif;
+        color: #111;
+    }
+
+    .solb-report-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        margin: 0;
+    }
+
+        .solb-report-table th,
+        .solb-report-table td {
+            border: 1px solid #222;
+            padding: 6px 5px;
+            vertical-align: middle;
+            word-break: break-word;
+            font-size: 12px;
+        }
+
+        .solb-report-table th {
+            font-weight: 700;
+            text-align: center;
+        }
+
+    .company-logo-cell {
+        width: 19%;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .logo-box {
+        height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .company-title {
+        text-align: center;
+        font-size: 20px !important;
+        font-weight: 800;
+        letter-spacing: .4px;
+    }
+
+    .form-title {
+        text-align: center;
+        font-size: 17px !important;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .document-cell {
+        text-align: center;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .meta-label {
+        background: #f3f3f3;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .meta-value {
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .section-title {
+        background: #e7e7e7;
+        font-size: 13px !important;
+        font-weight: 800;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .sub-header {
+        background: #f2f2f2;
+        font-size: 11px !important;
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    .data-cell {
+        height: 32px;
+        text-align: center;
+    }
+
+    .separator {
+        width: 1.4%;
+        background: #fff;
+        border-top: 0 !important;
+        border-bottom: 0 !important;
+    }
+
+    .signature-area td {
+        height: 38px;
+    }
+
+    .signature-label {
+        font-weight: 700;
+        background: #f8f8f8;
+    }
+
+    .signature-line {
+        min-height: 24px;
+        border-bottom: 1px solid #333;
+        display: block;
+        padding: 2px 5px;
+    }
+
+    .report-actions {
+        max-width: 1500px;
+        margin: 12px auto 0;
+        text-align: right;
+    }
+
+    .btn-print-report {
+        border: 0;
+        padding: 8px 16px;
+        border-radius: 5px;
+        background: #9d1238;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    @@media print {
+        .xp-breadcrumbbar,
+        .report-actions,
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .xp-contentbar {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .solb-report-page {
+            max-width: none;
+            margin: 0;
+            border: 0;
+        }
+
+        .solb-report-table th,
+        .solb-report-table td {
+            font-size: 9px;
+            padding: 4px 3px;
+        }
+
+        @@page {
+            size: A4 landscape;
+            margin: 7mm;
+        }
+    }
+</style>
+
+<div class="xp-breadcrumbbar no-print">
+    <div class="row">
+        <div class="col-md-10">
+            <h4 class="xp-page-title font-weight-bold">
+                Furnace Charging &amp; Discharging Summary
+            </h4>
+        </div>
+    </div>
+</div>
+
+<div class="xp-contentbar">
+
+    <div class="report-actions no-print">
+        <button type="button"
+                class="btn-print-report"
+                onclick="window.print();">
+            <i class="fa fa-print"></i>
+            Print Report
+        </button>
+    </div>
+
+    <div class="solb-report-page">
+
+        <table class="solb-report-table">
+
+            <colgroup>
+                <col style="width:19%;" />
+                <col style="width:56%;" />
+                <col style="width:12.5%;" />
+                <col style="width:12.5%;" />
+            </colgroup>
+
+            <tr>
+                <td rowspan="2"
+                    class="company-logo-cell">
+
+                    <div class="logo-box">
+
+                        <img src="@Url.Content("~/assets/images/logo.png")"
+                             style="width:45%;" />
+
+                    </div>
+
+                </td>
+
+                <td class="company-title">
+                    SOLB STEEL COMPANY
+                </td>
+
+                <td colspan="2"
+                    class="document-cell">
+                    @documentNo
+                </td>
+            </tr>
+
+            <tr>
+                <td class="form-title">
+                    FURNACE CHARGING DISCHARGING SUMMARY
+                </td>
+
+                <td class="document-cell">
+                    @reportDate
+                </td>
+
+                <td class="document-cell">
+                    Revision no. @revisionNo
+                </td>
+            </tr>
+
+        </table>
+
+
+        <table class="solb-report-table">
+
+            <colgroup>
+                <col style="width:8%;" />
+                <col style="width:8%;" />
+                <col style="width:8%;" />
+                <col style="width:8%;" />
+
+                <col style="width:2%;" />
+
+                <col style="width:7%;" />
+                <col style="width:6%;" />
+                <col style="width:6%;" />
+                <col style="width:6%;" />
+
+                <col style="width:2%;" />
+
+                <col style="width:7%;" />
+                <col style="width:6%;" />
+                <col style="width:6%;" />
+                <col style="width:6%;" />
+
+                <col style="width:2%;" />
+
+                <col style="width:7%;" />
+                <col style="width:6%;" />
+                <col style="width:6%;" />
+                <col style="width:6%;" />
+            </colgroup>
+
+            <tr>
+                <td colspan="3"
+                    class="meta-label">
+                    DATE
+                </td>
+
+                <td colspan="4"
+                    class="meta-value">
+                    @reportDate
+                </td>
+
+                <td colspan="2"
+                    class="meta-label">
+                    SHIFT
+                </td>
+
+                <td colspan="3"
+                    class="meta-value">
+                    @shift
+                </td>
+
+                <td class="meta-label">
+                    PLANT
+                </td>
+
+                <td colspan="6"
+                    class="meta-value">
+                    @plant
+                </td>
+            </tr>
+
+
+            <tr>
+                <th colspan="4"
+                    class="section-title">
+                    Physical Check
+                </th>
+
+                <td class="separator"></td>
+
+                <th colspan="4"
+                    class="section-title">
+                    Charged
+                </th>
+
+                <td class="separator"></td>
+
+                <th colspan="4"
+                    class="section-title">
+                    Discharged
+                </th>
+
+                <td class="separator"></td>
+
+                <th colspan="4"
+                    class="section-title">
+                    Balance in the Furnace
+                    <br />
+                    <small>
+                        (End of Shift)
+                    </small>
+                </th>
+            </tr>
+
+
+            <tr>
+                <th class="sub-header">
+                    Billet Boarding No.
+                </th>
+
+                <th class="sub-header">
+                    Heat No.
+                </th>
+
+                <th class="sub-header">
+                    No. of Billets in Heat as per Billet Boarding
+                </th>
+
+                <th class="sub-header">
+                    Actual No. of Billets Received in the Heat /
+                    Checked on Charging Grid
+                </th>
+
+                <td class="separator"></td>
+
+
+                <th class="sub-header">
+                    Heat No.
+                </th>
+
+                <th class="sub-header">
+                    Grade
+                </th>
+
+                <th class="sub-header">
+                    Billet Size
+                </th>
+
+                <th class="sub-header">
+                    Total Pcs.
+                </th>
+
+                <td class="separator"></td>
+
+
+                <th class="sub-header">
+                    Heat No.
+                </th>
+
+                <th class="sub-header">
+                    Grade
+                </th>
+
+                <th class="sub-header">
+                    Billet Size
+                </th>
+
+                <th class="sub-header">
+                    Total Pcs.
+                </th>
+
+                <td class="separator"></td>
+
+
+                <th class="sub-header">
+                    Heat No.
+                </th>
+
+                <th class="sub-header">
+                    Grade
+                </th>
+
+                <th class="sub-header">
+                    Billet Size
+                </th>
+
+                <th class="sub-header">
+                    Total Pcs.
+                </th>
+            </tr>
+
+
+            @{
+                int displayRowCount =
+                    Math.Max(
+                        minimumRows,
+                        rows.Count
+                    );
+            }
+
+
+            @for (
+                int i = 0;
+                i < displayRowCount;
+                i++
+            )
+            {
+                FurnaceChargingDischargingSummaryRowBLL item =
+                    i < rows.Count
+                        ? rows[i]
+                        : null;
+
+                <tr>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.BilletBoardingNo
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.PhysicalHeatNo
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.BoardingBillets.ToString("0.###")
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.ActualBillets.ToString("0.###")
+                            : "")
+                    </td>
+
+                    <td class="separator"></td>
+
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.ChargedHeatNo
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.ChargedGrade
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.ChargedBilletSize
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null &&
+                          item.ChargedTotalPcs > 0
+                            ? item.ChargedTotalPcs.ToString("0.###")
+                            : "")
+                    </td>
+
+                    <td class="separator"></td>
+
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.DischargedHeatNo
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.DischargedGrade
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.DischargedBilletSize
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null &&
+                          item.DischargedTotalPcs > 0
+                            ? item.DischargedTotalPcs.ToString("0.###")
+                            : "")
+                    </td>
+
+                    <td class="separator"></td>
+
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.BalanceHeatNo
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.BalanceGrade
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null
+                            ? item.BalanceBilletSize
+                            : "")
+                    </td>
+
+                    <td class="data-cell">
+                        @(item != null &&
+                          item.BalanceTotalPcs > 0
+                            ? item.BalanceTotalPcs.ToString("0.###")
+                            : "")
+                    </td>
+
+                </tr>
+            }
+
+        </table>
+
+
+        <table class="solb-report-table signature-area">
+
+            <tr>
+                <td style="width:20%;"
+                    class="signature-label">
+                    Furnace Operator :
+                </td>
+
+                <td style="width:10%;"
+                    class="signature-label">
+                    Name
+                </td>
+
+                <td style="width:32%;">
+
+                    <span class="signature-line">
+                        @Convert.ToString(
+                                 ViewBag.FurnaceOperatorName
+                                 ??
+                                 ""
+                             )
+                    </span>
+
+                </td>
+
+                <td style="width:12%;"
+                    class="signature-label">
+                    Signature
+                </td>
+
+                <td style="width:26%;">
+
+                    <span class="signature-line">
+                        @Convert.ToString(
+                                 ViewBag.FurnaceOperatorSignature
+                                 ??
+                                 ""
+                             )
+                    </span>
+
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+@if (autoPrint)
+{
+    <script>
+        window.addEventListener(
+            "load",
+            function () {
+                window.print();
+            }
+        );
+    </script>
+}

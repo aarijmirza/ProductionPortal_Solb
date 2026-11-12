@@ -269,10 +269,13 @@
                                         <li><a href="@Url.Action("BilletBoard", "Quality")">BILLET BOARDING</a></li>
                                     </ul>
                                 }
-                                @if (isAdmin || isQC || isRollingMill)
+                                @if (isAdmin || isQC || isRollingMill || isSupplyChain)
                                 {
                                     <ul class="xp-vertical-submenu">
                                         <li><a href="@Url.Action("QCInspectionRMadd", "RMMechanical")">RM MECHANICAL TEST RESULT</a></li>
+                                    </ul>
+                                    <ul class="xp-vertical-submenu">
+                                        <li><a href="@Url.Action("Index", "RMMTC")">MTC FORM</a></li>
                                     </ul>
                                 }
                             </li>

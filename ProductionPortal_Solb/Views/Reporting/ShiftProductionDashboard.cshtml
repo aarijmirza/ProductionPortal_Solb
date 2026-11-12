@@ -12,8 +12,19 @@
             ? Model.MonthlyProductionData
             : new List<DAL.Models.BilletDischargingBLL>();
 
+    // Production Summary / Details sequence:
+    // 1) Date ascending
+    // 2) Discharging Sequence ascending within each date
+    // Records without a valid date are kept at the end.
     var data = Model != null && Model.DischargedHeats != null
         ? Model.DischargedHeats
+            .OrderBy(x =>
+                x.Date == DateTime.MinValue
+                    ? DateTime.MaxValue
+                    : x.Date.Date)
+            .ThenBy(x => x.DischargingSequence)
+            .ThenBy(x => x.HeatNo)
+            .ToList()
         : new List<DAL.Models.BilletDischargingBLL>();
 
     // =========================================================
@@ -908,53 +919,130 @@
     // aur final averaged object Model.RollingMillTarget mein pass hoga.
     // =========================================================
 
-    var profileYieldTargets =
-        new List<decimal>();
+    // =========================================================
+    // WEIGHTED YIELD TARGET BY PROFILE
+    // =========================================================
+    // Overall Yield Target % =
+    // SUM(Profile Production * Profile Yield Target %)
+    // -------------------------------------------------
+    //              SUM(Total Production)
+    //
+    // Profile production is taken from TheoriticalWeight,
+    // which is also used as Finished Product on this dashboard.
+    // =========================================================
 
-    foreach (string profile in selectedProfiles)
-    {
-        if (profile.Equals(
-                "WR",
-                StringComparison.OrdinalIgnoreCase) ||
-            profile.IndexOf(
-                "WIRE",
-                StringComparison.OrdinalIgnoreCase) >= 0)
+    Func<string, decimal> GetProfileYieldTarget =
+        profile =>
         {
-            profileYieldTargets.Add(
-                rollingMillTarget.YeildPercentageWRTarget
-            );
-        }
-        else if (profile.Equals(
+            string normalizedProfile =
+                Convert.ToString(profile ?? "")
+                    .Trim();
+
+            if (
+                normalizedProfile.Equals(
+                    "WR",
+                    StringComparison.OrdinalIgnoreCase
+                ) ||
+                normalizedProfile.IndexOf(
+                    "WIRE",
+                    StringComparison.OrdinalIgnoreCase
+                ) >= 0
+            )
+            {
+                return rollingMillTarget
+                    .YeildPercentageWRTarget;
+            }
+
+            if (
+                normalizedProfile.Equals(
                     "PB",
-                    StringComparison.OrdinalIgnoreCase) ||
-                 profile.IndexOf(
+                    StringComparison.OrdinalIgnoreCase
+                ) ||
+                normalizedProfile.IndexOf(
                     "PLAIN",
-                    StringComparison.OrdinalIgnoreCase) >= 0)
-        {
-            profileYieldTargets.Add(
-                rollingMillTarget.YeildPercentagePBTarget
-            );
-        }
-        else if (profile.Equals(
+                    StringComparison.OrdinalIgnoreCase
+                ) >= 0
+            )
+            {
+                return rollingMillTarget
+                    .YeildPercentagePBTarget;
+            }
+
+            if (
+                normalizedProfile.Equals(
                     "RIC",
-                    StringComparison.OrdinalIgnoreCase))
-        {
-            profileYieldTargets.Add(
-                rollingMillTarget.YeildPercentageRICTarget
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                return rollingMillTarget
+                    .YeildPercentageRICTarget;
+            }
+
+            return rollingMillTarget
+                .YeildPercentageRBTarget;
+        };
+
+
+    var profileYieldTargetSummary =
+        data
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(
+                    x.Profile
+                )
+            )
+            .GroupBy(
+                x => x.Profile.Trim(),
+                StringComparer.OrdinalIgnoreCase
+            )
+            .Select(g =>
+            {
+                decimal profileProduction =
+                    g.Sum(
+                        x =>
+                            x.TheoriticalWeight
+                            ?? 0
+                    );
+
+                decimal profileTarget =
+                    GetProfileYieldTarget(
+                        g.Key
+                    );
+
+                return new
+                {
+                    Profile = g.Key,
+                    Production = profileProduction,
+                    Target = profileTarget,
+                    WeightedTargetValue =
+                        profileProduction *
+                        profileTarget
+                };
+            })
+            .ToList();
+
+
+    decimal yieldTargetProduction =
+        profileYieldTargetSummary
+            .Sum(
+                x => x.Production
             );
-        }
-        else
-        {
-            profileYieldTargets.Add(
-                rollingMillTarget.YeildPercentageRBTarget
+
+
+    decimal weightedYieldTargetTotal =
+        profileYieldTargetSummary
+            .Sum(
+                x => x.WeightedTargetValue
             );
-        }
-    }
+
 
     decimal yieldTarget =
-        profileYieldTargets.Any()
-            ? profileYieldTargets.Average()
-            : rollingMillTarget.YeildPercentageRBTarget;
+        yieldTargetProduction > 0
+            ? weightedYieldTargetTotal /
+              yieldTargetProduction
+            : rollingMillTarget
+                .YeildPercentageRBTarget;
+
 
     decimal rrrTarget =
         rollingMillTarget.RRRPercentageTarget;
@@ -2346,7 +2434,8 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th>Seq.</th>
+                            <th>S.No.</th>
+                            <th>Date</th>
                             <th>Heat No</th>
                             <th>Grade</th>
                             <th>Profile</th>
@@ -2368,8 +2457,31 @@
                     <tbody>
                         @if (data != null && data.Any())
                         {
+                            int productionSerialNo = 0;
+                            DateTime? productionSerialDate = null;
+                            bool productionSerialDateInitialized = false;
+
                             foreach (var item in data)
                             {
+                                DateTime? currentProductionDate =
+                                    item.Date != DateTime.MinValue
+                                        ? (DateTime?)item.Date.Date
+                                        : null;
+
+                                if (
+                                    !productionSerialDateInitialized ||
+                                    productionSerialDate != currentProductionDate
+                                )
+                                {
+                                    productionSerialNo = 1;
+                                    productionSerialDate = currentProductionDate;
+                                    productionSerialDateInitialized = true;
+                                }
+                                else
+                                {
+                                    productionSerialNo++;
+                                }
+
                                 decimal itemTotalWeight = item.TotalWeight ?? 0;
                                 decimal itemTheoriticalWeight =
                                     item.TheoriticalWeight ?? 0;
@@ -2379,7 +2491,12 @@
                                     : 0;
 
                                 <tr>
-                                    <td>@item.DischargingSequence</td>
+                                    <td>@productionSerialNo</td>
+                                    <td>
+                                        @(item.Date != DateTime.MinValue
+                                            ? item.Date.ToString("dd/MM/yyyy", gregorian)
+                                            : "-")
+                                    </td>
                                     <td>@item.HeatNo</td>
                                     <td>@item.SteelGrade</td>
                                     <td>@item.Profile</td>
@@ -2417,12 +2534,13 @@
                                         </span>
                                     </td>
                                 </tr>
+
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="15" class="text-center text-muted">
+                                <td colspan="17" class="text-center text-muted">
                                     No production data found.
                                 </td>
                             </tr>
@@ -2431,7 +2549,7 @@
 
                     <tfoot>
                         <tr class="font-weight-bold">
-                            <td colspan="4" class="text-right">Total</td>
+                            <td colspan="6" class="text-right">Total</td>
                             <td>@totalDischarge</td>
                             <td>@totalRolled</td>
                             <td>@totalCobble</td>

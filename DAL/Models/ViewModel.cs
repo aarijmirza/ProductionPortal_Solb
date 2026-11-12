@@ -397,46 +397,6 @@ namespace DAL.Models
             }
         }
 
-        //public class DelayCounterMeasureVM
-        //{
-        //    public int PlantDelayID { get; set; }
-
-        //    public PlantDelayBLL DelayDetail
-        //    {
-        //        get;
-        //        set;
-        //    }
-
-        //    public List<DelayCounterMeasureBLL>
-        //        CounterMeasures
-        //    {
-        //        get;
-        //        set;
-        //    }
-
-        //    public List<DelayCounterMeasureBLL>
-        //        ExistingCounterMeasures
-        //    {
-        //        get;
-        //        set;
-        //    }
-
-        //    public DelayCounterMeasureVM()
-        //    {
-        //        DelayDetail =
-        //            new PlantDelayBLL();
-
-        //        CounterMeasures =
-        //            new List<
-        //                DelayCounterMeasureBLL
-        //            >();
-
-        //        ExistingCounterMeasures =
-        //            new List<
-        //                DelayCounterMeasureBLL
-        //            >();
-        //    }
-        //}
         public class RMBundlesVM
         {
             public RMBundlesVM()

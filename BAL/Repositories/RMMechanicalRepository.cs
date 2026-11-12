@@ -99,7 +99,7 @@ namespace BAL.Repositories
                         BarSize =
                             GetString(
                                 row,
-                                "BarySize"
+                                "BarSize"
                             ),
 
                         BarsPerBundle =
@@ -308,10 +308,16 @@ namespace BAL.Repositories
             }
 
 
-            return
+            QCInspectionRMDetailBLL detail =
                 MapQCInspectionRMDetail(
                     dt.Rows[0]
                 );
+
+            EnrichRMChemistryByHeat(
+                detail
+            );
+
+            return detail;
         }
 
 
@@ -355,10 +361,16 @@ namespace BAL.Repositories
             }
 
 
-            return
+            QCInspectionRMDetailBLL detail =
                 MapQCInspectionRMDetail(
                     dt.Rows[0]
                 );
+
+            EnrichRMChemistryByHeat(
+                detail
+            );
+
+            return detail;
         }
 
 
@@ -392,7 +404,7 @@ namespace BAL.Repositories
              *   Product + Mechanical
              *
              * RMChemicalAnalysis
-             *   C, Si, Mn, P, S, N, Ceq
+             *   C, Si, Mn, P, S, Cu, Ni, Cr, Mo, V, B, N, Ceq
              */
             DataTable dt =
                 DBHelper.ExecuteDataTable(
@@ -411,10 +423,16 @@ namespace BAL.Repositories
             }
 
 
-            return
+            QCInspectionRMDetailBLL detail =
                 MapQCInspectionRMDetail(
                     dt.Rows[0]
                 );
+
+            EnrichRMChemistryByHeat(
+                detail
+            );
+
+            return detail;
         }
 
 
@@ -664,6 +682,20 @@ namespace BAL.Repositories
         },
 
         new SqlParameter(
+            "@ProductType",
+            SqlDbType.NVarChar,
+            50
+        )
+        {
+            Value =
+                model.IsWireRodOrCoil
+                    ? DbValue(
+                        model.ProductType
+                    )
+                    : (object)DBNull.Value
+        },
+
+        new SqlParameter(
             "@YieldStrength",
             SqlDbType.Decimal
         )
@@ -832,6 +864,68 @@ namespace BAL.Repositories
             return 0;
         }
 
+
+
+        private void EnrichRMChemistryByHeat(
+            QCInspectionRMDetailBLL model)
+        {
+            if (
+                model == null
+                ||
+                string.IsNullOrWhiteSpace(
+                    model.HeatNo
+                )
+            )
+            {
+                return;
+            }
+
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@HeatNo",
+                    SqlDbType.NVarChar,
+                    100
+                )
+                {
+                    Value =
+                        model.HeatNo.Trim()
+                }
+            };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_QC_GetRMChemistryForMTCByHeat",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null
+                ||
+                dt.Rows.Count == 0
+            )
+            {
+                return;
+            }
+
+            DataRow row =
+                dt.Rows[0];
+
+            SetDecimalPair(row, "C", value => { model.CValue = value; model.C = FormatDecimal(value); });
+            SetDecimalPair(row, "Si", value => { model.SiValue = value; model.Si = FormatDecimal(value); });
+            SetDecimalPair(row, "Mn", value => { model.MnValue = value; model.Mn = FormatDecimal(value); });
+            SetDecimalPair(row, "P", value => { model.PValue = value; model.P = FormatDecimal(value); });
+            SetDecimalPair(row, "S", value => { model.SValue = value; model.S = FormatDecimal(value); });
+            SetDecimalPair(row, "Cu", value => { model.CuValue = value; model.Cu = FormatDecimal(value); });
+            SetDecimalPair(row, "Ni", value => { model.NiValue = value; model.Ni = FormatDecimal(value); });
+            SetDecimalPair(row, "Cr", value => { model.CrValue = value; model.Cr = FormatDecimal(value); });
+            SetDecimalPair(row, "Mo", value => { model.MoValue = value; model.Mo = FormatDecimal(value); });
+            SetDecimalPair(row, "V", value => { model.VValue = value; model.V = FormatDecimal(value); });
+            SetDecimalPair(row, "B", value => { model.BValue = value; model.B = FormatDecimal(value); });
+            SetDecimalPair(row, "N", value => { model.NValue = value; model.N = FormatDecimal(value); });
+            SetDecimalPair(row, "Ceq", value => { model.CeqValue = value; model.Ceq = FormatDecimal(value); });
+        }
 
 
         /* ================================================================
@@ -1046,6 +1140,13 @@ namespace BAL.Repositories
                 );
 
 
+            model.ProductType =
+                GetString(
+                    row,
+                    "ProductType"
+                );
+
+
             SetDecimalPair(
                 row,
                 "YieldStrength",
@@ -1199,6 +1300,66 @@ namespace BAL.Repositories
                         FormatDecimal(
                             value
                         );
+                }
+            );
+
+            SetDecimalPair(
+                row,
+                "Cu",
+                value =>
+                {
+                    model.CuValue = value;
+                    model.Cu = FormatDecimal(value);
+                }
+            );
+
+            SetDecimalPair(
+                row,
+                "Ni",
+                value =>
+                {
+                    model.NiValue = value;
+                    model.Ni = FormatDecimal(value);
+                }
+            );
+
+            SetDecimalPair(
+                row,
+                "Cr",
+                value =>
+                {
+                    model.CrValue = value;
+                    model.Cr = FormatDecimal(value);
+                }
+            );
+
+            SetDecimalPair(
+                row,
+                "Mo",
+                value =>
+                {
+                    model.MoValue = value;
+                    model.Mo = FormatDecimal(value);
+                }
+            );
+
+            SetDecimalPair(
+                row,
+                "V",
+                value =>
+                {
+                    model.VValue = value;
+                    model.V = FormatDecimal(value);
+                }
+            );
+
+            SetDecimalPair(
+                row,
+                "B",
+                value =>
+                {
+                    model.BValue = value;
+                    model.B = FormatDecimal(value);
                 }
             );
 
@@ -1529,5 +1690,128 @@ namespace BAL.Repositories
                 )
             );
         }
+
+        // Add this method inside RMMechanicalRepository
+
+        public string GetBundlingSteelGradeByHeatNo(
+            string heatNo)
+        {
+            if (
+                string.IsNullOrWhiteSpace(
+                    heatNo
+                )
+            )
+            {
+                return "";
+            }
+
+            SqlParameter[] parameters =
+            {
+        new SqlParameter(
+            "@HeatNo",
+            SqlDbType.NVarChar,
+            100
+        )
+        {
+            Value =
+                heatNo.Trim()
+        }
+    };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_QC_GetBundlingGradeByHeatNo",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null
+                ||
+                dt.Rows.Count == 0
+                ||
+                !dt.Columns.Contains(
+                    "SteelGrade"
+                )
+            )
+            {
+                return "";
+            }
+
+            return
+                Convert.ToString(
+                    dt.Rows[0]["SteelGrade"]
+                ).Trim();
+        }
+
+        public BundlingMTCInfoBLL GetBundlingMTCInfoByHeatNo(
+    string heatNo)
+        {
+            if (
+                string.IsNullOrWhiteSpace(
+                    heatNo
+                )
+            )
+            {
+                return null;
+            }
+
+            SqlParameter[] parameters =
+            {
+        new SqlParameter(
+            "@HeatNo",
+            SqlDbType.NVarChar,
+            100
+        )
+        {
+            Value =
+                heatNo.Trim()
+        }
+    };
+
+            DataTable dt =
+                DBHelper.ExecuteDataTable(
+                    "sp_QC_GetBundlingMTCInfoByHeatNo",
+                    CommandType.StoredProcedure,
+                    parameters
+                );
+
+            if (
+                dt == null
+                ||
+                dt.Rows.Count == 0
+            )
+            {
+                return null;
+            }
+
+            DataRow row =
+                dt.Rows[0];
+
+            return new BundlingMTCInfoBLL
+            {
+                SteelGrade =
+                    dt.Columns.Contains("SteelGrade")
+                        ? Convert.ToString(
+                            row["SteelGrade"]
+                        ).Trim()
+                        : "",
+
+                Profile =
+                    dt.Columns.Contains("Profile")
+                        ? Convert.ToString(
+                            row["Profile"]
+                        ).Trim()
+                        : "",
+
+                ProductType =
+                    dt.Columns.Contains("ProductType")
+                        ? Convert.ToString(
+                            row["ProductType"]
+                        ).Trim()
+                        : ""
+            };
+        }
+
     }
 }

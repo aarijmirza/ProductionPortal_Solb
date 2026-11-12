@@ -73,7 +73,12 @@ namespace BAL.Repositories
                     parameters
                 );
 
-            return ToList<RMChemicalAnalysisBLL>(table);
+            List<RMChemicalAnalysisBLL> rows =
+                ToList<RMChemicalAnalysisBLL>(table);
+
+            MergeExtendedChemistryValues(rows);
+
+            return rows;
         }
 
         public List<string> GetDuplicateHeatNos(
@@ -196,6 +201,16 @@ namespace BAL.Repositories
 
             DataRow row = table.Rows[0];
 
+            /*
+             * Existing sp_QC_SaveBilletBoard remains the authoritative
+             * Billet Board/base chemistry save. Extended chemistry columns
+             * are persisted immediately afterwards from the same XML.
+             */
+            SaveExtendedChemistry(
+                chemistryXml,
+                userName
+            );
+
             return new BilletBoardSaveResult
             {
                 SavedID = GetInt(row, "SavedID"),
@@ -203,6 +218,166 @@ namespace BAL.Repositories
                 Message = GetString(row, "Message")
             };
         }
+
+        private static void SaveExtendedChemistry(
+            string chemistryXml,
+            string userName)
+        {
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@Chemistry",
+                    SqlDbType.Xml
+                )
+                {
+                    Value =
+                        string.IsNullOrWhiteSpace(chemistryXml)
+                            ? (object)DBNull.Value
+                            : chemistryXml
+                },
+
+                NVarChar(
+                    "@UserName",
+                    userName,
+                    100
+                )
+            };
+
+            new DBHelper().ExecuteNonQueryReturn(
+                "sp_QC_SaveRMChemistryExtended",
+                parameters
+            );
+        }
+
+
+        private static void MergeExtendedChemistryValues(
+            IList<RMChemicalAnalysisBLL> rows)
+        {
+            if (rows == null || rows.Count == 0)
+            {
+                return;
+            }
+
+            XElement root =
+                new XElement(
+                    "Chemistry",
+                    rows.Select(
+                        x =>
+                            new XElement(
+                                "Row",
+                                new XAttribute(
+                                    "ID",
+                                    x.ID
+                                ),
+                                new XAttribute(
+                                    "HeatNo",
+                                    x.HeatNo ?? string.Empty
+                                )
+                            )
+                    )
+                );
+
+            SqlParameter[] parameters =
+            {
+                new SqlParameter(
+                    "@Rows",
+                    SqlDbType.Xml
+                )
+                {
+                    Value =
+                        root.ToString(
+                            SaveOptions.DisableFormatting
+                        )
+                }
+            };
+
+            DataTable table =
+                new DBHelper().GetTableFromSP(
+                    "sp_QC_GetRMChemistryExtended",
+                    parameters
+                );
+
+            if (table == null || table.Rows.Count == 0)
+            {
+                return;
+            }
+
+            foreach (
+                RMChemicalAnalysisBLL row
+                in rows
+            )
+            {
+                DataRow match =
+                    table
+                        .AsEnumerable()
+                        .FirstOrDefault(
+                            x =>
+                                GetInt(x, "ID") == row.ID
+                        );
+
+                if (
+                    match == null &&
+                    !string.IsNullOrWhiteSpace(row.HeatNo)
+                )
+                {
+                    match =
+                        table
+                            .AsEnumerable()
+                            .FirstOrDefault(
+                                x =>
+                                    string.Equals(
+                                        Convert.ToString(
+                                            x["HeatNo"]
+                                        ).Trim(),
+                                        row.HeatNo.Trim(),
+                                        StringComparison.OrdinalIgnoreCase
+                                    )
+                            );
+                }
+
+                if (match == null)
+                {
+                    continue;
+                }
+
+                row.Cu = GetNullableDecimal(match, "Cu");
+                row.Ni = GetNullableDecimal(match, "Ni");
+                row.Cr = GetNullableDecimal(match, "Cr");
+                row.Mo = GetNullableDecimal(match, "Mo");
+                row.V = GetNullableDecimal(match, "V");
+                row.B = GetNullableDecimal(match, "B");
+            }
+        }
+
+
+        private static decimal? GetNullableDecimal(
+            DataRow row,
+            string columnName)
+        {
+            if (
+                row == null ||
+                !row.Table.Columns.Contains(columnName) ||
+                row[columnName] == DBNull.Value
+            )
+            {
+                return null;
+            }
+
+            decimal value;
+
+            return decimal.TryParse(
+                Convert.ToString(
+                    row[columnName],
+                    CultureInfo.InvariantCulture
+                ),
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out value
+            )
+                ? value
+                : (decimal?)null;
+        }
+
 
         public int Delete(int id, string userName)
         {
@@ -257,8 +432,14 @@ namespace BAL.Repositories
                                 new XAttribute("C", ToInvariant(row.C)),
                                 new XAttribute("Si", ToInvariant(row.Si)),
                                 new XAttribute("Mn", ToInvariant(row.Mn)),
-                                new XAttribute("S", ToInvariant(row.S)),
                                 new XAttribute("P", ToInvariant(row.P)),
+                                new XAttribute("S", ToInvariant(row.S)),
+                                new XAttribute("Cu", ToInvariant(row.Cu)),
+                                new XAttribute("Ni", ToInvariant(row.Ni)),
+                                new XAttribute("Cr", ToInvariant(row.Cr)),
+                                new XAttribute("Mo", ToInvariant(row.Mo)),
+                                new XAttribute("V", ToInvariant(row.V)),
+                                new XAttribute("B", ToInvariant(row.B)),
                                 new XAttribute("N", ToInvariant(row.N)),
                                 new XAttribute("Ceq", ToInvariant(row.Ceq)),
                                 new XAttribute(

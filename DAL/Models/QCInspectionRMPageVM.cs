@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL.Models
 {
@@ -11,17 +8,11 @@ namespace DAL.Models
     {
         public string SelectedRM { get; set; }
 
-        public List<QCBilletBoardingRowBLL>
-            BilletBoardingRows
-        { get; set; }
+        public List<QCBilletBoardingRowBLL> BilletBoardingRows { get; set; }
 
-        public List<QCMTCRowBLL>
-            MTCRows
-        { get; set; }
+        public List<QCMTCRowBLL> MTCRows { get; set; }
 
-        public QCInspectionRMDetailBLL
-            Detail
-        { get; set; }
+        public QCInspectionRMDetailBLL Detail { get; set; }
 
         public QCInspectionRMPageVM()
         {
@@ -40,15 +31,25 @@ namespace DAL.Models
     public class QCBilletBoardingRowBLL
     {
         public int ID { get; set; }
+
         public string Site { get; set; }
+
         public string BoardingNo { get; set; }
+
         public int SerialNo { get; set; }
+
         public string HeatNo { get; set; }
+
         public string SteelGrade { get; set; }
+
         public string BarSize { get; set; }
+
         public int BarsPerBundle { get; set; }
+
         public int ActualBundleCount { get; set; }
+
         public string YardInspection { get; set; }
+
         public string YardInspectionRemarks { get; set; }
     }
 
@@ -56,12 +57,19 @@ namespace DAL.Models
     public class QCMTCRowBLL
     {
         public int ID { get; set; }
+
         public string HeatNo { get; set; }
+
         public string SteelGrade { get; set; }
+
         public decimal BarSize { get; set; }
+
         public decimal YieldStress { get; set; }
+
         public decimal TensileStress { get; set; }
+
         public int NoOfBundles { get; set; }
+
         public decimal YSTSRatio { get; set; }
     }
 
@@ -69,17 +77,42 @@ namespace DAL.Models
     public class QCMTCDetailBLL
     {
         public string HeatNo { get; set; }
+
         public decimal YieldStrength { get; set; }
+
         public decimal TensileStrength { get; set; }
+
         public decimal TensileYieldRatio { get; set; }
+
         public decimal Elongation { get; set; }
+
         public decimal GaugeLength { get; set; }
+
+
         public decimal C { get; set; }
+
         public decimal Si { get; set; }
+
         public decimal Mn { get; set; }
+
         public decimal P { get; set; }
+
         public decimal S { get; set; }
+
+        public decimal Cu { get; set; }
+
+        public decimal Ni { get; set; }
+
+        public decimal Cr { get; set; }
+
+        public decimal Mo { get; set; }
+
+        public decimal V { get; set; }
+
+        public decimal B { get; set; }
+
         public decimal N { get; set; }
+
         public decimal Ceq { get; set; }
     }
 
@@ -87,58 +120,127 @@ namespace DAL.Models
     public class QCInspectionRMDetailBLL
     {
         public int ID { get; set; }
+
         public int BilletBoardingID { get; set; }
+
         public int MTCID { get; set; }
 
+
         public string Site { get; set; }
+
         public string ProductionShift { get; set; }
+
         public DateTime? ProductionDateValue { get; set; }
 
+
         public string HeatNo { get; set; }
+
         public string Specification { get; set; }
+
         public string SteelGrade { get; set; }
 
+
         public decimal? LengthValue { get; set; }
+
         public decimal? NominalWeightValue { get; set; }
+
         public decimal? CrossSectionAreaValue { get; set; }
 
+
         public bool BendTestObserved { get; set; }
+
         public decimal? BarSizeValue { get; set; }
+
         public decimal? WeightPerBundleValue { get; set; }
+
         public int? NoOfBarsPerBundleValue { get; set; }
+
         public int? NoOfBundlesValue { get; set; }
+
+
         public bool IsWireRodOrCoil { get; set; }
 
+        /*
+         * Dropdown values:
+         *
+         * Rebar
+         * Rebar In Coil
+         * Plain Bar
+         * Wire Rod (Coil)
+         */
+        public string ProductType { get; set; }
+
+
         public decimal? YieldStrengthValue { get; set; }
+
         public decimal? TensileStrengthValue { get; set; }
+
         public decimal? TensileYieldRatioValue { get; set; }
+
         public decimal? ElongationValue { get; set; }
+
         public decimal? GaugeLengthValue { get; set; }
 
+
+        /*
+         * Complete Chemical Analysis
+         *
+         * Sequence:
+         * C, Si, Mn, P, S,
+         * Cu, Ni, Cr, Mo, V, B, N, CE%
+         */
         public decimal? CValue { get; set; }
+
         public decimal? SiValue { get; set; }
+
         public decimal? MnValue { get; set; }
+
         public decimal? PValue { get; set; }
+
         public decimal? SValue { get; set; }
+
+        public decimal? CuValue { get; set; }
+
+        public decimal? NiValue { get; set; }
+
+        public decimal? CrValue { get; set; }
+
+        public decimal? MoValue { get; set; }
+
+        public decimal? VValue { get; set; }
+
+        public decimal? BValue { get; set; }
+
         public decimal? NValue { get; set; }
+
         public decimal? CeqValue { get; set; }
 
+
         public int StatusID { get; set; }
-        public string RollingMill { get; set; }
+
         public string CreatedBy { get; set; }
+
         public DateTime? CreatedDate { get; set; }
 
-        // Display-compatible aliases used by the current View.
+
+        /*
+         * ============================================================
+         * DISPLAY COMPATIBLE PROPERTIES
+         * ============================================================
+         */
+
         public string ProductionDate
         {
             get
             {
-                return ProductionDateValue.HasValue
-                    ? ProductionDateValue.Value.ToString(
-                        "dd-MM-yyyy"
-                    )
-                    : "";
+                return
+                    ProductionDateValue.HasValue
+                        ? ProductionDateValue.Value.ToString(
+                            "dd-MM-yyyy"
+                        )
+                        : "";
             }
+
             set
             {
                 DateTime parsed;
@@ -156,158 +258,519 @@ namespace DAL.Models
             }
         }
 
+
         public string DatabaseServer { get; set; }
+
 
         public string Length
         {
-            get { return Format(LengthValue); }
-            set { LengthValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    LengthValue
+                );
+            }
+
+            set
+            {
+                LengthValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string NominalWeight
         {
-            get { return Format(NominalWeightValue); }
-            set { NominalWeightValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    NominalWeightValue
+                );
+            }
+
+            set
+            {
+                NominalWeightValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string CrossSectionArea
         {
-            get { return Format(CrossSectionAreaValue); }
-            set { CrossSectionAreaValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    CrossSectionAreaValue
+                );
+            }
+
+            set
+            {
+                CrossSectionAreaValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string BarSize
         {
-            get { return Format(BarSizeValue); }
-            set { BarSizeValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    BarSizeValue
+                );
+            }
+
+            set
+            {
+                BarSizeValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string WeightPerBundle
         {
-            get { return Format(WeightPerBundleValue); }
-            set { WeightPerBundleValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    WeightPerBundleValue
+                );
+            }
+
+            set
+            {
+                WeightPerBundleValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string NoOfBarsPerBundle
         {
             get
             {
-                return NoOfBarsPerBundleValue.HasValue
-                    ? NoOfBarsPerBundleValue.Value.ToString()
-                    : "";
+                return
+                    NoOfBarsPerBundleValue.HasValue
+                        ? NoOfBarsPerBundleValue.Value.ToString()
+                        : "";
             }
+
             set
             {
                 int parsed;
 
                 NoOfBarsPerBundleValue =
-                    int.TryParse(value, out parsed)
+                    int.TryParse(
+                        value,
+                        out parsed
+                    )
                         ? (int?)parsed
                         : null;
             }
         }
+
 
         public string NoOfBundles
         {
             get
             {
-                return NoOfBundlesValue.HasValue
-                    ? NoOfBundlesValue.Value.ToString()
-                    : "";
+                return
+                    NoOfBundlesValue.HasValue
+                        ? NoOfBundlesValue.Value.ToString()
+                        : "";
             }
+
             set
             {
                 int parsed;
 
                 NoOfBundlesValue =
-                    int.TryParse(value, out parsed)
+                    int.TryParse(
+                        value,
+                        out parsed
+                    )
                         ? (int?)parsed
                         : null;
             }
         }
 
+
         public string YieldStrength
         {
-            get { return Format(YieldStrengthValue); }
-            set { YieldStrengthValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    YieldStrengthValue
+                );
+            }
+
+            set
+            {
+                YieldStrengthValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string TensileStrength
         {
-            get { return Format(TensileStrengthValue); }
-            set { TensileStrengthValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    TensileStrengthValue
+                );
+            }
+
+            set
+            {
+                TensileStrengthValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string TensileYieldRatio
         {
-            get { return Format(TensileYieldRatioValue); }
-            set { TensileYieldRatioValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    TensileYieldRatioValue
+                );
+            }
+
+            set
+            {
+                TensileYieldRatioValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string Elongation
         {
-            get { return Format(ElongationValue); }
-            set { ElongationValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    ElongationValue
+                );
+            }
+
+            set
+            {
+                ElongationValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string GaugeLength
         {
-            get { return Format(GaugeLengthValue); }
-            set { GaugeLengthValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    GaugeLengthValue
+                );
+            }
+
+            set
+            {
+                GaugeLengthValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
+
+        /*
+         * ============================================================
+         * CHEMICAL DISPLAY PROPERTIES
+         * ============================================================
+         */
 
         public string C
         {
-            get { return Format(CValue); }
-            set { CValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    CValue
+                );
+            }
+
+            set
+            {
+                CValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string Si
         {
-            get { return Format(SiValue); }
-            set { SiValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    SiValue
+                );
+            }
+
+            set
+            {
+                SiValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string Mn
         {
-            get { return Format(MnValue); }
-            set { MnValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    MnValue
+                );
+            }
+
+            set
+            {
+                MnValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string P
         {
-            get { return Format(PValue); }
-            set { PValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    PValue
+                );
+            }
+
+            set
+            {
+                PValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string S
         {
-            get { return Format(SValue); }
-            set { SValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    SValue
+                );
+            }
+
+            set
+            {
+                SValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
+
+        public string Cu
+        {
+            get
+            {
+                return Format(
+                    CuValue
+                );
+            }
+
+            set
+            {
+                CuValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
+        }
+
+
+        public string Ni
+        {
+            get
+            {
+                return Format(
+                    NiValue
+                );
+            }
+
+            set
+            {
+                NiValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
+        }
+
+
+        public string Cr
+        {
+            get
+            {
+                return Format(
+                    CrValue
+                );
+            }
+
+            set
+            {
+                CrValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
+        }
+
+
+        public string Mo
+        {
+            get
+            {
+                return Format(
+                    MoValue
+                );
+            }
+
+            set
+            {
+                MoValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
+        }
+
+
+        public string V
+        {
+            get
+            {
+                return Format(
+                    VValue
+                );
+            }
+
+            set
+            {
+                VValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
+        }
+
+
+        public string B
+        {
+            get
+            {
+                return Format(
+                    BValue
+                );
+            }
+
+            set
+            {
+                BValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
+        }
+
 
         public string N
         {
-            get { return Format(NValue); }
-            set { NValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    NValue
+                );
+            }
+
+            set
+            {
+                NValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
+
 
         public string Ceq
         {
-            get { return Format(CeqValue); }
-            set { CeqValue = ParseDecimal(value); }
+            get
+            {
+                return Format(
+                    CeqValue
+                );
+            }
+
+            set
+            {
+                CeqValue =
+                    ParseDecimal(
+                        value
+                    );
+            }
         }
 
+
+        /*
+         * ============================================================
+         * HELPERS
+         * ============================================================
+         */
 
         private static string Format(
             decimal? value)
         {
-            return value.HasValue
-                ? value.Value.ToString(
-                    "0.###",
-                    CultureInfo.InvariantCulture
-                )
-                : "";
+            return
+                value.HasValue
+                    ? value.Value.ToString(
+                        "0.###",
+                        CultureInfo.InvariantCulture
+                    )
+                    : "";
         }
 
 
@@ -316,14 +779,30 @@ namespace DAL.Models
         {
             decimal parsed;
 
-            return decimal.TryParse(
-                value,
-                NumberStyles.Any,
-                CultureInfo.InvariantCulture,
-                out parsed
-            )
-                ? (decimal?)parsed
-                : null;
+            return
+                decimal.TryParse(
+                    value,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out parsed
+                )
+                    ? (decimal?)parsed
+                    : null;
         }
     }
+
+
+    /*
+     * Used by MTC Generate flow when fetching
+     * BundlingSection SteelGrade + Profile.
+     */
+    public class BundlingMTCInfoBLL
+    {
+        public string SteelGrade { get; set; }
+
+        public string Profile { get; set; }
+
+        public string ProductType { get; set; }
+    }
+
 }

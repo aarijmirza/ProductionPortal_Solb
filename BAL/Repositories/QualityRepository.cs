@@ -173,23 +173,53 @@ namespace BAL.Repositories
                 throw;
             }
         }
-
-        public List<BilletBoardBLL> GetAllBoarding()
+        public List<BilletBoardBLL> GetAllBoarding(DateTime? fromDate, DateTime? toDate)
         {
             try
             {
                 var lst = new List<BilletBoardBLL>();
-                SqlParameter[] p = new SqlParameter[0];
+
+                SqlParameter[] p =
+                {
+            new SqlParameter("@FromDate", SqlDbType.Date)
+            {
+                Value = fromDate.HasValue ? (object)fromDate.Value.Date : DBNull.Value
+            },
+            new SqlParameter("@ToDate", SqlDbType.Date)
+            {
+                Value = toDate.HasValue ? (object)toDate.Value.Date : DBNull.Value
+            }
+        };
+
                 _dt = new DBHelper().GetTableFromSP("sp_GetAllBilletBoarding", p);
+
                 if (_dt != null && _dt.Rows.Count > 0)
                     lst = JArray.Parse(JsonConvert.SerializeObject(_dt)).ToObject<List<BilletBoardBLL>>();
+
                 return lst;
             }
             catch
             {
-                return null;
+                return new List<BilletBoardBLL>();
             }
         }
+
+        //public List<BilletBoardBLL> GetAllBoarding()
+        //{
+        //    try
+        //    {
+        //        var lst = new List<BilletBoardBLL>();
+        //        SqlParameter[] p = new SqlParameter[0];
+        //        _dt = new DBHelper().GetTableFromSP("sp_GetAllBilletBoarding", p);
+        //        if (_dt != null && _dt.Rows.Count > 0)
+        //            lst = JArray.Parse(JsonConvert.SerializeObject(_dt)).ToObject<List<BilletBoardBLL>>();
+        //        return lst;
+        //    }
+        //    catch
+        //    {
+        //        return null;
+        //    }
+        //}
 
         public List<BilletBoardBLL> GetAllBoarding_RMCharging()
         {
@@ -1130,18 +1160,29 @@ namespace BAL.Repositories
             if (dt == null || dt.Rows.Count == 0) return null;
 
             DataRow row = dt.Rows[0];
+
             return new RMChemicalAnalysisBLL
             {
                 ID = row["ID"] == DBNull.Value ? 0 : Convert.ToInt32(row["ID"]),
                 HeatNo = Convert.ToString(row["HeatNo"]).Trim(),
-                NoOfBillets = row["NoOfBillets"] == DBNull.Value ? 0 : Convert.ToInt32(row["NoOfBillets"]),
+                NoOfBillets = row["NoOfBillets"] == DBNull.Value
+                    ? 0
+                    : Convert.ToInt32(row["NoOfBillets"]),
+
                 C = GetNullableDecimal(row, "C"),
                 Si = GetNullableDecimal(row, "Si"),
                 Mn = GetNullableDecimal(row, "Mn"),
-                S = GetNullableDecimal(row, "S"),
                 P = GetNullableDecimal(row, "P"),
+                S = GetNullableDecimal(row, "S"),
+                Cu = GetNullableDecimal(row, "Cu"),
+                Ni = GetNullableDecimal(row, "Ni"),
+                Cr = GetNullableDecimal(row, "Cr"),
+                Mo = GetNullableDecimal(row, "Mo"),
+                V = GetNullableDecimal(row, "V"),
+                B = GetNullableDecimal(row, "B"),
                 N = GetNullableDecimal(row, "N"),
                 Ceq = GetNullableDecimal(row, "Ceq"),
+
                 HeatStatus = GetInt(row, "HeatStatus")
             };
         }

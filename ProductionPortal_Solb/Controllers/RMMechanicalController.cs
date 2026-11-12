@@ -158,6 +158,22 @@ namespace ProductionPortal_Solb.Controllers
                     NormalizeRM(model.Site);
 
                 /*
+                 * Product Type is applicable only when Wire Rod / Coil
+                 * checkbox is checked.
+                 */
+                if (!model.IsWireRodOrCoil)
+                {
+                    model.ProductType = null;
+                }
+                else
+                {
+                    model.ProductType =
+                        NormalizeProductType(
+                            model.ProductType
+                        );
+                }
+
+                /*
                  * When an MTC row is selected, its ID is the saved
                  * QCInspectionRM identity and must be updated, not inserted.
                  */
@@ -432,7 +448,7 @@ namespace ProductionPortal_Solb.Controllers
                  *   -> Product + Mechanical
                  *
                  * RMChemicalAnalysis
-                 *   -> C, Si, Mn, P, S, N, Ceq
+                 *   -> C, Si, Mn, P, S, Cu, Ni, Cr, Mo, V, B, N, Ceq
                  */
                 var data =
                     repo.GetMTCDetails(
@@ -544,6 +560,98 @@ namespace ProductionPortal_Solb.Controllers
                 "QCInspectionRMadd"
             );
         }
+
+
+        // Replace NormalizeProductType() with this exact version.
+
+        private static string NormalizeProductType(
+            string productType)
+        {
+            string value =
+                (productType ?? string.Empty)
+                    .Trim();
+
+            if (
+                value.Equals(
+                    "Rebar Coil",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                value.Equals(
+                    "Rebar In Coil",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                value.Equals(
+                    "RIC",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                return "Rebar Coil";
+            }
+
+            if (
+                value.Equals(
+                    "Plain Rod",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                value.Equals(
+                    "Plain Bar",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                value.Equals(
+                    "PB",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                return "Plain Rod";
+            }
+
+            if (
+                value.Equals(
+                    "Wire Rod",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                value.Equals(
+                    "Wire Rod (Coil)",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                value.Equals(
+                    "WR",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                return "Wire Rod";
+            }
+
+            if (
+                value.Equals(
+                    "Rebar",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                ||
+                value.Equals(
+                    "RB",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                return "Rebar";
+            }
+
+            return
+                string.IsNullOrWhiteSpace(value)
+                    ? null
+                    : value;
+        }
+
 
 
         private static string NormalizeRM(

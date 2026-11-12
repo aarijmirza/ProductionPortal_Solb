@@ -90,6 +90,7 @@
     <Compile Include="Models\BilletDischargingBLL.cs" />
     <Compile Include="Models\BilletGrades.cs" />
     <Compile Include="Models\BilletYardBLL.cs" />
+    <Compile Include="Models\BundlingMTCInfoBLL.cs" />
     <Compile Include="Models\BundlingSectionBLL.cs" />
     <Compile Include="Models\CCMDailyProductionReportBLL.cs" />
     <Compile Include="Models\CCMYeildBLL.cs" />
@@ -106,6 +107,8 @@
     <Compile Include="Models\ExecutiveOperationsDashboardVM.cs" />
     <Compile Include="Models\FailureAnalysisActionBLL.cs" />
     <Compile Include="Models\FailureAnalysisBLL.cs" />
+    <Compile Include="Models\FinishedProductShiftSummaryRowBLL.cs" />
+    <Compile Include="Models\FurnaceChargingDischargingSummaryRowBLL.cs" />
     <Compile Include="Models\HeatChemistryBLL.cs" />
     <Compile Include="Models\LaddleFurnaceBLL.cs" />
     <Compile Include="Models\PlantConsumptionBLL.cs" />
@@ -123,6 +126,7 @@
     <Compile Include="Models\RMChemicalAnalysisBLL.cs" />
     <Compile Include="Models\RMHourlyDischargeBLL.cs" />
     <Compile Include="Models\RMMechanicalTestBLL.cs" />
+    <Compile Include="Models\RMMTCPageVM.cs" />
     <Compile Include="Models\RMQCInspectionBLL.cs" />
     <Compile Include="Models\RMShiftDetailsBLL.cs" />
     <Compile Include="Models\RollingMillDailyTargetBLL.cs" />

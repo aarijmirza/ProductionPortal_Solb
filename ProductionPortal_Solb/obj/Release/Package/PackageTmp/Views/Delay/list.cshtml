@@ -154,6 +154,66 @@
                             </div>
                         </div>
                     </form>
+                    @using (Html.BeginForm(
+                        "UpdateMessage",
+                        "RollingMill",
+                        FormMethod.Post,
+                        new
+                        {
+                            id = "shiftUpdateForm",
+                            @class = "mt-3"
+                        }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               id="updateShiftDate"
+                               name="Date"
+                               value="@ViewBag.SelectedDate" />
+
+                        <input type="hidden"
+                               id="updateShiftName"
+                               name="Shift"
+                               value="@ViewBag.Shift" />
+
+                        <div class="row">
+
+                            <div class="col-md-9">
+                                <div class="form-group mb-0">
+
+                                    <label>
+                                        Message for Upcoming Shift
+                                    </label>
+
+                                    <textarea rows="3"
+                                              id="MessageUpcomingShift"
+                                              name="MessageUpcomingShift"
+                                              class="form-control"
+                                              placeholder="Enter message for upcoming shift...">@Convert.ToString(ViewBag.MessageUpcomingShift)</textarea>
+
+                                    <small class="text-muted">
+                                        Message will be updated for the selected Date and Shift above.
+                                    </small>
+
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 d-flex align-items-end">
+
+                                <div class="form-group mb-0 w-100">
+
+                                    <button type="submit"
+                                            class="btn btn-primary btn-block">
+                                        <i class="fa fa-save"></i>
+                                        Update Message
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -305,6 +365,108 @@
 
             return true;
         });
+
+        // ==============================
+        // UPCOMING SHIFT MESSAGE UPDATE
+        // Selected Date + Shift will be posted to Shift/Update
+        // ==============================
+        $('#shiftUpdateForm').on('submit', function (e) {
+
+            var selectedDate =
+                $('#filterDate').val() || '';
+
+            var selectedShift =
+                $('#shiftFilter').val() || '';
+
+            if (!selectedDate) {
+                e.preventDefault();
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Date Required',
+                    text: 'Please select date before updating the shift message.'
+                });
+
+                return false;
+            }
+
+            if (!selectedShift) {
+                e.preventDefault();
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Shift Required',
+                    text: 'Please select shift before updating the shift message.'
+                });
+
+                return false;
+            }
+
+            $('#updateShiftDate').val(selectedDate);
+            $('#updateShiftName').val(selectedShift);
+
+            return true;
+        });
+
+
+        // Keep update keys synchronized with filter selections
+        // and load saved message for selected Date + Shift
+        $('#filterDate, #shiftFilter').on('change', function () {
+
+            $('#updateShiftDate')
+                .val(
+                    $('#filterDate').val() || ''
+                );
+
+            $('#updateShiftName')
+                .val(
+                    $('#shiftFilter').val() || ''
+                );
+
+            loadUpcomingShiftMessage();
+        });
+
+
+        function loadUpcomingShiftMessage() {
+
+            var selectedDate =
+                $('#filterDate').val() || '';
+
+            var selectedShift =
+                $('#shiftFilter').val() || '';
+
+            if (!selectedDate || !selectedShift) {
+                $('#MessageUpcomingShift').val('');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetShiftMessage", "RollingMill")',
+                type: 'GET',
+                data: {
+                    date: selectedDate,
+                    shift: selectedShift
+                },
+                success: function (response) {
+
+                    if (response && response.success) {
+                        $('#MessageUpcomingShift')
+                            .val(response.message || '');
+                    }
+                    else {
+                        $('#MessageUpcomingShift').val('');
+                    }
+                },
+                error: function () {
+                    $('#MessageUpcomingShift').val('');
+                }
+            });
+        }
+
+
+        // Load saved message on page load as well
+        loadUpcomingShiftMessage();
+
 
         // ==============================
         // EXPORT PDF - SINGLE DATE

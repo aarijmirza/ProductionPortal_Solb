@@ -18,6 +18,8 @@ namespace DAL.Models
 
         public string Shift { get; set; }
 
+        public string Supplier { get; set; }
+
         public string Grade { get; set; }
 
         public decimal? NoofBaskets { get; set; }

@@ -8,17 +8,226 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var monthlyData =
-    Model != null && Model.MonthlyProductionData != null
-        ? Model.MonthlyProductionData
+        Model != null && Model.MonthlyProductionData != null
+            ? Model.MonthlyProductionData
+            : new List<DAL.Models.BilletDischargingBLL>();
+
+    // Production Summary / Details sequence:
+    // 1) Date ascending
+    // 2) Discharging Sequence ascending within each date
+    // Records without a valid date are kept at the end.
+    var data = Model != null && Model.DischargedHeats != null
+        ? Model.DischargedHeats
+            .OrderBy(x =>
+                x.Date == DateTime.MinValue
+                    ? DateTime.MaxValue
+                    : x.Date.Date)
+            .ThenBy(x => x.DischargingSequence)
+            .ThenBy(x => x.HeatNo)
+            .ToList()
         : new List<DAL.Models.BilletDischargingBLL>();
 
-    var data = Model != null && Model.DischargedHeats != null
-? Model.DischargedHeats
-: new List<DAL.Models.BilletDischargingBLL>();
+    // =========================================================
+    // DOWNTIME OPERATIONAL DAY RULE
+    // PlantDelay.Date already represents the operational/report date.
+    // Do not change that date in the View. StartTime is used only to
+    // order rows from 07:00 through 06:59.
+    // =========================================================
 
-    var delays = Model != null && Model.Delays != null
+    var rawDelays = Model != null && Model.Delays != null
         ? Model.Delays
         : new List<DAL.Models.PlantDelayBLL>();
+
+    var rawMonthlyDelays = Model != null && Model.MonthlyDelayData != null
+        ? Model.MonthlyDelayData
+        : new List<DAL.Models.PlantDelayBLL>();
+
+    TimeSpan downtimeDayStart = new TimeSpan(7, 0, 0);
+
+    // StartTime can be string, TimeSpan or DateTime depending on DAL mapping.
+    // Convert.ToString keeps this view safe for all three cases.
+    Func<object, TimeSpan?> ParseDelayTime = value =>
+    {
+        if (value == null || value == DBNull.Value)
+        {
+            return null;
+        }
+
+        string text = Convert.ToString(value).Trim();
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        TimeSpan parsedTime;
+        if (TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out parsedTime))
+        {
+            return parsedTime;
+        }
+
+        DateTime parsedDateTime;
+        if (DateTime.TryParse(
+            text,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AllowWhiteSpaces,
+            out parsedDateTime))
+        {
+            return parsedDateTime.TimeOfDay;
+        }
+
+        if (DateTime.TryParse(text, out parsedDateTime))
+        {
+            return parsedDateTime.TimeOfDay;
+        }
+
+        return null;
+    };
+
+    // Use the stored operational/report date exactly as returned.
+    Func<DAL.Models.PlantDelayBLL, DateTime?> GetDowntimeOperationalDate = delay =>
+    {
+        if (delay == null || !delay.Date.HasValue)
+        {
+            return null;
+        }
+
+        return delay.Date.Value.Date;
+    };
+
+    // Sort each operational day from 07:00 through next-day 06:59.
+    Func<DAL.Models.PlantDelayBLL, int> GetDowntimeOperationalTimeOrder = delay =>
+    {
+        if (delay == null)
+        {
+            return int.MaxValue;
+        }
+
+        TimeSpan? startTime = ParseDelayTime(delay.StartTime);
+
+        if (!startTime.HasValue)
+        {
+            return int.MaxValue;
+        }
+
+        int minutes = (int)startTime.Value.TotalMinutes;
+        int dayStartMinutes = 7 * 60;
+
+        return minutes >= dayStartMinutes
+            ? minutes - dayStartMinutes
+            : (24 * 60 - dayStartMinutes) + minutes;
+    };
+
+    Func<object, DateTime?> ParseDashboardDate = value =>
+    {
+        string text = Convert.ToString(value ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        DateTime parsed;
+
+        if (DateTime.TryParseExact(
+            text,
+            new[] { "yyyy-MM-dd", "dd/MM/yyyy", "dd-MM-yyyy", "MM/dd/yyyy" },
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out parsed))
+        {
+            return parsed.Date;
+        }
+
+        if (DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsed))
+        {
+            return parsed.Date;
+        }
+
+        if (DateTime.TryParse(text, out parsed))
+        {
+            return parsed.Date;
+        }
+
+        return null;
+    };
+
+    // Resolve selected downtime date range.
+    // ViewBag.FromDate is used when multiple dates are selected.
+    // Fallbacks preserve current single-date behavior.
+    DateTime? downtimeToDateNullable = ParseDashboardDate((object)ViewBag.ToDate);
+
+    if (!downtimeToDateNullable.HasValue)
+    {
+        downtimeToDateNullable = ParseDashboardDate((object)ViewBag.ReportDate);
+    }
+
+    if (!downtimeToDateNullable.HasValue)
+    {
+        var availableOperationalDates = rawDelays
+            .Select(x => GetDowntimeOperationalDate(x))
+            .Where(x => x.HasValue)
+            .Select(x => x.Value.Date)
+            .ToList();
+
+        if (availableOperationalDates.Any())
+        {
+            downtimeToDateNullable = availableOperationalDates.Max();
+        }
+    }
+
+    DateTime downtimeToDate = downtimeToDateNullable ?? DateTime.Today;
+
+    DateTime? downtimeFromDateNullable = ParseDashboardDate((object)ViewBag.FromDate);
+    DateTime downtimeFromDate = downtimeFromDateNullable ?? downtimeToDate;
+
+    if (downtimeFromDate > downtimeToDate)
+    {
+        DateTime tempDate = downtimeFromDate;
+        downtimeFromDate = downtimeToDate;
+        downtimeToDate = tempDate;
+    }
+
+    // Main report downtime: filter strictly by PlantDelay.Date.
+    var delays = rawDelays
+        .Where(x =>
+        {
+            DateTime? operationalDate = GetDowntimeOperationalDate(x);
+
+            // Preserve records whose date/time cannot be interpreted.
+            if (!operationalDate.HasValue)
+            {
+                return true;
+            }
+
+            return operationalDate.Value.Date >= downtimeFromDate.Date
+                && operationalDate.Value.Date <= downtimeToDate.Date;
+        })
+        .OrderBy(x => GetDowntimeOperationalDate(x) ?? DateTime.MaxValue)
+        .ThenBy(x => GetDowntimeOperationalTimeOrder(x))
+        .ThenBy(x => Convert.ToString(x.EndTime))
+        .ToList();
+
+    // Monthly accumulated downtime also filters by PlantDelay.Date.
+    DateTime monthlyDowntimeFromDate =
+        new DateTime(downtimeToDate.Year, downtimeToDate.Month, 1);
+
+    var monthlyDelays = rawMonthlyDelays
+        .Where(x =>
+        {
+            DateTime? operationalDate = GetDowntimeOperationalDate(x);
+
+            if (!operationalDate.HasValue)
+            {
+                return true;
+            }
+
+            return operationalDate.Value.Date >= monthlyDowntimeFromDate.Date
+                && operationalDate.Value.Date <= downtimeToDate.Date;
+        })
+        .OrderBy(x => GetDowntimeOperationalDate(x) ?? DateTime.MaxValue)
+        .ThenBy(x => GetDowntimeOperationalTimeOrder(x))
+        .ThenBy(x => Convert.ToString(x.EndTime))
+        .ToList();
 
     decimal totalDischarge = data.Sum(x => x.TotalBillet ?? 0);
     decimal totalRolled = data.Sum(x => x.TotalBillet ?? 0);
@@ -49,23 +258,109 @@
             .Distinct())
         : "-";
 
+    var selectedSizes = data
+        .Where(x => !string.IsNullOrWhiteSpace(x.Size))
+        .Select(x => x.Size.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    int selectedSizeCount = selectedSizes.Count;
+
+    var selectedProfiles = data
+        .Where(x => !string.IsNullOrWhiteSpace(x.Profile))
+        .Select(x => x.Profile.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    string profiles = data.Any()
+        ? string.Join(", ", data
+            .Where(x => !string.IsNullOrWhiteSpace(x.Profile))
+            .Select(x => x.Profile.Trim())
+            .Distinct())
+        : "-";
+
+    string sizeProfiles = data.Any()
+        ? string.Join(", ", data
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(x.Size) ||
+                !string.IsNullOrWhiteSpace(x.Profile))
+            .Select(x =>
+            {
+                string size = string.IsNullOrWhiteSpace(x.Size)
+                    ? string.Empty
+                    : x.Size.Trim();
+
+                string profile = string.IsNullOrWhiteSpace(x.Profile)
+                    ? string.Empty
+                    : x.Profile.Trim();
+
+                if (!string.IsNullOrWhiteSpace(size) &&
+                    !string.IsNullOrWhiteSpace(profile))
+                {
+                    return size + " - " + profile;
+                }
+
+                return !string.IsNullOrWhiteSpace(size)
+                    ? size
+                    : profile;
+            })
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct())
+        : "-";
+
     var heatLabels = data.Select(x => x.HeatNo ?? "").ToList();
     var billetRolledData = data.Select(x => x.TotalBillet ?? 0).ToList();
     var billetWeightData = data.Select(x => x.TotalWeight ?? 0).ToList();
     var finishedWeightData = data.Select(x => x.TheoriticalWeight ?? 0).ToList();
     var bundleData = data.Select(x => x.TotalBundleProduced ?? 0).ToList();
 
-    var downtimeAgency = delays
-        .GroupBy(x => string.IsNullOrWhiteSpace(x.AgencyName) ? "Unknown" : x.AgencyName.Trim())
+    // Daily production chart data
+    var dailyProductionByDay = monthlyData
+        .Where(x => x.Date != DateTime.MinValue)
+        .GroupBy(x => x.Date.Date)
+        .OrderBy(g => g.Key)
         .Select(g => new
         {
-            Agency = g.Key,
-            Minutes = g.Sum(x => x.TotalDuration ?? 0)
+            Date = g.Key.ToString("dd-MMM-yyyy"),
+
+            DailyProduction = Math.Round(
+                g.Sum(x => x.TheoriticalWeight ?? 0),
+                2
+            )
         })
         .ToList();
 
-    var downtimeAgencyLabels = downtimeAgency.Select(x => x.Agency).ToList();
-    var downtimeAgencyData = downtimeAgency.Select(x => x.Minutes).ToList();
+    // Day-wise production: har date ki apni production, running total nahi.
+    var productivityDateLabels = dailyProductionByDay
+        .Select(x => x.Date)
+        .ToList();
+
+    var productivityDayData = dailyProductionByDay
+        .Select(x => x.DailyProduction)
+        .ToList();
+
+    // Monthly size-wise finished production
+    var monthlySizeProduction = monthlyData
+        .Where(x => !string.IsNullOrWhiteSpace(x.Size))
+        .GroupBy(x => x.Size.Trim())
+        .OrderBy(x => x.Key)
+        .Select(g => new
+        {
+            Size = g.Key,
+            Production = Math.Round(
+                g.Sum(x => x.TheoriticalWeight ?? 0),
+                2
+            )
+        })
+        .ToList();
+
+    var monthlySizeLabels = monthlySizeProduction
+        .Select(x => x.Size)
+        .ToList();
+
+    var monthlySizeProductionData = monthlySizeProduction
+        .Select(x => x.Production)
+        .ToList();
 
     var gregorian = new CultureInfo("en-US");
     gregorian.DateTimeFormat.Calendar = new GregorianCalendar();
@@ -76,13 +371,47 @@
     // Agar Finished Product = TotalWeight chahiye to above line ko replace karo:
     // decimal totalFinishedProd = totalWeight;
 
-    // Plan Vs Actual chart values
-    decimal productionPlan = ViewBag.ProductionPlan != null
+    // Target Vs Actual chart values
+    decimal productionTarget = ViewBag.ProductionPlan != null
         ? Convert.ToDecimal(ViewBag.ProductionPlan)
-        : 5800;
+        : 30000;
 
-    decimal productionActual = totalFinishedProd;
-    decimal productionDifference = Math.Abs(productionActual - productionPlan);
+    // Monthly accumulated actual:
+    // selected To Date se pehle jitni production hui hai uska total.
+    DateTime selectedToDateForAccumulation;
+
+    bool hasSelectedToDate = DateTime.TryParseExact(
+        Convert.ToString(ViewBag.ToDate),
+        "yyyy-MM-dd",
+        CultureInfo.InvariantCulture,
+        DateTimeStyles.None,
+        out selectedToDateForAccumulation
+    );
+
+    if (!hasSelectedToDate)
+    {
+        selectedToDateForAccumulation = DateTime.Today;
+    }
+
+    decimal productionActual = monthlyData
+        .Where(x =>
+            x.Date != DateTime.MinValue &&
+            x.Date.Date < selectedToDateForAccumulation.Date
+        )
+        .Sum(x => x.TheoriticalWeight ?? 0);
+
+    // Monthly accumulated Finished Product up to and including
+    // the selected report date.
+    decimal monthlyAccumulatedFinishedProduct = monthlyData
+        .Where(x =>
+            x.Date != DateTime.MinValue &&
+            x.Date.Date <= selectedToDateForAccumulation.Date
+        )
+        .Sum(x => x.TheoriticalWeight ?? 0);
+
+    decimal productionDifference = Math.Abs(
+        productionTarget - productionActual
+    );
 
     string selectedShift = Convert.ToString(ViewBag.ReportShift ?? "").Trim();
 
@@ -109,35 +438,6 @@
         return 0;
     };
 
-    // ================= ACCUMULATED DAY-WISE PRODUCTION =================
-    // Har date ka finished product weight niklega, phir cumulative total banega.
-    // Is calculation mein hours aur downtime use nahi hote.
-    // ================= DAILY PRODUCTION BY DATE =================
-
-    var dailyProductionByDay = monthlyData
-        .Where(x => x.Date != DateTime.MinValue)
-        .GroupBy(x => x.Date.Date)
-        .OrderBy(g => g.Key)
-        .Select(g => new
-        {
-            Date = g.Key.ToString("dd-MMM-yyyy"),
-
-            DailyProduction = Math.Round(
-                g.Sum(x => x.TheoriticalWeight ?? 0),
-                2
-            )
-        })
-        .ToList();
-
-    var productivityDateLabels = dailyProductionByDay
-        .Select(x => x.Date)
-        .ToList();
-
-    var productivityDayData = dailyProductionByDay
-        .Select(x => x.DailyProduction)
-        .ToList();
-
-
     // Production list se shifts uthao
     var productionShifts = data
         .Where(x => !string.IsNullOrWhiteSpace(x.Shift))
@@ -157,6 +457,13 @@
         .Union(delayShifts, StringComparer.OrdinalIgnoreCase)
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToList();
+
+    //string sizes = data.Any()
+    //? string.Join(", ", data
+    //    .Where(x => !string.IsNullOrWhiteSpace(x.Size))
+    //    .Select(x => x.Size.Trim())
+    //    .Distinct())
+    //: "-";
 
     decimal totalHrsInShift = 0;
 
@@ -185,7 +492,11 @@
         totalHrsInShift = 8;
     }
 
-    decimal totalTimeMins = totalHrsInShift * 60;
+    // Controller complete selected period ke shift-detail records se
+    // total shift minutes calculate karta hai.
+    decimal totalTimeMins = ViewBag.TotalShiftMinutes != null
+        ? Convert.ToDecimal(ViewBag.TotalShiftMinutes)
+        : totalHrsInShift * 60;
 
     // Header / display ke liye report shift text
     string reportShift = allShifts.Any()
@@ -210,6 +521,365 @@
             )
         )
         .Sum(x => Convert.ToDecimal(x.TotalDuration ?? 0));
+
+    // ================= DOWNTIME AGENCY TARGET VS ACTUAL (%) =================
+
+    var rollingMillTarget =
+        Model != null && Model.RollingMillTarget != null
+            ? Model.RollingMillTarget
+            : new DAL.Models.RollingMillTargetsBLL();
+
+    decimal dailyProductionTarget =
+        ViewBag.DailyProductionTarget != null
+            ? Convert.ToDecimal(ViewBag.DailyProductionTarget)
+            : 0;
+
+    decimal dailyProductionActual = totalFinishedProd;
+
+    decimal dailyFuelConsumption =
+        ViewBag.TotalFuelConsumption != null
+            ? Convert.ToDecimal(ViewBag.TotalFuelConsumption)
+            : 0;
+
+    decimal fuelConsumptionActual =
+        totalFinishedProd > 0
+            ? dailyFuelConsumption / totalFinishedProd
+            : 0;
+
+    decimal fuelConsumptionTarget =
+        rollingMillTarget.FuelOilTarget;
+
+    // Favorable variance rules:
+    // Production: Actual - Target (above target is positive)
+    // Fuel: Target - Actual (lower consumption is positive)
+    decimal productionVariance =
+        dailyProductionActual - dailyProductionTarget;
+
+    decimal fuelConsumptionVariance =
+        fuelConsumptionTarget - fuelConsumptionActual;
+
+    decimal productionVariancePercentage =
+        dailyProductionTarget > 0
+            ? (productionVariance / dailyProductionTarget) * 100
+            : 0;
+
+    decimal fuelConsumptionVariancePercentage =
+        fuelConsumptionTarget > 0
+            ? (fuelConsumptionVariance / fuelConsumptionTarget) * 100
+            : 0;
+
+
+    decimal electricityConsumptionTarget = rollingMillTarget.ElectricityTarget;
+    decimal electricityConsumptionActual = ViewBag.ElectricityConsumptionActual != null
+        ? Convert.ToDecimal(ViewBag.ElectricityConsumptionActual)
+        : 0;
+
+    decimal waterConsumptionTarget = rollingMillTarget.WaterTarget;
+    decimal waterConsumptionActual = ViewBag.WaterConsumptionActual != null
+        ? Convert.ToDecimal(ViewBag.WaterConsumptionActual)
+        : 0;
+
+    Func<decimal, decimal, decimal> ConsumptionPerformance = (target, actual) =>
+        {
+            if (target <= 0 || actual <= 0) return 0;
+            decimal value = (target / actual) * 100;
+            if (value < 0) value = 0;
+            if (value > 100) value = 100;
+            return Math.Round(value, 2);
+        };
+
+    Func<string, string> NormalizeAgencyCode = agency =>
+    {
+        if (string.IsNullOrWhiteSpace(agency))
+            return string.Empty;
+
+        string value = agency
+            .Trim()
+            .Replace("/", "")
+            .Replace("\\", "")
+            .Replace(" ", "")
+            .Replace("-", "")
+            .Replace("_", "")
+            .ToUpperInvariant();
+
+        switch (value)
+        {
+            case "GP":
+            case "GUIDE":
+            case "GUIDEPASS":
+            case "GUIDEPASSCHANGE":
+                return "GP";
+
+            case "QA":
+            case "QUALITY":
+            case "QUALITYMAINTENANCE":
+                return "QA";
+
+            case "MD":
+            case "MAINTENANCEDOWNDAY":
+            case "DOWNDAY":
+                return "MD";
+
+            case "PRD":
+            case "PRODUCTION":
+                return "PRD";
+
+            case "RS":
+            case "ROLLSHOP":
+                return "RS";
+
+            case "EL":
+            case "ELECTRICAL":
+                return "EL";
+
+            case "ME":
+            case "MECHANICAL":
+                return "ME";
+
+            case "CR":
+            case "CRANE":
+                return "CR";
+
+            case "DP":
+            case "DISPATCH":
+                return "DP";
+
+            case "UT":
+            case "UTILITY":
+                return "UT";
+
+            case "SC":
+            case "SIZECHANGE":
+                return "SC";
+
+            case "PF":
+            case "POWERFAILURE":
+                return "PF";
+
+            case "NB":
+            case "NOBILLET":
+                return "NB";
+
+            case "AS":
+            case "ANNUALSHUTDOWN":
+                return "AS";
+
+            case "OTH":
+            case "OTHER":
+            case "OTHERS":
+                return string.Empty;
+
+            default:
+                return string.Empty;
+        }
+    };
+
+    // Sirf agency charts ke liye AgencyCode first priority hai.
+    Func<DAL.Models.PlantDelayBLL, string> GetChartAgencyCode = delay =>
+    {
+        if (delay == null)
+            return string.Empty;
+
+        string code = string.IsNullOrWhiteSpace(delay.AgencyCode)
+            ? NormalizeAgencyCode(delay.AgencyName)
+            : delay.AgencyCode.Trim().ToUpperInvariant();
+
+        if (code.Equals("OTH", StringComparison.OrdinalIgnoreCase) ||
+            code.Equals("OTHER", StringComparison.OrdinalIgnoreCase) ||
+            code.Equals("OTHERS", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        return code;
+    };
+
+    // Available operating time:
+    // Total shift minutes minus scheduled/planned delay minutes.
+    decimal availableOperatingMinutes =
+        totalTimeMins - plannedDowntime;
+
+    if (availableOperatingMinutes < 0)
+    {
+        availableOperatingMinutes = 0;
+    }
+
+    // Scheduled and Unscheduled delays agency-wise group hongi.
+    // Scheduled + Unscheduled delays are included agency-wise.
+    var actualDowntimeLookup = delays
+        .Where(x =>
+            !string.IsNullOrWhiteSpace(GetChartAgencyCode(x))
+        )
+        .GroupBy(x => GetChartAgencyCode(x))
+        .Select(g => new
+        {
+            Code = g.Key,
+            ActualMinutes = g.Sum(
+                x => Convert.ToDecimal(x.TotalDuration ?? 0)
+            )
+        })
+        .ToList();
+
+
+
+    // Table values are already target percentages.
+    var downtimeTargets = new[]
+    {
+        new { Code = "GP",  Name = "Guide / Pass Change", TargetPercentage = rollingMillTarget.GuidePassTarget },
+        new { Code = "QA",  Name = "Quality",             TargetPercentage = rollingMillTarget.QualityTarget },
+        new { Code = "MD",  Name = "Down Day",            TargetPercentage = rollingMillTarget.DownDayTarget },
+        new { Code = "PRD", Name = "Production",          TargetPercentage = rollingMillTarget.ProductionTarget },
+        new { Code = "RS",  Name = "Roll Shop",           TargetPercentage = rollingMillTarget.RollShopTarget },
+        new { Code = "EL",  Name = "Electrical",          TargetPercentage = rollingMillTarget.ElectricalTarget },
+        new { Code = "ME",  Name = "Mechanical",          TargetPercentage = rollingMillTarget.MechanicalTarget },
+        new { Code = "CR",  Name = "Crane",               TargetPercentage = rollingMillTarget.CraneTarget },
+        new { Code = "DP",  Name = "Dispatch",            TargetPercentage = rollingMillTarget.DispatchTarget },
+        new { Code = "UT",  Name = "Utility",             TargetPercentage = rollingMillTarget.UtilityTarget },
+        new { Code = "SC",  Name = "Size Change",         TargetPercentage = rollingMillTarget.SizeChangeTarget },
+        new { Code = "PF",  Name = "Power Failure",       TargetPercentage = rollingMillTarget.PowerFailureTarget },
+        new { Code = "NB",  Name = "No Billet",           TargetPercentage = rollingMillTarget.NoBilletTarget },
+        new { Code = "AS",  Name = "Annual Shutdown",     TargetPercentage = rollingMillTarget.AnnualShutdownTarget }
+    }.ToList();
+
+    // Filtered delays mein maujood har valid agency code show hoga.
+    // New/unconfigured code ka target zero rahega.
+    var availableDowntimeTargets = actualDowntimeLookup
+        .Select(x =>
+        {
+            var target = downtimeTargets.FirstOrDefault(t =>
+                string.Equals(
+                    t.Code,
+                    x.Code,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+
+            return new
+            {
+                Code = x.Code,
+                Name = x.Code,
+                TargetPercentage = target != null
+                    ? target.TargetPercentage
+                    : 0m
+            };
+        })
+        .OrderBy(x => x.Code)
+        .ToList();
+
+    var downtimeAgencyLabels = availableDowntimeTargets
+        .Select(x => x.Code)
+        .ToList();
+
+    var downtimeAgencyNames = availableDowntimeTargets
+        .Select(x => x.Code)
+        .ToList();
+
+    // Target directly percentage table se.
+    var downtimeAgencyTargetData = availableDowntimeTargets
+        .Select(x => Math.Round(x.TargetPercentage, 2))
+        .ToList();
+
+    // Actual percentage =
+    // Agency total delay minutes / total selected period minutes * 100.
+    // Both Scheduled and Unscheduled delays are included.
+    var downtimeAgencyActualData = availableDowntimeTargets
+        .Select(x =>
+        {
+            decimal actualMinutes = actualDowntimeLookup
+                .Where(a =>
+                    string.Equals(
+                        a.Code,
+                        x.Code,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                .Select(a => a.ActualMinutes)
+                .FirstOrDefault();
+
+            return totalTimeMins > 0
+                ? Math.Round(
+                    (actualMinutes / totalTimeMins) * 100,
+                    2
+                )
+                : 0;
+        })
+        .ToList();
+
+    var downtimeAgencyActualMinutes = availableDowntimeTargets
+        .Select(x =>
+            actualDowntimeLookup
+                .Where(a =>
+                    string.Equals(
+                        a.Code,
+                        x.Code,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                .Select(a => a.ActualMinutes)
+                .FirstOrDefault()
+        )
+        .ToList();
+
+    // Monthly accumulated delay chart only:
+    // selected To Date ke month ki 1st date se To Date tak accumulation.
+    decimal monthlyShiftMinutes = ViewBag.MonthlyShiftMinutes != null
+        ? Convert.ToDecimal(ViewBag.MonthlyShiftMinutes)
+        : totalTimeMins;
+
+    var monthlyDelayAgencyData = monthlyDelays
+        .Where(x =>
+            !string.IsNullOrWhiteSpace(GetChartAgencyCode(x))
+        )
+        .GroupBy(x => GetChartAgencyCode(x))
+        .Select(g => new
+        {
+            AgencyCode = g.Key,
+            TotalMinutes = g.Sum(
+                x => Convert.ToDecimal(
+                    x.TotalDuration ?? 0
+                )
+            )
+        })
+        .OrderByDescending(x => x.TotalMinutes)
+        .ToList();
+
+    decimal totalMonthlyDelayMinutes =
+        monthlyDelayAgencyData.Sum(x => x.TotalMinutes);
+
+    var monthlyDelayAgencyLabels = monthlyDelayAgencyData
+        .Select(x => x.AgencyCode)
+        .ToList();
+
+    var monthlyDelayAgencyTargetData = monthlyDelayAgencyData
+        .Select(x =>
+        {
+            var target = downtimeTargets.FirstOrDefault(t =>
+                string.Equals(
+                    t.Code,
+                    x.AgencyCode,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+
+            return target != null
+                ? Math.Round(target.TargetPercentage, 2)
+                : 0m;
+        })
+        .ToList();
+
+    // Correct accumulated percentage:
+    // Agency delay minutes / total selected period minutes * 100.
+    var monthlyDelayAgencyPercentages = monthlyDelayAgencyData
+        .Select(x =>
+            monthlyShiftMinutes > 0
+                ? Math.Round(
+                    (x.TotalMinutes /
+                     monthlyShiftMinutes) * 100,
+                    2
+                )
+                : 0
+        )
+        .ToList();
 
     // ActualRollingTime = TotalTime(mins) - TotalDelayDuration
     decimal actualRollingTime = totalTimeMins - Convert.ToDecimal(totalDelayDuration);
@@ -242,43 +912,185 @@
         ? (actualRollingTime / plannedRollingTime) * 100
         : 0;
 
+    // =========================================================
+    // TARGET VALUES FROM DATABASE
+    // Model.RollingMillTarget controller se database record receive karta hai.
+    // Multiple size target averaging controller/repository side par honi chahiye,
+    // aur final averaged object Model.RollingMillTarget mein pass hoga.
+    // =========================================================
+
+    var profileYieldTargets =
+        new List<decimal>();
+
+    foreach (string profile in selectedProfiles)
+    {
+        if (profile.Equals(
+                "WR",
+                StringComparison.OrdinalIgnoreCase) ||
+            profile.IndexOf(
+                "WIRE",
+                StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            profileYieldTargets.Add(
+                rollingMillTarget.YeildPercentageWRTarget
+            );
+        }
+        else if (profile.Equals(
+                    "PB",
+                    StringComparison.OrdinalIgnoreCase) ||
+                 profile.IndexOf(
+                    "PLAIN",
+                    StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            profileYieldTargets.Add(
+                rollingMillTarget.YeildPercentagePBTarget
+            );
+        }
+        else if (profile.Equals(
+                    "RIC",
+                    StringComparison.OrdinalIgnoreCase))
+        {
+            profileYieldTargets.Add(
+                rollingMillTarget.YeildPercentageRICTarget
+            );
+        }
+        else
+        {
+            profileYieldTargets.Add(
+                rollingMillTarget.YeildPercentageRBTarget
+            );
+        }
+    }
+
+    decimal yieldTarget =
+        profileYieldTargets.Any()
+            ? profileYieldTargets.Average()
+            : rollingMillTarget.YeildPercentageRBTarget;
+
+    decimal rrrTarget =
+        rollingMillTarget.RRRPercentageTarget;
+
+    // Favorable variance:
+    // Higher is better: Production, Yield, RRR => Actual - Target
+    // Lower is better: Fuel, Electricity, Water => Target - Actual
+    decimal electricityConsumptionVariance =
+        electricityConsumptionTarget - electricityConsumptionActual;
+
+    decimal waterConsumptionVariance =
+        waterConsumptionTarget - waterConsumptionActual;
+
+    decimal yieldVariance =
+        yieldValue - yieldTarget;
+
+    decimal rrrVariance =
+        rrrValue - rrrTarget;
+
+    decimal electricityConsumptionVariancePercentage =
+        electricityConsumptionTarget > 0
+            ? (electricityConsumptionVariance /
+               electricityConsumptionTarget) * 100
+            : 0;
+
+    decimal waterConsumptionVariancePercentage =
+        waterConsumptionTarget > 0
+            ? (waterConsumptionVariance /
+               waterConsumptionTarget) * 100
+            : 0;
+
+    decimal yieldVariancePercentage =
+        yieldTarget > 0
+            ? (yieldVariance / yieldTarget) * 100
+            : 0;
+
+    decimal rrrVariancePercentage =
+        rrrTarget > 0
+            ? (rrrVariance / rrrTarget) * 100
+            : 0;
+
+    decimal productivityTarget =
+        rollingMillTarget.TonperhourTarget;
+
+    decimal productivityVariance =
+        productivityTonsHr - productivityTarget;
+
+    decimal productivityVariancePercentage =
+        productivityTarget > 0
+            ? (productivityVariance / productivityTarget) * 100
+            : 0;
+
     // Bundles / Coils Produced
     decimal bundlesCoilsProduced = totalBundles;
 
+    string pdfFileTimestamp =
+        DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
-    System.Diagnostics.Debug.WriteLine("===== RM DASHBOARD DEBUG =====");
-    System.Diagnostics.Debug.WriteLine("Report Shift: " + reportShift);
-    System.Diagnostics.Debug.WriteLine("Total Hours In Shift: " + totalHrsInShift);
-    System.Diagnostics.Debug.WriteLine("Total Time Mins: " + totalTimeMins);
-    System.Diagnostics.Debug.WriteLine("Total Delay Duration: " + totalDelayDuration);
-    System.Diagnostics.Debug.WriteLine("Planned Downtime: " + plannedDowntime);
-    System.Diagnostics.Debug.WriteLine("Actual Rolling Time: " + actualRollingTime);
-    System.Diagnostics.Debug.WriteLine("Actual Rolling Hours: " + actualRollingHours);
-    System.Diagnostics.Debug.WriteLine("Total Finished Product: " + totalFinishedProd);
-    System.Diagnostics.Debug.WriteLine("Productivity Tons/Hr: " + productivityTonsHr);
-    System.Diagnostics.Debug.WriteLine("RRR: " + rrrValue);
 }
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 
 <style>
+    :root {
+        --solb-maroon: #a6173f;
+        --solb-maroon-dark: #7f1230;
+        --solb-grey-900: #1f2937;
+        --solb-grey-700: #4b5563;
+        --solb-grey-500: #6b7280;
+        --solb-grey-200: #e5e7eb;
+        --solb-grey-100: #f3f4f6;
+        --solb-surface: #ffffff;
+        --solb-bg: #eef2f6;
+    }
+
     body {
-        background: #eef2f6;
+        background: var(--solb-bg);
+        color: var(--solb-grey-900);
+    }
+
+    .xp-contentbar {
+        max-width: 1600px;
+        margin: 0 auto;
     }
 
     .dashboard-header {
-        background: #a6173f;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient( 135deg, var(--solb-maroon-dark) 0%, var(--solb-maroon) 58%, #b91c4b 100% );
         color: #fff;
-        border-radius: 14px;
-        padding: 22px 25px;
-        margin-bottom: 20px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        border-radius: 18px;
+        padding: 24px 28px;
+        margin-bottom: 22px;
+        box-shadow: 0 12px 28px rgba(127,18,48,0.22);
+        border: 1px solid rgba(255,255,255,0.14);
     }
+
+        .dashboard-header::after {
+            content: "";
+            position: absolute;
+            right: -70px;
+            top: -90px;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            pointer-events: none;
+        }
 
         .dashboard-header h3 {
             margin: 0;
-            font-weight: 700;
+            font-weight: 800;
             color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        .dashboard-header .btn-light {
+            border: 0;
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 8px 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
         }
 
         .dashboard-header small {
@@ -286,39 +1098,66 @@
         }
 
     .kpi-card {
-        border: none;
-        border-radius: 14px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(148,163,184,0.18);
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(15,23,42,0.07);
         min-height: 125px;
-        margin-bottom: 15px;
-        background: #fff;
+        margin-bottom: 18px;
+        background: var(--solb-surface);
+        transition: transform .18s ease, box-shadow .18s ease;
     }
 
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(15,23,42,0.10);
+        }
+
+        .kpi-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--solb-maroon);
+            opacity: .9;
+        }
+
+        .kpi-card .card-body {
+            padding: 18px 18px 16px 20px;
+        }
+
     .kpi-title {
-        font-size: 12px;
-        color: #6c757d;
-        font-weight: 700;
+        font-size: 11px;
+        color: var(--solb-grey-500);
+        font-weight: 800;
         text-transform: uppercase;
+        letter-spacing: .55px;
+        line-height: 1.35;
     }
 
     .kpi-value {
-        font-size: 26px;
+        font-size: 23px;
         font-weight: 800;
-        color: #222;
-        margin-top: 8px;
-        line-height: 1.2;
+        color: var(--solb-grey-900);
+        margin-top: 9px;
+        line-height: 1.15;
+        letter-spacing: -0.35px;
     }
 
     .kpi-sub {
-        font-size: 12px;
-        color: #888;
-        margin-top: 5px;
+        font-size: 11px;
+        color: var(--solb-grey-500);
+        margin-top: 6px;
+        line-height: 1.35;
     }
 
     .kpi-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
+        width: 44px;
+        height: 44px;
+        border-radius: 13px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -353,26 +1192,435 @@
     }
 
     .section-card {
-        border: none;
-        border-radius: 14px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        margin-bottom: 20px;
-        background: #fff;
+        border: 1px solid rgba(148,163,184,0.18);
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(15,23,42,0.07);
+        margin-bottom: 22px;
+        background: var(--solb-surface);
+        overflow: hidden;
     }
 
         .section-card .card-header {
-            background: #fff;
-            border-bottom: 1px solid #eee;
-            font-weight: 700;
-            border-radius: 14px 14px 0 0;
+            background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+            border-bottom: 1px solid var(--solb-grey-200);
+            font-weight: 800;
+            color: var(--solb-grey-900);
+            border-radius: 16px 16px 0 0;
+            padding: 14px 18px;
+            letter-spacing: .1px;
+        }
+
+        .section-card .card-body {
+            padding: 18px;
         }
 
     .chart-box {
-        height: 310px;
+        height: 320px;
+        padding: 4px 2px 0;
+    }
+
+    .equal-chart-row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+        .equal-chart-row > [class*="col-"] {
+            display: flex;
+        }
+
+        .equal-chart-row .section-card {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .equal-chart-row .section-card .card-body {
+                flex: 1;
+            }
+
+        .equal-chart-row .chart-box {
+            padding-top: 8px;
+        }
+
+    .monthly-delay-chart-box {
+        height: 320px;
+        min-height: 320px;
+    }
+
+
+    .modern-chart-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 330px;
+    }
+
+        .modern-chart-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg,var(--solb-maroon-dark),var(--solb-maroon),#d1d5db);
+        }
+
+        .modern-chart-card .chart-subtitle {
+            display: block;
+            margin-top: 3px;
+            color: var(--solb-grey-500);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+    .comparison-bar-box {
+        position: relative;
+        height: 245px;
+        width: 100%;
+        padding: 8px 4px 0;
+    }
+
+    .double-gauge-card,
+    .gauge-card,
+    .secondary-kpi-row .gauge-card {
+        min-height: 410px;
+    }
+
+    @@media (max-width: 767px) {
+        .comparison-bar-box {
+            height: 225px;
+        }
+    }
+
+
+
+    .variance-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--solb-grey-200);
+        border-radius: 12px;
+        background: #fafafa;
+    }
+
+        .variance-strip small {
+            color: var(--solb-grey-500);
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .variance-strip strong {
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+    .variance-positive {
+        color: #198754;
+    }
+
+    .variance-negative {
+        color: #c1121f;
+    }
+
+    .chart-metric-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    .chart-metric-pill {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 42px;
+        padding: 10px 12px;
+        border: 1px solid var(--solb-grey-200);
+        border-radius: 10px;
+        background: #ffffff;
+    }
+
+        .chart-metric-pill small {
+            margin: 0;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .chart-metric-pill strong {
+            margin: 0;
+            font-size: 10px;
+            font-weight: 800;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .chart-metric-pill.target-value {
+            border-left: 4px solid var(--solb-maroon);
+        }
+
+            .chart-metric-pill.target-value small,
+            .chart-metric-pill.target-value strong {
+                color: var(--solb-maroon-dark);
+            }
+
+        .chart-metric-pill.actual-value {
+            border-left: 4px solid #9ca3af;
+        }
+
+            .chart-metric-pill.actual-value small,
+            .chart-metric-pill.actual-value strong {
+                color: #6b7280;
+            }
+
+    .double-gauge-card {
+        min-height: 410px;
+    }
+
+    .double-gauge-box {
+        position: relative;
+        height: 235px;
+        max-width: 355px;
+        margin: 0 auto;
+    }
+
+    .double-gauge-actual {
+        position: absolute;
+        top: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+        min-width: 150px;
+        text-align: center;
+        pointer-events: none;
+    }
+
+        .double-gauge-actual strong {
+            display: block;
+            color: #6b7280;
+            font-size: 23px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .double-gauge-actual span {
+            display: block;
+            margin-top: 4px;
+            color: var(--solb-grey-500);
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .45px;
+        }
+
+    .double-gauge-target {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        z-index: 2;
+        min-width: 145px;
+        text-align: center;
+        pointer-events: none;
+    }
+
+        .double-gauge-target span {
+            display: block;
+            color: var(--solb-grey-500);
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .45px;
+        }
+
+        .double-gauge-target strong {
+            display: block;
+            margin-top: 4px;
+            color: var(--solb-maroon-dark);
+            font-size: 21px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+    .double-gauge-scale {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 310px;
+        margin: -13px auto 8px;
+        color: var(--solb-grey-500);
+        font-size: 9px;
+        font-weight: 700;
+    }
+
+    .secondary-kpi-row .gauge-card {
+        min-height: 415px;
+    }
+
+    .secondary-kpi-row .gauge-chart-box {
+        height: 225px;
+    }
+
+    .gauge-card {
+        min-height: 365px;
+    }
+
+    .gauge-chart-box {
+        position: relative;
+        height: 210px;
+        max-width: 330px;
+        margin: 0 auto;
+    }
+
+    .gauge-value {
+        position: absolute;
+        left: 50%;
+        bottom: 10px;
+        transform: translateX(-50%);
+        min-width: 150px;
+        text-align: center;
+        pointer-events: none;
+    }
+
+        .gauge-value strong {
+            display: block;
+            color: var(--solb-maroon-dark);
+            font-size: 23px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .gauge-value span {
+            display: block;
+            margin-top: 5px;
+            color: var(--solb-grey-500);
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+    .gauge-scale-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 300px;
+        margin: -8px auto 8px;
+        color: var(--solb-grey-500);
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .nested-donut-layout {
+        display: grid;
+        grid-template-columns: minmax(250px, 1fr) minmax(180px, .72fr);
+        gap: 18px;
+        align-items: center;
+    }
+
+    .nested-donut-box {
+        position: relative;
+        height: 300px;
+        max-width: 340px;
+        margin: 0 auto;
+    }
+
+    .nested-donut-center {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        min-width: 140px;
+        text-align: center;
+        pointer-events: none;
+    }
+
+        .nested-donut-center strong {
+            display: block;
+            color: var(--solb-grey-900);
+            font-size: 25px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .nested-donut-center span {
+            display: block;
+            margin-top: 6px;
+            color: var(--solb-grey-500);
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+    .nested-donut-summary {
+        display: grid;
+        gap: 10px;
+    }
+
+    .nested-value-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border: 1px solid var(--solb-grey-200);
+        border-radius: 12px;
+        background: #fafafa;
+    }
+
+        .nested-value-row span {
+            color: var(--solb-grey-500);
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .nested-value-row strong {
+            color: var(--solb-grey-900);
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .nested-value-row.target {
+            border-left: 4px solid var(--solb-maroon);
+        }
+
+        .nested-value-row.actual {
+            border-left: 4px solid #9ca3af;
+        }
+
+    @@media (max-width: 767px) {
+        .chart-metric-row {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .chart-metric-pill {
+            padding: 9px 10px;
+        }
+
+            .chart-metric-pill strong {
+                font-size: 12px;
+            }
+
+        .nested-donut-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .gauge-chart-box {
+            height: 190px;
+        }
     }
 
     .table thead th {
-        background: #991b1b;
+        background: var(--solb-maroon-dark);
         color: #fff;
         font-size: 12px;
         white-space: nowrap;
@@ -409,6 +1657,21 @@
         margin-bottom: 20px;
         font-size: 13px;
         line-height: 1.7;
+    }
+
+    @@media (max-width: 767px) {
+        .dashboard-header {
+            padding: 20px;
+            border-radius: 14px;
+        }
+
+        .kpi-card {
+            min-height: auto;
+        }
+
+        .chart-box {
+            height: 280px;
+        }
     }
 
     @@media print {
@@ -457,7 +1720,7 @@
 <div class="xp-breadcrumbbar no-print">
     <div class="row">
         <div class="col-md-10">
-            <h4 class="xp-page-title">Rolling Mill Dashboard</h4>
+            <h4 class="xp-page-title font-weight-bold">Rolling Mill Dashboard</h4>
         </div>
         <div class="col-md-2">
             <ol class="breadcrumb">
@@ -471,7 +1734,7 @@
     </div>
 </div>
 
-<div class="xp-contentbar">
+<div class="xp-contentbar" id="pdfReportArea">
 
     <div class="dashboard-header">
         <div class="row align-items-center">
@@ -489,7 +1752,13 @@
                 </small>
             </div>
             <div class="col-md-4 text-right no-print">
-                <button class="btn btn-light btn-sm" onclick="window.print()">Print / Save PDF</button>
+                <button type="button"
+                        class="btn btn-light btn-sm"
+                        id="btnSaveOnePagePdf"
+                        onclick="saveDashboardAsOnePagePdf(this)">
+                    <i class="fa fa-file-pdf-o"></i>
+                    Save One-Page PDF
+                </button>
             </div>
         </div>
     </div>
@@ -501,7 +1770,7 @@
             <div class="card kpi-card">
                 <div class="card-body d-flex justify-content-between align-items-start">
                     <div>
-                        <div class="kpi-title">BILLET WEIGHT</div>
+                        <div class="kpi-title">DISCHARGE WEIGHT</div>
                         <div class="kpi-value">@totalWeight.ToString("0")</div>
                         <div class="kpi-sub">Metric tons</div>
                     </div>
@@ -514,8 +1783,8 @@
             <div class="card kpi-card">
                 <div class="card-body d-flex justify-content-between align-items-start">
                     <div>
-                        <div class="kpi-title">FINISHED PRODUCT</div>
-                        <div class="kpi-value">@totalFinishedProd.ToString("0.###")</div>
+                        <div class="kpi-title">FINISHED PRODUCT (MT)</div>
+                        <div class="kpi-value">@totalFinishedProd.ToString("0")</div>
                         <div class="kpi-sub">Metric tons</div>
                     </div>
                     <div class="kpi-icon bg-green">MT</div>
@@ -527,22 +1796,15 @@
             <div class="card kpi-card">
                 <div class="card-body d-flex justify-content-between align-items-start">
                     <div>
-                        <div class="kpi-title">YIELD</div>
-                        <div class="kpi-value">@yieldValue.ToString("0.00")%</div>
-                        <div class="kpi-sub">Shift performance</div>
-                    </div>
-                    <div class="kpi-icon bg-purple">Y%</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card kpi-card">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="kpi-title">SIZE</div>
+                        <div class="kpi-title">FINISHED PRODUCT SIZE</div>
                         <div class="kpi-value">@sizes</div>
-                        <div class="kpi-sub">Product size</div>
+                        <div class="kpi-sub">
+                            @(selectedSizeCount > 1
+                                ? selectedSizeCount + " sizes — size-based targets applied"
+                                : selectedSizeCount == 1
+                                    ? "Single size target"
+                                    : "No product size")
+                        </div>
                     </div>
                     <div class="kpi-icon bg-orange">SZ</div>
                 </div>
@@ -553,78 +1815,385 @@
             <div class="card kpi-card">
                 <div class="card-body d-flex justify-content-between align-items-start">
                     <div>
-                        <div class="kpi-title">PRODUCTIVITY TONS/HR</div>
-                        <div class="kpi-value">@productivityTonsHr.ToString("0.00")</div>
+                        <div class="kpi-title">
+                            MONTHLY ACCUMULATED FINISHED PRODUCT
+                        </div>
+
+                        <div class="kpi-value">
+                            @monthlyAccumulatedFinishedProduct.ToString("0")
+                        </div>
+
                         <div class="kpi-sub">
-                            @totalFinishedProd.ToString("0.###") MT / @actualRollingHours.ToString("0.00") hrs
+                            Accumulated Production
                         </div>
                     </div>
-                    <div class="kpi-icon bg-red">PH</div>
+
+                    <div class="kpi-icon bg-orange">
+                        MT
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card kpi-card">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="kpi-title">RRR</div>
-                        <div class="kpi-value">@rrrValue.ToString("0.00")%</div>
-                        <div class="kpi-sub">
-                            Actual @actualRollingTime.ToString("0") / Planned @plannedRollingTime.ToString("0") mins
+        @*<div class="col-md-2">
+                <div class="card kpi-card">
+                    <div class="card-body d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-title">YIELD</div>
+                            <div class="kpi-value">@yieldValue.ToString("0.00")%</div>
+                            <div class="kpi-sub">Shift performance</div>
                         </div>
+                        <div class="kpi-icon bg-purple">Y%</div>
                     </div>
-                    <div class="kpi-icon bg-teal">RR</div>
                 </div>
             </div>
-        </div>
 
-        @*<div class="col-md-3">
+            <div class="col-md-2">
                 <div class="card kpi-card">
                     <div class="card-body d-flex justify-content-between align-items-start">
                         <div>
-                            <div class="kpi-title">BUNDLES / COILS PRODUCED</div>
-                            <div class="kpi-value">@bundlesCoilsProduced.ToString("0")</div>
-                            <div class="kpi-sub">Prime bundles / coils</div>
+                            <div class="kpi-title">PRODUCTIVITY TONS/HR</div>
+                            <div class="kpi-value">@productivityTonsHr.ToString("0.00")</div>
+                            <div class="kpi-sub">
+                                @totalFinishedProd.ToString("0.###") MT / @actualRollingHours.ToString("0.00") hrs
+                            </div>
                         </div>
-                        <div class="kpi-icon bg-green">BC</div>
+                        <div class="kpi-icon bg-red">PH</div>
                     </div>
                 </div>
-            </div>*@
+            </div>
 
-        @*<div class="col-md-3">
+            <div class="col-md-2">
                 <div class="card kpi-card">
                     <div class="card-body d-flex justify-content-between align-items-start">
                         <div>
-                            <div class="kpi-title">COBBLE / MISS ROLLS</div>
-                            <div class="kpi-value">@totalCobble.ToString("0")</div>
-                            <div class="kpi-sub">Nos.</div>
+                            <div class="kpi-title">RRR</div>
+                            <div class="kpi-value">@rrrValue.ToString("0.00")%</div>
+                            <div class="kpi-sub">
+                                Actual / Target
+                            </div>
                         </div>
-                        <div class="kpi-icon bg-red">CM</div>
+                        <div class="kpi-icon bg-teal">RR</div>
                     </div>
                 </div>
             </div>*@
 
     </div>
 
-    @*<div class="summary-box">
-            <b>Shift Summary:</b>
-            <br />
-            Size <b>@sizes</b> production achieved <b>@totalRolled.ToString("0") billets rolled</b>
-            with <b>@totalFinishedProd.ToString("0.###") MT finished product</b>.
-            Yield is <b>@yieldValue.ToString("0.00")%</b>.
-            Total downtime recorded is <b>@totalDelayDuration minutes</b>.
-            Actual rolling time is <b>@actualRollingTime.ToString("0") minutes</b>.
-            Planned rolling time is <b>@plannedRollingTime.ToString("0") minutes</b>.
-            Productivity is <b>@productivityTonsHr.ToString("0.00") tons/hr</b>
-            and RRR is <b>@rrrValue.ToString("0.00")%</b>.
-        </div>*@
-
+    <!-- PRIMARY OPERATIONAL TARGET VS ACTUAL -->
     <div class="row">
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card section-card modern-chart-card double-gauge-card">
+                <div class="card-header">
+                    <div>
+                        Production Target vs Actual
+                        <span class="chart-subtitle">
+                            Daily finished production performance
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="comparison-bar-box">
+                        <canvas id="productionDoubleGaugeChart"></canvas>
+                    </div>
+
+                    <div class="chart-metric-row">
+                        <div class="chart-metric-pill target-value">
+                            <small>Target</small>
+                            <strong>@dailyProductionTarget.ToString("0.00") MT</strong>
+                        </div>
+
+                        <div class="chart-metric-pill actual-value">
+                            <small>Actual</small>
+                            <strong>@dailyProductionActual.ToString("0.00") MT</strong>
+                        </div>
+                    </div>
+
+                    <div class="variance-strip">
+                        <small>Variance</small>
+
+                        <strong class="@(productionVariance >= 0
+                            ? "variance-positive"
+                            : "variance-negative")">
+                            @productionVariance.ToString("+0.00;-0.00;0.00") MT
+                            (@productionVariancePercentage.ToString("+0.00;-0.00;0.00")%)
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card section-card modern-chart-card double-gauge-card">
+                <div class="card-header">
+                    <div>
+                        Yield Target vs Actual
+                        <span class="chart-subtitle">
+                            Finished product yield performance
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="comparison-bar-box">
+                        <canvas id="yieldDoubleGaugeChart"></canvas>
+                    </div>
+
+                    <div class="chart-metric-row">
+                        <div class="chart-metric-pill target-value">
+                            <small>Target</small>
+                            <strong>@yieldTarget.ToString("0.00")%</strong>
+                        </div>
+
+                        <div class="chart-metric-pill actual-value">
+                            <small>Actual</small>
+                            <strong>@yieldValue.ToString("0.00")%</strong>
+                        </div>
+                    </div>
+
+                    <div class="variance-strip">
+                        <small>Variance</small>
+
+                        <strong class="@(yieldVariance >= 0
+                            ? "variance-positive"
+                            : "variance-negative")">
+                            @yieldVariance.ToString("+0.00;-0.00;0.00")%
+                            (@yieldVariancePercentage.ToString("+0.00;-0.00;0.00")%)
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card section-card modern-chart-card double-gauge-card">
+                <div class="card-header">
+                    <div>
+                        RRR Target vs Actual
+                        <span class="chart-subtitle">
+                            Rolling time utilization performance
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="comparison-bar-box">
+                        <canvas id="rrrDoubleGaugeChart"></canvas>
+                    </div>
+
+                    <div class="chart-metric-row">
+                        <div class="chart-metric-pill target-value">
+                            <small>Target</small>
+                            <strong>@rrrTarget.ToString("0.00")%</strong>
+                        </div>
+
+                        <div class="chart-metric-pill actual-value">
+                            <small>Actual</small>
+                            <strong>@rrrValue.ToString("0.00")%</strong>
+                        </div>
+                    </div>
+
+                    <div class="variance-strip">
+                        <small>Variance</small>
+
+                        <strong class="@(rrrVariance >= 0
+                            ? "variance-positive"
+                            : "variance-negative")">
+                            @rrrVariance.ToString("+0.00;-0.00;0.00")%
+                            (@rrrVariancePercentage.ToString("+0.00;-0.00;0.00")%)
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card section-card modern-chart-card double-gauge-card">
+                <div class="card-header">
+                    <div>
+                        Productivity Target vs Actual
+                        <span class="chart-subtitle">
+                            Finished production per rolling hour
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="comparison-bar-box">
+                        <canvas id="productivityDoubleGaugeChart"></canvas>
+                    </div>
+
+                    <div class="chart-metric-row">
+                        <div class="chart-metric-pill target-value">
+                            <small>Target</small>
+                            <strong>@productivityTarget.ToString("0.00") MT/Hr</strong>
+                        </div>
+
+                        <div class="chart-metric-pill actual-value">
+                            <small>Actual</small>
+                            <strong>@productivityTonsHr.ToString("0.00") MT/Hr</strong>
+                        </div>
+                    </div>
+
+                    <div class="variance-strip">
+                        <small>Variance</small>
+
+                        <strong class="@(productivityVariance >= 0
+                            ? "variance-positive"
+                            : "variance-negative")">
+                            @productivityVariance.ToString("+0.00;-0.00;0.00") MT/Hr
+                            (@productivityVariancePercentage.ToString("+0.00;-0.00;0.00")%)
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SECONDARY CONSUMPTION TARGET VS ACTUAL -->
+    <div class="row secondary-kpi-row">
+
+        <div class="col-xl-4 col-md-6">
+            <div class="card section-card modern-chart-card gauge-card">
+                <div class="card-header">
+                    <div>
+                        Fuel Consumption Target vs Actual
+                        <span class="chart-subtitle">
+                            Lower actual consumption is better
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="comparison-bar-box">
+                        <canvas id="fuelGaugeChart"></canvas>
+                    </div>
+
+                    <div class="chart-metric-row">
+                        <div class="chart-metric-pill target-value">
+                            <small>Target</small>
+                            <strong>@fuelConsumptionTarget.ToString("0.00") Lit/MT</strong>
+                        </div>
+
+                        <div class="chart-metric-pill actual-value">
+                            <small>Actual</small>
+                            <strong>@fuelConsumptionActual.ToString("0.00") Lit/MT</strong>
+                        </div>
+                    </div>
+
+                    <div class="variance-strip">
+                        <small>Variance</small>
+
+                        <strong class="@(fuelConsumptionVariance >= 0
+                            ? "variance-positive"
+                            : "variance-negative")">
+                            @fuelConsumptionVariance.ToString("+0.00;-0.00;0.00") Lit/MT
+                            (@fuelConsumptionVariancePercentage.ToString("+0.00;-0.00;0.00")%)
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6">
+            <div class="card section-card modern-chart-card gauge-card">
+                <div class="card-header">
+                    <div>
+                        Electricity Target vs Actual
+                        <span class="chart-subtitle">
+                            Lower actual consumption is better
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="comparison-bar-box">
+                        <canvas id="electricityGaugeChart"></canvas>
+                    </div>
+
+                    <div class="chart-metric-row">
+                        <div class="chart-metric-pill target-value">
+                            <small>Target</small>
+                            <strong>@electricityConsumptionTarget.ToString("0.00") KWh/MT</strong>
+                        </div>
+
+                        <div class="chart-metric-pill actual-value">
+                            <small>Actual</small>
+                            <strong>@electricityConsumptionActual.ToString("0.00") KWh/MT</strong>
+                        </div>
+                    </div>
+
+                    <div class="variance-strip">
+                        <small>Variance</small>
+
+                        <strong class="@(electricityConsumptionVariance >= 0
+                            ? "variance-positive"
+                            : "variance-negative")">
+                            @electricityConsumptionVariance.ToString("+0.00;-0.00;0.00") KWh/MT
+                            (@electricityConsumptionVariancePercentage.ToString("+0.00;-0.00;0.00")%)
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6">
+            <div class="card section-card modern-chart-card gauge-card">
+                <div class="card-header">
+                    <div>
+                        Water Target vs Actual
+                        <span class="chart-subtitle">
+                            Lower actual consumption is better
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="comparison-bar-box">
+                        <canvas id="waterGaugeChart"></canvas>
+                    </div>
+
+                    <div class="chart-metric-row">
+                        <div class="chart-metric-pill target-value">
+                            <small>Target</small>
+                            <strong>@waterConsumptionTarget.ToString("0.00") m³/MT</strong>
+                        </div>
+
+                        <div class="chart-metric-pill actual-value">
+                            <small>Actual</small>
+                            <strong>@waterConsumptionActual.ToString("0.00") m³/MT</strong>
+                        </div>
+                    </div>
+
+                    <div class="variance-strip">
+                        <small>Variance</small>
+
+                        <strong class="@(waterConsumptionVariance >= 0
+                            ? "variance-positive"
+                            : "variance-negative")">
+                            @waterConsumptionVariance.ToString("+0.00;-0.00;0.00") m³/MT
+                            (@waterConsumptionVariancePercentage.ToString("+0.00;-0.00;0.00")%)
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row equal-chart-row">
 
         <div class="col-md-6">
             <div class="card section-card">
-                <div class="card-header">Downtime by Agency</div>
+                <div class="card-header">
+                    Delay Budget vs Actual (%)
+                    <small class="text-muted">
+                        (@(ViewBag.TargetMonth ?? "-") @(ViewBag.TargetYear ?? ""))
+                    </small>
+                </div>
                 <div class="card-body">
                     <div class="chart-box">
                         <canvas id="downtimeAgencyChart"></canvas>
@@ -635,10 +2204,16 @@
 
         <div class="col-md-6">
             <div class="card section-card">
-                <div class="card-header">Plan Vs Actual</div>
+                <div class="card-header">
+                    Monthly Accumulated Delay Target vs Actual
+                    <small class="text-muted">
+                        Scheduled + Unscheduled delays by agency
+                    </small>
+                </div>
+
                 <div class="card-body">
-                    <div class="chart-box">
-                        <canvas id="planVsActualChart"></canvas>
+                    <div class="chart-box monthly-delay-chart-box">
+                        <canvas id="monthlyDelayAgencyChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -650,7 +2225,7 @@
 
         <div class="col-md-6">
             <div class="card section-card">
-                <div class="card-header">Accumulated Day-wise Production</div>
+                <div class="card-header">Day-wise Production</div>
                 <div class="card-body">
                     <div class="chart-box">
                         <canvas id="daywiseProductivityChart"></canvas>
@@ -661,10 +2236,10 @@
 
         <div class="col-md-6">
             <div class="card section-card">
-                <div class="card-header">Billet Weight vs Finished Product</div>
+                <div class="card-header">Monthly Size-wise Production</div>
                 <div class="card-body">
                     <div class="chart-box">
-                        <canvas id="weightCompareChart"></canvas>
+                        <canvas id="monthlySizeProductionChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -673,7 +2248,10 @@
     </div>
     <div class="card section-card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Downtime Details</span>
+            <span>
+                Downtime Details
+                <small class="text-muted ml-2">Operational day: 07:00 AM to next day 06:59 AM</small>
+            </span>
 
             <button type="button"
                     class="btn btn-sm btn-outline-secondary no-print"
@@ -697,6 +2275,8 @@
                             <th>Equipment</th>
                             <th>Reason</th>
                             <th>Description</th>
+                            <th>Reason For Occurance</th>
+                            <th>Action Taken</th>
                         </tr>
                     </thead>
 
@@ -707,9 +2287,13 @@
                             {
                                 <tr>
                                     <td>
-                                        @(item.Date.HasValue
-                                        ? item.Date.Value.ToString("dd/MM/yyyy", gregorian)
-                                        : "-")
+                                        @{
+                                            DateTime? operationalDisplayDate =
+                                                GetDowntimeOperationalDate(item);
+                                        }
+                                        @(operationalDisplayDate.HasValue
+                                            ? operationalDisplayDate.Value.ToString("dd/MM/yyyy", gregorian)
+                                            : "-")
                                     </td>
 
                                     <td>@item.StartTime</td>
@@ -726,13 +2310,15 @@
                                     <td>@item.Equipments</td>
                                     <td>@item.Reason</td>
                                     <td>@item.DelayDescription</td>
+                                    <td>@item.ReasonForOccurence</td>
+                                    <td>@item.ActionTaken</td>
                                 </tr>
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="9"
+                                <td colspan="11"
                                     class="text-center text-muted">
                                     No downtime found.
                                 </td>
@@ -742,12 +2328,12 @@
 
                     <tfoot>
                         <tr class="font-weight-bold">
-                            <td colspan="3" class="text-right">
+                            <td colspan="5" class="text-right">
                                 Total
                             </td>
 
                             <td>@totalDelayDuration</td>
-                            <td colspan="5"></td>
+                            <td colspan="7"></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -771,9 +2357,11 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th>Seq.</th>
+                            <th>S.No.</th>
+                            <th>Date</th>
                             <th>Heat No</th>
                             <th>Grade</th>
+                            <th>Profile</th>
                             <th>Size</th>
                             <th>Billet Discharge</th>
                             <th>Billet Rolled</th>
@@ -792,8 +2380,31 @@
                     <tbody>
                         @if (data != null && data.Any())
                         {
+                            int productionSerialNo = 0;
+                            DateTime? productionSerialDate = null;
+                            bool productionSerialDateInitialized = false;
+
                             foreach (var item in data)
                             {
+                                DateTime? currentProductionDate =
+                                    item.Date != DateTime.MinValue
+                                        ? (DateTime?)item.Date.Date
+                                        : null;
+
+                                if (
+                                    !productionSerialDateInitialized ||
+                                    productionSerialDate != currentProductionDate
+                                )
+                                {
+                                    productionSerialNo = 1;
+                                    productionSerialDate = currentProductionDate;
+                                    productionSerialDateInitialized = true;
+                                }
+                                else
+                                {
+                                    productionSerialNo++;
+                                }
+
                                 decimal itemTotalWeight = item.TotalWeight ?? 0;
                                 decimal itemTheoriticalWeight =
                                     item.TheoriticalWeight ?? 0;
@@ -803,9 +2414,15 @@
                                     : 0;
 
                                 <tr>
-                                    <td>@item.DischargingSequence</td>
+                                    <td>@productionSerialNo</td>
+                                    <td>
+                                        @(item.Date != DateTime.MinValue
+                                            ? item.Date.ToString("dd/MM/yyyy", gregorian)
+                                            : "-")
+                                    </td>
                                     <td>@item.HeatNo</td>
                                     <td>@item.SteelGrade</td>
+                                    <td>@item.Profile</td>
                                     <td>@item.Size</td>
                                     <td>@item.TotalBillet</td>
                                     <td>@item.TotalBillet</td>
@@ -840,12 +2457,13 @@
                                         </span>
                                     </td>
                                 </tr>
+
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="15" class="text-center text-muted">
+                                <td colspan="17" class="text-center text-muted">
                                     No production data found.
                                 </td>
                             </tr>
@@ -854,7 +2472,7 @@
 
                     <tfoot>
                         <tr class="font-weight-bold">
-                            <td colspan="4" class="text-right">Total</td>
+                            <td colspan="6" class="text-right">Total</td>
                             <td>@totalDischarge</td>
                             <td>@totalRolled</td>
                             <td>@totalCobble</td>
@@ -873,92 +2491,258 @@
         </div>
     </div>
 
-    @*<div class="card section-card">
-            <div class="card-header">Production Details</div>
-            <div class="card-body table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>Seq.</th>
-                            <th>Heat No</th>
-                            <th>Grade</th>
-                            <th>Size</th>
-                            <th>Billet Discharge</th>
-                            <th>Billet Rolled</th>
-                            <th>Cobble</th>
-                            <th>Hot Out</th>
-                            <th>Discharge Wt.</th>
-                            <th>Bundles</th>
-                            <th>On-Hold</th>
-                            <th>Reject</th>
-                            <th>Short Wt.</th>
-                            <th>Finished Product Wt.</th>
-                            <th>Yield %</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (data != null && data.Any())
-                        {
-                            foreach (var item in data)
-                            {
-                                decimal itemTotalWeight = item.TotalWeight ?? 0;
-                                decimal itemTheoriticalWeight = item.TheoriticalWeight ?? 0;
 
-                                decimal itemYield = itemTotalWeight > 0
-                                    ? (itemTheoriticalWeight / itemTotalWeight) * 100
-                                    : 0;
-
-                                <tr>
-                                    <td>@item.DischargingSequence</td>
-                                    <td>@item.HeatNo</td>
-                                    <td>@item.SteelGrade</td>
-                                    <td>@item.Size</td>
-                                    <td>@item.TotalBillet</td>
-                                    <td>@item.TotalBillet</td>
-                                    <td>@item.Cobble</td>
-                                    <td>@item.HotOut</td>
-                                    <td>@itemTotalWeight.ToString("0.###")</td>
-                                    <td>@item.TotalBundleProduced</td>
-                                    <td>@(item.TotalBundleOnHold.HasValue ? item.TotalBundleOnHold.Value.ToString("0.00") : "0.00")</td>
-                                    <td>@(item.TotalRejectedBundle.HasValue ? item.TotalRejectedBundle.Value.ToString("0.00") : "0.00")</td>
-                                    <td>@(item.ShortBundleActualWeight.HasValue ? item.ShortBundleActualWeight.Value.ToString("0.00") : "0.00")</td>
-                                    <td>@itemTheoriticalWeight.ToString("0.###")</td>
-                                    <td>
-                                        <span class="badge-soft-success">@itemYield.ToString("0.00")%</span>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="15" class="text-center text-muted">
-                                    No production data found.
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                    <tfoot>
-                        <tr class="font-weight-bold">
-                            <td colspan="4" class="text-right">Total</td>
-                            <td>@totalDischarge</td>
-                            <td>@totalRolled</td>
-                            <td>@totalCobble</td>
-                            <td>@totalHotOut</td>
-                            <td>@totalWeight.ToString("0.###")</td>
-                            <td>@totalBundles</td>
-                            <td>@totalOnHold</td>
-                            <td>@totalRejected</td>
-                            <td>@totalShortWeight.ToString("0.00")</td>
-                            <td>@theoriticalWeight.ToString("0.###")</td>
-                            <td>@yieldValue.ToString("0.00")%</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>*@
 
 </div>
+
+<script>
+    async function saveDashboardAsOnePagePdf(button) {
+        var report = document.getElementById("pdfReportArea");
+
+        if (!report) {
+            alert("PDF report area was not found.");
+            return;
+        }
+
+        if (
+            typeof html2canvas === "undefined" ||
+            !window.jspdf ||
+            !window.jspdf.jsPDF
+        ) {
+            alert("PDF libraries could not be loaded. Please refresh the page and try again.");
+            return;
+        }
+
+        var originalButtonHtml = button ? button.innerHTML : "";
+        var originalScrollX = window.pageXOffset || 0;
+        var originalScrollY = window.pageYOffset || 0;
+
+        try {
+            if (button) {
+                button.disabled = true;
+                button.innerHTML =
+                    '<i class="fa fa-spinner fa-spin"></i> Preparing PDF...';
+            }
+
+            document.body.classList.add("pdf-exporting");
+
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+
+            // Give Chart.js and browser layout one final frame before capture.
+            await new Promise(function (resolve) {
+                window.requestAnimationFrame(function () {
+                    window.requestAnimationFrame(resolve);
+                });
+            });
+
+            var reportRect = report.getBoundingClientRect();
+
+            // Use the ACTUAL rendered width. report.scrollWidth can include
+            // the layout/sidebar overflow and was creating blank PDF space
+            // on the right side.
+            var contentWidth = Math.ceil(reportRect.width);
+
+            var contentHeight = Math.ceil(
+                Math.max(report.scrollHeight, reportRect.height)
+            );
+
+            /*
+             * Keep canvas memory controlled while retaining readable charts.
+             * The complete dashboard is then placed on ONE custom-size PDF page.
+             */
+            var longestSide = Math.max(contentWidth, contentHeight);
+            var captureScale = Math.min(
+                1.6,
+                Math.max(1, 10000 / longestSide)
+            );
+
+            var capturedCanvas = await html2canvas(report, {
+                backgroundColor: "#ffffff",
+                scale: captureScale,
+                useCORS: true,
+                allowTaint: false,
+                logging: false,
+                scrollX: 0,
+                scrollY: -window.scrollY,
+                ignoreElements: function (element) {
+                    return !!(
+                        element &&
+                        element.classList &&
+                        element.classList.contains("no-print")
+                    );
+                }
+            });
+
+            /*
+             * Trim any remaining outer white area from html2canvas and add
+             * equal padding on all four sides. This prevents an unbalanced
+             * blank strip even when the master layout has hidden overflow.
+             */
+            var canvas = trimDashboardCanvas(
+                capturedCanvas,
+                Math.max(12, Math.round(12 * captureScale))
+            );
+
+            if (!canvas.width || !canvas.height) {
+                throw new Error("Dashboard capture is empty.");
+            }
+
+            var jsPDF = window.jspdf.jsPDF;
+
+            // 420 mm gives an A3-width canvas; height follows the report ratio.
+            // This produces exactly one PDF page without splitting any card/chart.
+            var pdfWidthMm = 420;
+            var pdfHeightMm =
+                pdfWidthMm * canvas.height / canvas.width;
+
+            // Stay below the PDF maximum page dimension.
+            if (pdfHeightMm > 5000) {
+                pdfHeightMm = 5000;
+                pdfWidthMm =
+                    pdfHeightMm * canvas.width / canvas.height;
+            }
+
+            var orientation =
+                pdfWidthMm >= pdfHeightMm
+                    ? "landscape"
+                    : "portrait";
+
+            var pdf = new jsPDF({
+                orientation: orientation,
+                unit: "mm",
+                format: [pdfWidthMm, pdfHeightMm],
+                compress: true,
+                hotfixes: ["px_scaling"]
+            });
+
+            var imageData =
+                canvas.toDataURL("image/jpeg", 0.94);
+
+            pdf.addImage(
+                imageData,
+                "JPEG",
+                0,
+                0,
+                pdfWidthMm,
+                pdfHeightMm,
+                undefined,
+                "FAST"
+            );
+
+            pdf.save(
+                "Rolling_Mill_Dashboard_" +
+                "@pdfFileTimestamp" +
+                ".pdf"
+            );
+        }
+        catch (error) {
+            console.error("One-page PDF generation failed:", error);
+
+            alert(
+                "PDF could not be generated. " +
+                (error && error.message
+                    ? error.message
+                    : "Please try again.")
+            );
+        }
+        finally {
+            document.body.classList.remove("pdf-exporting");
+            window.scrollTo(originalScrollX, originalScrollY);
+
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = originalButtonHtml;
+            }
+        }
+    }
+
+    function trimDashboardCanvas(sourceCanvas, padding) {
+        if (!sourceCanvas || !sourceCanvas.width || !sourceCanvas.height) {
+            return sourceCanvas;
+        }
+
+        var context = sourceCanvas.getContext("2d", {
+            willReadFrequently: true
+        });
+
+        var width = sourceCanvas.width;
+        var height = sourceCanvas.height;
+        var pixels = context.getImageData(0, 0, width, height).data;
+
+        var minX = width;
+        var minY = height;
+        var maxX = -1;
+        var maxY = -1;
+        var step = 2;
+
+        for (var y = 0; y < height; y += step) {
+            for (var x = 0; x < width; x += step) {
+                var index = (y * width + x) * 4;
+                var alpha = pixels[index + 3];
+
+                var isVisible =
+                    alpha > 10 &&
+                    (
+                        pixels[index] < 248 ||
+                        pixels[index + 1] < 248 ||
+                        pixels[index + 2] < 248
+                    );
+
+                if (!isVisible) {
+                    continue;
+                }
+
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+        }
+
+        if (maxX < minX || maxY < minY) {
+            return sourceCanvas;
+        }
+
+        padding = Math.max(0, Number(padding || 0));
+
+        minX = Math.max(0, minX - padding);
+        minY = Math.max(0, minY - padding);
+        maxX = Math.min(width - 1, maxX + padding);
+        maxY = Math.min(height - 1, maxY + padding);
+
+        var cropWidth = maxX - minX + 1;
+        var cropHeight = maxY - minY + 1;
+
+        // Skip recreation only when the source is already tightly balanced.
+        if (cropWidth === width && cropHeight === height) {
+            return sourceCanvas;
+        }
+
+        var trimmedCanvas = document.createElement("canvas");
+        trimmedCanvas.width = cropWidth;
+        trimmedCanvas.height = cropHeight;
+
+        var trimmedContext = trimmedCanvas.getContext("2d");
+        trimmedContext.fillStyle = "#ffffff";
+        trimmedContext.fillRect(0, 0, cropWidth, cropHeight);
+
+        trimmedContext.drawImage(
+            sourceCanvas,
+            minX,
+            minY,
+            cropWidth,
+            cropHeight,
+            0,
+            0,
+            cropWidth,
+            cropHeight
+        );
+
+        return trimmedCanvas;
+    }
+</script>
 
 <script>
     $(document).ready(function () {
@@ -986,21 +2770,768 @@
         Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
         Chart.defaults.color = "#444";
 
+        // Register plugin before creating any chart.
+        if (typeof ChartDataLabels !== "undefined") {
+            Chart.register(ChartDataLabels);
+        }
+
         var heatLabels = @Html.Raw(JsonConvert.SerializeObject(heatLabels));
         var billetRolledData = @Html.Raw(JsonConvert.SerializeObject(billetRolledData));
         var billetWeightData = @Html.Raw(JsonConvert.SerializeObject(billetWeightData));
         var finishedWeightData = @Html.Raw(JsonConvert.SerializeObject(finishedWeightData));
-        var downtimeAgencyLabels = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyLabels));
-        var downtimeAgencyData = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyData));
-        var productivityDateLabels = @Html.Raw(JsonConvert.SerializeObject(productivityDateLabels));
-        var productivityDayData = @Html.Raw(JsonConvert.SerializeObject(productivityDayData));
 
-        var productionPlan = @Html.Raw(JsonConvert.SerializeObject(productionPlan));
+        var productivityDateLabels =
+            @Html.Raw(JsonConvert.SerializeObject(productivityDateLabels));
+
+        var productivityDayData =
+            @Html.Raw(JsonConvert.SerializeObject(productivityDayData));
+
+        var monthlySizeLabels =
+            @Html.Raw(JsonConvert.SerializeObject(monthlySizeLabels));
+
+        var monthlySizeProductionData =
+            @Html.Raw(JsonConvert.SerializeObject(monthlySizeProductionData));
+
+        var downtimeAgencyLabels = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyLabels));
+        var downtimeAgencyNames = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyNames));
+        var downtimeAgencyTargetData = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyTargetData));
+        var downtimeAgencyActualData = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyActualData));
+        var downtimeAgencyActualMinutes = @Html.Raw(JsonConvert.SerializeObject(downtimeAgencyActualMinutes));
+
+        var monthlyDelayAgencyLabels =
+            @Html.Raw(JsonConvert.SerializeObject(monthlyDelayAgencyLabels));
+
+        var monthlyDelayAgencyTargetData =
+            @Html.Raw(JsonConvert.SerializeObject(monthlyDelayAgencyTargetData));
+
+        var monthlyDelayAgencyPercentages =
+            @Html.Raw(JsonConvert.SerializeObject(monthlyDelayAgencyPercentages));
+
+        var productionTarget = @Html.Raw(JsonConvert.SerializeObject(productionTarget));
         var productionActual = @Html.Raw(JsonConvert.SerializeObject(productionActual));
         var productionDifference = @Html.Raw(JsonConvert.SerializeObject(productionDifference));
 
+        var dailyProductionTargetValue = @Html.Raw(JsonConvert.SerializeObject(dailyProductionTarget));
+        var dailyProductionActualValue = @Html.Raw(JsonConvert.SerializeObject(dailyProductionActual));
+        var fuelConsumptionTargetValue = @Html.Raw(JsonConvert.SerializeObject(fuelConsumptionTarget));
+        var fuelConsumptionActualValue = @Html.Raw(JsonConvert.SerializeObject(fuelConsumptionActual));
+
+        var electricityConsumptionTargetValue = @Html.Raw(JsonConvert.SerializeObject(electricityConsumptionTarget));
+        var electricityConsumptionActualValue = @Html.Raw(JsonConvert.SerializeObject(electricityConsumptionActual));
+        var waterConsumptionTargetValue = @Html.Raw(JsonConvert.SerializeObject(waterConsumptionTarget));
+        var waterConsumptionActualValue = @Html.Raw(JsonConvert.SerializeObject(waterConsumptionActual));
+
+        var yieldTargetValue = @Html.Raw(JsonConvert.SerializeObject(yieldTarget));
+        var yieldActualValue = @Html.Raw(JsonConvert.SerializeObject(yieldValue));
+        var rrrTargetValue = @Html.Raw(JsonConvert.SerializeObject(rrrTarget));
+        var rrrActualValue = @Html.Raw(JsonConvert.SerializeObject(rrrValue));
+
+        var productivityTargetValue = @Html.Raw(JsonConvert.SerializeObject(productivityTarget));
+        var productivityActualValue = @Html.Raw(JsonConvert.SerializeObject(productivityTonsHr));
+
         function numberLabel(value) {
             return Number(value || 0).toLocaleString();
+        }
+
+        var gaugeNeedlePlugin = {
+            id: "gaugeNeedlePlugin",
+
+            afterDatasetsDraw: function (
+                chart,
+                args,
+                pluginOptions
+            ) {
+                if (!pluginOptions ||
+                    !pluginOptions.enabled) {
+                    return;
+                }
+
+                var meta = chart.getDatasetMeta(0);
+
+                if (!meta ||
+                    !meta.data ||
+                    meta.data.length === 0) {
+                    return;
+                }
+
+                var arc = meta.data[0];
+                var ctx = chart.ctx;
+
+                var actualValue =
+                    Number(pluginOptions.actualValue || 0);
+
+                var targetValue =
+                    Number(pluginOptions.targetValue || 0);
+
+                var maxValue =
+                    Number(pluginOptions.maxValue || 1);
+
+                if (maxValue <= 0) {
+                    maxValue = 1;
+                }
+
+                function ratio(value) {
+                    var result = value / maxValue;
+                    if (result < 0) result = 0;
+                    if (result > 1) result = 1;
+                    return result;
+                }
+
+                var centerX = arc.x;
+                var centerY = arc.y;
+
+                // Target marker in maroon:
+                // draw a clean radial line across the gauge ring.
+                var targetAngle =
+                    Math.PI +
+                    (Math.PI * ratio(targetValue));
+
+                var targetInnerRadius =
+                    arc.innerRadius - 2;
+
+                var targetOuterRadius =
+                    arc.outerRadius + 2;
+
+                var targetStartX =
+                    centerX +
+                    Math.cos(targetAngle) *
+                    targetInnerRadius;
+
+                var targetStartY =
+                    centerY +
+                    Math.sin(targetAngle) *
+                    targetInnerRadius;
+
+                var targetEndX =
+                    centerX +
+                    Math.cos(targetAngle) *
+                    targetOuterRadius;
+
+                var targetEndY =
+                    centerY +
+                    Math.sin(targetAngle) *
+                    targetOuterRadius;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(
+                    targetStartX,
+                    targetStartY
+                );
+                ctx.lineTo(
+                    targetEndX,
+                    targetEndY
+                );
+                ctx.strokeStyle = "#a6173f";
+                ctx.lineWidth = 5;
+                ctx.lineCap = "round";
+                ctx.stroke();
+                ctx.restore();
+
+                // Show target value beside the maroon target line.
+                var unitLabel =
+                    pluginOptions.unitLabel || "";
+
+                var targetLabel =
+                    "Target " +
+                    Number(targetValue).toFixed(2) +
+                    (unitLabel ? " " + unitLabel : "");
+
+                var labelRadius =
+                    arc.outerRadius + 17;
+
+                var labelX =
+                    centerX +
+                    Math.cos(targetAngle) *
+                    labelRadius;
+
+                var labelY =
+                    centerY +
+                    Math.sin(targetAngle) *
+                    labelRadius;
+
+                ctx.save();
+                ctx.font =
+                    "700 10px Arial, Helvetica, sans-serif";
+
+                var labelWidth =
+                    ctx.measureText(targetLabel).width + 14;
+
+                var labelHeight = 22;
+
+                // Keep label inside the chart canvas.
+                labelX = Math.max(
+                    labelWidth / 2 + 3,
+                    Math.min(
+                        chart.width - labelWidth / 2 - 3,
+                        labelX
+                    )
+                );
+
+                labelY = Math.max(
+                    labelHeight / 2 + 3,
+                    Math.min(
+                        chart.height - labelHeight / 2 - 3,
+                        labelY
+                    )
+                );
+
+                var boxX =
+                    labelX - labelWidth / 2;
+
+                var boxY =
+                    labelY - labelHeight / 2;
+
+                var radius = 6;
+
+                ctx.beginPath();
+                ctx.moveTo(boxX + radius, boxY);
+                ctx.lineTo(
+                    boxX + labelWidth - radius,
+                    boxY
+                );
+                ctx.quadraticCurveTo(
+                    boxX + labelWidth,
+                    boxY,
+                    boxX + labelWidth,
+                    boxY + radius
+                );
+                ctx.lineTo(
+                    boxX + labelWidth,
+                    boxY + labelHeight - radius
+                );
+                ctx.quadraticCurveTo(
+                    boxX + labelWidth,
+                    boxY + labelHeight,
+                    boxX + labelWidth - radius,
+                    boxY + labelHeight
+                );
+                ctx.lineTo(
+                    boxX + radius,
+                    boxY + labelHeight
+                );
+                ctx.quadraticCurveTo(
+                    boxX,
+                    boxY + labelHeight,
+                    boxX,
+                    boxY + labelHeight - radius
+                );
+                ctx.lineTo(boxX, boxY + radius);
+                ctx.quadraticCurveTo(
+                    boxX,
+                    boxY,
+                    boxX + radius,
+                    boxY
+                );
+                ctx.closePath();
+
+                ctx.fillStyle =
+                    "rgba(255,255,255,0.96)";
+                ctx.fill();
+
+                ctx.strokeStyle = "#a6173f";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.fillStyle = "#a6173f";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(
+                    targetLabel,
+                    labelX,
+                    labelY + 0.5
+                );
+
+                ctx.restore();
+
+                // Actual needle in grey.
+                var actualAngle =
+                    Math.PI +
+                    (Math.PI * ratio(actualValue));
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(actualAngle);
+
+                ctx.beginPath();
+                ctx.moveTo(0, -4);
+                ctx.lineTo(
+                    arc.outerRadius * 0.78,
+                    0
+                );
+                ctx.lineTo(0, 4);
+                ctx.closePath();
+
+                ctx.fillStyle = "#6b7280";
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, 8, 0, Math.PI * 2);
+                ctx.fillStyle = "#6b7280";
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+
+                ctx.restore();
+            }
+        };
+
+        Chart.register(gaugeNeedlePlugin);
+
+        function createDoubleSemiGaugeChart(
+            canvasId,
+            targetValue,
+            actualValue,
+            unitLabel,
+            actualBackground,
+            targetBackground
+        ) {
+            var canvas =
+                document.getElementById(canvasId);
+
+            if (!canvas) return;
+
+            var target = Number(targetValue || 0);
+            var actual = Number(actualValue || 0);
+
+            var maximumValue = Math.max(
+                target,
+                actual,
+                1
+            ) * 1.10;
+
+            var actualSafe = Math.max(
+                0,
+                Math.min(actual, maximumValue)
+            );
+
+            var targetSafe = Math.max(
+                0,
+                Math.min(target, maximumValue)
+            );
+
+            new Chart(canvas, {
+                type: "doughnut",
+
+                data: {
+                    datasets: [
+                        {
+                            label: "Actual",
+                            data: [
+                                actualSafe,
+                                Math.max(
+                                    maximumValue - actualSafe,
+                                    0
+                                )
+                            ],
+                            backgroundColor: [
+                                "#9ca3af",
+                                actualBackground || "#e5e7eb"
+                            ],
+                            borderWidth: 0,
+                            weight: 1.18
+                        },
+                        {
+                            label: "Target",
+                            data: [
+                                targetSafe,
+                                Math.max(
+                                    maximumValue - targetSafe,
+                                    0
+                                )
+                            ],
+                            backgroundColor: [
+                                "#a6173f",
+                                targetBackground || "#f3d6df"
+                            ],
+                            borderWidth: 0,
+                            weight: 0.88
+                        }
+                    ]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    rotation: -90,
+                    circumference: 180,
+                    cutout: "42%",
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+                            filter: function (item) {
+                                return item.dataIndex === 0;
+                            },
+
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label +
+                                        ": " +
+                                        Number(context.raw || 0)
+                                            .toFixed(2) +
+                                        " " +
+                                        unitLabel;
+                                }
+                            }
+                        },
+
+                        datalabels: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function createGaugeChart(
+            canvasId,
+            targetValue,
+            actualValue,
+            unitLabel,
+            lowerIsBetter,
+            actualColor,
+            remainingColor
+        ) {
+            var canvas =
+                document.getElementById(canvasId);
+
+            if (!canvas) return;
+
+            var target = Number(targetValue || 0);
+            var actual = Number(actualValue || 0);
+
+            var maximumValue = Math.max(
+                target,
+                actual,
+                1
+            );
+
+            maximumValue = maximumValue * 1.20;
+
+            var actualRatio =
+                actual / maximumValue;
+
+            if (actualRatio < 0) actualRatio = 0;
+            if (actualRatio > 1) actualRatio = 1;
+
+            var actualPercent =
+                actualRatio * 100;
+
+            new Chart(canvas, {
+                type: "doughnut",
+
+                data: {
+                    labels: [
+                        "Actual",
+                        "Remaining"
+                    ],
+
+                    datasets: [{
+                        data: [
+                            actualPercent,
+                            100 - actualPercent
+                        ],
+
+                        backgroundColor: [
+                            actualColor || "#9ca3af",
+                            remainingColor || "#e5e7eb"
+                        ],
+
+                        borderWidth: 0,
+                        hoverOffset: 0
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    rotation: -90,
+                    circumference: 180,
+                    cutout: "68%",
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+                            filter: function (item) {
+                                return item.dataIndex === 0;
+                            },
+
+                            callbacks: {
+                                label: function () {
+                                    return "Actual: " +
+                                        Number(actual).toFixed(2) +
+                                        " " +
+                                        unitLabel;
+                                },
+
+                                afterLabel: function () {
+                                    return "Target: " +
+                                        Number(target).toFixed(2) +
+                                        " " +
+                                        unitLabel;
+                                }
+                            }
+                        },
+
+                        datalabels: {
+                            display: false
+                        },
+
+                        gaugeNeedlePlugin: {
+                            enabled: true,
+                            actualValue: actual,
+                            targetValue: target,
+                            maxValue: maximumValue,
+                            unitLabel: unitLabel
+                        }
+                    }
+                }
+            });
+        }
+
+        function createKpiComparisonChart(
+            canvasId,
+            targetValue,
+            actualValue,
+            unitLabel
+        ) {
+            var canvas =
+                document.getElementById(canvasId);
+
+            if (!canvas) return;
+
+            var target =
+                Number(targetValue || 0);
+
+            var actual =
+                Number(actualValue || 0);
+
+            var maximumValue =
+                Math.max(target, actual, 1);
+
+            var topPadding =
+                maximumValue * 0.22;
+
+            new Chart(canvas, {
+                type: "bar",
+
+                data: {
+                    labels: [
+                        "Performance"
+                    ],
+
+                    datasets: [
+                        {
+                            label: "Target",
+                            data: [
+                                target
+                            ],
+                            backgroundColor:
+                                "#a6173f",
+                            borderColor:
+                                "#7f1230",
+                            borderWidth:
+                                1,
+                            borderRadius:
+                                7,
+                            barPercentage:
+                                0.72,
+                            categoryPercentage:
+                                0.68
+                        },
+                        {
+                            label: "Actual",
+                            data: [
+                                actual
+                            ],
+                            backgroundColor:
+                                "#9ca3af",
+                            borderColor:
+                                "#6b7280",
+                            borderWidth:
+                                1,
+                            borderRadius:
+                                7,
+                            barPercentage:
+                                0.72,
+                            categoryPercentage:
+                                0.68
+                        }
+                    ]
+                },
+
+                options: {
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+                    animation:
+                        false,
+
+                    layout: {
+                        padding: {
+                            top: 26,
+                            right: 8,
+                            left: 8,
+                            bottom: 0
+                        }
+                    },
+
+                    interaction: {
+                        mode:
+                            "index",
+                        intersect:
+                            false
+                    },
+
+                    plugins: {
+                        legend: {
+                            display:
+                                true,
+                            position:
+                                "top",
+                            align:
+                                "center",
+
+                            labels: {
+                                usePointStyle:
+                                    true,
+                                pointStyle:
+                                    "rectRounded",
+                                boxWidth:
+                                    10,
+                                boxHeight:
+                                    10,
+                                padding:
+                                    18,
+                                color:
+                                    "#374151",
+
+                                font: {
+                                    size:
+                                        11,
+                                    weight:
+                                        "700"
+                                }
+                            }
+                        },
+
+                        tooltip: {
+                            callbacks: {
+                                label: function (
+                                    context
+                                ) {
+                                    return (
+                                        context.dataset.label +
+                                        ": " +
+                                        Number(
+                                            context.raw || 0
+                                        ).toFixed(2) +
+                                        " " +
+                                        unitLabel
+                                    );
+                                }
+                            }
+                        },
+
+                        datalabels: {
+                            display:
+                                true,
+
+                            formatter: function (
+                                value
+                            ) {
+                                return (
+                                    Number(
+                                        value || 0
+                                    ).toFixed(2) +
+                                    " " +
+                                    unitLabel
+                                );
+                            },
+
+                            color: function (
+                                context
+                            ) {
+                                return context.datasetIndex === 0
+                                    ? "#7f1230"
+                                    : "#4b5563";
+                            },
+
+                            font: {
+                                weight:
+                                    "bold",
+                                size:
+                                    11
+                            },
+
+                            anchor:
+                                "end",
+                            align:
+                                "top",
+                            offset:
+                                4,
+                            clamp:
+                                true,
+                            clip:
+                                false
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            grid: {
+                                display:
+                                    false
+                            },
+
+                            ticks: {
+                                display:
+                                    false
+                            }
+                        },
+
+                        y: {
+                            beginAtZero:
+                                true,
+
+                            suggestedMax:
+                                maximumValue +
+                                topPadding,
+
+                            grace:
+                                "20%",
+
+                            grid: {
+                                color:
+                                    "rgba(0,0,0,0.07)"
+                            },
+
+                            ticks: {
+                                callback: function (
+                                    value
+                                ) {
+                                    return numberLabel(
+                                        value
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function createDowntimeChart() {
@@ -1011,43 +3542,136 @@
                 type: "bar",
                 data: {
                     labels: downtimeAgencyLabels,
-                    datasets: [{
-                        label: "Downtime Minutes",
-                        data: downtimeAgencyData,
-                        backgroundColor: "#c1121f",
-                        borderColor: "#991b1b",
-                        borderWidth: 1,
-                        borderRadius: 6
-                    }]
+                    datasets: [
+                        {
+                            label: "Target (%)",
+                            data: downtimeAgencyTargetData,
+                            backgroundColor: "#a6173f",
+                            borderColor: "#a6173f",
+                            borderWidth: 1,
+                            borderRadius: 5,
+                            barPercentage: 0.72,
+                            categoryPercentage: 0.72,
+                            datalabels: {
+                                display: function (context) {
+                                    return Number(context.dataset.data[context.dataIndex] || 0) > 0;
+                                },
+                                formatter: function (value) {
+                                    return Number(value || 0).toFixed(2) + "%";
+                                },
+                                color: "#991b1b",
+                                font: { weight: "bold", size: 10 },
+                                anchor: "end",
+                                align: "top",
+                                offset: 2,
+                                clamp: true
+                            }
+                        },
+                        {
+                            label: "Actual (%)",
+                            data: downtimeAgencyActualData,
+                            backgroundColor: "#9ca3af",
+                            borderColor: "#545b62",
+                            borderWidth: 1,
+                            borderRadius: 5,
+                            barPercentage: 0.72,
+                            categoryPercentage: 0.72,
+                            datalabels: {
+                                display: function (context) {
+                                    return Number(context.dataset.data[context.dataIndex] || 0) > 0;
+                                },
+                                formatter: function (value) {
+                                    return Number(value || 0).toFixed(2) + "%";
+                                },
+                                color: "#343a40",
+                                font: { weight: "bold", size: 10 },
+                                anchor: "end",
+                                align: "top",
+                                offset: 2,
+                                clamp: true
+                            }
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: { mode: "index", intersect: false },
                     plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    return "Downtime: " + numberLabel(context.raw) + " min";
+                        legend: {
+                            display: true,
+                            position: "top",
+                            align: "center",
+
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: "circle",
+                                boxWidth: 9,
+                                boxHeight: 9,
+                                padding: 18,
+                                color: "#374151",
+
+                                font: {
+                                    size: 11,
+                                    weight: "700"
                                 }
                             }
-                        }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function (items) {
+                                    if (!items || items.length === 0) return "";
+                                    var index = items[0].dataIndex;
+                                    return downtimeAgencyLabels[index];
+                                },
+                                label: function (context) {
+                                    return context.dataset.label + ": " +
+                                        Number(context.raw || 0).toFixed(2) + "%";
+                                },
+                                afterBody: function (items) {
+                                    if (!items || items.length === 0) return "";
+
+                                    var index = items[0].dataIndex;
+                                    var actualMinutes = Number(
+                                        downtimeAgencyActualMinutes[index] || 0
+                                    );
+
+                                    return [
+                                        "Unscheduled Delay: " +
+                                            actualMinutes.toLocaleString() +
+                                            " min",
+                                        "Available Time: @availableOperatingMinutes.ToString("0.##") min"
+                                    ];
+                                }
+                            }
+                        },
+                        datalabels: { display: false }
                     },
                     scales: {
                         x: {
                             grid: { display: false },
+                            title: { display: true, text: "Agency Code" },
                             ticks: {
                                 autoSkip: false,
-                                maxRotation: 45,
-                                minRotation: 0
+                                maxRotation: 0,
+                                minRotation: 0,
+                                font: { weight: "bold" }
                             }
                         },
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: "Minutes" },
+                            suggestedMax: Math.max(
+                                5,
+                                ...downtimeAgencyTargetData,
+                                ...downtimeAgencyActualData
+                            ) * 1.20,
+                            title: {
+                                display: true,
+                                text: "Downtime Percentage (%)"
+                            },
                             ticks: {
                                 callback: function (value) {
-                                    return numberLabel(value);
+                                    return Number(value || 0).toFixed(1) + "%";
                                 }
                             }
                         }
@@ -1056,61 +3680,254 @@
             });
         }
 
-        function createPlanVsActualChart() {
-            var canvas = document.getElementById("planVsActualChart");
+        function createMonthlyDelayAgencyChart() {
+            var canvas =
+                document.getElementById(
+                    "monthlyDelayAgencyChart"
+                );
+
             if (!canvas) return;
+
+            var labels =
+                monthlyDelayAgencyLabels &&
+                monthlyDelayAgencyLabels.length > 0
+                    ? monthlyDelayAgencyLabels
+                    : ["No Delay"];
+
+            var targetValues =
+                monthlyDelayAgencyTargetData &&
+                monthlyDelayAgencyTargetData.length > 0
+                    ? monthlyDelayAgencyTargetData
+                    : [0];
+
+            var actualValues =
+                monthlyDelayAgencyPercentages &&
+                monthlyDelayAgencyPercentages.length > 0
+                    ? monthlyDelayAgencyPercentages
+                    : [0];
+
+            var highestValue = Math.max.apply(
+                null,
+                targetValues
+                    .concat(actualValues)
+                    .map(function (value) {
+                        return Number(value || 0);
+                    })
+            );
+
+            var axisMaximum;
+
+            if (highestValue <= 1) {
+                axisMaximum = 1;
+            }
+            else if (highestValue <= 5) {
+                axisMaximum = Math.ceil(
+                    highestValue * 1.40
+                );
+            }
+            else if (highestValue <= 10) {
+                axisMaximum = Math.ceil(
+                    highestValue * 1.25
+                );
+            }
+            else {
+                axisMaximum = Math.ceil(
+                    highestValue * 1.15
+                );
+            }
+
+            axisMaximum = Math.max(
+                axisMaximum,
+                1
+            );
 
             new Chart(canvas, {
                 type: "bar",
+
                 data: {
-                    labels: ["Plan", "Actual", "Difference"],
-                    datasets: [{
-                        label: "Production Weight (MT)",
-                        data: [productionPlan, productionActual, productionDifference],
-                        backgroundColor: ["#6c6c6c", "#c00000", "#a6a6a6"],
-                        borderColor: ["#595959", "#990000", "#808080"],
-                        borderWidth: 1,
-                        borderRadius: 0,
-                        barPercentage: 0.72,
-                        categoryPercentage: 0.72
-                    }]
+                    labels: labels,
+
+                    datasets: [
+                        {
+                            label: "Target",
+                            data: targetValues,
+                            backgroundColor: "#a6173f",
+                            borderColor: "#7f1230",
+                            borderWidth: 1,
+                            borderRadius: 7,
+                            maxBarThickness: 42
+                        },
+                        {
+                            label: "Actual",
+                            data: actualValues,
+                            backgroundColor: "#9ca3af",
+                            borderColor: "#6b7280",
+                            borderWidth: 1,
+                            borderRadius: 7,
+                            maxBarThickness: 42
+                        }
+                    ]
                 },
+
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        title: {
-                            display: true,
-                            text: "Plan Vs Actual",
-                            color: "#222",
-                            font: { size: 13, weight: "bold" }
+
+                    layout: {
+                        padding: {
+                            top: 18,
+                            right: 12,
+                            left: 8,
+                            bottom: 4
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+
+                            ticks: {
+                                color: "#374151",
+                                maxRotation: 35,
+                                minRotation: 0,
+                                autoSkip: false,
+                                font: {
+                                    size: 9,
+                                    weight: "700"
+                                },
+
+                                callback: function (
+                                    value
+                                ) {
+                                    var label =
+                                        this.getLabelForValue(
+                                            value
+                                        );
+
+                                    return label.length > 15
+                                        ? label.substring(
+                                            0,
+                                            15
+                                        ) + "…"
+                                        : label;
+                                }
+                            }
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    return numberLabel(context.raw) + " MT";
+
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: axisMaximum,
+                            max: axisMaximum,
+
+                            title: {
+                                display: true,
+                                text:
+                                    "Accumulated Delay Percentage (%)",
+                                color: "#4b5563",
+                                font: {
+                                    size: 11,
+                                    weight: "bold"
+                                }
+                            },
+
+                            grid: {
+                                color:
+                                    "rgba(107,114,128,0.12)"
+                            },
+
+                            ticks: {
+                                maxTicksLimit: 6,
+
+                                callback: function (value) {
+                                    return Number(
+                                        value || 0
+                                    ).toFixed(
+                                        axisMaximum <= 5
+                                            ? 1
+                                            : 0
+                                    ) + "%";
                                 }
                             }
                         }
                     },
-                    scales: {
-                        x: {
-                            grid: { color: "rgba(0,0,0,0.10)" },
-                            ticks: {
-                                autoSkip: false,
-                                maxRotation: 45,
-                                minRotation: 45
+
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: "top",
+                            align: "center",
+
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: "circle",
+                                boxWidth: 9,
+                                boxHeight: 9,
+                                padding: 18,
+                                color: "#374151",
+
+                                font: {
+                                    size: 11,
+                                    weight: "700"
+                                }
                             }
                         },
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: "rgba(0,0,0,0.10)" },
-                            title: { display: true, text: "Metric Tons" },
-                            ticks: {
-                                callback: function (value) {
-                                    return numberLabel(value);
+
+                        tooltip: {
+                            callbacks: {
+                                title: function (items) {
+                                    if (!items ||
+                                        items.length === 0) {
+                                        return "";
+                                    }
+
+                                    return labels[
+                                        items[0].dataIndex
+                                    ];
+                                },
+
+                                label: function (context) {
+                                    return context.dataset.label +
+                                        ": " +
+                                        Number(
+                                            context.raw || 0
+                                        ).toFixed(2) +
+                                        "%";
                                 }
+                            }
+                        },
+
+                        datalabels: {
+                            display: function (context) {
+                                return Number(
+                                    context.dataset.data[
+                                        context.dataIndex
+                                    ] || 0
+                                ) > 0;
+                            },
+
+                            formatter: function (value) {
+                                return Number(
+                                    value || 0
+                                ).toFixed(2) + "%";
+                            },
+
+                            color: function (context) {
+                                return context.dataset.label ===
+                                    "Target"
+                                        ? "#7f1230"
+                                        : "#4b5563";
+                            },
+
+                            anchor: "end",
+                            align: "top",
+                            offset: 3,
+                            clamp: true,
+
+                            font: {
+                                size: 9,
+                                weight: "bold"
                             }
                         }
                     }
@@ -1123,14 +3940,14 @@
             if (!canvas) return;
 
             new Chart(canvas, {
-                type: "line",
+                type: "bar",
                 data: {
                     labels: productivityDateLabels,
                     datasets: [{
-                        label: "Accumulated Production (MT)",
+                        label: "Daily Production (MT)",
                         data: productivityDayData,
                         borderColor: "#a6173f",
-                        backgroundColor: "rgba(166,23,63,0.12)",
+                        backgroundColor: "#a6173f",
                         borderWidth: 3,
                         tension: 0.35,
                         fill: true,
@@ -1138,7 +3955,31 @@
                         pointHoverRadius: 7,
                         pointBackgroundColor: "#a6173f",
                         pointBorderColor: "#ffffff",
-                        pointBorderWidth: 2
+                        pointBorderWidth: 2,
+
+                        datalabels: {
+                            display: function (context) {
+                                return Number(
+                                    context.dataset.data[context.dataIndex] || 0
+                                ) > 0;
+                            },
+
+                            formatter: function (value) {
+                                return Number(value || 0).toFixed(2);
+                            },
+
+                            color: "#ffffff",
+
+                            font: {
+                                weight: "bolder",
+                                size: 13
+                            },
+
+                            anchor: "center",
+                            align: "center",
+                            rotation: -90,
+                            clamp: true
+                        }
                     }]
                 },
                 options: {
@@ -1156,7 +3997,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function (context) {
-                                    return "Accumulated Production: " +
+                                    return "Daily Production: " +
                                         numberLabel(context.raw) +
                                         " MT";
                                 }
@@ -1181,7 +4022,7 @@
                             grid: { color: "rgba(0,0,0,0.08)" },
                             title: {
                                 display: true,
-                                text: "Accumulated Production (MT)"
+                                text: "Daily Production (MT)"
                             },
                             ticks: {
                                 callback: function (value) {
@@ -1194,43 +4035,35 @@
             });
         }
 
-        function createWeightCompareChart() {
-            var canvas = document.getElementById("weightCompareChart");
+        function createBilletRolledChart() {
+            var canvas = document.getElementById("billetChart");
             if (!canvas) return;
 
             new Chart(canvas, {
-                type: "bar",
+                type: "line",
                 data: {
                     labels: heatLabels,
-                    datasets: [
-                        {
-                            label: "Billet Wt. (MT)",
-                            data: billetWeightData,
-                            backgroundColor: "#0d6efd",
-                            borderColor: "#0a58ca",
-                            borderWidth: 1,
-                            borderRadius: 6
-                        },
-                        {
-                            label: "Finished Product Wt. (MT)",
-                            data: finishedWeightData,
-                            backgroundColor: "#198754",
-                            borderColor: "#146c43",
-                            borderWidth: 1,
-                            borderRadius: 6
-                        }
-                    ]
+                    datasets: [{
+                        label: "Billet Rolled",
+                        data: billetRolledData,
+                        borderColor: "#198754",
+                        backgroundColor: "rgba(25,135,84,0.15)",
+                        borderWidth: 2,
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: true, position: "top" },
+                        legend: { display: false },
                         tooltip: {
                             callbacks: {
                                 label: function (context) {
-                                    return context.dataset.label + ": " +
-                                        numberLabel(context.raw) + " MT";
+                                    return "Billet Rolled: " + numberLabel(context.raw);
                                 }
                             }
                         }
@@ -1246,7 +4079,107 @@
                         },
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: "Metric Tons" },
+                            title: { display: true, text: "Nos." },
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createMonthlySizeProductionChart() {
+            var canvas = document.getElementById("monthlySizeProductionChart");
+            if (!canvas) return;
+
+            new Chart(canvas, {
+                type: "bar",
+                data: {
+                    labels: monthlySizeLabels,
+                    datasets: [{
+                        label: "Finished Production (MT)",
+                        data: monthlySizeProductionData,
+                        backgroundColor: "#a6173f",
+                        borderColor: "#8f1236",
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: 0.70,
+                        categoryPercentage: 0.75,
+
+                        datalabels: {
+                            display: true,
+                            formatter: function (value) {
+                                return Number(value || 0).toFixed(2);
+                            },
+                            color: "#7f1230",
+                            font: {
+                                weight: "bold",
+                                size: 11
+                            },
+                            anchor: "end",
+                            align: "top",
+                            offset: 4,
+                            clamp: true,
+                            clip: false
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 28
+                        }
+                    },
+                    interaction: {
+                        mode: "index",
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: "top"
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function (items) {
+                                    if (!items || items.length === 0) return "";
+                                    return "Size: " + items[0].label;
+                                },
+                                label: function (context) {
+                                    return "Production: " +
+                                        Number(context.raw || 0).toLocaleString() +
+                                        " MT";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: "Finished Product Size"
+                            },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 0,
+                                font: {
+                                    weight: "bold"
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grace: "20%",
+                            grid: {
+                                color: "rgba(0,0,0,0.08)"
+                            },
+                            title: {
+                                display: true,
+                                text: "Finished Production (MT)"
+                            },
                             ticks: {
                                 callback: function (value) {
                                     return numberLabel(value);
@@ -1257,10 +4190,59 @@
                 }
             });
         }
+        createKpiComparisonChart(
+            "productionDoubleGaugeChart",
+            dailyProductionTargetValue,
+            dailyProductionActualValue,
+            "MT"
+        );
+
+        createKpiComparisonChart(
+            "yieldDoubleGaugeChart",
+            yieldTargetValue,
+            yieldActualValue,
+            "%"
+        );
+
+        createKpiComparisonChart(
+            "rrrDoubleGaugeChart",
+            rrrTargetValue,
+            rrrActualValue,
+            "%"
+        );
+
+        createKpiComparisonChart(
+            "productivityDoubleGaugeChart",
+            productivityTargetValue,
+            productivityActualValue,
+            "MT/Hr"
+        );
+
+        createKpiComparisonChart(
+            "fuelGaugeChart",
+            fuelConsumptionTargetValue,
+            fuelConsumptionActualValue,
+            "Lit/MT"
+        );
+
+        createKpiComparisonChart(
+            "electricityGaugeChart",
+            electricityConsumptionTargetValue,
+            electricityConsumptionActualValue,
+            "KWh/MT"
+        );
+
+        createKpiComparisonChart(
+            "waterGaugeChart",
+            waterConsumptionTargetValue,
+            waterConsumptionActualValue,
+            "m³/MT"
+        );
 
         createDowntimeChart();
-        createPlanVsActualChart();
+        createMonthlyDelayAgencyChart();
         createAccumulatedProductionChart();
-        createWeightCompareChart();
-    });
+        createBilletRolledChart();
+        createMonthlySizeProductionChart();
+});
 </script>

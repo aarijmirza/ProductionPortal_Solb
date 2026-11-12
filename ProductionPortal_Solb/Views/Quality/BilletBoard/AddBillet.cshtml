@@ -97,6 +97,214 @@
             border-bottom: none;
         }
     /* ... (Keep existing hover styles) ... */
+
+    /* ================= CHEMICAL ANALYSIS REDESIGN ================= */
+    .chem-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
+    }
+
+    .chem-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #fff;
+    }
+
+    .chem-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .chem-title-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8e8ee;
+        color: #a6173f;
+        font-size: 16px;
+    }
+
+    .chem-title {
+        margin: 0;
+        color: #111827;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .chem-subtitle {
+        margin: 2px 0 0;
+        color: #6b7280;
+        font-size: 11px;
+    }
+
+    .chem-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        padding: 14px 14px 4px;
+    }
+
+    .chem-table {
+        width: 100%;
+        min-width: 1500px;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        table-layout: fixed;
+    }
+
+        .chem-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 9px 5px;
+            border-top: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
+            background: #f8fafc;
+            color: #374151;
+            font-size: 10px;
+            font-weight: 800;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+            .chem-table thead th:first-child {
+                border-left: 1px solid #d1d5db;
+                border-radius: 8px 0 0 0;
+            }
+
+            .chem-table thead th:last-child {
+                border-right: 1px solid #d1d5db;
+                border-radius: 0 8px 0 0;
+            }
+
+        .chem-table tbody td {
+            padding: 5px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fff;
+            vertical-align: middle;
+        }
+
+        .chem-table tbody tr:nth-child(even) td {
+            background: #fbfbfc;
+        }
+
+        .chem-table tbody tr:hover td {
+            background: #fff8fa;
+        }
+
+        .chem-table .form-control {
+            height: 34px;
+            padding: 5px 7px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            background: #fff;
+            color: #111827;
+            font-size: 11px;
+            text-align: center;
+            box-shadow: none;
+        }
+
+            .chem-table .form-control:focus {
+                border-color: #a6173f;
+                box-shadow: 0 0 0 2px rgba(166, 23, 63, .10);
+            }
+
+        .chem-table .heat-input {
+            text-align: left;
+            font-weight: 700;
+            min-width: 105px;
+        }
+
+        .chem-table .billet-input {
+            min-width: 74px;
+        }
+
+        .chem-table .chem-input {
+            min-width: 62px;
+        }
+
+        .chem-table .status-select {
+            min-width: 115px;
+            text-align: left;
+        }
+
+    .chem-srno {
+        width: 52px;
+        color: #4b5563;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .chem-action-cell {
+        width: 58px;
+        text-align: center;
+    }
+
+    .chem-remove-btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: #fee2e2;
+        color: #b91c1c;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+        .chem-remove-btn:hover {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+    .chem-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 14px 14px;
+    }
+
+    .chem-add-btn {
+        border: 1px solid #a6173f;
+        border-radius: 8px;
+        padding: 7px 13px;
+        background: #a6173f;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+        .chem-add-btn:hover {
+            border-color: #7f1230;
+            background: #7f1230;
+            color: #fff;
+        }
+
+    .chem-sequence-note {
+        color: #6b7280;
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    @@media(max-width: 767px) {
+        .chem-card-header,
+        .chem-footer {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
 </style>
 
 <div class="xp-contentbar">
@@ -274,145 +482,151 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <div class="card m-b-30">
-                    <div class="card-header bg-white">
-                        <h5 class="card-title text-black">Chemical Analysis</h5>
-                    </div>
-                    <div class="card-body">
+                <div class="chem-card m-b-30">
 
-                        <div class="table-responsive m-b-30">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th scope="col" style="width:70px;">Sr No</th>
-                                        <th scope="col">Heat #</th>
-                                        <th scope="col">No. Of Billet</th>
-                                        <th scope="col">C</th>
-                                        <th scope="col">Si</th>
-                                        <th scope="col">Mn</th>
-                                        <th scope="col">S</th>
-                                        <th scope="col">P</th>
-                                        <th scope="col">N</th>
-                                        <th scope="col">Ceq</th>
-                                        <th scope="col">Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="chemBody">
-                                    @if (chemistryRows.Count > 0)
-                                    {
-                                        for (int i = 0; i < chemistryRows.Count; i++)
-                                        {
-                                            var chem = chemistryRows[i];
-                                            string heatStatus = Convert.ToString(chem.HeatStatus);
+                    <div class="chem-card-header">
+                        <div class="chem-title-wrap">
+                            <span class="chem-title-icon">
+                                <i class="fa fa-flask"></i>
+                            </span>
 
-                                            <tr>
-                                                <td class="text-center chemistry-srno">
-                                                    @(i + 1)
-                                                </td>
+                            <div>
+                                <h5 class="chem-title">
+                                    Chemical Analysis
+                                </h5>
 
-                                                <td class="text-center">
-                                                    <input type="hidden"
-                                                           class="chemistry-id"
-                                                           name="Chemistry[@i].ID"
-                                                           value="@chem.ID" />
-
-                                                    <input type="text"
-                                                           class="form-control"
-                                                           name="Chemistry[@i].HeatNo"
-                                                           autocomplete="off"
-                                                           value="@chem.HeatNo" />
-                                                </td>
-
-                                                <td>
-                                                    <input type="text"
-                                                           class="form-control"
-                                                           name="Chemistry[@i].NoOfBillets"
-                                                           value="@chem.NoOfBillets" />
-                                                </td>
-
-                                                <td><input type="text" class="form-control" name="Chemistry[@i].C" value="@chem.C" /></td>
-                                                <td><input type="text" class="form-control" name="Chemistry[@i].Si" value="@chem.Si" /></td>
-                                                <td><input type="text" class="form-control" name="Chemistry[@i].Mn" value="@chem.Mn" /></td>
-                                                <td><input type="text" class="form-control" name="Chemistry[@i].S" value="@chem.S" /></td>
-                                                <td><input type="text" class="form-control" name="Chemistry[@i].P" value="@chem.P" /></td>
-                                                <td><input type="text" class="form-control" name="Chemistry[@i].N" value="@chem.N" /></td>
-                                                <td><input type="text" class="form-control" name="Chemistry[@i].Ceq" value="@chem.Ceq" /></td>
-
-                                                <td>
-                                                    <select class="form-control"
-                                                            name="Chemistry[@i].HeatStatus">
-                                                        <option value="">-- select --</option>
-                                                        <option value="100" @(heatStatus == "100" || heatStatus == "Complete" ? "selected" : "")>Complete</option>
-                                                        <option value="101" @(heatStatus == "101" || heatStatus == "Cancelled" ? "selected" : "")>Cancelled</option>
-                                                        <option value="102" @(heatStatus == "102" || heatStatus == "Charging" ? "selected" : "")>Charging</option>
-                                                        <option value="103" @(heatStatus == "103" || heatStatus == "In Process" || heatStatus == "In-Process" ? "selected" : "")>In Process</option>
-                                                        <option value="104" @(heatStatus == "104" || heatStatus == "New" ? "selected" : "")>New</option>
-                                                        <option value="105" @(heatStatus == "105" || heatStatus == "Rolled" ? "selected" : "")>Rolled</option>
-                                                        <option value="106" @(heatStatus == "106" || heatStatus == "Rolling" ? "selected" : "")>Rolling</option>
-                                                    </select>
-                                                </td>
-
-                                                <td class="text-center">
-                                                    <button type="button"
-                                                            class="btn btn-sm btn-danger removeRow">
-                                                        X
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    }
-                                </tbody>
-                                @*<tbody id="chemBody">
-                                        @if (Model.Chemistry == null || !Model.chem.Any())
-                                        {
-                                            // default one row
-                                            Model. = new List<DAL.Models.RMChemicalAnalysisBLL> { new DAL.Models.RMChemicalAnalysisBLL() };
-                                        }
-
-                                        @for (int i = 0; i < Model.Chemistry.Count; i++)
-                                        {
-                                            <tr>
-                                                <td class="text-center">@(i + 1)</td>
-
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].NoOfBillets" value="@Model.Chemistry[i].NoOfBillets" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].C" step="0.01" value="@Model.Chemistry[i].C" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].Si" step="0.01" value="@Model.Chemistry[i].Si" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].Mn" step="0.01" value="@Model.Chemistry[i].Mn" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].S" step="0.01" value="@Model.Chemistry[i].S" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].P" step="0.01" value="@Model.Chemistry[i].P" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].N" step="0.01" value="@Model.Chemistry[i].N" /></td>
-                                                <td><input type="number" class="form-control" name="Chemistry[@i].Ceq" step="0.01" value="@Model.Chemistry[i].Ceq" /></td>
-
-                                                <td>
-                                                    <select class="form-control" name="Chemistry[@i].HeatStatus">
-                                                        <option disabled selected>-- select --</option>
-                                                        <option value="Cancelled">Cancelled</option>
-                                                        <option value="Charging">Charging</option>
-                                                        <option value="Complete">Complete</option>
-                                                        <option value="In Process">In-Process</option>
-                                                        <option value="New">New</option>
-                                                        <option value="Rolled">Rolled</option>
-                                                        <option value="Rolling">Rolling</option>
-                                                    </select>
-                                                </td>
-
-                                                <td class="text-center">
-                                                    <button type="button" class="btn btn-sm btn-danger removeRow">X</button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>*@
-                            </table>
-                            <button type="button" class="btn btn-sm btn-success" id="addChemRow">
-                                + Add Row
-                            </button>
+                                <div class="chem-subtitle">
+                                    Enter heat-wise billet count and chemistry results.
+                                </div>
+                            </div>
                         </div>
 
+                        <div class="chem-sequence-note">
+                            Sequence:
+                            C · Si · Mn · P · S · Cu · Ni · Cr · Mo · V · B · N · CE%
+                        </div>
                     </div>
+
+                    <div class="chem-table-wrap">
+                        <table class="chem-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:52px;">Sr No</th>
+                                    <th style="width:120px;">Heat #</th>
+                                    <th style="width:90px;">No. Of Billet</th>
+
+                                    <th>C</th>
+                                    <th>Si</th>
+                                    <th>Mn</th>
+                                    <th>P</th>
+                                    <th>S</th>
+                                    <th>Cu</th>
+                                    <th>Ni</th>
+                                    <th>Cr</th>
+                                    <th>Mo</th>
+                                    <th>V</th>
+                                    <th>B</th>
+                                    <th>N</th>
+                                    <th>CE%</th>
+
+                                    <th style="width:125px;">Status</th>
+                                    <th style="width:60px;">Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="chemBody">
+                                @if (chemistryRows.Count > 0)
+                                {
+                                    for (int i = 0; i < chemistryRows.Count; i++)
+                                    {
+                                        var chem = chemistryRows[i];
+                                        string heatStatus = Convert.ToString(chem.HeatStatus);
+
+                                        <tr>
+                                            <td class="chem-srno chemistry-srno">
+                                                @(i + 1)
+                                            </td>
+
+                                            <td>
+                                                <input type="hidden"
+                                                       class="chemistry-id"
+                                                       name="Chemistry[@i].ID"
+                                                       value="@chem.ID" />
+
+                                                <input type="text"
+                                                       class="form-control heat-input"
+                                                       name="Chemistry[@i].HeatNo"
+                                                       autocomplete="off"
+                                                       value="@chem.HeatNo" />
+                                            </td>
+
+                                            <td>
+                                                <input type="text"
+                                                       class="form-control billet-input"
+                                                       name="Chemistry[@i].NoOfBillets"
+                                                       value="@chem.NoOfBillets" />
+                                            </td>
+
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].C" value="@chem.C" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].Si" value="@chem.Si" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].Mn" value="@chem.Mn" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].P" value="@chem.P" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].S" value="@chem.S" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].Cu" value="@chem.Cu" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].Ni" value="@chem.Ni" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].Cr" value="@chem.Cr" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].Mo" value="@chem.Mo" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].V" value="@chem.V" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].B" value="@chem.B" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].N" value="@chem.N" /></td>
+                                            <td><input type="text" class="form-control chem-input" name="Chemistry[@i].Ceq" value="@chem.Ceq" /></td>
+
+                                            <td>
+                                                <select class="form-control status-select"
+                                                        name="Chemistry[@i].HeatStatus">
+                                                    <option value="">-- select --</option>
+                                                    <option value="100" @(heatStatus == "100" || heatStatus == "Complete" ? "selected" : "")>Complete</option>
+                                                    <option value="101" @(heatStatus == "101" || heatStatus == "Cancelled" ? "selected" : "")>Cancelled</option>
+                                                    <option value="102" @(heatStatus == "102" || heatStatus == "Charging" ? "selected" : "")>Charging</option>
+                                                    <option value="103" @(heatStatus == "103" || heatStatus == "In Process" || heatStatus == "In-Process" ? "selected" : "")>In Process</option>
+                                                    <option value="104" @(heatStatus == "104" || heatStatus == "New" ? "selected" : "")>New</option>
+                                                    <option value="105" @(heatStatus == "105" || heatStatus == "Rolled" ? "selected" : "")>Rolled</option>
+                                                    <option value="106" @(heatStatus == "106" || heatStatus == "Rolling" ? "selected" : "")>Rolling</option>
+                                                </select>
+                                            </td>
+
+                                            <td class="chem-action-cell">
+                                                <button type="button"
+                                                        class="chem-remove-btn removeRow"
+                                                        title="Remove row">
+                                                    ×
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="chem-footer">
+                        <button type="button"
+                                class="chem-add-btn"
+                                id="addChemRow">
+                            <i class="fa fa-plus"></i>
+                            Add Row
+                        </button>
+
+                        <span class="chem-sequence-note">
+                            Scroll horizontally to view all chemistry parameters.
+                        </span>
+                    </div>
+
                 </div>
             </div>
         </div>
+
+</div>
 
     </form>
 </div>
@@ -493,7 +707,6 @@
             const crossSectionValue = length + 'x' + width;
 
             // ✅ SET VALUES
-            debugger
             $inputField.val(selectedSpec);
             $hiddenIdField.val(selectedId);
             $billetLengthField.val(billetLength);
@@ -523,17 +736,14 @@
         let rowIndex =
             $('#chemBody tr').length;
 
-        // Sirf tab blank row add karo jab existing chemistry na ho.
         if (rowIndex === 0) {
             addChemRow();
         }
 
-        // Add new row
         $('#addChemRow').click(function () {
             addChemRow();
         });
 
-        // Remove row
         $('#chemBody').on('click', '.removeRow', function () {
             $(this).closest('tr').remove();
             reindexRows();
@@ -542,79 +752,102 @@
         function addChemRow() {
 
             const row = `
-        <tr>
-            <td class="text-center chemistry-srno">${rowIndex + 1}</td>
+                <tr>
+                    <td class="chem-srno chemistry-srno">${rowIndex + 1}</td>
 
-            <td class="text-center">
-            <input type="hidden" class="chemistry-id" name="Chemistry[${rowIndex}].ID" value="0">
-            <input type="text" class="form-control" name="Chemistry[${rowIndex}].HeatNo" autocomplete="off" placeholder="">
-            </td>
+                    <td>
+                        <input type="hidden"
+                               class="chemistry-id"
+                               name="Chemistry[${rowIndex}].ID"
+                               value="0">
 
-            <td><input type="text" class="form-control" name="Chemistry[${rowIndex}].NoOfBillets" /></td>
-            <td><input type="text" class="form-control" name="Chemistry[${rowIndex}].C" /></td>
-            <td><input type="text" class="form-control" name="Chemistry[${rowIndex}].Si" /></td>
-            <td><input type="text" class="form-control" name="Chemistry[${rowIndex}].Mn" /></td>
-            <td><input type="text" class="form-control" name="Chemistry[${rowIndex}].S" /></td>
-            <td><input type="text" class="form-control" name="Chemistry[${rowIndex}].P" /></td>
-            <td><input type="text" class="form-control" name="Chemistry[${rowIndex}].N" /></td>
-            <td><input type="text" class="form-control" name="Chemistry[${rowIndex}].Ceq" /></td>
+                        <input type="text"
+                               class="form-control heat-input"
+                               name="Chemistry[${rowIndex}].HeatNo"
+                               autocomplete="off">
+                    </td>
 
-            <td>
-                <select class="form-control" name="Chemistry[${rowIndex}].HeatStatus">
-                    <option value="">-- select --</option>
-                    <option value="100">Complete</option>
-                    <option value="101">Cancelled</option>
-                    <option value="102">Charging</option>
-                    <option value="103">In Process</option>
-                    <option value="104">New</option>
-                    <option value="105">Rolled</option>
-                    <option value="106">Rolling</option>
-                </select>
-            </td>
+                    <td>
+                        <input type="text"
+                               class="form-control billet-input"
+                               name="Chemistry[${rowIndex}].NoOfBillets">
+                    </td>
 
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-danger removeRow">X</button>
-            </td>
-        </tr>`;
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].C"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].Si"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].Mn"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].P"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].S"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].Cu"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].Ni"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].Cr"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].Mo"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].V"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].B"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].N"></td>
+                    <td><input type="text" class="form-control chem-input" name="Chemistry[${rowIndex}].Ceq"></td>
+
+                    <td>
+                        <select class="form-control status-select"
+                                name="Chemistry[${rowIndex}].HeatStatus">
+                            <option value="">-- select --</option>
+                            <option value="100">Complete</option>
+                            <option value="101">Cancelled</option>
+                            <option value="102">Charging</option>
+                            <option value="103">In Process</option>
+                            <option value="104">New</option>
+                            <option value="105">Rolled</option>
+                            <option value="106">Rolling</option>
+                        </select>
+                    </td>
+
+                    <td class="chem-action-cell">
+                        <button type="button"
+                                class="chem-remove-btn removeRow"
+                                title="Remove row">
+                            ×
+                        </button>
+                    </td>
+                </tr>`;
 
             $('#chemBody').append(row);
+
             rowIndex++;
+
             reindexRows();
         }
 
         function reindexRows() {
 
-            $('#chemBody tr').each(
-                function (i) {
+            $('#chemBody tr').each(function (i) {
 
-                    $(this)
-                        .find('.chemistry-srno')
-                        .text(i + 1);
+                $(this)
+                    .find('.chemistry-srno')
+                    .text(i + 1);
 
-                    $(this)
-                        .find('input, select')
-                        .each(function () {
+                $(this)
+                    .find('input, select')
+                    .each(function () {
 
-                            var name =
-                                $(this).attr('name');
+                        var name =
+                            $(this).attr('name');
 
-                            if (!name) {
-                                return;
-                            }
+                        if (!name) {
+                            return;
+                        }
 
-                            name =
-                                name.replace(
-                                    /Chemistry\[\d+\]/,
-                                    'Chemistry[' + i + ']'
-                                );
-
-                            $(this).attr(
-                                'name',
-                                name
+                        name =
+                            name.replace(
+                                /Chemistry\[\d+\]/,
+                                'Chemistry[' + i + ']'
                             );
-                        });
-                }
-            );
+
+                        $(this).attr(
+                            'name',
+                            name
+                        );
+                    });
+            });
 
             rowIndex =
                 $('#chemBody tr').length;

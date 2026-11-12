@@ -3,10 +3,16 @@
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>D:\Published\Production Portal</_PublishTargetUrl>
-    <History>True|2026-09-10T07:41:42.6481002Z||;True|2026-09-09T10:39:29.0029125+03:00||;True|2026-09-08T10:00:25.2219425+03:00||;True|2026-09-07T13:53:29.9271467+03:00||;True|2026-09-06T10:00:27.0116005+03:00||;True|2026-09-06T09:15:14.1522902+03:00||;True|2026-09-03T09:42:43.1213433+03:00||;True|2026-09-02T13:40:27.5723172+03:00||;True|2026-08-31T11:08:54.2898309+03:00||;True|2026-08-26T10:21:42.3492453+03:00||;True|2026-08-24T12:52:33.7852602+03:00||;True|2026-08-23T16:58:56.5795273+03:00||;</History>
+    <History>True|2026-11-12T11:30:04.4038584Z||;True|2026-11-12T11:36:04.6813903+03:00||;True|2026-11-11T10:31:40.1609435+03:00||;True|2026-11-11T09:33:59.3098046+03:00||;True|2026-11-11T09:33:29.3711351+03:00||;True|2026-11-08T16:38:26.6900986+03:00||;True|2026-11-05T13:31:57.1545593+03:00||;True|2026-11-02T14:51:15.5152348+03:00||;True|2026-11-02T13:50:21.0959965+03:00||;True|2026-11-02T09:06:32.8797897+03:00||;False|2026-11-02T09:05:56.0617750+03:00||;True|2026-11-01T09:44:40.7523330+03:00||;True|2026-10-29T13:45:35.0415578+03:00||;True|2026-10-21T16:30:18.8697622+03:00||;True|2026-10-05T14:29:15.5368087+03:00||;True|2026-10-04T09:37:54.9480675+03:00||;True|2026-09-10T10:41:42.6481002+03:00||;True|2026-09-09T10:39:29.0029125+03:00||;True|2026-09-08T10:00:25.2219425+03:00||;True|2026-09-07T13:53:29.9271467+03:00||;True|2026-09-06T10:00:27.0116005+03:00||;True|2026-09-06T09:15:14.1522902+03:00||;True|2026-09-03T09:42:43.1213433+03:00||;True|2026-09-02T13:40:27.5723172+03:00||;True|2026-08-31T11:08:54.2898309+03:00||;True|2026-08-26T10:21:42.3492453+03:00||;True|2026-08-24T12:52:33.7852602+03:00||;True|2026-08-23T16:58:56.5795273+03:00||;</History>
     <LastFailureDetails />
   </PropertyGroup>
   <ItemGroup>
+    <File Include="arm/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:50</publishTime>
+    </File>
+    <File Include="arm64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:44</publishTime>
+    </File>
     <File Include="assets/css/bootstrap.min.css">
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
@@ -5686,17 +5692,32 @@
     <File Include="bin/Antlr3.Runtime.pdb">
       <publishTime>08/21/2026 14:30:26</publishTime>
     </File>
+    <File Include="bin/arm/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:50</publishTime>
+    </File>
+    <File Include="bin/arm64/libSkiaSharp.dll">
+      <publishTime>05/23/2026 05:11:10</publishTime>
+    </File>
+    <File Include="bin/arm64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:44</publishTime>
+    </File>
     <File Include="bin/BAL.dll">
-      <publishTime>09/10/2026 10:41:29</publishTime>
+      <publishTime>11/12/2026 14:29:54</publishTime>
     </File>
     <File Include="bin/BAL.dll.config">
-      <publishTime>08/21/2026 14:29:52</publishTime>
+      <publishTime>11/12/2026 13:05:07</publishTime>
     </File>
     <File Include="bin/BAL.pdb">
-      <publishTime>09/10/2026 10:41:29</publishTime>
+      <publishTime>11/12/2026 14:29:54</publishTime>
+    </File>
+    <File Include="bin/bionic-arm64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:50</publishTime>
+    </File>
+    <File Include="bin/bionic-x64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:50</publishTime>
     </File>
     <File Include="bin/BouncyCastle.Cryptography.dll">
-      <publishTime>08/21/2026 14:30:26</publishTime>
+      <publishTime>07/31/2025 14:19:54</publishTime>
     </File>
     <File Include="bin/ClosedXML.dll">
       <publishTime>08/21/2026 14:30:27</publishTime>
@@ -5708,13 +5729,13 @@
       <publishTime>08/21/2026 14:30:27</publishTime>
     </File>
     <File Include="bin/DAL.dll">
-      <publishTime>09/10/2026 10:41:28</publishTime>
+      <publishTime>11/12/2026 14:29:54</publishTime>
     </File>
     <File Include="bin/DAL.dll.config">
       <publishTime>08/21/2026 14:29:54</publishTime>
     </File>
     <File Include="bin/DAL.pdb">
-      <publishTime>09/10/2026 10:41:28</publishTime>
+      <publishTime>11/12/2026 14:29:54</publishTime>
     </File>
     <File Include="bin/DocumentFormat.OpenXml.dll">
       <publishTime>08/21/2026 14:30:27</publishTime>
@@ -5727,6 +5748,12 @@
     </File>
     <File Include="bin/EntityFramework.SqlServer.dll">
       <publishTime>08/21/2026 14:30:29</publishTime>
+    </File>
+    <File Include="bin/Enums.NET.dll">
+      <publishTime>05/03/2024 06:56:42</publishTime>
+    </File>
+    <File Include="bin/Enums.NET.pdb">
+      <publishTime>05/03/2024 06:56:42</publishTime>
     </File>
     <File Include="bin/EPPlus.dll">
       <publishTime>08/21/2026 14:30:28</publishTime>
@@ -5749,14 +5776,32 @@
     <File Include="bin/ExcelNumberFormat.dll">
       <publishTime>08/21/2026 14:30:29</publishTime>
     </File>
+    <File Include="bin/ExtendedNumerics.BigDecimal.dll">
+      <publishTime>05/08/2024 13:03:54</publishTime>
+    </File>
     <File Include="bin/HarfBuzzSharp.dll">
       <publishTime>08/21/2026 14:30:29</publishTime>
     </File>
     <File Include="bin/HarfBuzzSharp.pdb">
       <publishTime>08/21/2026 14:30:29</publishTime>
     </File>
+    <File Include="bin/ICSharpCode.SharpZipLib.dll">
+      <publishTime>01/29/2023 17:59:00</publishTime>
+    </File>
+    <File Include="bin/ICSharpCode.SharpZipLib.pdb">
+      <publishTime>01/29/2023 17:59:00</publishTime>
+    </File>
     <File Include="bin/itextsharp.dll">
       <publishTime>08/21/2026 14:30:52</publishTime>
+    </File>
+    <File Include="bin/libSkiaSharp.dylib">
+      <publishTime>05/22/2026 22:09:42</publishTime>
+    </File>
+    <File Include="bin/loongarch64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:48</publishTime>
+    </File>
+    <File Include="bin/MathNet.Numerics.dll">
+      <publishTime>04/03/2022 17:02:06</publishTime>
     </File>
     <File Include="bin/Microsoft.AspNetCore.Antiforgery.dll">
       <publishTime>08/21/2026 14:30:30</publishTime>
@@ -5878,6 +5923,9 @@
     <File Include="bin/Microsoft.Bcl.AsyncInterfaces.dll">
       <publishTime>08/21/2026 14:30:31</publishTime>
     </File>
+    <File Include="bin/Microsoft.Bcl.Cryptography.dll">
+      <publishTime>06/26/2026 22:45:48</publishTime>
+    </File>
     <File Include="bin/Microsoft.Bcl.HashCode.dll">
       <publishTime>08/21/2026 14:30:31</publishTime>
     </File>
@@ -5971,23 +6019,65 @@
     <File Include="bin/Microsoft.Win32.Registry.dll">
       <publishTime>08/21/2026 14:30:35</publishTime>
     </File>
+    <File Include="bin/musl-arm/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:04</publishTime>
+    </File>
+    <File Include="bin/musl-arm64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:02</publishTime>
+    </File>
+    <File Include="bin/musl-loongarch64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:02</publishTime>
+    </File>
+    <File Include="bin/musl-riscv64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:44</publishTime>
+    </File>
+    <File Include="bin/musl-x64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:04</publishTime>
+    </File>
     <File Include="bin/Newtonsoft.Json.Bson.dll">
       <publishTime>08/21/2026 14:30:36</publishTime>
     </File>
     <File Include="bin/Newtonsoft.Json.dll">
       <publishTime>08/21/2026 14:30:35</publishTime>
     </File>
+    <File Include="bin/NPOI.Core.dll">
+      <publishTime>09/22/2026 09:52:02</publishTime>
+    </File>
+    <File Include="bin/NPOI.Core.pdb">
+      <publishTime>09/22/2026 09:52:02</publishTime>
+    </File>
+    <File Include="bin/NPOI.OOXML.dll">
+      <publishTime>09/22/2026 09:52:02</publishTime>
+    </File>
+    <File Include="bin/NPOI.OOXML.pdb">
+      <publishTime>09/22/2026 09:52:02</publishTime>
+    </File>
+    <File Include="bin/NPOI.OpenXml4Net.dll">
+      <publishTime>09/22/2026 09:52:02</publishTime>
+    </File>
+    <File Include="bin/NPOI.OpenXml4Net.pdb">
+      <publishTime>09/22/2026 09:52:02</publishTime>
+    </File>
+    <File Include="bin/NPOI.OpenXmlFormats.dll">
+      <publishTime>09/22/2026 09:52:02</publishTime>
+    </File>
+    <File Include="bin/NPOI.OpenXmlFormats.pdb">
+      <publishTime>09/22/2026 09:52:02</publishTime>
+    </File>
     <File Include="bin/Oracle.ManagedDataAccess.dll">
       <publishTime>08/21/2026 14:30:36</publishTime>
     </File>
     <File Include="bin/ProductionPortal_Solb.dll">
-      <publishTime>09/10/2026 10:41:31</publishTime>
+      <publishTime>11/12/2026 14:29:55</publishTime>
     </File>
     <File Include="bin/ProductionPortal_Solb.pdb">
-      <publishTime>09/10/2026 10:41:31</publishTime>
+      <publishTime>11/12/2026 14:29:55</publishTime>
     </File>
     <File Include="bin/RBush.dll">
       <publishTime>08/21/2026 14:30:36</publishTime>
+    </File>
+    <File Include="bin/riscv64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:58</publishTime>
     </File>
     <File Include="bin/roslyn/csc.exe">
       <publishTime>08/21/2026 14:30:33</publishTime>
@@ -6148,11 +6238,17 @@
     <File Include="bin/SixLabors.Fonts.dll">
       <publishTime>08/21/2026 14:30:39</publishTime>
     </File>
+    <File Include="bin/SkiaSharp.dll">
+      <publishTime>05/23/2026 05:08:10</publishTime>
+    </File>
+    <File Include="bin/SkiaSharp.pdb">
+      <publishTime>05/23/2026 03:41:28</publishTime>
+    </File>
     <File Include="bin/Spire.XLS.dll">
       <publishTime>08/21/2026 14:30:40</publishTime>
     </File>
     <File Include="bin/System.Buffers.dll">
-      <publishTime>08/21/2026 14:30:41</publishTime>
+      <publishTime>03/19/2025 23:55:38</publishTime>
     </File>
     <File Include="bin/System.Collections.Immutable.dll">
       <publishTime>08/21/2026 14:30:42</publishTime>
@@ -6164,10 +6260,10 @@
       <publishTime>08/21/2026 14:30:42</publishTime>
     </File>
     <File Include="bin/System.Formats.Asn1.dll">
-      <publishTime>08/21/2026 14:30:43</publishTime>
+      <publishTime>06/26/2026 22:45:28</publishTime>
     </File>
     <File Include="bin/System.Memory.dll">
-      <publishTime>08/21/2026 14:30:44</publishTime>
+      <publishTime>04/04/2025 02:00:54</publishTime>
     </File>
     <File Include="bin/System.Numerics.Vectors.dll">
       <publishTime>08/21/2026 14:30:44</publishTime>
@@ -6176,19 +6272,19 @@
       <publishTime>08/21/2026 14:30:44</publishTime>
     </File>
     <File Include="bin/System.Runtime.CompilerServices.Unsafe.dll">
-      <publishTime>08/21/2026 14:30:45</publishTime>
+      <publishTime>04/04/2025 02:00:52</publishTime>
     </File>
     <File Include="bin/System.Security.AccessControl.dll">
       <publishTime>08/21/2026 14:30:46</publishTime>
     </File>
     <File Include="bin/System.Security.Cryptography.Xml.dll">
-      <publishTime>08/21/2026 14:30:46</publishTime>
+      <publishTime>06/26/2026 22:46:24</publishTime>
     </File>
     <File Include="bin/System.Security.Principal.Windows.dll">
       <publishTime>08/21/2026 14:30:47</publishTime>
     </File>
     <File Include="bin/System.Text.Encoding.CodePages.dll">
-      <publishTime>08/21/2026 14:30:47</publishTime>
+      <publishTime>10/31/2023 18:10:16</publishTime>
     </File>
     <File Include="bin/System.Text.Encodings.Web.dll">
       <publishTime>08/21/2026 14:30:47</publishTime>
@@ -6226,6 +6322,18 @@
     <File Include="bin/WebGrease.dll">
       <publishTime>08/21/2026 14:30:49</publishTime>
     </File>
+    <File Include="bin/x64/libSkiaSharp.dll">
+      <publishTime>05/23/2026 05:11:32</publishTime>
+    </File>
+    <File Include="bin/x64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:50</publishTime>
+    </File>
+    <File Include="bin/x86/libSkiaSharp.dll">
+      <publishTime>05/23/2026 05:11:32</publishTime>
+    </File>
+    <File Include="bin/x86/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:04</publishTime>
+    </File>
     <File Include="bin/Xamarin.Forms.Core.dll">
       <publishTime>08/21/2026 14:30:50</publishTime>
     </File>
@@ -6241,17 +6349,47 @@
     <File Include="bin/Xamarin.Forms.Xaml.pdb">
       <publishTime>08/21/2026 14:30:50</publishTime>
     </File>
+    <File Include="bin/ZString.dll">
+      <publishTime>03/25/2024 12:20:42</publishTime>
+    </File>
+    <File Include="bionic-arm64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:50</publishTime>
+    </File>
+    <File Include="bionic-x64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:50</publishTime>
+    </File>
     <File Include="favicon.ico">
       <publishTime>08/21/2026 14:30:11</publishTime>
     </File>
     <File Include="Global.asax">
       <publishTime>08/21/2026 14:29:55</publishTime>
     </File>
+    <File Include="loongarch64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:48</publishTime>
+    </File>
     <File Include="Microsoft.DiaSymReader.Native.amd64.dll">
       <publishTime>08/21/2026 14:30:33</publishTime>
     </File>
     <File Include="Microsoft.DiaSymReader.Native.x86.dll">
       <publishTime>08/21/2026 14:30:33</publishTime>
+    </File>
+    <File Include="musl-arm/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:04</publishTime>
+    </File>
+    <File Include="musl-arm64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:02</publishTime>
+    </File>
+    <File Include="musl-loongarch64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:02</publishTime>
+    </File>
+    <File Include="musl-riscv64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:44</publishTime>
+    </File>
+    <File Include="musl-x64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:04</publishTime>
+    </File>
+    <File Include="riscv64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:58</publishTime>
     </File>
     <File Include="Rotativa/help-wkhtmltoimage.txt">
       <publishTime>08/21/2026 14:29:55</publishTime>
@@ -6265,8 +6403,14 @@
     <File Include="Rotativa/wkhtmltopdf.exe">
       <publishTime>08/21/2026 14:29:56</publishTime>
     </File>
+    <File Include="Templates/1- MTC -TEMPELETE %281%29.xlsx">
+      <publishTime>11/01/2026 12:38:50</publishTime>
+    </File>
     <File Include="Templates/Daily Production Report.xlsx">
       <publishTime>08/21/2026 14:29:57</publishTime>
+    </File>
+    <File Include="Templates/Grades Limits.xlsx">
+      <publishTime>11/01/2026 11:29:50</publishTime>
     </File>
     <File Include="Templates/MTCTemplate.xlsx">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6323,10 +6467,10 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Delay/add.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>10/04/2026 08:49:51</publishTime>
     </File>
     <File Include="Views/Delay/list.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>10/04/2026 09:36:07</publishTime>
     </File>
     <File Include="Views/DelayCounterMeasure/add.cshtml">
       <publishTime>09/03/2026 16:33:57</publishTime>
@@ -6347,10 +6491,10 @@
       <publishTime>09/03/2026 10:08:28</publishTime>
     </File>
     <File Include="Views/Maintenance/detail.cshtml">
-      <publishTime>09/03/2026 10:08:28</publishTime>
+      <publishTime>11/01/2026 09:39:09</publishTime>
     </File>
     <File Include="Views/Maintenance/list.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>10/15/2026 16:01:27</publishTime>
     </File>
     <File Include="Views/Meltshop/Delay/add.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6389,10 +6533,10 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Quality/BilletBoard/AddBillet.cshtml">
-      <publishTime>08/23/2026 08:46:50</publishTime>
+      <publishTime>11/08/2026 11:05:06</publishTime>
     </File>
     <File Include="Views/Quality/BilletBoard/BilletBoard.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>10/20/2026 10:29:25</publishTime>
     </File>
     <File Include="Views/Quality/BilletBoard/BilletBoardingPDF.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6428,7 +6572,7 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Quality/RMMechanical/add.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>11/12/2026 11:33:23</publishTime>
     </File>
     <File Include="Views/Quality/RMMechanical/list.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6497,10 +6641,10 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Reporting/ShiftProductionDashboard - Copy.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>10/26/2026 16:20:16</publishTime>
     </File>
     <File Include="Views/Reporting/ShiftProductionDashboard.cshtml">
-      <publishTime>09/08/2026 09:57:46</publishTime>
+      <publishTime>10/26/2026 16:20:31</publishTime>
     </File>
     <File Include="Views/Reporting/ShiftProductionReport.cshtml">
       <publishTime>09/03/2026 14:58:44</publishTime>
@@ -6518,10 +6662,19 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Reporting/UtilityDailyReport.cshtml">
-      <publishTime>08/21/2026 14:29:57</publishTime>
+      <publishTime>10/27/2026 16:25:54</publishTime>
+    </File>
+    <File Include="Views/RMMTC/Index.cshtml">
+      <publishTime>11/12/2026 14:20:49</publishTime>
+    </File>
+    <File Include="Views/RMReports/FinishedProductShiftSummaryReport.cshtml">
+      <publishTime>11/05/2026 11:35:55</publishTime>
+    </File>
+    <File Include="Views/RMReports/FurnaceChargingDischargingSummary.cshtml">
+      <publishTime>11/05/2026 12:51:09</publishTime>
     </File>
     <File Include="Views/RMReports/list.cshtml">
-      <publishTime>09/03/2026 10:08:28</publishTime>
+      <publishTime>10/19/2026 16:32:43</publishTime>
     </File>
     <File Include="Views/RollingMill/AddDetails.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6533,7 +6686,7 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/RollingMill/Charging/add.cshtml">
-      <publishTime>09/07/2026 13:49:52</publishTime>
+      <publishTime>10/20/2026 10:40:57</publishTime>
     </File>
     <File Include="Views/RollingMill/Charging/list.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6578,7 +6731,7 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Views/Shared/_Layout.cshtml">
-      <publishTime>09/10/2026 10:22:43</publishTime>
+      <publishTime>11/12/2026 13:37:06</publishTime>
     </File>
     <File Include="Views/SMPDayWiseProduction/Details.cshtml">
       <publishTime>08/21/2026 14:29:57</publishTime>
@@ -6647,7 +6800,13 @@
       <publishTime>08/21/2026 14:29:57</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>08/24/2026 12:52:27</publishTime>
+      <publishTime>11/12/2026 14:29:59</publishTime>
+    </File>
+    <File Include="x64/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:33:50</publishTime>
+    </File>
+    <File Include="x86/libSkiaSharp.so">
+      <publishTime>05/23/2026 03:34:04</publishTime>
     </File>
   </ItemGroup>
 </Project>
